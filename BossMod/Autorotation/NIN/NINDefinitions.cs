@@ -259,33 +259,43 @@ namespace BossMod.NIN
             SupportedActions.OGCD(AID.Feint, 10, CDGroup.Feint, 90.0f);
             SupportedActions.GCD(AID.AeolianEdge, 3);
             SupportedActions.GCD(AID.Ninjutsu, 0);
-            SupportedActions.GCD(AID.FumaShuriken, 25);
-            SupportedActions.GCD(AID.Ten2, 0, 0.350f);
-            SupportedActions.OGCDWithCharges(AID.Ten, 0, CDGroup.Ten, 20.0f, 2, 0.350f);
-            SupportedActions.GCD(AID.FumaShuriken, 25);
             SupportedActions.GCD(AID.RabbitMedium, 0);
-            SupportedActions.GCD(AID.FumaShuriken, 25);
-            SupportedActions.GCD(AID.FumaShuriken, 25);
             SupportedActions.OGCD(AID.ArmsLength, 0, CDGroup.ArmsLength, 120.0f);
-            SupportedActions.GCD(AID.Raiton, 20);
-            SupportedActions.GCD(AID.Katon, 20);
-            SupportedActions.OGCDWithCharges(AID.Chi, 0, CDGroup.Ten, 20.0f, 2, 0.350f);
-            SupportedActions.GCD(AID.Chi2, 0, 0.350f);
-            SupportedActions.GCD(AID.Katon, 20);
-            SupportedActions.GCD(AID.Raiton, 20);
             SupportedActions.GCD(AID.DeathBlossom, 0);
             SupportedActions.OGCD(AID.Assassinate, 3, CDGroup.Assassinate, 60.0f);
             SupportedActions.OGCDWithCharges(AID.Shukuchi, 20, CDGroup.Shukuchi, 60.0f, 2, 0.800f);
-            SupportedActions.GCD(AID.Doton, 0);
-            SupportedActions.GCD(AID.Huton, 0);
-            SupportedActions.GCD(AID.Hyoton, 25);
-            SupportedActions.GCD(AID.Hyoton, 25);
-            SupportedActions.GCD(AID.Jin2, 0, 0.350f);
-            SupportedActions.GCD(AID.Suiton, 20);
-            SupportedActions.GCD(AID.Doton, 0);
-            SupportedActions.GCD(AID.Huton, 0);
-            SupportedActions.GCD(AID.Suiton, 20);
+
+            // mudra starters
+            SupportedActions.OGCDWithCharges(AID.Ten, 0, CDGroup.Ten, 20.0f, 2, 0.350f);
+            SupportedActions.OGCDWithCharges(AID.Chi, 0, CDGroup.Ten, 20.0f, 2, 0.350f);
             SupportedActions.OGCDWithCharges(AID.Jin, 0, CDGroup.Ten, 20.0f, 2, 0.350f);
+            // mudra combos
+            SupportedActions.GCD(AID.Ten2, 0, 0.350f);
+            SupportedActions.GCD(AID.Chi2, 0, 0.350f);
+            SupportedActions.GCD(AID.Jin2, 0, 0.350f);
+
+            // standard ninjutsu
+            SupportedActions.GCD(AID.FumaShuriken, 25);
+            SupportedActions.GCD(AID.Raiton, 20);
+            SupportedActions.GCD(AID.Katon, 20);
+            SupportedActions.GCD(AID.Hyoton, 25);
+            SupportedActions.GCD(AID.Doton, 0);
+            SupportedActions.GCD(AID.Huton, 0);
+            SupportedActions.GCD(AID.Suiton, 20);
+            SupportedActions.GCD(AID.HyoshoRanryu, 25);
+            SupportedActions.GCD(AID.GokaMekkyaku, 20);
+
+            // tcj ninjutsu
+            SupportedActions.GCD(AID.FumaTen, 25);
+            SupportedActions.GCD(AID.FumaChi, 25);
+            SupportedActions.GCD(AID.FumaJin, 25);
+            SupportedActions.GCD(AID.TCJRaiton, 20);
+            SupportedActions.GCD(AID.TCJKaton, 20);
+            SupportedActions.GCD(AID.TCJHyoton, 25);
+            SupportedActions.GCD(AID.TCJDoton, 0);
+            SupportedActions.GCD(AID.TCJHuton, 0);
+            SupportedActions.GCD(AID.TCJSuiton, 20);
+
             SupportedActions.OGCDWithCharges(AID.TrueNorth, 0, CDGroup.TrueNorth, 45.0f, 2);
             SupportedActions.OGCD(AID.Kassatsu, 0, CDGroup.Kassatsu, 60.0f);
             SupportedActions.GCD(AID.HakkeMujinsatsu, 0);
@@ -296,8 +306,6 @@ namespace BossMod.NIN
             SupportedActions.OGCD(AID.Bhavacakra, 3, CDGroup.HellfrogMedium, 1.0f);
             SupportedActions.OGCD(AID.TenChiJin, 0, CDGroup.TenChiJin, 120.0f);
             SupportedActions.OGCD(AID.Meisui, 0, CDGroup.Meisui, 120.0f);
-            SupportedActions.GCD(AID.HyoshoRanryu, 25);
-            SupportedActions.GCD(AID.GokaMekkyaku, 20);
             SupportedActions.OGCD(AID.Bunshin, 0, CDGroup.Bunshin, 90.0f);
             SupportedActions.GCD(AID.PhantomKamaitachi, 20);
             SupportedActions.GCD(AID.ForkedRaiju, 20);

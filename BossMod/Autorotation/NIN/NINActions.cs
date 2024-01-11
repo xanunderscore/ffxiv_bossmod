@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 
 namespace BossMod.NIN
 {
@@ -10,7 +11,7 @@ namespace BossMod.NIN
         public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
         private Rotation.State _state;
-        private CommonRotation.Strategy _strategy;
+        private Rotation.Strategy _strategy;
 
         public Actions(Autorotation autorot, Actor player)
             : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -18,28 +19,7 @@ namespace BossMod.NIN
             _state = new(autorot.Cooldowns);
             _strategy = new();
 
-            AID[] allJutsu =
-            [
-                AID.Ninjutsu,
-                AID.FumaShuriken,
-                AID.Katon,
-                AID.Raiton,
-                AID.Hyoton,
-                AID.Huton,
-                AID.Doton,
-                AID.Suiton,
-                AID.RabbitMedium,
-                AID.HyoshoRanryu,
-                AID.GokaMekkyaku
-            ];
-            foreach (AID jutsu in allJutsu)
-            {
-                SupportedSpell(jutsu).TransformAction = () =>
-                    ActionID.MakeSpell(_state.CurNinjutsu);
-            }
-            SupportedSpell(AID.Ten).TransformAction = () => ActionID.MakeSpell(_state.CurTen);
-            SupportedSpell(AID.Chi).TransformAction = () => ActionID.MakeSpell(_state.CurChi);
-            SupportedSpell(AID.Jin).TransformAction = () => ActionID.MakeSpell(_state.CurJin);
+            SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = AutoActionST;
         }
 
         public override CommonRotation.PlayerState GetState()
@@ -56,12 +36,29 @@ namespace BossMod.NIN
 
         protected override NextAction CalculateAutomaticGCD()
         {
-            return new();
+            if (AutoAction < AutoActionAIFight)
+                return new();
+
+            var aid = Rotation.GetNextBestGCD(_state, _strategy);
+            return MakeResult(aid, Autorot.PrimaryTarget);
         }
 
         protected override NextAction CalculateAutomaticOGCD(float deadline)
         {
-            return new();
+            if (AutoAction < AutoActionAIFight)
+                return new();
+
+            ActionID res = new();
+            if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
+                res = Rotation.GetNextBestOGCD(
+                    _state,
+                    _strategy,
+                    deadline - _state.OGCDSlotLength,
+                    false
+                );
+            if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
+                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline, true);
+            return MakeResult(res, Autorot.PrimaryTarget);
         }
 
         protected override void UpdateInternalState(int autoAction)
@@ -73,15 +70,22 @@ namespace BossMod.NIN
             _state.HutonLeft = gauge.HutonTimer / 1000f;
             _state.Ninki = gauge.Ninki;
 
-            _state.CurMudra = StatusDetails(Player, SID.Mudra, Player.InstanceID);
+            // bypass pending status check for mudras because it takes 3 seconds to finalize, so 3-action mudras time out
+            var stat = Player.FindStatus(SID.Mudra, Player.InstanceID);
+            if (stat == null)
+                _state.Mudra = (0, 0);
+            else
+                _state.Mudra = (StatusDuration(stat.Value.ExpireAt), stat.Value.Extra & 0xFF);
+
+            _state.TenChiJin = StatusDetails(Player, SID.TenChiJin, Player.InstanceID);
+            _state.Bunshin = StatusDetails(Player, SID.Bunshin, Player.InstanceID);
+            _state.RaijuReady = StatusDetails(Player, SID.RaijuReady, Player.InstanceID);
+
             _state.KassatsuLeft = StatusDetails(Player, SID.Kassatsu, Player.InstanceID).Left;
-            _state.TCJLeft = StatusDetails(Player, SID.TenChiJin, Player.InstanceID).Left;
             _state.SuitonLeft = StatusDetails(Player, SID.Suiton, Player.InstanceID).Left;
             _state.DotonLeft = StatusDetails(Player, SID.Doton, Player.InstanceID).Left;
             _state.MeisuiLeft = StatusDetails(Player, SID.Meisui, Player.InstanceID).Left;
-            _state.RaijuReadyLeft = StatusDetails(Player, SID.RaijuReady, Player.InstanceID).Left;
             _state.HiddenLeft = StatusDetails(Player, SID.Hidden, Player.InstanceID).Left;
-            _state.BunshinLeft = StatusDetails(Player, SID.Bunshin, Player.InstanceID).Left;
             _state.KamaitachiLeft = StatusDetails(
                 Player,
                 SID.PhantomKamaitachiReady,
