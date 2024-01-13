@@ -68,6 +68,7 @@ namespace BossMod.NIN
             {
                 if (
                     strategy.CombatTimer > -9.5
+                    && strategy.CombatTimer < -6
                     && state.HutonLeft < 50
                     && DoNinjutsu(state, AID.Huton, out act)
                 )
@@ -87,6 +88,9 @@ namespace BossMod.NIN
 
             if (!state.TargetingEnemy)
                 return AID.None;
+
+            if (state.TargetMugLeft > state.GCD && state.KamaitachiLeft > state.GCD)
+                return AID.PhantomKamaitachi;
 
             if (state.TenChiJin.Left > 0)
                 return state.TenChiJin.Combo switch
@@ -109,9 +113,6 @@ namespace BossMod.NIN
 
             if (state.KassatsuLeft == 0 && DoNinjutsu(state, AID.Raiton, out act))
                 return act;
-
-            if (state.TargetMugLeft > state.GCD && state.KamaitachiLeft > state.GCD)
-                return AID.PhantomKamaitachi;
 
             if (state.ComboLastMove == AID.GustSlash)
                 return AID.AeolianEdge;
@@ -213,7 +214,7 @@ namespace BossMod.NIN
                 return true;
             }
 
-            if (Array.IndexOf(End, combo) != -1)
+            if (End.Contains(combo))
             {
                 act = ninjutsu;
                 return true;
@@ -222,7 +223,6 @@ namespace BossMod.NIN
             var comboAction = Continue.FirstOrDefault(x => x.Item1 == state.Mudra.Combo).Item2;
             if (comboAction == AID.None)
             {
-                Service.Log($"failed ninjutsu {ninjutsu}");
                 if (state.Mudra.Combo == 13)
                     act = AID.Hyoton;
                 else if (state.Mudra.Combo == 6)
@@ -236,7 +236,7 @@ namespace BossMod.NIN
             return true;
         }
 
-        private static (AID Start, (uint, AID)[] Continue, uint[] End) GetComboStates(AID ninjutsu)
+        private static (AID Start, (int, AID)[] Continue, int[] End) GetComboStates(AID ninjutsu)
         {
             return ninjutsu switch
             {

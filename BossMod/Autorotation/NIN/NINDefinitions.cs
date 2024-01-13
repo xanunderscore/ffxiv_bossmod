@@ -247,20 +247,22 @@ namespace BossMod.NIN
         {
             SupportedActions = CommonDefinitions.CommonActionData(CommonDefinitions.IDPotionDex);
             SupportedActions.GCD(AID.SpinningEdge, 3);
-            SupportedActions.OGCD(AID.ShadeShift, 0, CDGroup.ShadeShift, 120.0f);
+            SupportedActions.OGCD(AID.ShadeShift, 0, CDGroup.ShadeShift, 120.0f).EffectDuration =
+                20;
             SupportedActions.GCD(AID.GustSlash, 3);
             SupportedActions.OGCD(AID.SecondWind, 0, CDGroup.SecondWind, 120.0f);
             SupportedActions.OGCD(AID.Hide, 0, CDGroup.Hide, 20.0f);
             SupportedActions.OGCD(AID.LegSweep, 3, CDGroup.LegSweep, 40.0f);
-            SupportedActions.OGCD(AID.Bloodbath, 0, CDGroup.Bloodbath, 90.0f);
+            SupportedActions.OGCD(AID.Bloodbath, 0, CDGroup.Bloodbath, 90.0f).EffectDuration = 20;
             SupportedActions.GCD(AID.ThrowingDagger, 20);
-            SupportedActions.OGCD(AID.Mug, 3, CDGroup.Mug, 120.0f);
-            SupportedActions.OGCD(AID.TrickAttack, 3, CDGroup.TrickAttack, 60.0f);
-            SupportedActions.OGCD(AID.Feint, 10, CDGroup.Feint, 90.0f);
+            SupportedActions.OGCD(AID.Mug, 3, CDGroup.Mug, 120.0f).EffectDuration = 20;
+            SupportedActions.OGCD(AID.TrickAttack, 3, CDGroup.TrickAttack, 60.0f).EffectDuration =
+                15;
+            SupportedActions.OGCD(AID.Feint, 10, CDGroup.Feint, 90.0f).EffectDuration = 10;
             SupportedActions.GCD(AID.AeolianEdge, 3);
             SupportedActions.GCD(AID.Ninjutsu, 0);
             SupportedActions.GCD(AID.RabbitMedium, 0);
-            SupportedActions.OGCD(AID.ArmsLength, 0, CDGroup.ArmsLength, 120.0f);
+            SupportedActions.OGCD(AID.ArmsLength, 0, CDGroup.ArmsLength, 120.0f).EffectDuration = 6;
             SupportedActions.GCD(AID.DeathBlossom, 0);
             SupportedActions.OGCD(AID.Assassinate, 3, CDGroup.Assassinate, 60.0f);
             SupportedActions.OGCDWithCharges(AID.Shukuchi, 20, CDGroup.Shukuchi, 60.0f, 2, 0.800f);
@@ -296,17 +298,19 @@ namespace BossMod.NIN
             SupportedActions.GCD(AID.TCJHuton, 0);
             SupportedActions.GCD(AID.TCJSuiton, 20);
 
-            SupportedActions.OGCDWithCharges(AID.TrueNorth, 0, CDGroup.TrueNorth, 45.0f, 2);
-            SupportedActions.OGCD(AID.Kassatsu, 0, CDGroup.Kassatsu, 60.0f);
+            SupportedActions
+                .OGCDWithCharges(AID.TrueNorth, 0, CDGroup.TrueNorth, 45.0f, 2)
+                .EffectDuration = 10;
+            SupportedActions.OGCD(AID.Kassatsu, 0, CDGroup.Kassatsu, 60.0f).EffectDuration = 15;
             SupportedActions.GCD(AID.HakkeMujinsatsu, 0);
             SupportedActions.GCD(AID.ArmorCrush, 3);
             SupportedActions.OGCD(AID.DreamWithinADream, 3, CDGroup.DreamWithinADream, 60.0f);
             SupportedActions.GCD(AID.Huraijin, 3);
             SupportedActions.OGCD(AID.HellfrogMedium, 25, CDGroup.HellfrogMedium, 1.0f);
             SupportedActions.OGCD(AID.Bhavacakra, 3, CDGroup.HellfrogMedium, 1.0f);
-            SupportedActions.OGCD(AID.TenChiJin, 0, CDGroup.TenChiJin, 120.0f);
-            SupportedActions.OGCD(AID.Meisui, 0, CDGroup.Meisui, 120.0f);
-            SupportedActions.OGCD(AID.Bunshin, 0, CDGroup.Bunshin, 90.0f);
+            SupportedActions.OGCD(AID.TenChiJin, 0, CDGroup.TenChiJin, 120.0f).EffectDuration = 6;
+            SupportedActions.OGCD(AID.Meisui, 0, CDGroup.Meisui, 120.0f).EffectDuration = 30;
+            SupportedActions.OGCD(AID.Bunshin, 0, CDGroup.Bunshin, 90.0f).EffectDuration = 30;
             SupportedActions.GCD(AID.PhantomKamaitachi, 20);
             SupportedActions.GCD(AID.ForkedRaiju, 20);
             SupportedActions.GCD(AID.FleetingRaiju, 3);
