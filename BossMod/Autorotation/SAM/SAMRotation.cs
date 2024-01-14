@@ -239,7 +239,7 @@ namespace BossMod.SAM
                 return k;
 
             if (
-                state.OgiNamikiriLeft > 0
+                state.OgiNamikiriLeft > state.GCD
                 && state.HasCombatBuffs
                 && canCast
                 && !ShouldRefreshHiganbana(state, strategy)
@@ -330,10 +330,7 @@ namespace BossMod.SAM
             Strategy strategy
         )
         {
-            if (
-                !state.HasMoonSen && !state.HasFlowerSen
-                || (state.SenCount == 1 && ShouldRefreshHiganbana(state, strategy))
-            )
+            if (state.SenCount == 1 && state.HasIceSen)
             {
                 if (state.TrueNorthLeft > state.GCD)
                     return (AID.Gekko, false);
@@ -375,7 +372,10 @@ namespace BossMod.SAM
                 return new();
             }
 
-            if (state.MeikyoLeft == 0 && state.CanWeave(state.NextMeikyoCharge, 0.6f, deadline))
+            if (
+                state.MeikyoLeft < state.AnimationLock
+                && state.CanWeave(state.NextMeikyoCharge, 0.6f, deadline)
+            )
             {
                 if (strategy.MeikyoStrategy == MeikyoUse.Force && !state.InCombo)
                     return ActionID.MakeSpell(AID.MeikyoShisui);
@@ -430,7 +430,7 @@ namespace BossMod.SAM
 
                 if (
                     CanUseKenki(state, strategy, 10)
-                    && state.RaidBuffsLeft > 0
+                    && state.RaidBuffsLeft > state.AnimationLock
                     && state.CanWeave(CDGroup.HissatsuGyoten, 0.6f, deadline)
                     && (state.CD(CDGroup.HissatsuGuren) > state.GCDTime || state.Kenki >= 35)
                     && state.RangeToTarget <= 3
