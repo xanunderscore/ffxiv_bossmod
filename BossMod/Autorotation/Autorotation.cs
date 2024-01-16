@@ -121,6 +121,7 @@ namespace BossMod
                     Class.DRG => typeof(DRG.Actions),
                     Class.BRD => typeof(BRD.Actions),
                     Class.BLM => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(BLM.Actions) : null,
+                    Class.BLU => typeof(BLU.Actions),
                     Class.SMN => Service.ClientState.LocalPlayer?.Level <= 30 ? typeof(SMN.Actions) : null,
                     Class.WHM => typeof(WHM.Actions),
                     Class.SCH => Service.ClientState.LocalPlayer?.Level <= 60 ? typeof(SCH.Actions) : null,
