@@ -95,8 +95,9 @@ namespace BossMod.SGE
         {
             if (
                 _kardiaTarget != null
-                && _state.Unlocked(AID.Kardia)
                 && Player.FindStatus((uint)SID.Kardia) == null
+                && _state.Unlocked(AID.Kardia)
+                && _state.CanWeave(CDGroup.Kardia, 0.6f, deadline)
             )
                 return MakeResult(ActionID.MakeSpell(AID.Kardia), _kardiaTarget);
 
@@ -107,10 +108,20 @@ namespace BossMod.SGE
             )
                 return MakeResult(ActionID.MakeSpell(AID.Swiftcast), Player);
 
-            return MakeResult(
-                Rotation.GetNextBestOGCD(_state, _strategy, deadline),
-                Autorot.PrimaryTarget
-            );
+            var ogcd = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
+
+            if (
+                !ogcd
+                && _config.PreventGallOvercap
+                && (_state.Gall == 3 || (_state.Gall == 2 && _state.NextGall < 2.5))
+                && _state.CurMP <= 9000
+            )
+                return MakeResult(
+                    ActionID.MakeSpell(AID.Druochole),
+                    FindBestSTHealTarget(1).Target ?? Player
+                );
+
+            return MakeResult(ogcd, Autorot.PrimaryTarget);
         }
 
         private void UpdatePlayerState()
@@ -165,7 +176,7 @@ namespace BossMod.SGE
             if (!_config.AutoRaise)
                 return null;
 
-            var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true);
+            var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true);
             // if all tanks dead, raise tank, otherwise h -> t -> d
             var tanks = party.Where(x => x.Class.GetRole() == Role.Tank);
             if (tanks.Any() && tanks.All(x => x.IsDead))
@@ -190,7 +201,7 @@ namespace BossMod.SGE
             if (!_config.AutoKardia)
                 return null;
 
-            var party = Autorot.WorldState.Party.WithoutSlot();
+            var party = Autorot.WorldState.Party.WithoutSlot(partyOnly: true);
 
             if (party.Count(x => x.Type == ActorType.Player) == 1)
                 return Player;

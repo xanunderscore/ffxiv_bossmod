@@ -83,6 +83,9 @@ namespace BossMod.SGE
             if (!state.TargetingEnemy)
                 return state.Eukrasia ? AID.None : AID.Eukrasia;
 
+            if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
+                return AID.None;
+
             if (RefreshDOT(state, state.TargetDotLeft))
                 return state.Eukrasia ? state.BestDosis : AID.Eukrasia;
 

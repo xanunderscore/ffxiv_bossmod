@@ -21,5 +21,8 @@
 
         [PropertyDisplay("Automatically choose Kardia target")]
         public bool AutoKardia = true;
+
+        [PropertyDisplay("Automatically use Druochole (ST heal) to prevent Addersgall overcap")]
+        public bool PreventGallOvercap = true;
     }
 }
