@@ -189,6 +189,11 @@ namespace BossMod
             return (WHM.SID)sid is WHM.SID.Medica2 or WHM.SID.Asylum or WHM.SID.Regen;
         }
 
+        protected static bool CanBeRaised(Actor actor)
+        {
+            return actor.IsDead && actor.FindStatus(148) == null;
+        }
+
         protected static BitMask CastedHealTargets(WorldState ws, Actor a)
         {
             BitMask res = new();
