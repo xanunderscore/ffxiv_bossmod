@@ -63,6 +63,8 @@ namespace BossMod.SGE
         {
             public int NumDyskrasiaTargets; // 5y around self
             public int NumToxikonTargets; // 5y around target
+            public int NumPhlegmaTargets; // 5y around target
+            public int NumPneumaTargets; // 25y/4y rect
 
             public override string ToString()
             {
@@ -77,8 +79,15 @@ namespace BossMod.SGE
 
         public static AID GetNextBestGCD(State state, Strategy strategy)
         {
-            if (strategy.NumDyskrasiaTargets > 1)
+            if (strategy.NumDyskrasiaTargets > 1 && state.Unlocked(AID.Dyskrasia))
                 return state.BestDyskrasia;
+
+            if (
+                strategy.NumPneumaTargets >= 3
+                && state.Unlocked(AID.Pneuma)
+                && state.CD(CDGroup.Pneuma) <= state.GCD
+            )
+                return AID.Pneuma;
 
             if (!state.TargetingEnemy)
                 return state.Eukrasia ? AID.None : AID.Eukrasia;
