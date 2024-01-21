@@ -3,6 +3,17 @@
     [ConfigDisplay(Parent = typeof(AutorotationConfig))]
     class SGEConfig : ConfigNode
     {
+        public enum RaiseBehavior {
+            [PropertyDisplay("Unchanged")]
+            None = 0,
+            [PropertyDisplay("Smart target (mouseover target, otherwise most valuable dead party member)")]
+            SmartManual = 1,
+            [PropertyDisplay("Automatic")]
+            Auto = 2,
+            [PropertyDisplay("Automatic, allowing slowcast")]
+            AutoSlow = 3
+        }
+
         [PropertyDisplay("Execute optimal damage rotation on Dosis (ST) or Dyskrasia (AOE)")]
         public bool FullRotation = true;
 
@@ -16,8 +27,8 @@
         [PropertyDisplay("Automatic Esuna")]
         public bool AutoEsuna = true;
 
-        [PropertyDisplay("Automatic raise")]
-        public bool AutoRaise = false;
+        [PropertyDisplay("Raise behavior")]
+        public RaiseBehavior AutoRaise = RaiseBehavior.None;
 
         [PropertyDisplay("Automatically choose Kardia target")]
         public bool AutoKardia = true;

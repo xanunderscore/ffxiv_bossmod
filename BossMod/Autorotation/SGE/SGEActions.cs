@@ -35,7 +35,7 @@ namespace BossMod.SGE
 
         public override CommonRotation.Strategy GetStrategy() => _strategy;
 
-        private Actor? _raiseTarget;
+        private Actor? _autoRaiseTarget;
         private Actor? _kardiaTarget;
 
         protected override void UpdateInternalState(int autoAction)
@@ -77,12 +77,21 @@ namespace BossMod.SGE
                     return MakeResult(AID.Esuna, esunaTarget);
             }
 
-            if (
-                _raiseTarget != null
-                && _state.SwiftcastLeft > _state.GCD
-                && _state.Unlocked(AID.Egeiro)
-            )
-                return MakeResult(AID.Egeiro, _raiseTarget);
+            if (_autoRaiseTarget != null)
+            {
+                if (
+                    _config.AutoRaise == SGEConfig.RaiseBehavior.Auto
+                    && _state.SwiftcastLeft > _state.GCD
+                    && _state.Unlocked(AID.Egeiro)
+                )
+                    return MakeResult(AID.Egeiro, _autoRaiseTarget);
+
+                if (
+                    _config.AutoRaise == SGEConfig.RaiseBehavior.AutoSlow
+                    && _state.Unlocked(AID.Egeiro)
+                )
+                    return MakeResult(AID.Egeiro, _autoRaiseTarget);
+            }
 
             return MakeResult(Rotation.GetNextBestGCD(_state, _strategy), Autorot.PrimaryTarget);
         }
@@ -105,14 +114,14 @@ namespace BossMod.SGE
         {
             if (
                 _kardiaTarget != null
-                && Player.FindStatus((uint)SID.Kardia) == null
                 && _state.Unlocked(AID.Kardia)
+                && StatusDetails(_kardiaTarget, (uint)SID.Kardia, Player.InstanceID).Left == 0
                 && _state.CanWeave(CDGroup.Kardia, 0.6f, deadline)
             )
                 return MakeResult(ActionID.MakeSpell(AID.Kardia), _kardiaTarget);
 
             if (
-                _raiseTarget != null
+                _autoRaiseTarget != null
                 && _state.SwiftcastLeft == 0
                 && _state.CanWeave(CDGroup.Swiftcast, 0.6f, deadline)
             )
@@ -151,7 +160,11 @@ namespace BossMod.SGE
                 Player.InstanceID
             ).Left;
 
-            _raiseTarget = _config.AutoRaise ? FindRaiseTarget() : null;
+            _autoRaiseTarget = _config.AutoRaise
+                is SGEConfig.RaiseBehavior.Auto
+                    or SGEConfig.RaiseBehavior.AutoSlow
+                ? FindRaiseTarget()
+                : null;
             _kardiaTarget = _config.AutoKardia ? FindKardiaTarget() : null;
         }
 
@@ -179,13 +192,17 @@ namespace BossMod.SGE
             SupportedSpell(AID.Icarus).TransformTarget = _config.MouseoverIcarus
                 ? (act) => Autorot.SecondaryTarget ?? act
                 : null;
+
+            SupportedSpell(AID.Egeiro).TransformTarget =
+                _config.AutoRaise == SGEConfig.RaiseBehavior.SmartManual
+                    ? ((act) => Autorot.SecondaryTarget ?? FindRaiseTarget())
+                    : _config.MouseoverFriendly
+                        ? SmartTargetFriendly
+                        : null;
         }
 
         private Actor? FindRaiseTarget()
         {
-            if (!_config.AutoRaise)
-                return null;
-
             var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true);
             // if all tanks dead, raise tank, otherwise h -> t -> d
             var tanks = party.Where(x => x.Class.GetRole() == Role.Tank);

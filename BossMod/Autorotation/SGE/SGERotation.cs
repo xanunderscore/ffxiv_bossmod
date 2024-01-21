@@ -102,6 +102,7 @@ namespace BossMod.SGE
                 state.RangeToTarget <= 6
                 && state.CD(state.PhlegmaCD) <= 40
                 && ShouldUseBurst(state, strategy)
+                && strategy.NumPhlegmaTargets > 0
             )
                 return state.BestPhlegma;
 
