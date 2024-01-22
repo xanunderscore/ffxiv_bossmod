@@ -203,14 +203,14 @@ namespace BossMod.SGE
 
         private Actor? FindRaiseTarget()
         {
-            var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true);
+            var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true).Where(x => RangeToTarget(x) <= 30);
             // if all tanks dead, raise tank, otherwise h -> t -> d
             var tanks = party.Where(x => x.Class.GetRole() == Role.Tank);
-            if (tanks.Any() && tanks.All(x => x.IsDead))
+            if (tanks.Any() && tanks.All(CanBeRaised))
                 return tanks.First();
 
             return party
-                .Where(x => CanBeRaised(x) && RangeToTarget(x) <= 30)
+                .Where(CanBeRaised)
                 .MaxBy(
                     x =>
                         x.Class.GetRole() == Role.Healer
