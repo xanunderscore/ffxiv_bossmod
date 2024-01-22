@@ -18,13 +18,11 @@ namespace BossMod.SGE
 
             public AID BestDosis =>
                 Eukrasia
-                    ? FindUnlocked(
-                        [AID.EukrasianDosisIII, AID.EukrasianDosisII, AID.EukrasianDosis]
-                    )
-                    : FindUnlocked([AID.DosisIII, AID.DosisII, AID.Dosis]);
-            public AID BestPhlegma => FindUnlocked([AID.PhlegmaIII, AID.PhlegmaII, AID.Phlegma]);
-            public AID BestDyskrasia => FindUnlocked([AID.DyskrasiaII, AID.Dyskrasia]);
-            public AID BestToxikon => FindUnlocked([AID.ToxikonII, AID.Toxikon]);
+                    ? FindUnlocked(AID.EukrasianDosisIII, AID.EukrasianDosisII, AID.EukrasianDosis)
+                    : FindUnlocked(AID.DosisIII, AID.DosisII, AID.Dosis);
+            public AID BestPhlegma => FindUnlocked(AID.PhlegmaIII, AID.PhlegmaII, AID.Phlegma);
+            public AID BestDyskrasia => FindUnlocked(AID.DyskrasiaII, AID.Dyskrasia);
+            public AID BestToxikon => FindUnlocked(AID.ToxikonII, AID.Toxikon);
 
             public SID ExpectedEudosis =>
                 Unlocked(AID.EukrasianDosisIII)
@@ -47,9 +45,10 @@ namespace BossMod.SGE
 
             public bool Unlocked(TraitID tid) => Definitions.Unlocked(tid, Level, UnlockProgress);
 
-            private AID FindUnlocked(AID[] actions)
+            private AID FindUnlocked(params AID[] actions)
             {
-                return actions.FirstOrDefault(x => Unlocked(x));
+                var act = actions.FirstOrDefault(Unlocked);
+                return act == AID.None ? actions.Last() : act;
             }
 
             public override string ToString()
@@ -79,8 +78,17 @@ namespace BossMod.SGE
 
         public static AID GetNextBestGCD(State state, Strategy strategy)
         {
-            if (strategy.NumDyskrasiaTargets > 1 && state.Unlocked(AID.Dyskrasia))
+            var canCast = CanCast(state, strategy, 1.5f);
+
+            if (strategy.NumDyskrasiaTargets > 1 && state.Unlocked(state.BestDyskrasia))
                 return state.BestDyskrasia;
+
+            if (
+                !canCast
+                && state.Sting > 0
+                && strategy.NumToxikonTargets > 0
+            )
+                return state.BestToxikon;
 
             if (
                 strategy.NumPneumaTargets >= 3
@@ -126,6 +134,7 @@ namespace BossMod.SGE
             if (
                 state.Unlocked(AID.Rhizomata)
                 && state.Gall < 2
+                && state.NextGall > 10
                 && state.CanWeave(CDGroup.Rhizomata, 0.6f, deadline)
             )
                 return ActionID.MakeSpell(AID.Rhizomata);
