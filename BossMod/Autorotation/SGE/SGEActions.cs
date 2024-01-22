@@ -115,7 +115,7 @@ namespace BossMod.SGE
             if (
                 _kardiaTarget != null
                 && _state.Unlocked(AID.Kardia)
-                && StatusDetails(_kardiaTarget, (uint)SID.Kardia, Player.InstanceID).Left == 0
+                && StatusDetails(_kardiaTarget, (uint)SID.Kardion, Player.InstanceID).Left == 0
                 && _state.CanWeave(CDGroup.Kardia, 0.6f, deadline)
             )
                 return MakeResult(ActionID.MakeSpell(AID.Kardia), _kardiaTarget);
