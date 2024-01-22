@@ -165,7 +165,16 @@ namespace BossMod.SAM
 
             public OffensiveAbilityUse TrueNorthUse;
 
-            public bool UseAOERotation;
+            // fuga: 8y/120deg cone
+            // fuko: 5y circle
+            public int NumFufuTargets;
+
+            // 5y circle
+            // hissatsu kyuten, shoha 2, combo AOE GCDs at all levels
+            public int NumAOETargets;
+            public int NumTenkaTargets; // 8y circle
+            public int NumOgiTargets; // 8y/120deg cone
+            public int NumGurenTargets; // 10y/4y rect
 
             public void ApplyStrategyOverrides(uint[] overrides)
             {
@@ -244,6 +253,7 @@ namespace BossMod.SAM
                 && state.HasCombatBuffs
                 && canCast
                 && !ShouldRefreshHiganbana(state, strategy)
+                && strategy.NumOgiTargets > 0
                 && state.SenCount == 0
             )
                 return AID.OgiNamikiri;
@@ -265,7 +275,7 @@ namespace BossMod.SAM
                     return AID.Higanbana;
 
                 if (
-                    strategy.UseAOERotation
+                    strategy.NumTenkaTargets > 1
                     && state.SenCount == 2
                     && state.Unlocked(AID.TenkaGoken)
                 )
@@ -278,7 +288,7 @@ namespace BossMod.SAM
 
             if (state.MeikyoLeft > state.GCD)
             {
-                if (strategy.UseAOERotation)
+                if (strategy.NumAOETargets > 2)
                 {
                     if (!state.HasMoonSen)
                         return AID.Mangetsu;
@@ -294,7 +304,7 @@ namespace BossMod.SAM
             if (state.ComboLastMove == AID.Shifu && state.Unlocked(AID.Kasha))
                 return AID.Kasha;
 
-            if (state.ComboLastMove == state.AOEStarter)
+            if (state.ComboLastMove == state.AOEStarter && strategy.NumAOETargets > 2)
             {
                 if (state.Unlocked(AID.Oka) && state.FukaLeft <= state.FugetsuLeft)
                     return AID.Oka;
@@ -309,15 +319,14 @@ namespace BossMod.SAM
                     return aid;
             }
 
-            return strategy.UseAOERotation ? state.AOEStarter : AID.Hakaze;
+            return strategy.NumFufuTargets > 2 && state.Unlocked(AID.Fuga)
+                ? state.AOEStarter
+                : AID.Hakaze;
         }
 
         // range checked at callsite
         private static bool CanEnpi(State state, Strategy strategy)
         {
-            if (strategy.UseAOERotation)
-                return false;
-
             return strategy.EnpiStrategy switch
             {
                 EnpiUse.Automatic => state.Unlocked(AID.Enpi) && state.EnhancedEnpiLeft > state.GCD,
@@ -391,13 +400,14 @@ namespace BossMod.SAM
             )
                 return ActionID.MakeSpell(AID.TrueNorth);
 
-            if (!state.TargetingEnemy)
-                return default;
-
             if (state.MeikyoLeft == 0 && state.LastTsubame < state.GCDTime * 3)
                 return ActionID.MakeSpell(AID.MeikyoShisui);
 
-            if (state.RangeToTarget > 3 && strategy.DashStrategy == DashUse.UseOutsideMelee)
+            if (
+                state.RangeToTarget > 3
+                && state.RangeToTarget <= 20
+                && strategy.DashStrategy == DashUse.UseOutsideMelee
+            )
                 return ActionID.MakeSpell(AID.HissatsuGyoten);
 
             if (
@@ -411,7 +421,7 @@ namespace BossMod.SAM
             )
                 return ActionID.MakeSpell(AID.Hagakure);
 
-            if (state.HasCombatBuffs)
+            if (state.HasCombatBuffs && state.TargetingEnemy)
             {
                 if (state.CanWeave(CDGroup.Ikishoten, 0.6f, deadline))
                     return ActionID.MakeSpell(AID.Ikishoten);
@@ -423,7 +433,7 @@ namespace BossMod.SAM
                     && state.CanWeave(CDGroup.HissatsuGuren, 0.6f, deadline)
                 )
                 {
-                    if (strategy.UseAOERotation || !state.Unlocked(AID.HissatsuSenei))
+                    if (strategy.NumGurenTargets > 1 || !state.Unlocked(AID.HissatsuSenei))
                         return ActionID.MakeSpell(AID.HissatsuGuren);
 
                     return ActionID.MakeSpell(AID.HissatsuSenei);
@@ -445,10 +455,22 @@ namespace BossMod.SAM
                 && state.CanWeave(CDGroup.HissatsuShinten, 0.6f, deadline)
                 && (state.CD(CDGroup.HissatsuGuren) > state.GCDTime || state.Kenki >= 50)
             )
-                return ActionID.MakeSpell(AID.HissatsuShinten);
+            {
+                if (strategy.NumAOETargets > 2 && state.Unlocked(AID.HissatsuKyuten))
+                    return ActionID.MakeSpell(AID.HissatsuKyuten);
+
+                if (state.TargetingEnemy)
+                    return ActionID.MakeSpell(AID.HissatsuShinten);
+            }
 
             if (state.MeditationStacks == 3 && state.CanWeave(deadline))
-                return ActionID.MakeSpell(AID.Shoha);
+            {
+                if (strategy.NumAOETargets > 2 && state.Unlocked(AID.Shoha2))
+                    return ActionID.MakeSpell(AID.Shoha2);
+
+                if (state.TargetingEnemy)
+                    return ActionID.MakeSpell(AID.Shoha);
+            }
 
             return new();
         }
@@ -480,7 +502,7 @@ namespace BossMod.SAM
             uint gcdsInAdvance = 0
         )
         {
-            if (strategy.HiganbanaStrategy == HiganbanaUse.Never || !state.HasCombatBuffs)
+            if (strategy.HiganbanaStrategy == HiganbanaUse.Never || !state.HasCombatBuffs || strategy.NumAOETargets > 2)
                 return false;
 
             // force use to get shoha even if the target is dying, dot overwrite doesn't matter
@@ -550,7 +572,7 @@ namespace BossMod.SAM
 
         public static (Positional, bool) GetNextPositional(State state, Strategy strategy)
         {
-            if (strategy.UseAOERotation)
+            if (strategy.NumAOETargets > 2)
                 return default;
 
             if (state.MeikyoLeft > state.GCD)

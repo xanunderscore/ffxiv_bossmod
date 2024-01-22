@@ -30,14 +30,6 @@ namespace BossMod.SAM
 
         public override CommonRotation.Strategy GetStrategy() => _strategy;
 
-        public override Targeting SelectBetterTarget(AIHints.Enemy initial)
-        {
-            // TODO
-            // - fuga and ogi namikiri - range 8, angle 120deg
-            // - hissatsu: guren - range 10, width (XAxisModifier) 4
-            return new(initial);
-        }
-
         private void OnConfigModified(object? sender, EventArgs args)
         {
             SupportedSpell(AID.Hakaze).PlaceholderForAuto = _config.FullRotation
@@ -55,7 +47,7 @@ namespace BossMod.SAM
 
         protected override NextAction CalculateAutomaticGCD()
         {
-            if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
+            if (AutoAction < AutoActionAIFight)
                 return new();
 
             var aid = Rotation.GetNextBestGCD(_state, _strategy);
@@ -102,13 +94,25 @@ namespace BossMod.SAM
                     .Bossmods.ActiveModule?.PlanExecution
                     ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
             );
-            _strategy.UseAOERotation = autoAction switch
-            {
-                AutoActionST => false,
-                AutoActionAOE => true,
-                AutoActionAIFight => false, // TODO: detect
-                _ => false,
-            };
+
+            _strategy.NumAOETargets =
+                autoAction == AutoActionST
+                    ? 0
+                    : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
+            _strategy.NumTenkaTargets =
+                autoAction == AutoActionST
+                    ? 0
+                    : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 8);
+            _strategy.NumOgiTargets = NumConeTargets(Autorot.PrimaryTarget);
+            _strategy.NumGurenTargets = NumGurenTargets(Autorot.PrimaryTarget);
+
+            if (autoAction == AutoActionST)
+                _strategy.NumFufuTargets = 0;
+            else if (_state.Unlocked(AID.Fuko))
+                _strategy.NumFufuTargets = _strategy.NumAOETargets;
+            else
+                _strategy.NumFufuTargets = NumConeTargets(Autorot.PrimaryTarget);
+
             FillStrategyPositionals(
                 _strategy,
                 Rotation.GetNextPositional(_state, _strategy),
@@ -144,10 +148,9 @@ namespace BossMod.SAM
                 Player.InstanceID
             ).Left;
 
-            _state.TargetHiganbanaLeft =
-                (_strategy.ForbidDOTs || _strategy.UseAOERotation)
-                    ? float.MaxValue
-                    : StatusDetails(Autorot.PrimaryTarget, SID.Higanbana, Player.InstanceID).Left;
+            _state.TargetHiganbanaLeft = _strategy.ForbidDOTs
+                ? float.MaxValue
+                : StatusDetails(Autorot.PrimaryTarget, SID.Higanbana, Player.InstanceID).Left;
 
             _state.GCDTime = ActionManagerEx.Instance!.GCDTime();
             _state.LastTsubame =
@@ -156,6 +159,14 @@ namespace BossMod.SAM
                     : (float)(Autorot.WorldState.CurrentTime - _lastTsubame).TotalSeconds;
 
             _state.ClosestPositional = GetClosestPositional();
+        }
+
+        public override Targeting SelectBetterTarget(AIHints.Enemy initial)
+        {
+            // TODO
+            // - fuga and ogi namikiri - range 8, angle 120deg
+            // - hissatsu: guren - range 10, width (XAxisModifier) 4
+            return new(initial);
         }
 
         private Positional GetClosestPositional()
@@ -173,5 +184,25 @@ namespace BossMod.SAM
                 _ => Positional.Front
             };
         }
+
+        private int NumGurenTargets(Actor? primary) =>
+            primary == null
+                ? 0
+                : Autorot.Hints.NumPriorityTargetsInAOERect(
+                    Player.Position,
+                    (primary.Position - Player.Position).Normalized(),
+                    10,
+                    4
+                );
+
+        private int NumConeTargets(Actor? primary) =>
+            primary == null
+                ? 0
+                : Autorot.Hints.NumPriorityTargetsInAOECone(
+                    Player.Position,
+                    8,
+                    (primary.Position - Player.Position).Normalized(),
+                    60.Degrees()
+                );
     }
 }
