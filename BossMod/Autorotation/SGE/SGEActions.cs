@@ -77,19 +77,15 @@ namespace BossMod.SGE
                     return MakeResult(AID.Esuna, esunaTarget);
             }
 
-            if (_autoRaiseTarget != null)
+            if (_autoRaiseTarget != null && _state.Unlocked(AID.Egeiro))
             {
                 if (
                     _config.AutoRaise == SGEConfig.RaiseBehavior.Auto
                     && _state.SwiftcastLeft > _state.GCD
-                    && _state.Unlocked(AID.Egeiro)
                 )
                     return MakeResult(AID.Egeiro, _autoRaiseTarget);
 
-                if (
-                    _config.AutoRaise == SGEConfig.RaiseBehavior.AutoSlow
-                    && _state.Unlocked(AID.Egeiro)
-                )
+                if (_config.AutoRaise == SGEConfig.RaiseBehavior.AutoSlow)
                     return MakeResult(AID.Egeiro, _autoRaiseTarget);
             }
 
@@ -203,7 +199,9 @@ namespace BossMod.SGE
 
         private Actor? FindRaiseTarget()
         {
-            var party = Autorot.WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true).Where(x => RangeToTarget(x) <= 30);
+            var party = Autorot
+                .WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true)
+                .Where(x => RangeToTarget(x) <= 30);
             // if all tanks dead, raise tank, otherwise h -> t -> d
             var tanks = party.Where(x => x.Class.GetRole() == Role.Tank);
             if (tanks.Any() && tanks.All(CanBeRaised))
