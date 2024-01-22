@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.SAM
@@ -82,6 +83,15 @@ namespace BossMod.SAM
                     Player,
                     Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f
                 );
+            if (_state.Unlocked(AID.MeikyoShisui))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.MeikyoShisui),
+                    Player,
+                    !_state.HasCombatBuffs
+                        && _strategy.CombatTimer > 0
+                        && _strategy.CombatTimer < 5
+                        && _state.MeikyoLeft == 0
+                );
             // TODO: true north...
         }
 
@@ -163,10 +173,45 @@ namespace BossMod.SAM
 
         public override Targeting SelectBetterTarget(AIHints.Enemy initial)
         {
-            // TODO
-            // - fuga and ogi namikiri - range 8, angle 120deg
-            // - hissatsu: guren - range 10, width (XAxisModifier) 4
-            return new(initial);
+            if (Rotation.ShouldUseGuren(_state, _strategy))
+            {
+                var bestGuren = initial;
+                var hit = NumGurenTargets(bestGuren.Actor);
+
+                foreach (
+                    var enemy in Autorot.Hints.PriorityTargets.Where(
+                        e => e != initial && e.Actor.Position.InCircle(Player.Position, 10)
+                    )
+                )
+                {
+                    var newHit = NumGurenTargets(enemy.Actor);
+                    if (newHit > hit)
+                        bestGuren = enemy;
+                }
+
+                return new(initial, 10);
+            }
+
+            if (_state.OgiNamikiriLeft > 0 || !_state.Unlocked(AID.Fuko))
+            {
+                var bestAOE = initial;
+                var hit = NumConeTargets(bestAOE.Actor);
+
+                foreach (
+                    var enemy in Autorot.Hints.PriorityTargets.Where(
+                        e => e != initial && e.Actor.Position.InCircle(Player.Position, 8)
+                    )
+                )
+                {
+                    var newHit = NumConeTargets(enemy.Actor);
+                    if (newHit > hit)
+                        bestAOE = enemy;
+                }
+
+                return new(bestAOE, 8);
+            }
+
+            return new(initial, 3, _strategy.NextPositionalImminent ? _strategy.NextPositional : Positional.Any);
         }
 
         private Positional GetClosestPositional()

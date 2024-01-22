@@ -250,13 +250,17 @@ namespace BossMod.SAM
 
             if (
                 state.OgiNamikiriLeft > 0
+                && strategy.NumOgiTargets > 0
                 && state.HasCombatBuffs
                 && canCast
-                && !ShouldRefreshHiganbana(state, strategy)
-                && strategy.NumOgiTargets > 0
-                && state.SenCount == 0
             )
-                return AID.OgiNamikiri;
+            {
+                if (!ShouldRefreshHiganbana(state, strategy) && state.SenCount == 0)
+                    return AID.OgiNamikiri;
+
+                if (strategy.NumOgiTargets >= 3)
+                    return AID.OgiNamikiri;
+            }
 
             // fallback 2: out of range for iaijutsu
             if (CanEnpi(state, strategy) && state.RangeToTarget > 6)
@@ -427,9 +431,7 @@ namespace BossMod.SAM
                     return ActionID.MakeSpell(AID.Ikishoten);
 
                 if (
-                    CanUseKenki(state, strategy)
-                    && state.SenCount == 0
-                    && state.Unlocked(AID.HissatsuGuren)
+                    ShouldUseGuren(state, strategy)
                     && state.CanWeave(CDGroup.HissatsuGuren, 0.6f, deadline)
                 )
                 {
@@ -502,7 +504,11 @@ namespace BossMod.SAM
             uint gcdsInAdvance = 0
         )
         {
-            if (strategy.HiganbanaStrategy == HiganbanaUse.Never || !state.HasCombatBuffs || strategy.NumAOETargets > 2)
+            if (
+                strategy.HiganbanaStrategy == HiganbanaUse.Never
+                || !state.HasCombatBuffs
+                || strategy.NumAOETargets > 2
+            )
                 return false;
 
             // force use to get shoha even if the target is dying, dot overwrite doesn't matter
@@ -530,6 +536,13 @@ namespace BossMod.SAM
                 KenkiUse.ForceDash => state.Kenki - 10 >= minCost,
                 KenkiUse.Never or _ => false,
             };
+        }
+
+        public static bool ShouldUseGuren(State state, Strategy strategy)
+        {
+            return CanUseKenki(state, strategy)
+                && state.SenCount == 0
+                && state.Unlocked(AID.HissatsuGuren);
         }
 
         private static AID GetHakazeComboAction(State state)
