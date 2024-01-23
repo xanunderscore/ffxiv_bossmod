@@ -3,7 +3,7 @@
     [ConfigDisplay(Parent = typeof(AutorotationConfig))]
     class BLMConfig : ConfigNode
     {
-        [PropertyDisplay("Execute optimal rotations on Blizzard1 (ST) or Blizzard2 (AOE)")]
+        [PropertyDisplay("Execute optimal rotations on Fire/Fire IV (ST) or Fire II (AOE)")]
         public bool FullRotation = true;
 
         [PropertyDisplay("Use mouseover targeting for friendly spells")]
