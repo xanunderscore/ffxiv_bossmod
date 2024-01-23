@@ -52,7 +52,11 @@ namespace BossMod.BLM
                 )
                 {
                     var candidateAOECount = NumTargetsHitByAOE(candidate.Actor);
-                    if (candidateAOECount > bestAOECount)
+                    if (
+                        candidateAOECount > bestAOECount
+                        || candidateAOECount == bestAOECount
+                            && candidate.Actor.HP.Cur > bestTarget.Actor.HP.Cur
+                    )
                     {
                         bestTarget = candidate;
                         bestAOECount = candidateAOECount;
@@ -66,10 +70,10 @@ namespace BossMod.BLM
         {
             UpdatePlayerState();
             FillCommonStrategy(_strategy, CommonDefinitions.IDPotionInt);
-            _strategy.NumAOETargets =
-                Autorot.PrimaryTarget != null && autoAction != AutoActionST
-                    ? NumTargetsHitByAOE(Autorot.PrimaryTarget)
-                    : 0;
+            _strategy.UseAOERotation =
+                Autorot.PrimaryTarget != null
+                && autoAction != AutoActionST
+                && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
         }
 
         protected override void QueueAIActions()
@@ -85,6 +89,20 @@ namespace BossMod.BLM
                     ActionID.MakeSpell(AID.Manaward),
                     Player,
                     Player.HP.Cur < Player.HP.Max * 0.8f
+                );
+            if (_state.Unlocked(AID.UmbralSoul))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.UmbralSoul),
+                    Player,
+                    !Player.InCombat
+                        && _state.ElementalLevel < 0
+                        && (_state.UmbralHearts < 3 || _state.ElementalLeft < 3)
+                );
+            if (_state.Unlocked(AID.Sharpcast))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.Sharpcast),
+                    Player,
+                    !Player.InCombat && _state.SharpcastLeft == 0
                 );
         }
 
@@ -144,6 +162,7 @@ namespace BossMod.BLM
             _state.EnochianTimer = gauge.EnochianTimer * 0.001f;
             _state.UmbralHearts = gauge.UmbralHearts;
             _state.Polyglot = gauge.PolyglotStacks;
+            _state.Paradox = gauge.IsParadoxActive;
 
             _state.TriplecastLeft = StatusDetails(Player, SID.Triplecast, Player.InstanceID).Left;
             _state.SwiftcastLeft = StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
@@ -158,10 +177,14 @@ namespace BossMod.BLM
             _state.TargetThunderLeft = Math.Max(
                 StatusDetails(
                     Autorot.PrimaryTarget,
-                    _state.ExpectedThunder3,
+                    _state.ExpectedThunder1,
                     Player.InstanceID
                 ).Left,
-                StatusDetails(Autorot.PrimaryTarget, SID.Thunder2, Player.InstanceID).Left
+                StatusDetails(
+                    Autorot.PrimaryTarget,
+                    _state.ExpectedThunder2,
+                    Player.InstanceID
+                ).Left
             );
 
             _state.LeyLinesLeft = StatusDetails(Player, SID.LeyLines, Player.InstanceID).Left;

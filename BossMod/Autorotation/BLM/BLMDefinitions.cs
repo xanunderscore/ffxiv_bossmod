@@ -114,6 +114,7 @@ namespace BossMod.BLM
         Surecast = 160, // applied by Surecast to self, knockback immune
         Sleep = 3, // applied by Sleep to target
         Sharpcast = 867, // applied by Sharpcast to self
+        Thunder4 = 1210, // applied by Thunder4 to target, dot
         Triplecast = 1211, // applied by Triplecast to self
         LeyLines = 737, // applied by Ley Lines to self
         CircleOfPower = 738, // active while standing in Ley Lines
@@ -287,27 +288,6 @@ namespace BossMod.BLM
                 _ => BLM.Aspect.None
             };
 
-        public static float CastTime(this AID action) =>
-            action switch
-            {
-                AID.Flare => 4f,
-                AID.Blizzard3 or AID.Fire3 => 3.5f,
-                AID.Blizzard2
-                or AID.Fire2
-                or AID.HighBlizzard2
-                or AID.HighFire2
-                or AID.Despair
-                    => 3f,
-                AID.Fire4 or AID.Freeze => 2.8f,
-                AID.Blizzard1
-                or AID.Fire1
-                or AID.Thunder1
-                or AID.Thunder2
-                or AID.Thunder3
-                or AID.Blizzard4
-                or AID.Thunder4
-                    => 2.5f,
-                _ => 0f
-            };
+        public static float BaseCastTime(this AID action) => SupportedActions[ActionID.MakeSpell(action)].CastTime;
     }
 }
