@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.JobGauge.Types;
-using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace BossMod.BLM
 {
@@ -77,11 +75,18 @@ namespace BossMod.BLM
                 && _state.Unlocked(AID.Blizzard2)
                 && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
 
-            // if (autoAction == AutoActionFiller)
-            // {
-            //     _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
-            //     _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
-            // }
+            _strategy.ApplyStrategyOverrides(
+                Autorot
+                    .Bossmods.ActiveModule?.PlanExecution
+                    ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine)
+                    ?? new uint[0]
+            );
+
+            if (autoAction == AutoActionFiller)
+            {
+                _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+                _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+            }
         }
 
         protected override void QueueAIActions()

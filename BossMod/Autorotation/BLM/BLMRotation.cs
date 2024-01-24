@@ -110,9 +110,9 @@ namespace BossMod.BLM
                 if (
                     action == AID.Paradox && ElementalLevel < 0
                     || InstantCastLeft > GCD
-                    // todo: this is wrong if firestarter/thundercloud will expire *during* the next cast
                     || action == AID.Fire3 && FirestarterLeft > GCD
                     || action.Aspect() == BLM.Aspect.Thunder && ThundercloudLeft > GCD
+                    || action == AID.Foul && Unlocked(TraitID.EnhancedFoul)
                 )
                     return 0f;
 
@@ -133,6 +133,10 @@ namespace BossMod.BLM
             public float GetSlidecastTime(AID action) =>
                 MathF.Max(0f, GetCastTime(action) - 0.500f);
 
+            public float GetCastEnd(AID action) => GetCastTime(action) + GCD;
+
+            public float GetSlidecastEnd(AID action) => GetSlidecastEnd(action) + GCD;
+
             public override string ToString()
             {
                 return $"MP={CurMP} (tick={TimeToManaTick:f1}), RB={RaidBuffsLeft:f1}, E={EnochianTimer}, Elem={ElementalLevel}/{ElementalLeft:f1}, Thunder={TargetThunderLeft:f1}, TC={ThundercloudLeft:f1}, FS={FirestarterLeft:f1}, PotCD={PotionCD:f1}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
@@ -142,25 +146,31 @@ namespace BossMod.BLM
         // strategy configuration
         public class Strategy : CommonRotation.Strategy
         {
-            public enum TriplecastUse : uint
-            {
-                // forced clip in opener, otherwise use when inside leylines
-                Automatic = 0,
-            }
-
             public OffensiveAbilityUse TriplecastStrategy;
             public OffensiveAbilityUse LeylinesStrategy;
             public bool UseAOERotation;
+
+            public void ApplyStrategyOverrides(uint[] overrides)
+            {
+                if (overrides.Length >= 2)
+                {
+                    TriplecastStrategy = (OffensiveAbilityUse)overrides[0];
+                    LeylinesStrategy = (OffensiveAbilityUse)overrides[1];
+                }
+                else
+                {
+                    TriplecastStrategy = OffensiveAbilityUse.Automatic;
+                    LeylinesStrategy = OffensiveAbilityUse.Automatic;
+                }
+            }
         }
 
         private static bool CanCast(State state, Strategy strategy, float castTime, int mpCost)
         {
             var castEndIn = state.GCD + castTime;
 
-            if (mpCost > state.ExpectedMPAfter(castEndIn))
-                return false;
-
-            return strategy.ForceMovementIn >= castEndIn;
+            return strategy.ForceMovementIn >= castEndIn
+                && state.ExpectedMPAfter(castEndIn) >= mpCost;
         }
 
         private static bool CanCast(State state, Strategy strategy, AID action, int mpCost) =>
@@ -192,34 +202,33 @@ namespace BossMod.BLM
             if (!state.TargetingEnemy)
                 return AID.None;
 
-            // if fire timer will run out soon...
+            // first check if F4 is unlocked and fire timer is running out. all other fire spells refresh the timer
             if (
                 !strategy.UseAOERotation
                 && state.Unlocked(AID.Fire4)
                 && state.ElementalLevel == 3
-                && state.ElementalLeft < state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
+                && state.ElementalLeft
+                    < state.GCD + state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
             )
             {
-                // use despair now if we don't have enough mana for f1/paradox -> despair
+                // use despair now if f1 will leave us with too little mana. we check this first
+                // since despair has a longer cast time
                 if (
-                    state.Unlocked(AID.Despair)
-                    && state.CurMP >= 800
-                    && state.CurMP < state.GetAdjustedFireCost(800) + 800
-                    && state.ElementalLeft >= state.GetCastTime(AID.Despair)
+                    state.ElementalLeft >= state.GetCastEnd(AID.Despair)
+                    && CanCast(state, strategy, AID.Despair, 800)
+                    && state.CurMP - 800 < state.GetAdjustedFireCost(800)
                 )
                     return AID.Despair;
 
+                // otherwise use f1/paradox to refresh
                 if (
-                    state.CurMP >= state.GetAdjustedFireCost(800)
-                    && state.ElementalLeft >= state.GetCastTime(state.BestFire1)
+                    state.ElementalLeft >= state.GetCastEnd(state.BestFire1)
+                    && CanCast(state, strategy, state.BestFire1, state.GetAdjustedFireCost(800))
                 )
                     return state.BestFire1;
 
                 if (state.ElementalLeft > state.GCD && state.FirestarterLeft > state.GCD)
                     return AID.Fire3;
-
-                // can't avoid timer expiring due to forced movement etc, swap back to ice
-                return AID.Blizzard3;
             }
 
             // polyglot overcap
@@ -231,13 +240,9 @@ namespace BossMod.BLM
                     ? state.BestThunder2
                     : state.BestThunder1;
 
-            var damageGCD =
-                state.ElementalLevel > 0 ? GetFireGCD(state, strategy) : GetIceGCD(state, strategy);
-
-            if (damageGCD == AID.None && state.Polyglot > 0)
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
-
-            return damageGCD;
+            return state.ElementalLevel > 0
+                ? GetFireGCD(state, strategy)
+                : GetIceGCD(state, strategy);
         }
 
         public static AID GetFireGCD(State state, Strategy strategy)
@@ -258,7 +263,9 @@ namespace BossMod.BLM
                 if (state.UmbralHearts == 1 && canFlare)
                     return AID.Flare;
 
-                if (CanCast(state, strategy, state.BestFire2, state.GetAdjustedFireCost(1500) + 800))
+                if (
+                    CanCast(state, strategy, state.BestFire2, state.GetAdjustedFireCost(1500) + 800)
+                )
                     return state.BestFire2;
 
                 if (canFlare)
@@ -266,6 +273,12 @@ namespace BossMod.BLM
             }
             else
             {
+                if (
+                    state.ElementalLevel < 3
+                    && CanCast(state, strategy, AID.Fire3, state.GetAdjustedFireCost(2000))
+                )
+                    return AID.Fire3;
+
                 if (CanCast(state, strategy, AID.Fire4, state.GetAdjustedFireCost(800) + 800))
                     return AID.Fire4;
 
@@ -288,7 +301,8 @@ namespace BossMod.BLM
             // use instant spell for manafont weave
             if (
                 state.Polyglot > 0
-                && state.CanWeave(CDGroup.Manafont, 0.6f, state.GCD + state.SpellGCDTime)
+                && CanUseManafont(state, strategy, state.GCD + state.SpellGCDTime)
+                && state.Unlocked(TraitID.EnhancedFoul)
             )
                 return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
 
@@ -378,7 +392,7 @@ namespace BossMod.BLM
             if (
                 state.CurMP < 800
                 && state.ElementalLevel == 3
-                && state.CanWeave(CDGroup.Manafont, 0.6f, deadline)
+                && CanUseManafont(state, strategy, deadline)
             )
                 return ActionID.MakeSpell(AID.Manafont);
 
@@ -402,7 +416,11 @@ namespace BossMod.BLM
                 if (state.CanWeave(CDGroup.Swiftcast, 0.6f, deadline))
                     return ActionID.MakeSpell(AID.Swiftcast);
 
-                if (state.CanWeave(state.CD(CDGroup.Triplecast) - 60, 0.6f, deadline))
+                if (
+                    state.CanWeave(state.CD(CDGroup.Triplecast) - 60, 0.6f, deadline)
+                    && strategy.TriplecastStrategy
+                        != CommonRotation.Strategy.OffensiveAbilityUse.Delay
+                )
                     return ActionID.MakeSpell(AID.Triplecast);
             }
 
@@ -415,6 +433,14 @@ namespace BossMod.BLM
                 return ActionID.MakeSpell(AID.Sharpcast);
 
             return new();
+        }
+
+        private static bool CanUseManafont(State state, Strategy strategy, float deadline)
+        {
+            if (strategy.LeylinesStrategy == CommonRotation.Strategy.OffensiveAbilityUse.Delay)
+                return false;
+
+            return state.CanWeave(CDGroup.Manafont, 0.6f, deadline);
         }
     }
 }
