@@ -58,12 +58,7 @@ namespace BossMod.BLM
                 && _state.Unlocked(AID.Blizzard2)
                 && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
 
-            _strategy.ApplyStrategyOverrides(
-                Autorot
-                    .Bossmods.ActiveModule?.PlanExecution
-                    ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine)
-                    ?? new uint[0]
-            );
+            _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
 
             if (autoAction == AutoActionFiller)
             {
