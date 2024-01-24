@@ -43,24 +43,7 @@ namespace BossMod.BLM
             var bestTarget = initial;
             if (_state.Unlocked(AID.Blizzard2))
             {
-                var bestAOECount = NumTargetsHitByAOE(initial.Actor);
-                foreach (
-                    var candidate in Autorot.Hints.PriorityTargets.Where(
-                        e => e != initial && e.Actor.Position.InCircle(Player.Position, 25)
-                    )
-                )
-                {
-                    var candidateAOECount = NumTargetsHitByAOE(candidate.Actor);
-                    if (
-                        candidateAOECount > bestAOECount
-                        || candidateAOECount == bestAOECount
-                            && candidate.Actor.HP.Cur > bestTarget.Actor.HP.Cur
-                    )
-                    {
-                        bestTarget = candidate;
-                        bestAOECount = candidateAOECount;
-                    }
-                }
+                bestTarget = FindBetterTargetBy(initial, 25, e => NumTargetsHitByAOE(e.Actor)).Target;
             }
             return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
         }
