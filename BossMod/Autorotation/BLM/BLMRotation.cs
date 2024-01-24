@@ -146,9 +146,20 @@ namespace BossMod.BLM
         // strategy configuration
         public class Strategy : CommonRotation.Strategy
         {
+            public enum LeylinesUse : uint
+            {
+                // F3 -> (pull) -> T3 -> F4 -> F4 -> leylines
+                Automatic = 0,
+
+                [PropertyDisplay("Place before fight start")]
+                AutomaticEarly = 1
+            }
+
             public OffensiveAbilityUse TriplecastStrategy;
             public OffensiveAbilityUse LeylinesStrategy;
             public bool UseAOERotation;
+            public bool AutoRefresh;
+            public bool PermitScathe;
 
             public void ApplyStrategyOverrides(uint[] overrides)
             {
@@ -170,7 +181,7 @@ namespace BossMod.BLM
             var castEndIn = state.GCD + castTime;
 
             return strategy.ForceMovementIn > castEndIn
-                && strategy.FightEndIn > castEndIn
+                && (strategy.FightEndIn == 0 || strategy.FightEndIn > castEndIn)
                 && state.ExpectedMPAfter(castEndIn) >= mpCost;
         }
 
@@ -210,6 +221,8 @@ namespace BossMod.BLM
                 !state.TargetingEnemy
                 && state.ElementalLevel < 0
                 && (state.ElementalLeft < 5 || state.UmbralHearts < 3 || state.ElementalLevel > -3)
+                && state.Unlocked(AID.UmbralSoul)
+                && strategy.AutoRefresh
             )
                 return AID.UmbralSoul;
 
@@ -272,6 +285,7 @@ namespace BossMod.BLM
             // intentional gcd clip in opener
             if (
                 state.InstantCastLeft == 0
+                && strategy.CombatTimer < 60
                 && strategy.TriplecastStrategy != CommonRotation.Strategy.OffensiveAbilityUse.Delay
                 && state.Unlocked(AID.Triplecast)
                 && state.CD(CDGroup.Triplecast) == 0
@@ -305,6 +319,7 @@ namespace BossMod.BLM
                     return AID.Fire4;
 
                 // before F4 unlock, use firestarter proc for damage
+                // (after F4 unlock we save it for fast ice -> fire swap)
                 if (
                     !state.Unlocked(AID.Fire4)
                     && state.FirestarterLeft > state.GCD
@@ -318,6 +333,10 @@ namespace BossMod.BLM
                 // TODO: swiftcast flare is a dps gain on two targets
                 if (CanCast(state, strategy, AID.Despair, 800))
                     return AID.Despair;
+
+                // despair isn't unlocked
+                if (CanCast(state, strategy, AID.Fire1, state.GetAdjustedFireCost(800)))
+                    return AID.Fire1;
             }
 
             // use instant spell for manafont weave
@@ -329,8 +348,13 @@ namespace BossMod.BLM
                 return strategy.UseAOERotation ? AID.Foul : AID.Xenoglossy;
 
             // if fight ending, dump resources instead of switching to ice
-            if (strategy.FightEndIn < state.GetCastEnd(AID.Blizzard3) + state.SpellGCDTime) {
-                if (state.Polyglot > 0 && CanCast(state, strategy, state.BestPolySpell, 0))
+            // (assuming <800 MP left here, otherwise one of the earlier branches would have been taken)
+            if (
+                strategy.FightEndIn > 0
+                && strategy.FightEndIn < state.GetCastEnd(AID.Blizzard3) + state.SpellGCDTime
+            )
+            {
+                if (CanPoly(state, strategy, 1))
                     return state.BestPolySpell;
 
                 if (state.FirestarterLeft > state.GCD)
@@ -346,6 +370,9 @@ namespace BossMod.BLM
 
             if (CanCast(state, strategy, state.BestBlizzard1, 0))
                 return state.BestBlizzard1;
+
+            if (strategy.PermitScathe && CanCast(state, strategy, AID.Scathe, 800))
+                return AID.Scathe;
 
             return AID.None;
         }
@@ -384,9 +411,7 @@ namespace BossMod.BLM
                     return AID.Fire1;
             }
 
-            var canPoly = state.ElementalLevel < 0 && CanCast(state, strategy, AID.Foul, 0);
-
-            if (canPoly && state.Polyglot == 2)
+            if (state.ElementalLeft < 0 && CanPoly(state, strategy, 2))
                 return strategy.UseAOERotation ? AID.Foul : state.BestPolySpell;
 
             if (strategy.UseAOERotation)
@@ -394,7 +419,7 @@ namespace BossMod.BLM
                 if (CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800)))
                     return state.BestBlizzard2;
 
-                if (canPoly)
+                if (CanPoly(state, strategy, 1))
                     return AID.Foul;
             }
             else
@@ -409,12 +434,15 @@ namespace BossMod.BLM
                 if (state.Paradox)
                     return AID.Paradox;
 
-                if (canPoly)
+                if (CanPoly(state, strategy, 1))
                     return state.BestPolySpell;
 
                 if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
                     return AID.Blizzard1;
             }
+
+            if (strategy.PermitScathe && CanCast(state, strategy, AID.Scathe, 800))
+                return AID.Scathe;
 
             return AID.None;
         }
@@ -433,6 +461,7 @@ namespace BossMod.BLM
                 !state.TargetingEnemy
                 && state.ElementalLevel > 0
                 && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
+                && strategy.AutoRefresh
             )
                 return ActionID.MakeSpell(AID.Transpose);
 
@@ -475,6 +504,7 @@ namespace BossMod.BLM
             if (
                 state.ThundercloudLeft > 0
                 && state.SharpcastLeft < state.GCD
+                && state.Unlocked(AID.Sharpcast)
                 && state.CanWeave(state.CD(CDGroup.Sharpcast) - 30, 0.6f, deadline)
             )
                 return ActionID.MakeSpell(AID.Sharpcast);
@@ -489,5 +519,8 @@ namespace BossMod.BLM
 
             return state.CanWeave(CDGroup.Manafont, 0.6f, deadline);
         }
+
+        private static bool CanPoly(State state, Strategy strategy, int minStacks = 2) =>
+            state.Polyglot >= minStacks && CanCast(state, strategy, state.BestPolySpell, 0);
     }
 }

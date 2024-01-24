@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
+using System;
 using System.Linq;
-using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.BLM
 {
@@ -95,21 +95,18 @@ namespace BossMod.BLM
                 SimulateManualActionForAI(
                     ActionID.MakeSpell(AID.Transpose),
                     Player,
-                    !Player.InCombat && _state.ElementalLevel > 0 && _state.CurMP < 10000
+                    !Player.InCombat
+                        && (
+                            _state.ElementalLevel > 0 && _state.CurMP < 10000
+                            || _state.ElementalLevel < 0 && _state.CurMP == 10000
+                            || _state.ElementalLevel != 0 && _state.ElementalLeft < 3
+                        )
                 );
             if (_state.Unlocked(AID.Manaward))
                 SimulateManualActionForAI(
                     ActionID.MakeSpell(AID.Manaward),
                     Player,
                     Player.HP.Cur < Player.HP.Max * 0.8f
-                );
-            if (_state.Unlocked(AID.UmbralSoul))
-                SimulateManualActionForAI(
-                    ActionID.MakeSpell(AID.UmbralSoul),
-                    Player,
-                    !Player.InCombat
-                        && _state.ElementalLevel < 0
-                        && (_state.UmbralHearts < 3 || _state.ElementalLeft < 3)
                 );
             if (_state.Unlocked(AID.Sharpcast))
                 SimulateManualActionForAI(
@@ -124,6 +121,7 @@ namespace BossMod.BLM
             if (AutoAction < AutoActionAIFight)
                 return new();
             var aid = Rotation.GetNextBestGCD(_state, _strategy);
+
             return MakeResult(aid, Autorot.PrimaryTarget);
         }
 
@@ -185,7 +183,7 @@ namespace BossMod.BLM
                 SID.Thundercloud,
                 Player.InstanceID
             ).Left;
-            _state.FirestarterLeft = StatusDetails(Player, SID.Firestarter, Player.InstanceID).Left;
+            _state.FirestarterLeft = StatusDetails(Player, SID.Firestarter, Player.InstanceID, 0).Left;
 
             _state.TargetThunderLeft = Math.Max(
                 StatusDetails(
@@ -222,6 +220,9 @@ namespace BossMod.BLM
             SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash
                 ? (tar) => Autorot.SecondaryTarget ?? tar
                 : null;
+
+            _strategy.AutoRefresh = _config.AutoIceRefresh;
+            _strategy.PermitScathe = _config.ScatheFallback;
         }
 
         private int NumTargetsHitByAOE(Actor primary) =>
