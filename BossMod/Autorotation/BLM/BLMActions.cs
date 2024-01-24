@@ -10,6 +10,7 @@ namespace BossMod.BLM
     {
         public const int AutoActionST = AutoActionFirstCustom + 0;
         public const int AutoActionAOE = AutoActionFirstCustom + 1;
+        public const int AutoActionFiller = AutoActionFirstCustom + 2;
 
         private BLMConfig _config;
         private Rotation.State _state;
@@ -74,6 +75,12 @@ namespace BossMod.BLM
                 Autorot.PrimaryTarget != null
                 && autoAction != AutoActionST
                 && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
+
+            // if (autoAction == AutoActionFiller)
+            // {
+            //     _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+            //     _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+            // }
         }
 
         protected override void QueueAIActions()
@@ -201,10 +208,13 @@ namespace BossMod.BLM
             SupportedSpell(AID.Fire2).PlaceholderForAuto = _config.FullRotation
                 ? AutoActionAOE
                 : AutoActionNone;
+            SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(
+                AID.Blizzard4
+            ).PlaceholderForAuto = _config.FullRotation ? AutoActionFiller : AutoActionNone;
 
             // smart targets
-            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.MouseoverFriendly
-                ? SmartTargetFriendly
+            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash
+                ? (tar) => Autorot.SecondaryTarget ?? tar
                 : null;
         }
 

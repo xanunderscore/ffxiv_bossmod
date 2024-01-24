@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography.X509Certificates;
 using BossMod.Components;
 using BossMod.ReplayAnalysis;
 using Dalamud.Game.ClientState.Structs;
@@ -141,63 +142,35 @@ namespace BossMod.BLM
         // strategy configuration
         public class Strategy : CommonRotation.Strategy
         {
+            public enum TriplecastUse : uint
+            {
+                // forced clip in opener, otherwise use when inside leylines
+                Automatic = 0,
+            }
+
+            public OffensiveAbilityUse TriplecastStrategy;
+            public OffensiveAbilityUse LeylinesStrategy;
             public bool UseAOERotation;
         }
 
-        private static unsafe bool CanCast(
-            State state,
-            Strategy strategy,
-            float castTime,
-            int mpCost
-        )
+        private static bool CanCast(State state, Strategy strategy, float castTime, int mpCost)
         {
             var castEndIn = state.GCD + castTime;
 
             if (mpCost > state.ExpectedMPAfter(castEndIn))
                 return false;
 
-            if (state.InstantCastLeft > state.GCD)
-                return true;
-
             return strategy.ForceMovementIn >= castEndIn;
         }
 
-        private static unsafe bool CanCast(
+        private static bool CanCast(
             State state,
             Strategy strategy,
             AID action,
             int mpCost
         ) =>
             state.Unlocked(action)
-            && CanCast(state, strategy, GetSlidecastTime(state, action), mpCost);
-
-        public static float GetCastTime(State state, AID action)
-        {
-            if (
-                (state.ElementalLevel < 0 && action == AID.Paradox)
-                || (state.FirestarterLeft > state.GCD && action == AID.Fire3)
-                || (state.ThundercloudLeft > state.GCD && action.Aspect() == BLM.Aspect.Thunder)
-            )
-                return 0f;
-
-            var spsFactor = state.SpellGCDTime / 2.5f;
-
-            var iceAdjust = state.ElementalLevel == 3 ? 0.5f : 1f;
-            var fireAdjust = state.ElementalLevel == -3 ? 0.5f : 1f;
-
-            var castTime = action.BaseCastTime();
-            var aspect = action.Aspect();
-
-            if (aspect == BLM.Aspect.Ice)
-                castTime *= iceAdjust;
-            if (aspect == BLM.Aspect.Fire)
-                castTime *= fireAdjust;
-
-            return castTime * spsFactor;
-        }
-
-        public static float GetSlidecastTime(State state, AID action) =>
-            MathF.Max(0f, GetCastTime(state, action) - 0.5f);
+            && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost);
 
         public static uint MPTick(int elementalLevel)
         {
@@ -215,10 +188,7 @@ namespace BossMod.BLM
         {
             if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
             {
-                if (
-                    strategy.CombatTimer > -GetCastTime(state, AID.Fire3)
-                    && state.ElementalLevel == 0
-                )
+                if (strategy.CombatTimer > -state.GetSlidecastTime(AID.Fire3))
                     return AID.Fire3;
 
                 return AID.None;
@@ -227,59 +197,62 @@ namespace BossMod.BLM
             if (!state.TargetingEnemy)
                 return AID.None;
 
-            if (state.ElementalLevel > 0)
-                return GetFireGCD(state, strategy);
-
-            if (state.ElementalLevel < 0)
-                return GetIceGCD(state, strategy);
-
-            // special case: no instant swap between ice/fire, cast fire in "neutral" to get stacks
-            if (!state.Unlocked(TraitID.AspectMastery3))
+            // if fire timer will run out soon...
+            if (
+                !strategy.UseAOERotation
+                && state.Unlocked(AID.Fire4)
+                && state.ElementalLevel == 3
+                && state.ElementalLeft
+                    < state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
+            )
             {
+                // use despair now if we don't have enough mana for f1/paradox -> despair
                 if (
-                    strategy.UseAOERotation
-                    && CanCast(state, strategy, AID.Fire2, 10000 - state.GetAdjustedIceCost(800))
+                    state.CurMP - 800 < state.GetAdjustedFireCost(800)
+                    && CanCast(state, strategy, AID.Despair, 800)
                 )
-                    return AID.Fire2;
+                    return AID.Despair;
 
-                if (CanCast(state, strategy, AID.Fire1, 10000 - state.GetAdjustedIceCost(400)))
-                    return AID.Fire1;
+                // refresh timer
+                return state.BestFire1;
             }
 
-            // not worth skipping first hearts in AOE since we need them for reduced flare cost
-            if (strategy.UseAOERotation && CanCast(state, strategy, AID.Blizzard2, 800))
-                return AID.Blizzard2;
-
-            if (CanCast(state, strategy, AID.Fire3, 10000))
-                return AID.Fire3;
-
-            if (CanCast(state, strategy, AID.Blizzard3, state.GetAdjustedIceCost(800)))
-                return AID.Blizzard3;
-
-            if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
-                return AID.Blizzard1;
-
-            if (state.Polyglot > 0)
+            // polyglot overcap
+            if (state.Polyglot == 2 && state.NextPolyglot > 0 && state.NextPolyglot < 10)
                 return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
 
-            return AID.None;
+            if (state.TargetThunderLeft < 5 && CanCast(state, strategy, state.BestThunder1, 400))
+                return strategy.UseAOERotation && state.Unlocked(state.BestThunder2)
+                    ? state.BestThunder2
+                    : state.BestThunder1;
+
+            var damageGCD =
+                state.ElementalLevel > 0 ? GetFireGCD(state, strategy) : GetIceGCD(state, strategy);
+
+            if (damageGCD == AID.None && state.Polyglot > 0)
+                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+
+            return damageGCD;
         }
 
         public static AID GetFireGCD(State state, Strategy strategy)
         {
-            var f4CastTime = GetCastTime(state, AID.Fire4);
-
             // despair/flare require at least 800 mp even though they only say all
             if (state.CurMP < 800)
             {
+                // use instant spell for manafont weave
                 if (
                     state.Polyglot > 0
                     && state.CanWeave(CDGroup.Manafont, 0.6f, state.GCD + state.SpellGCDTime)
                 )
                     return state.BestSTPolyglotSpell;
 
+                // otherwise swap to ice
                 if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
                     return state.BestBlizzard2;
+
+                if (CanCast(state, strategy, AID.Blizzard3, 0))
+                    return AID.Blizzard3;
 
                 if (CanCast(state, strategy, state.BestBlizzard1, 0))
                     return state.BestBlizzard1;
@@ -304,24 +277,10 @@ namespace BossMod.BLM
                     return AID.Despair;
             }
 
-            if (
-                !strategy.UseAOERotation
-                && state.Unlocked(AID.Fire4)
-                && state.ElementalLeft < f4CastTime + GetCastTime(state, AID.Fire1)
-            )
-                return state.BestFire1;
-
-            if (state.Polyglot == 2 && state.NextPolyglot < 10)
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
-
-            if (state.TargetThunderLeft < 5 && CanCast(state, strategy, state.BestThunder1, 400))
-                return strategy.UseAOERotation && state.Unlocked(state.BestThunder2)
-                    ? state.BestThunder2
-                    : state.BestThunder1;
-
             // intentional gcd clip in opener
             if (
                 state.InstantCastLeft == 0
+                && strategy.TriplecastStrategy != CommonRotation.Strategy.OffensiveAbilityUse.Delay
                 && state.Unlocked(AID.Triplecast)
                 && state.CD(CDGroup.Triplecast) == 0
             )
@@ -333,11 +292,8 @@ namespace BossMod.BLM
             )
                 return state.BestFire2;
 
-            if (state.Unlocked(AID.Fire4))
-            {
-                if (CanCast(state, strategy, f4CastTime, state.GetAdjustedFireCost(800)))
-                    return AID.Fire4;
-            }
+            if (CanCast(state, strategy, AID.Fire4, state.GetAdjustedFireCost(800)))
+                return AID.Fire4;
             // before F4 unlock, use firestarter proc for damage
             else if (state.FirestarterLeft > state.GCD && state.Unlocked(AID.Fire3))
             {
@@ -353,12 +309,10 @@ namespace BossMod.BLM
         public static AID GetIceGCD(State state, Strategy strategy)
         {
             if (
-                !state.Unlocked(TraitID.AspectMastery3)
-                && CanCast(state, strategy, AID.Fire1, 10000 - state.GetAdjustedIceCost(400))
+                state.UmbralHearts == 0
+                && state.Unlocked(TraitID.EnhancedFreeze)
+                && state.ElementalLevel < 0
             )
-                return AID.Fire1;
-
-            if (state.UmbralHearts == 0 && state.Unlocked(TraitID.EnhancedFreeze))
             {
                 if (strategy.UseAOERotation && CanCast(state, strategy, AID.Freeze, 0))
                     return AID.Freeze;
@@ -373,24 +327,35 @@ namespace BossMod.BLM
             if (
                 strategy.UseAOERotation
                 && CanCast(state, strategy, state.BestFire2, 10000 - state.GetAdjustedIceCost(800))
+                && (!state.Unlocked(TraitID.EnhancedFreeze) || state.UmbralHearts == 3)
             )
                 return state.BestFire2;
 
-            if (CanCast(state, strategy, AID.Fire3, 10000))
+            if (CanCast(state, strategy, AID.Fire3, 9600))
                 return AID.Fire3;
 
-            if (state.TargetThunderLeft < 5 && CanCast(state, strategy, state.BestThunder1, 400))
-                return strategy.UseAOERotation && state.Unlocked(state.BestThunder2)
-                    ? state.BestThunder2
-                    : state.BestThunder1;
+            if (CanCast(state, strategy, AID.Fire1, 9600))
+                return AID.Fire1;
 
-            if (state.Polyglot > 0)
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+            if (
+                strategy.UseAOERotation
+                && CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800))
+            )
+                return state.BestBlizzard2;
+
+            if (
+                CanCast(state, strategy, AID.Blizzard3, state.GetAdjustedIceCost(800))
+                && state.ElementalLevel > -3
+            )
+                return AID.Blizzard3;
 
             if (state.Paradox)
                 return AID.Paradox;
 
-            return AID.Blizzard1;
+            if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
+                return AID.Blizzard1;
+
+            return AID.None;
         }
 
         public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline)
@@ -415,7 +380,13 @@ namespace BossMod.BLM
                 if (state.CanWeave(CDGroup.Amplifier, 0.6f, deadline) && state.Polyglot < 2)
                     return ActionID.MakeSpell(AID.Amplifier);
 
-                if (state.CanWeave(CDGroup.LeyLines, 0.6f, deadline))
+                if (
+                    state.CanWeave(CDGroup.LeyLines, 0.6f, deadline)
+                    && strategy.LeylinesStrategy
+                        != CommonRotation.Strategy.OffensiveAbilityUse.Delay
+                    // don't place leylines after opener, let the player do it
+                    && strategy.CombatTimer < 60
+                )
                     return ActionID.MakeSpell(AID.LeyLines);
             }
 
