@@ -163,12 +163,7 @@ namespace BossMod.BLM
             return strategy.ForceMovementIn >= castEndIn;
         }
 
-        private static bool CanCast(
-            State state,
-            Strategy strategy,
-            AID action,
-            int mpCost
-        ) =>
+        private static bool CanCast(State state, Strategy strategy, AID action, int mpCost) =>
             state.Unlocked(action)
             && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost);
 
@@ -202,19 +197,29 @@ namespace BossMod.BLM
                 !strategy.UseAOERotation
                 && state.Unlocked(AID.Fire4)
                 && state.ElementalLevel == 3
-                && state.ElementalLeft
-                    < state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
+                && state.ElementalLeft < state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
             )
             {
                 // use despair now if we don't have enough mana for f1/paradox -> despair
                 if (
-                    state.CurMP - 800 < state.GetAdjustedFireCost(800)
-                    && CanCast(state, strategy, AID.Despair, 800)
+                    state.Unlocked(AID.Despair)
+                    && state.CurMP >= 800
+                    && state.CurMP < state.GetAdjustedFireCost(800) + 800
+                    && state.ElementalLeft >= state.GetCastTime(AID.Despair)
                 )
                     return AID.Despair;
 
-                // refresh timer
-                return state.BestFire1;
+                if (
+                    state.CurMP >= state.GetAdjustedFireCost(800)
+                    && state.ElementalLeft >= state.GetCastTime(state.BestFire1)
+                )
+                    return state.BestFire1;
+
+                if (state.ElementalLeft > state.GCD && state.FirestarterLeft > state.GCD)
+                    return AID.Fire3;
+
+                // can't avoid timer expiring due to forced movement etc, swap back to ice
+                return AID.Blizzard3;
             }
 
             // polyglot overcap
@@ -237,46 +242,6 @@ namespace BossMod.BLM
 
         public static AID GetFireGCD(State state, Strategy strategy)
         {
-            // despair/flare require at least 800 mp even though they only say all
-            if (state.CurMP < 800)
-            {
-                // use instant spell for manafont weave
-                if (
-                    state.Polyglot > 0
-                    && state.CanWeave(CDGroup.Manafont, 0.6f, state.GCD + state.SpellGCDTime)
-                )
-                    return state.BestSTPolyglotSpell;
-
-                // otherwise swap to ice
-                if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
-                    return state.BestBlizzard2;
-
-                if (CanCast(state, strategy, AID.Blizzard3, 0))
-                    return AID.Blizzard3;
-
-                if (CanCast(state, strategy, state.BestBlizzard1, 0))
-                    return state.BestBlizzard1;
-            }
-
-            if (
-                strategy.UseAOERotation
-                && state.UmbralHearts == 1
-                && CanCast(state, strategy, AID.Flare, 1)
-            )
-                return AID.Flare;
-
-            if (state.CurMP < state.GetAdjustedFireCost(strategy.UseAOERotation ? 1500 : 800))
-            {
-                if (
-                    (strategy.UseAOERotation || !state.Unlocked(AID.Despair))
-                    && CanCast(state, strategy, AID.Flare, 1)
-                )
-                    return AID.Flare;
-
-                if (CanCast(state, strategy, AID.Despair, 1))
-                    return AID.Despair;
-            }
-
             // intentional gcd clip in opener
             if (
                 state.InstantCastLeft == 0
@@ -286,22 +251,56 @@ namespace BossMod.BLM
             )
                 return AID.Triplecast;
 
-            if (
-                strategy.UseAOERotation
-                && CanCast(state, strategy, state.BestFire2, state.GetAdjustedFireCost(1500))
-            )
-                return state.BestFire2;
-
-            if (CanCast(state, strategy, AID.Fire4, state.GetAdjustedFireCost(800)))
-                return AID.Fire4;
-            // before F4 unlock, use firestarter proc for damage
-            else if (state.FirestarterLeft > state.GCD && state.Unlocked(AID.Fire3))
+            if (strategy.UseAOERotation)
             {
-                return AID.Fire3;
+                var canFlare = CanCast(state, strategy, AID.Flare, 800);
+                // double flare
+                if (state.UmbralHearts == 1 && canFlare)
+                    return AID.Flare;
+
+                if (CanCast(state, strategy, state.BestFire2, state.GetAdjustedFireCost(1500) + 800))
+                    return state.BestFire2;
+
+                if (canFlare)
+                    return AID.Flare;
+            }
+            else
+            {
+                if (CanCast(state, strategy, AID.Fire4, state.GetAdjustedFireCost(800) + 800))
+                    return AID.Fire4;
+
+                // before F4 unlock, use firestarter proc for damage
+                if (
+                    !state.Unlocked(AID.Fire4)
+                    && state.FirestarterLeft > state.GCD
+                    && state.Unlocked(AID.Fire3)
+                )
+                    return AID.Fire3;
+
+                if (CanCast(state, strategy, AID.Fire1, state.GetAdjustedFireCost(800) + 800))
+                    return AID.Fire1;
+
+                // TODO: swiftcast flare is a dps gain on two targets
+                if (CanCast(state, strategy, AID.Despair, 800))
+                    return AID.Despair;
             }
 
-            if (CanCast(state, strategy, AID.Fire1, state.GetAdjustedFireCost(800)))
-                return state.BestFire1;
+            // use instant spell for manafont weave
+            if (
+                state.Polyglot > 0
+                && state.CanWeave(CDGroup.Manafont, 0.6f, state.GCD + state.SpellGCDTime)
+            )
+                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+
+            // otherwise swap to ice
+            if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
+                return state.BestBlizzard2;
+
+            if (CanCast(state, strategy, AID.Blizzard3, 0))
+                return AID.Blizzard3;
+
+            if (CanCast(state, strategy, state.BestBlizzard1, 0))
+                return state.BestBlizzard1;
 
             return AID.None;
         }
@@ -309,7 +308,7 @@ namespace BossMod.BLM
         public static AID GetIceGCD(State state, Strategy strategy)
         {
             if (
-                state.UmbralHearts == 0
+                state.UmbralHearts < 3
                 && state.Unlocked(TraitID.EnhancedFreeze)
                 && state.ElementalLevel < 0
             )
@@ -321,39 +320,47 @@ namespace BossMod.BLM
                     return AID.Blizzard4;
             }
 
-            if (state.Polyglot == 2 && state.NextPolyglot < 10)
+            // fire swap
+            if (strategy.UseAOERotation)
+            {
+                if (
+                    CanCast(state, strategy, state.BestFire2, 9000)
+                    && (!state.Unlocked(TraitID.EnhancedFreeze) || state.UmbralHearts == 3)
+                )
+                    return state.BestFire2;
+            }
+            else
+            {
+                if (CanCast(state, strategy, AID.Fire3, 9000))
+                    return AID.Fire3;
+
+                if (CanCast(state, strategy, AID.Fire1, 9000))
+                    return AID.Fire1;
+            }
+
+            if (state.Polyglot == 2 && state.ElementalLevel < 0)
                 return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
 
-            if (
-                strategy.UseAOERotation
-                && CanCast(state, strategy, state.BestFire2, 10000 - state.GetAdjustedIceCost(800))
-                && (!state.Unlocked(TraitID.EnhancedFreeze) || state.UmbralHearts == 3)
-            )
-                return state.BestFire2;
+            if (strategy.UseAOERotation)
+            {
+                if (CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800)))
+                    return state.BestBlizzard2;
+            }
+            else
+            {
+                if (
+                    CanCast(state, strategy, AID.Blizzard3, state.GetAdjustedIceCost(800))
+                    && state.ElementalLevel > -3
+                )
+                    return AID.Blizzard3;
 
-            if (CanCast(state, strategy, AID.Fire3, 9600))
-                return AID.Fire3;
+                // in umbral ice, paradox costs no mp and has no cast time, so no check
+                if (state.Paradox)
+                    return AID.Paradox;
 
-            if (CanCast(state, strategy, AID.Fire1, 9600))
-                return AID.Fire1;
-
-            if (
-                strategy.UseAOERotation
-                && CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800))
-            )
-                return state.BestBlizzard2;
-
-            if (
-                CanCast(state, strategy, AID.Blizzard3, state.GetAdjustedIceCost(800))
-                && state.ElementalLevel > -3
-            )
-                return AID.Blizzard3;
-
-            if (state.Paradox)
-                return AID.Paradox;
-
-            if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
-                return AID.Blizzard1;
+                if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
+                    return AID.Blizzard1;
+            }
 
             return AID.None;
         }

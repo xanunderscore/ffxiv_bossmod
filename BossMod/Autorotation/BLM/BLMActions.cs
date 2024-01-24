@@ -74,6 +74,7 @@ namespace BossMod.BLM
             _strategy.UseAOERotation =
                 Autorot.PrimaryTarget != null
                 && autoAction != AutoActionST
+                && _state.Unlocked(AID.Blizzard2)
                 && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
 
             // if (autoAction == AutoActionFiller)
