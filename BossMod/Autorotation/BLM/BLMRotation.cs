@@ -51,11 +51,11 @@ namespace BossMod.BLM
             public AID BestBlizzard2 =>
                 Unlocked(AID.HighBlizzard2) ? AID.HighBlizzard2 : AID.Blizzard2;
 
-            public AID BestSTPolyglotSpell => Unlocked(AID.Xenoglossy) ? AID.Xenoglossy : AID.Foul;
-
             // statuses
             public SID ExpectedThunder1 => Unlocked(AID.Thunder3) ? SID.Thunder3 : SID.Thunder1;
             public SID ExpectedThunder2 => Unlocked(AID.Thunder4) ? SID.Thunder4 : SID.Thunder2;
+
+            public AID BestPolySpell => Unlocked(AID.Xenoglossy) ? AID.Xenoglossy : AID.Foul;
 
             public State(float[] cooldowns)
                 : base(cooldowns) { }
@@ -135,7 +135,7 @@ namespace BossMod.BLM
 
             public float GetCastEnd(AID action) => GetCastTime(action) + GCD;
 
-            public float GetSlidecastEnd(AID action) => GetSlidecastEnd(action) + GCD;
+            public float GetSlidecastEnd(AID action) => GetSlidecastTime(action) + GCD;
 
             public override string ToString()
             {
@@ -193,8 +193,14 @@ namespace BossMod.BLM
         {
             if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
             {
-                if (strategy.CombatTimer > -state.GetSlidecastTime(AID.Fire3))
+                if (
+                    strategy.CombatTimer > -state.GetCastTime(AID.Fire3)
+                    && state.ElementalLevel == 0
+                )
                     return AID.Fire3;
+
+                if (strategy.CombatTimer > -1 && state.TargetThunderLeft == 0)
+                    return AID.Thunder3;
 
                 return AID.None;
             }
@@ -229,17 +235,28 @@ namespace BossMod.BLM
 
                 if (state.ElementalLeft > state.GCD && state.FirestarterLeft > state.GCD)
                     return AID.Fire3;
+
+                // out of time, reset to ice
+                if (CanCast(state, strategy, AID.Blizzard3, 0))
+                    return AID.Blizzard3;
             }
 
             // polyglot overcap
-            if (state.Polyglot == 2 && state.NextPolyglot > 0 && state.NextPolyglot < 10)
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+            if (
+                state.Polyglot == 2
+                && state.NextPolyglot > 0
+                && state.NextPolyglot < 10
+                && CanCast(state, strategy, AID.Foul, 0)
+            )
+                return strategy.UseAOERotation ? AID.Foul : AID.Xenoglossy;
 
+            // thunder refresh
             if (state.TargetThunderLeft < 5 && CanCast(state, strategy, state.BestThunder1, 400))
                 return strategy.UseAOERotation && state.Unlocked(state.BestThunder2)
                     ? state.BestThunder2
                     : state.BestThunder1;
 
+            // standard gcd loop
             return state.ElementalLevel > 0
                 ? GetFireGCD(state, strategy)
                 : GetIceGCD(state, strategy);
@@ -304,7 +321,7 @@ namespace BossMod.BLM
                 && CanUseManafont(state, strategy, state.GCD + state.SpellGCDTime)
                 && state.Unlocked(TraitID.EnhancedFoul)
             )
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+                return strategy.UseAOERotation ? AID.Foul : AID.Xenoglossy;
 
             // otherwise swap to ice
             if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
@@ -321,6 +338,7 @@ namespace BossMod.BLM
 
         public static AID GetIceGCD(State state, Strategy strategy)
         {
+            // get max hearts for swap
             if (
                 state.UmbralHearts < 3
                 && state.Unlocked(TraitID.EnhancedFreeze)
@@ -334,7 +352,7 @@ namespace BossMod.BLM
                     return AID.Blizzard4;
             }
 
-            // fire swap
+            // swap if near max mp
             if (strategy.UseAOERotation)
             {
                 if (
@@ -352,13 +370,17 @@ namespace BossMod.BLM
                     return AID.Fire1;
             }
 
-            if (state.Polyglot == 2 && state.ElementalLevel < 0)
-                return strategy.UseAOERotation ? AID.Foul : state.BestSTPolyglotSpell;
+            var canPoly = state.ElementalLevel < 0 && CanCast(state, strategy, AID.Foul, 0);
+
+            if (canPoly && state.Polyglot == 2)
+                return strategy.UseAOERotation ? AID.Foul : state.BestPolySpell;
 
             if (strategy.UseAOERotation)
             {
                 if (CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800)))
                     return state.BestBlizzard2;
+
+                if (canPoly) return AID.Foul;
             }
             else
             {
@@ -371,6 +393,9 @@ namespace BossMod.BLM
                 // in umbral ice, paradox costs no mp and has no cast time, so no check
                 if (state.Paradox)
                     return AID.Paradox;
+
+                if (canPoly)
+                    return state.BestPolySpell;
 
                 if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
                     return AID.Blizzard1;
