@@ -169,7 +169,8 @@ namespace BossMod.BLM
         {
             var castEndIn = state.GCD + castTime;
 
-            return strategy.ForceMovementIn >= castEndIn
+            return strategy.ForceMovementIn > castEndIn
+                && strategy.FightEndIn > castEndIn
                 && state.ExpectedMPAfter(castEndIn) >= mpCost;
         }
 
@@ -191,7 +192,7 @@ namespace BossMod.BLM
 
         public static AID GetNextBestGCD(State state, Strategy strategy)
         {
-            if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
+            if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0 && state.TargetingEnemy)
             {
                 if (
                     strategy.CombatTimer > -state.GetCastTime(AID.Fire3)
@@ -205,8 +206,12 @@ namespace BossMod.BLM
                 return AID.None;
             }
 
-            if (!state.TargetingEnemy)
-                return AID.None;
+            if (
+                !state.TargetingEnemy
+                && state.ElementalLevel < 0
+                && (state.ElementalLeft < 5 || state.UmbralHearts < 3 || state.ElementalLevel > -3)
+            )
+                return AID.UmbralSoul;
 
             // first check if F4 is unlocked and fire timer is running out. all other fire spells refresh the timer
             if (
@@ -323,6 +328,15 @@ namespace BossMod.BLM
             )
                 return strategy.UseAOERotation ? AID.Foul : AID.Xenoglossy;
 
+            // if fight ending, dump resources instead of switching to ice
+            if (strategy.FightEndIn < state.GetCastEnd(AID.Blizzard3) + state.SpellGCDTime) {
+                if (state.Polyglot > 0 && CanCast(state, strategy, state.BestPolySpell, 0))
+                    return state.BestPolySpell;
+
+                if (state.FirestarterLeft > state.GCD)
+                    return AID.Fire3;
+            }
+
             // otherwise swap to ice
             if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
                 return state.BestBlizzard2;
@@ -380,7 +394,8 @@ namespace BossMod.BLM
                 if (CanCast(state, strategy, state.BestBlizzard2, state.GetAdjustedIceCost(800)))
                     return state.BestBlizzard2;
 
-                if (canPoly) return AID.Foul;
+                if (canPoly)
+                    return AID.Foul;
             }
             else
             {
@@ -413,6 +428,13 @@ namespace BossMod.BLM
 
                 return new();
             }
+
+            if (
+                !state.TargetingEnemy
+                && state.ElementalLevel > 0
+                && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
+            )
+                return ActionID.MakeSpell(AID.Transpose);
 
             if (
                 state.CurMP < 800
