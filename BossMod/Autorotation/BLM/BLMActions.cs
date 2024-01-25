@@ -42,9 +42,8 @@ namespace BossMod.BLM
             // TODO: multidot?..
             var bestTarget = initial;
             if (_state.Unlocked(AID.Blizzard2))
-            {
-                bestTarget = FindBetterTargetBy(initial, 25, e => NumTargetsHitByAOE(e.Actor)).Target;
-            }
+                // if multiple targets result in the same AOE count, prioritize by HP
+                bestTarget = FindBetterTargetBy(initial, 25, e => NumTargetsHitByAOE(e.Actor) * 1000000 + (int)e.Actor.HP.Cur).Target;
             return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
         }
 
