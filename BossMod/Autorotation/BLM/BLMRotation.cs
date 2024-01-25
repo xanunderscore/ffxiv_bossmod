@@ -146,15 +146,6 @@ namespace BossMod.BLM
         // strategy configuration
         public class Strategy : CommonRotation.Strategy
         {
-            public enum LeylinesUse : uint
-            {
-                // F3 -> (pull) -> T3 -> F4 -> F4 -> leylines
-                Automatic = 0,
-
-                [PropertyDisplay("Place before fight start")]
-                AutomaticEarly = 1
-            }
-
             public OffensiveAbilityUse TriplecastStrategy;
             public OffensiveAbilityUse LeylinesStrategy;
             public bool UseAOERotation;
@@ -466,6 +457,14 @@ namespace BossMod.BLM
                 return ActionID.MakeSpell(AID.Transpose);
 
             if (
+                state.FirestarterLeft > state.GCD
+                && state.ElementalLevel < 0
+                && CanCast(state, strategy, 0f, 10000)
+                && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
+            )
+                return ActionID.MakeSpell(AID.Transpose);
+
+            if (
                 state.CurMP < 800
                 && state.ElementalLevel == 3
                 && CanUseManafont(state, strategy, deadline)
@@ -494,8 +493,11 @@ namespace BossMod.BLM
 
                 if (
                     state.CanWeave(state.CD(CDGroup.Triplecast) - 60, 0.6f, deadline)
-                    && strategy.TriplecastStrategy
-                        != CommonRotation.Strategy.OffensiveAbilityUse.Delay
+                    && (
+                        strategy.CombatTimer > 0 && strategy.CombatTimer < 60
+                        || strategy.TriplecastStrategy
+                            == CommonRotation.Strategy.OffensiveAbilityUse.Force
+                    )
                 )
                     return ActionID.MakeSpell(AID.Triplecast);
             }
