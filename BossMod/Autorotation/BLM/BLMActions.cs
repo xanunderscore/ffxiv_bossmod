@@ -69,9 +69,7 @@ namespace BossMod.BLM
         protected override void QueueAIActions()
         {
             if (_state.Unlocked(AID.Transpose))
-                SimulateManualActionForAI(
-                    ActionID.MakeSpell(AID.Transpose),
-                    Player,
+                SimulateManualActionForAI(ActionID.MakeSpell(AID.Transpose), Player,
                     !Player.InCombat
                         && (
                             _state.ElementalLevel > 0 && _state.CurMP < 10000
@@ -80,17 +78,9 @@ namespace BossMod.BLM
                         )
                 );
             if (_state.Unlocked(AID.Manaward))
-                SimulateManualActionForAI(
-                    ActionID.MakeSpell(AID.Manaward),
-                    Player,
-                    Player.HP.Cur < Player.HP.Max * 0.8f
-                );
+                SimulateManualActionForAI(ActionID.MakeSpell(AID.Manaward), Player, Player.HP.Cur < Player.HP.Max * 0.8f);
             if (_state.Unlocked(AID.Sharpcast))
-                SimulateManualActionForAI(
-                    ActionID.MakeSpell(AID.Sharpcast),
-                    Player,
-                    !Player.InCombat && _state.SharpcastLeft == 0
-                );
+                SimulateManualActionForAI(ActionID.MakeSpell(AID.Sharpcast), Player, !Player.InCombat && _state.SharpcastLeft == 0);
         }
 
         protected override NextAction CalculateAutomaticGCD()
@@ -135,17 +125,9 @@ namespace BossMod.BLM
                 }
             }
             _prevMP = Player.CurMP;
-            _state.TimeToManaTick =
-                3
-                - (
-                    _lastManaTick != default
-                        ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3
-                        : 0
-                );
+            _state.TimeToManaTick = 3 - (_lastManaTick != default ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3 : 0);
 
-            _state.ElementalLevel = gauge.InAstralFire
-                ? gauge.AstralFireStacks
-                : -gauge.UmbralIceStacks;
+            _state.ElementalLevel = gauge.InAstralFire ? gauge.AstralFireStacks : -gauge.UmbralIceStacks;
             _state.ElementalLeft = gauge.ElementTimeRemaining * 0.001f;
             _state.EnochianTimer = gauge.EnochianTimer * 0.001f;
             _state.UmbralHearts = gauge.UmbralHearts;
@@ -155,48 +137,27 @@ namespace BossMod.BLM
             _state.TriplecastLeft = StatusDetails(Player, SID.Triplecast, Player.InstanceID).Left;
             _state.SwiftcastLeft = StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
             _state.SharpcastLeft = StatusDetails(Player, SID.Sharpcast, Player.InstanceID).Left;
-            _state.ThundercloudLeft = StatusDetails(
-                Player,
-                SID.Thundercloud,
-                Player.InstanceID
-            ).Left;
+            _state.ThundercloudLeft = StatusDetails(Player, SID.Thundercloud, Player.InstanceID).Left;
             _state.FirestarterLeft = StatusDetails(Player, SID.Firestarter, Player.InstanceID, 0).Left;
 
             _state.TargetThunderLeft = Math.Max(
-                StatusDetails(
-                    Autorot.PrimaryTarget,
-                    _state.ExpectedThunder1,
-                    Player.InstanceID
-                ).Left,
-                StatusDetails(
-                    Autorot.PrimaryTarget,
-                    _state.ExpectedThunder2,
-                    Player.InstanceID
-                ).Left
+                StatusDetails(Autorot.PrimaryTarget, _state.ExpectedThunder1, Player.InstanceID).Left,
+                StatusDetails(Autorot.PrimaryTarget, _state.ExpectedThunder2, Player.InstanceID).Left
             );
 
             _state.LeyLinesLeft = StatusDetails(Player, SID.LeyLines, Player.InstanceID).Left;
-            _state.InLeyLines =
-                StatusDetails(Player, SID.CircleOfPower, Player.InstanceID).Left > 0;
+            _state.InLeyLines = StatusDetails(Player, SID.CircleOfPower, Player.InstanceID).Left > 0;
         }
 
         private void OnConfigModified(object? sender, EventArgs args)
         {
             // placeholders
-            SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(
-                AID.Fire4
-            ).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
-            SupportedSpell(AID.Fire2).PlaceholderForAuto = _config.FullRotation
-                ? AutoActionAOE
-                : AutoActionNone;
-            SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(
-                AID.Blizzard4
-            ).PlaceholderForAuto = _config.FullRotation ? AutoActionFiller : AutoActionNone;
+            SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(AID.Fire4).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
+            SupportedSpell(AID.Fire2).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+            SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(AID.Blizzard4).PlaceholderForAuto = _config.FullRotation ? AutoActionFiller : AutoActionNone;
 
             // smart targets
-            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash
-                ? (tar) => Autorot.SecondaryTarget ?? tar
-                : null;
+            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash ? (tar) => Autorot.SecondaryTarget ?? tar : null;
 
             _strategy.AutoRefresh = _config.AutoIceRefresh;
             _strategy.PermitScathe = _config.ScatheFallback;
