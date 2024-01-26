@@ -170,15 +170,15 @@ namespace BossMod.BLM
         private static bool CanCast(State state, Strategy strategy, float castTime, int mpCost)
         {
             var castEndIn = state.GCD + castTime;
+            var moveOk = castTime == 0 || strategy.ForceMovementIn > castEndIn;
 
-            return strategy.ForceMovementIn > castEndIn
+            return moveOk
                 && (strategy.FightEndIn == 0 || strategy.FightEndIn > castEndIn)
                 && state.ExpectedMPAfter(castEndIn) >= mpCost;
         }
 
         private static bool CanCast(State state, Strategy strategy, AID action, int mpCost) =>
-            state.Unlocked(action)
-            && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost);
+            state.Unlocked(action) && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost);
 
         public static uint MPTick(int elementalLevel)
         {

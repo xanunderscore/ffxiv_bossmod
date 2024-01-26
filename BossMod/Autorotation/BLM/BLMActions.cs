@@ -135,7 +135,11 @@ namespace BossMod.BLM
             _state.Paradox = gauge.IsParadoxActive;
 
             _state.TriplecastLeft = StatusDetails(Player, SID.Triplecast, Player.InstanceID).Left;
-            _state.SwiftcastLeft = StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
+            _state.SwiftcastLeft = Math.Max(
+                StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left,
+                // Lost Chainspell
+                StatusDetails(Player, 2560, Player.InstanceID).Left
+            );
             _state.SharpcastLeft = StatusDetails(Player, SID.Sharpcast, Player.InstanceID).Left;
             _state.ThundercloudLeft = StatusDetails(Player, SID.Thundercloud, Player.InstanceID).Left;
             _state.FirestarterLeft = StatusDetails(Player, SID.Firestarter, Player.InstanceID, 0).Left;
