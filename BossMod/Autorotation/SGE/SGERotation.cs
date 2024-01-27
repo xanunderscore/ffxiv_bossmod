@@ -24,22 +24,11 @@ namespace BossMod.SGE
             public AID BestDyskrasia => FindUnlocked(AID.DyskrasiaII, AID.Dyskrasia);
             public AID BestToxikon => FindUnlocked(AID.ToxikonII, AID.Toxikon);
 
-            public SID ExpectedEudosis =>
-                Unlocked(AID.EukrasianDosisIII)
-                    ? SID.EukrasianDosisIII
-                    : Unlocked(AID.EukrasianDosisII)
-                        ? SID.EukrasianDosisII
-                        : SID.EukrasianDosis;
+            public SID ExpectedEudosis => Unlocked(AID.EukrasianDosisIII) ? SID.EukrasianDosisIII : Unlocked(AID.EukrasianDosisII) ? SID.EukrasianDosisII : SID.EukrasianDosis;
 
-            public CDGroup PhlegmaCD =>
-                Unlocked(AID.PhlegmaIII)
-                    ? CDGroup.PhlegmaIII
-                    : Unlocked(AID.PhlegmaII)
-                        ? CDGroup.PhlegmaII
-                        : CDGroup.Phlegma;
+            public CDGroup PhlegmaCD => Unlocked(AID.PhlegmaIII) ? CDGroup.PhlegmaIII : Unlocked(AID.PhlegmaII) ? CDGroup.PhlegmaII : CDGroup.Phlegma;
 
-            public State(float[] cooldowns)
-                : base(cooldowns) { }
+            public State(float[] cooldowns) : base(cooldowns) { }
 
             public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
 

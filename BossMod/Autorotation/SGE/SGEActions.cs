@@ -43,28 +43,13 @@ namespace BossMod.SGE
             base.UpdateInternalState(autoAction);
             UpdatePlayerState();
             FillCommonStrategy(_strategy, CommonDefinitions.IDPotionMnd);
-            _strategy.NumDyskrasiaTargets =
-                autoAction == AutoActionST
-                    ? 0
-                    : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5f);
-            _strategy.NumToxikonTargets = _strategy.NumPhlegmaTargets =
-                Autorot.PrimaryTarget == null
-                    ? 0
-                    : Autorot.Hints.NumPriorityTargetsInAOECircle(
-                        Autorot.PrimaryTarget.Position,
-                        5f
-                    );
-            _strategy.NumPneumaTargets =
-                Autorot.PrimaryTarget == null ? 0 : NumPneumaTargets(Autorot.PrimaryTarget);
+            _strategy.NumDyskrasiaTargets = autoAction == AutoActionST ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5f);
+            _strategy.NumToxikonTargets = _strategy.NumPhlegmaTargets = Autorot.PrimaryTarget == null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5f);
+            _strategy.NumPneumaTargets = Autorot.PrimaryTarget == null ? 0 : NumPneumaTargets(Autorot.PrimaryTarget);
         }
 
         private int NumPneumaTargets(Actor primary) =>
-            Autorot.Hints.NumPriorityTargetsInAOERect(
-                Player.Position,
-                (primary.Position - Player.Position).Normalized(),
-                25,
-                2
-            );
+            Autorot.Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 2);
 
         protected override void QueueAIActions() { }
 
