@@ -9,9 +9,6 @@
         [PropertyDisplay("Use mouseover targeting for Aetherial Manipulation")]
         public bool SmartDash = true;
 
-        [PropertyDisplay("Use Scathe as a last resort damage GCD")]
-        public bool ScatheFallback = true;
-
         [PropertyDisplay("Use Umbral Soul to extend Enochian time when no enemy is targeted")]
         public bool AutoIceRefresh = true;
     }

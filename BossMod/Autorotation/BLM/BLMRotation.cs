@@ -38,6 +38,8 @@ namespace BossMod.BLM
             public int Polyglot; // max 2
             public float EnochianTimer;
             public float NextPolyglot => EnochianTimer;
+            public int MaxHearts => Unlocked(TraitID.EnhancedFreeze) ? 3 : 0;
+
 
             public float InstantCastLeft => MathF.Max(SwiftcastLeft, TriplecastLeft);
 
@@ -46,7 +48,6 @@ namespace BossMod.BLM
             public AID BestThunder2 => Unlocked(AID.Thunder4) ? AID.Thunder4 : AID.Thunder2;
 
             public AID BestFire1 => Paradox ? AID.Paradox : AID.Fire1;
-            public AID BestBlizzard1 => Paradox ? AID.Paradox : AID.Blizzard1;
             public AID BestFire2 => Unlocked(AID.HighFire2) ? AID.HighFire2 : AID.Fire2;
             public AID BestBlizzard2 =>
                 Unlocked(AID.HighBlizzard2) ? AID.HighBlizzard2 : AID.Blizzard2;
@@ -150,7 +151,6 @@ namespace BossMod.BLM
             public OffensiveAbilityUse LeylinesStrategy;
             public bool UseAOERotation;
             public bool AutoRefresh;
-            public bool PermitScathe;
 
             public void ApplyStrategyOverrides(uint[] overrides)
             {
@@ -318,8 +318,8 @@ namespace BossMod.BLM
                 )
                     return AID.Fire3;
 
-                if (CanCast(state, strategy, AID.Fire1, state.GetAdjustedFireCost(800) + 800))
-                    return AID.Fire1;
+                if (CanCast(state, strategy, state.BestFire1, state.GetAdjustedFireCost(800) + 800))
+                    return state.BestFire1;
 
                 // TODO: swiftcast flare is a dps gain on two targets
                 if (CanCast(state, strategy, AID.Despair, 800))
@@ -359,11 +359,8 @@ namespace BossMod.BLM
             if (CanCast(state, strategy, AID.Blizzard3, 0))
                 return AID.Blizzard3;
 
-            if (CanCast(state, strategy, state.BestBlizzard1, 0))
-                return state.BestBlizzard1;
-
-            if (strategy.PermitScathe && CanCast(state, strategy, AID.Scathe, 800))
-                return AID.Scathe;
+            if (!state.Paradox && CanCast(state, strategy, AID.Blizzard1, 0))
+                return AID.Blizzard1;
 
             return AID.None;
         }
@@ -398,7 +395,7 @@ namespace BossMod.BLM
                 if (CanCast(state, strategy, AID.Fire3, 9000))
                     return AID.Fire3;
 
-                if (CanCast(state, strategy, AID.Fire1, 9000))
+                if (!state.Paradox && CanCast(state, strategy, AID.Fire1, 9000))
                     return AID.Fire1;
             }
 
@@ -431,9 +428,6 @@ namespace BossMod.BLM
                 if (CanCast(state, strategy, AID.Blizzard1, state.GetAdjustedIceCost(400)))
                     return AID.Blizzard1;
             }
-
-            if (strategy.PermitScathe && CanCast(state, strategy, AID.Scathe, 800))
-                return AID.Scathe;
 
             return AID.None;
         }

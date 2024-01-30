@@ -1,6 +1,6 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
-using System;
+﻿using System;
 using System.Linq;
+using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.BLM
 {
@@ -43,7 +43,11 @@ namespace BossMod.BLM
             var bestTarget = initial;
             if (_state.Unlocked(AID.Blizzard2))
                 // if multiple targets result in the same AOE count, prioritize by HP
-                bestTarget = FindBetterTargetBy(initial, 25, e => NumTargetsHitByAOE(e.Actor) * 1000000 + (int)e.Actor.HP.Cur).Target;
+                bestTarget = FindBetterTargetBy(
+                    initial,
+                    25,
+                    e => NumTargetsHitByAOE(e.Actor) * 1000000 + (int)e.Actor.HP.Cur
+                ).Target;
             return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
         }
 
@@ -57,7 +61,11 @@ namespace BossMod.BLM
                 && _state.Unlocked(AID.Blizzard2)
                 && NumTargetsHitByAOE(Autorot.PrimaryTarget) >= 3;
 
-            _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
+            _strategy.ApplyStrategyOverrides(
+                Autorot
+                    .Bossmods.ActiveModule?.PlanExecution
+                    ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+            );
 
             if (autoAction == AutoActionFiller)
             {
@@ -69,18 +77,36 @@ namespace BossMod.BLM
         protected override void QueueAIActions()
         {
             if (_state.Unlocked(AID.Transpose))
-                SimulateManualActionForAI(ActionID.MakeSpell(AID.Transpose), Player,
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.Transpose),
+                    Player,
                     !Player.InCombat
                         && (
                             _state.ElementalLevel > 0 && _state.CurMP < 10000
-                            || _state.ElementalLevel < 0 && _state.CurMP == 10000
+                            || _state.ElementalLevel < 0
+                                && _state.CurMP == 10000
+                                && _state.UmbralHearts == _state.MaxHearts
                             || _state.ElementalLevel != 0 && _state.ElementalLeft < 3
                         )
                 );
+            if (_state.Unlocked(AID.UmbralSoul))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.UmbralSoul),
+                    Player,
+                    !Player.InCombat && _state.ElementalLevel < 0 && _state.UmbralHearts < _state.MaxHearts
+                );
             if (_state.Unlocked(AID.Manaward))
-                SimulateManualActionForAI(ActionID.MakeSpell(AID.Manaward), Player, Player.HP.Cur < Player.HP.Max * 0.8f);
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.Manaward),
+                    Player,
+                    Player.HP.Cur < Player.HP.Max * 0.8f
+                );
             if (_state.Unlocked(AID.Sharpcast))
-                SimulateManualActionForAI(ActionID.MakeSpell(AID.Sharpcast), Player, !Player.InCombat && _state.SharpcastLeft == 0);
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.Sharpcast),
+                    Player,
+                    !Player.InCombat && _state.SharpcastLeft == 0
+                );
         }
 
         protected override NextAction CalculateAutomaticGCD()
@@ -125,7 +151,13 @@ namespace BossMod.BLM
                 }
             }
             _prevMP = Player.CurMP;
-            _state.TimeToManaTick = 3 - (_lastManaTick != default ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3 : 0);
+            _state.TimeToManaTick =
+                3
+                - (
+                    _lastManaTick != default
+                        ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3
+                        : 0
+                );
 
             _state.ElementalLevel = gauge.InAstralFire ? gauge.AstralFireStacks : -gauge.UmbralIceStacks;
             _state.ElementalLeft = gauge.ElementTimeRemaining * 0.001f;
@@ -156,15 +188,18 @@ namespace BossMod.BLM
         private void OnConfigModified(object? sender, EventArgs args)
         {
             // placeholders
-            SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(AID.Fire4).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
+            SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(AID.Fire4).PlaceholderForAuto =
+                _config.FullRotation ? AutoActionST : AutoActionNone;
             SupportedSpell(AID.Fire2).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
-            SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(AID.Blizzard4).PlaceholderForAuto = _config.FullRotation ? AutoActionFiller : AutoActionNone;
+            SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(AID.Blizzard4).PlaceholderForAuto =
+                _config.FullRotation ? AutoActionFiller : AutoActionNone;
 
             // smart targets
-            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash ? (tar) => Autorot.SecondaryTarget ?? tar : null;
+            SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash
+                ? (tar) => Autorot.SecondaryTarget ?? tar
+                : null;
 
             _strategy.AutoRefresh = _config.AutoIceRefresh;
-            _strategy.PermitScathe = _config.ScatheFallback;
         }
 
         private int NumTargetsHitByAOE(Actor primary) =>
