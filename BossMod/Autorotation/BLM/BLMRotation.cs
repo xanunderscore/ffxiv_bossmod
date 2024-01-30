@@ -218,6 +218,9 @@ namespace BossMod.BLM
                 return AID.UmbralSoul;
 
             // first check if F4 is unlocked and fire timer is running out. all other fire spells refresh the timer
+            // TODO: needs some fixing. F4 F1 is 2.8s + 2.5s, F4 Despair is 2.8s + 3s, it is possible to skip this branch
+            // with (e.g.) 5.5s remaining on elemental timer, but then after F4 cast we have <1600 MP, can't cast F1,
+            // despair is now too slow
             if (
                 !strategy.UseAOERotation
                 && state.Unlocked(AID.Fire4)
@@ -226,8 +229,7 @@ namespace BossMod.BLM
                     < state.GCD + state.GetCastTime(AID.Fire4) + state.GetCastTime(AID.Fire1)
             )
             {
-                // use despair now if f1 will leave us with too little mana. we check this first
-                // since despair has a longer cast time
+                // use despair now if f1 will leave us with too little mana
                 if (
                     state.ElementalLeft >= state.GetCastEnd(AID.Despair)
                     && CanCast(state, strategy, AID.Despair, 800)
