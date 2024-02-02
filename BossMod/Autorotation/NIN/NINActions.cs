@@ -14,12 +14,22 @@ namespace BossMod.NIN
         private Rotation.State _state;
         private Rotation.Strategy _strategy;
 
+        private WPos _lastDotonPos;
+
         public Actions(Autorotation autorot, Actor player)
             : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
         {
             _config = Service.Config.Get<NINConfig>();
             _state = new(autorot.Cooldowns);
             _strategy = new();
+
+            SupportedSpell(AID.Ten).TransformAction = SupportedSpell(AID.Ten2).TransformAction = () =>
+                ActionID.MakeSpell(_state.BestTen);
+            SupportedSpell(AID.Chi).TransformAction = SupportedSpell(AID.Chi2).TransformAction = () =>
+                ActionID.MakeSpell(_state.BestChi);
+            SupportedSpell(AID.Jin).TransformAction = SupportedSpell(AID.Jin2).TransformAction = () =>
+                ActionID.MakeSpell(_state.BestJin);
+            SupportedSpell(AID.Ninjutsu).TransformAction = () => ActionID.MakeSpell(_state.CurrentNinjutsu);
 
             _config.Modified += OnConfigModified;
             OnConfigModified(null, EventArgs.Empty);
@@ -40,6 +50,7 @@ namespace BossMod.NIN
                 return new();
 
             var aid = Rotation.GetNextBestGCD(_state, _strategy);
+
             return MakeResult(aid, Autorot.PrimaryTarget);
         }
 
@@ -65,6 +76,19 @@ namespace BossMod.NIN
                     .Bossmods.ActiveModule?.PlanExecution
                     ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
             );
+
+            _strategy.NumPointBlankAOETargets =
+                autoAction == AutoActionST ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
+            _strategy.NumKatonTargets =
+                autoAction == AutoActionST || Autorot.PrimaryTarget == null
+                    ? 0
+                    : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
+            _strategy.NumFrogTargets =
+                autoAction == AutoActionST || Autorot.PrimaryTarget == null
+                    ? 0
+                    : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 6);
+            _strategy.NumTargetsInDoton =
+                _state.DotonLeft > 0 ? Autorot.Hints.NumPriorityTargetsInAOECircle(_lastDotonPos, 5) : 0;
         }
 
         private void UpdatePlayerState()
@@ -96,6 +120,15 @@ namespace BossMod.NIN
             _state.TargetTrickLeft = StatusDetails(Autorot.PrimaryTarget, SID.TrickAttack, Player.InstanceID).Left;
         }
 
+        protected override void OnActionSucceeded(ActorCastEvent ev)
+        {
+            // TODO there is a better way to do this, right?
+            if (ev.Action.ID == (uint)AID.Doton)
+                _lastDotonPos = Player.Position;
+
+            base.OnActionSucceeded(ev);
+        }
+
         protected override void QueueAIActions()
         {
             if (_state.Unlocked(AID.SecondWind))
@@ -116,7 +149,6 @@ namespace BossMod.NIN
                     Player,
                     Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f
                 );
-
         }
 
         private void OnConfigModified(object? sender, EventArgs args)
