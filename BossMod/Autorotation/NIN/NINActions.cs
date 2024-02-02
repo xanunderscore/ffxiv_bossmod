@@ -10,29 +10,29 @@ namespace BossMod.NIN
         public const int AutoActionST = AutoActionFirstCustom + 0;
         public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
+        private NINConfig _config;
         private Rotation.State _state;
         private Rotation.Strategy _strategy;
 
         public Actions(Autorotation autorot, Actor player)
             : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
         {
+            _config = Service.Config.Get<NINConfig>();
             _state = new(autorot.Cooldowns);
             _strategy = new();
 
-            SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = AutoActionST;
+            _config.Modified += OnConfigModified;
+            OnConfigModified(null, EventArgs.Empty);
         }
 
-        public override CommonRotation.PlayerState GetState()
+        public override CommonRotation.PlayerState GetState() => _state;
+
+        public override CommonRotation.Strategy GetStrategy() => _strategy;
+
+        public override void Dispose()
         {
-            return _state;
+            _config.Modified -= OnConfigModified;
         }
-
-        public override CommonRotation.Strategy GetStrategy()
-        {
-            return _strategy;
-        }
-
-        public override void Dispose() { }
 
         protected override NextAction CalculateAutomaticGCD()
         {
@@ -50,12 +50,7 @@ namespace BossMod.NIN
 
             ActionID res = new();
             if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
-                res = Rotation.GetNextBestOGCD(
-                    _state,
-                    _strategy,
-                    deadline - _state.OGCDSlotLength,
-                    false
-                );
+                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength, false);
             if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
                 res = Rotation.GetNextBestOGCD(_state, _strategy, deadline, true);
             return MakeResult(res, Autorot.PrimaryTarget);
@@ -63,8 +58,18 @@ namespace BossMod.NIN
 
         protected override void UpdateInternalState(int autoAction)
         {
-            FillCommonPlayerState(_state);
+            UpdatePlayerState();
             FillCommonStrategy(_strategy, CommonDefinitions.IDPotionDex);
+            _strategy.ApplyStrategyOverrides(
+                Autorot
+                    .Bossmods.ActiveModule?.PlanExecution
+                    ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+            );
+        }
+
+        private void UpdatePlayerState()
+        {
+            FillCommonPlayerState(_state);
 
             var gauge = Service.JobGauges.Get<NINGauge>();
             _state.HutonLeft = gauge.HutonTimer / 1000f;
@@ -86,23 +91,40 @@ namespace BossMod.NIN
             _state.DotonLeft = StatusDetails(Player, SID.Doton, Player.InstanceID).Left;
             _state.MeisuiLeft = StatusDetails(Player, SID.Meisui, Player.InstanceID).Left;
             _state.HiddenLeft = StatusDetails(Player, SID.Hidden, Player.InstanceID).Left;
-            _state.KamaitachiLeft = StatusDetails(
-                Player,
-                SID.PhantomKamaitachiReady,
-                Player.InstanceID
-            ).Left;
-            _state.TargetMugLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.VulnerabilityUp,
-                Player.InstanceID
-            ).Left;
-            _state.TargetTrickLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.TrickAttack,
-                Player.InstanceID
-            ).Left;
+            _state.KamaitachiLeft = StatusDetails(Player, SID.PhantomKamaitachiReady, Player.InstanceID).Left;
+            _state.TargetMugLeft = StatusDetails(Autorot.PrimaryTarget, SID.VulnerabilityUp, Player.InstanceID).Left;
+            _state.TargetTrickLeft = StatusDetails(Autorot.PrimaryTarget, SID.TrickAttack, Player.InstanceID).Left;
         }
 
-        protected override void QueueAIActions() { }
+        protected override void QueueAIActions()
+        {
+            if (_state.Unlocked(AID.SecondWind))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.SecondWind),
+                    Player,
+                    Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.5f
+                );
+            if (_state.Unlocked(AID.Bloodbath))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.Bloodbath),
+                    Player,
+                    Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f
+                );
+            if (_state.Unlocked(AID.ShadeShift))
+                SimulateManualActionForAI(
+                    ActionID.MakeSpell(AID.ShadeShift),
+                    Player,
+                    Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f
+                );
+
+        }
+
+        private void OnConfigModified(object? sender, EventArgs args)
+        {
+            SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
+            SupportedSpell(AID.DeathBlossom).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+
+            _strategy.NonCombatHide = _config.AutoHide;
+        }
     }
 }
