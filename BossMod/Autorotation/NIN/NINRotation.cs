@@ -19,7 +19,6 @@ namespace BossMod.NIN
             public float MeisuiLeft;
             public float HiddenLeft;
             public float KamaitachiLeft;
-            public WPos DotonPosition;
 
             public (float Left, int Combo) TenChiJin;
             public (float Left, int Combo) Mudra;
@@ -91,7 +90,7 @@ namespace BossMod.NIN
 
             public override string ToString()
             {
-                return $"D={DotonPosition}, M={ShowMudra(Mudra.Combo)}/{Mudra.Left:f2}, PotCD={PotionCD:f3}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
+                return $"M={ShowMudra(Mudra.Combo)}/{Mudra.Left:f2}, PotCD={PotionCD:f3}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
             }
         }
 
@@ -119,18 +118,18 @@ namespace BossMod.NIN
 
             if (strategy.CombatTimer < 0)
             {
-                if (strategy.CombatTimer < -100 && state.HutonLeft < 5 && DoNinjutsu(state, AID.Huton, out act))
+                if (strategy.CombatTimer < -100 && state.HutonLeft < 5 && PerformNinjutsu(state, AID.Huton, out act))
                     return act;
 
                 if (
                     strategy.CombatTimer > -9.5
                     && strategy.CombatTimer < -6
                     && state.HutonLeft < 30
-                    && DoNinjutsu(state, AID.Huton, out act)
+                    && PerformNinjutsu(state, AID.Huton, out act)
                 )
                     return act;
 
-                if (strategy.CombatTimer > -6 && DoNinjutsu(state, AID.Suiton, out act))
+                if (strategy.CombatTimer > -6 && PerformNinjutsu(state, AID.Suiton, out act))
                 {
                     // delay suiton
                     if (act == AID.Suiton && strategy.CombatTimer < -1)
@@ -146,14 +145,6 @@ namespace BossMod.NIN
             if (!state.TargetingEnemy)
                 return AID.None;
 
-            if (
-                state.TargetTrickLeft == 0
-                && state.CD(CDGroup.TrickAttack) < 20
-                && state.SuitonLeft == 0
-                && DoNinjutsu(state, AID.Suiton, out act)
-            )
-                return act;
-
             if (state.KamaitachiLeft > state.GCD && state.HutonLeft < 50)
                 return AID.PhantomKamaitachi;
 
@@ -167,24 +158,40 @@ namespace BossMod.NIN
 
             if (ShouldUseDamageNinjutsu(state, strategy))
             {
+                // escape hatch. one of the conditions below might have changed during our cast, but the rotation isn't smart enough to know that
+                if (state.CurrentNinjutsu is AID.GokaMekkyaku or AID.HyoshoRanryu or AID.Katon or AID.Raiton)
+                    return state.CurrentNinjutsu;
+
                 if (state.KassatsuLeft > state.GCD + (2 - state.CurrentComboLength))
                 {
+                    if (strategy.NumKatonTargets >= 3 && PerformNinjutsu(state, AID.GokaMekkyaku, out act))
+                        return act;
+
                     // wait until trick application to use hyosho
-                    if (state.SuitonLeft == 0 && DoNinjutsu(state, AID.HyoshoRanryu, out act))
+                    if (state.SuitonLeft == 0 && PerformNinjutsu(state, AID.HyoshoRanryu, out act))
                         return act;
                 }
                 else
                 {
-                    if (state.CurrentNinjutsu is AID.Raiton or AID.Katon)
-                        return state.CurrentNinjutsu;
-
-                    if (strategy.NumKatonTargets >= 3 && DoNinjutsu(state, AID.Katon, out act))
+                    if (strategy.NumKatonTargets >= 3 && PerformNinjutsu(state, AID.Katon, out act))
                         return act;
 
-                    if (DoNinjutsu(state, AID.Raiton, out act))
+                    if (PerformNinjutsu(state, AID.Raiton, out act))
                         return act;
                 }
             }
+
+            // strategy overview: spending charges on suiton + trick on dungeon packs is generally a potency loss. it's
+            // better to spend on katon and/or doton. because the autorotation can't tell the difference between one
+            // tanky dungeon mob and a boss, we try to ensure that charges are spent on katon first in order to avoid
+            // this issue
+            if (
+                state.CD(CDGroup.TrickAttack) < 20
+                && strategy.NumKatonTargets == 1
+                && state.SuitonLeft == 0
+                && PerformNinjutsu(state, AID.Suiton, out act)
+            )
+                return act;
 
             if (state.RaijuReady.Left > state.GCD)
             {
@@ -203,9 +210,10 @@ namespace BossMod.NIN
             return AID.SpinningEdge;
         }
 
-        public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline, bool lastSlot)
+        public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline)
         {
             // don't use anything during ninjutsu as it breaks combo
+            // TODO does this need to be a condition on all of our ogcd action definitions to prevent queueing?
             if (state.Mudra.Left > 0 || state.TenChiJin.Left > 0)
                 return new();
 
@@ -213,7 +221,7 @@ namespace BossMod.NIN
                 state.CD(CDGroup.Ten) > 0
                 && strategy.NonCombatHide
                 && state.CanWeave(CDGroup.Hide, 0.6f, deadline)
-                && strategy.CombatTimer <= 0
+                && strategy.CombatTimer < 0
             )
                 return ActionID.MakeSpell(AID.Hide);
 
@@ -225,7 +233,12 @@ namespace BossMod.NIN
                 return ActionID.MakeSpell(AID.Kassatsu);
 
             if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
+            {
+                if (!state.Unlocked(AID.Bhavacakra) || strategy.NumFrogTargets >= (state.MeisuiLeft > deadline ? 4 : 3))
+                    return ActionID.MakeSpell(AID.HellfrogMedium);
+
                 return ActionID.MakeSpell(AID.Bhavacakra);
+            }
 
             if (state.TargetTrickLeft > 0)
             {
@@ -235,8 +248,8 @@ namespace BossMod.NIN
                 if (
                     // TCJ can't be used during kassatsu
                     state.KassatsuLeft == 0
-                    // do not use if ninjutsu charges would overcap during, plus one extra GCD in case we want to use bhava right away
-                    && state.CD(CDGroup.Ten) > state.GCD + 3 + state.AttackGCDTime
+                    // do not use if ninjutsu charges would overcap during
+                    && state.CD(CDGroup.Ten) > state.GCD + 3
                     && state.CanWeave(CDGroup.TenChiJin, 0.6f, deadline)
                 )
                     return ActionID.MakeSpell(AID.TenChiJin);
@@ -257,7 +270,7 @@ namespace BossMod.NIN
             return new();
         }
 
-        private static bool DoNinjutsu(State state, AID ninjutsu, out AID act)
+        private static bool PerformNinjutsu(State state, AID ninjutsu, out AID act)
         {
             act = AID.None;
 
@@ -283,15 +296,19 @@ namespace BossMod.NIN
 
         private static bool ShouldUseDamageNinjutsu(State state, Strategy strategy)
         {
+            // when fighting packs in dungeons, use all mudra charges
+            if (strategy.NumKatonTargets >= 3)
+                return true;
+
             // spam raiton in trick windows
             if (state.TargetTrickLeft > state.GCD && state.Bunshin.Stacks < 5)
                 return true;
 
+            // for opener. TODO this is a hack, figure out a better condition for it, something to do with ninjutsu CD
             if (state.TargetMugLeft > state.GCD && state.CD(CDGroup.TenChiJin) > 0)
                 return true;
 
-            // prevent charge overcap (TODO: make sure we are saving for trick)
-            // (note that the first mudra use increases the cooldown by 20s)
+            // prevent charge overcap (TODO: make sure we are saving for trick) (note that the first mudra use increases the cooldown by 20s)
             if (state.CD(CDGroup.Ten) < (state.Mudra.Left > 0 ? 25 : 5))
                 return true;
 

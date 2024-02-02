@@ -61,9 +61,9 @@ namespace BossMod.NIN
 
             ActionID res = new();
             if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
-                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength, false);
+                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength);
             if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
-                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline, true);
+                res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
             return MakeResult(res, Autorot.PrimaryTarget);
         }
 
