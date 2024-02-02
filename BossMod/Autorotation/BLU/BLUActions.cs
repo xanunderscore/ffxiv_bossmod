@@ -57,49 +57,27 @@ namespace BossMod.BLU
 
             for (var i = 0; i < 24; i++)
                 _state.BLUSlots[i] = (AID)
-                    FFXIVClientStructs
-                        .FFXIV.Client.Game.ActionManager.Instance()
-                        ->GetActiveBlueMageActionInSlot(i);
+                    FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->GetActiveBlueMageActionInSlot(i);
 
             _state.TargetMortalFlame = Autorot.PrimaryTarget?.FindStatus(SID.MortalFlame) != null;
             var bomExpire = Autorot.PrimaryTarget?.FindStatus(SID.BreathOfMagic)?.ExpireAt;
             _state.TargetBoMLeft = bomExpire == null ? 0f : StatusDuration(bomExpire.Value);
-            _state.TargetDropsyLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.Dropsy,
-                Player.InstanceID
-            ).Left;
-            _state.TargetSlowLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.Slow,
-                Player.InstanceID
-            ).Left;
-            _state.TargetBindLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.Bind,
-                Player.InstanceID
-            ).Left;
+            _state.TargetDropsyLeft = StatusDetails(Autorot.PrimaryTarget, SID.Dropsy, Player.InstanceID).Left;
+            _state.TargetSlowLeft = StatusDetails(Autorot.PrimaryTarget, SID.Slow, Player.InstanceID).Left;
+            _state.TargetBindLeft = StatusDetails(Autorot.PrimaryTarget, SID.Bind, Player.InstanceID).Left;
             _state.TargetLightheadedLeft = StatusDetails(
                 Autorot.PrimaryTarget,
                 SID.Lightheaded,
                 Player.InstanceID
             ).Left;
-            _state.TargetBegrimedLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.Begrimed,
-                Player.InstanceID
-            ).Left;
+            _state.TargetBegrimedLeft = StatusDetails(Autorot.PrimaryTarget, SID.Begrimed, Player.InstanceID).Left;
 
             _state.SurpanakhasFury = StatusDetails(Player, SID.SurpanakhasFury, Player.InstanceID);
             _state.WaxingLeft = StatusDetails(Player, SID.WaxingNocturne, Player.InstanceID).Left;
             _state.HarmonizedLeft = StatusDetails(Player, SID.Harmonized, Player.InstanceID).Left;
             _state.TinglingLeft = StatusDetails(Player, SID.Tingling, Player.InstanceID).Left;
             _state.BoostLeft = StatusDetails(Player, SID.Boost, Player.InstanceID).Left;
-            _state.BrushWithDeathLeft = StatusDetails(
-                Player,
-                SID.BrushWithDeath,
-                Player.InstanceID
-            ).Left;
+            _state.BrushWithDeathLeft = StatusDetails(Player, SID.BrushWithDeath, Player.InstanceID).Left;
             _state.ToadOilLeft = StatusDetails(Player, SID.ToadOil, Player.InstanceID).Left;
             _state.VeilLeft = StatusDetails(Player, SID.VeilOfTheWhorl, Player.InstanceID).Left;
             _state.ApokalypsisLeft = StatusDetails(Player, SID.Apokalypsis, Player.InstanceID).Left;

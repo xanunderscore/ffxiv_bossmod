@@ -55,11 +55,7 @@ namespace BossMod.BLU
             )
                 return AID.Bristle;
 
-            if (
-                state.TargetBoMLeft <= state.GCD
-                && state.OnSlot(AID.BreathOfMagic)
-                && state.RangeToTarget <= 10
-            )
+            if (state.TargetBoMLeft <= state.GCD && state.OnSlot(AID.BreathOfMagic) && state.RangeToTarget <= 10)
                 return AID.BreathOfMagic;
 
             if (state.OnSlot(AID.TripleTrident) && state.RangeToTarget < 3)

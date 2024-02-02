@@ -284,21 +284,9 @@ namespace BossMod.BLU
         {
             SupportedActions = CommonDefinitions.CommonActionData(CommonDefinitions.IDPotionInt);
             SupportedActions.GCDCast(AID.Whistle, 0, 1.0f);
-            SupportedActions.OGCDCast(
-                AID.TheRoseOfDestruction,
-                25,
-                CDGroup.TheRoseOfDestruction,
-                30.0f,
-                2.0f
-            );
+            SupportedActions.OGCDCast(AID.TheRoseOfDestruction, 25, CDGroup.TheRoseOfDestruction, 30.0f, 2.0f);
             SupportedActions.GCD(AID.DivineCataract, 0);
-            SupportedActions.OGCDCast(
-                AID.ChelonianGate,
-                0,
-                CDGroup.TheRoseOfDestruction,
-                30.0f,
-                2.0f
-            );
+            SupportedActions.OGCDCast(AID.ChelonianGate, 0, CDGroup.TheRoseOfDestruction, 30.0f, 2.0f);
             SupportedActions.OGCDCast(AID.AngelsSnack, 0, CDGroup.AngelsSnack, 120.0f, 2.0f);
             SupportedActions.GCDCast(AID.FeculentFlood, 20, 2.0f);
             SupportedActions.GCDCast(AID.SaintlyBeam, 25, 2.0f);
@@ -334,24 +322,12 @@ namespace BossMod.BLU
             SupportedActions.GCDCast(AID.MortalFlame, 25, 2.0f);
             SupportedActions.OGCDCast(AID.CandyCane, 25, CDGroup.CandyCane, 90.0f, 1.0f);
             SupportedActions.GCDCast(AID.LaserEye, 25, 2.0f);
-            SupportedActions.OGCDCast(
-                AID.WingedReprobation,
-                25,
-                CDGroup.WingedReprobation,
-                90.0f,
-                1.0f
-            );
+            SupportedActions.OGCDCast(AID.WingedReprobation, 25, CDGroup.WingedReprobation, 90.0f, 1.0f);
             SupportedActions.OGCDCast(AID.ForceField, 0, CDGroup.ForceField, 120.0f, 2.0f);
             SupportedActions.GCDCast(AID.ConvictionMarcato, 25, 2.0f);
             SupportedActions.GCDCast(AID.DimensionalShift, 0, 5.0f);
             SupportedActions.GCDCast(AID.DivinationRune, 0, 2.0f);
-            SupportedActions.OGCDCast(
-                AID.RubyDynamics,
-                0,
-                CDGroup.TheRoseOfDestruction,
-                30.0f,
-                2.0f
-            );
+            SupportedActions.OGCDCast(AID.RubyDynamics, 0, CDGroup.TheRoseOfDestruction, 30.0f, 2.0f);
             SupportedActions.GCDCast(AID.DeepClean, 25, 2.0f);
             SupportedActions.GCDCast(AID.PeatPelt, 25, 2.0f);
             SupportedActions.GCDCast(AID.WildRage, 0, 5.0f);
