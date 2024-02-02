@@ -66,7 +66,7 @@ namespace BossMod.BLU
         TheLook = 11399, // L1, 2.0s cast, range 0, AOE cone 6/0, targets=self, animLock=0.100s
         DrillCannons = 11398, // L1, 2.0s cast, range 20, AOE rect 20/3, targets=hostile, animLock=0.100s
         SonicBoom = 18308, // L1, 1.0s cast, range 25, single-target 0/0, targets=hostile, animLock=0.100s
-        A1000Needles = 11397, // L1, 6.0s cast, range 0, AOE circle 4/0, targets=self, animLock=0.100s
+        ThousandNeedles = 11397, // L1, 6.0s cast, range 0, AOE circle 4/0, targets=self, animLock=0.100s
         BloodDrain = 11395, // L1, 2.0s cast, range 25, single-target 0/0, targets=hostile, animLock=0.100s
         MindBlast = 11394, // L1, 1.0s cast, range 0, AOE circle 6/0, targets=self, animLock=0.100s
         Bristle = 11393, // L1, 1.0s cast, range 0, single-target 0/0, targets=self, animLock=0.100s
@@ -78,7 +78,7 @@ namespace BossMod.BLU
         HighVoltage = 11387, // L1, 2.0s cast, range 0, AOE circle 12/0, targets=self, animLock=0.100s
         SongOfTorment = 11386, // L1, 2.0s cast, range 25, single-target 0/0, targets=hostile, animLock=0.100s
         WaterCannon = 11385, // L1, 2.0s cast, range 25, single-target 0/0, targets=hostile, animLock=0.100s
-        A4TonzeWeight = 11384, // L1, 2.0s cast, range 25, AOE circle 4/0, targets=area, animLock=0.100s
+        FourTonzeWeight = 11384, // L1, 2.0s cast, range 25, AOE circle 4/0, targets=area, animLock=0.100s
         Snort = 11383, // L1, 2.0s cast, range 0, AOE cone 6/0, targets=self, animLock=0.100s
         BombToss = 11396, // L1, 2.0s cast, range 25, AOE circle 6/0, targets=area, animLock=0.100s
         StickyTongue = 11412, // L1, 2.0s cast, range 25, single-target 0/0, targets=hostile, animLock=0.100s
@@ -366,7 +366,7 @@ namespace BossMod.BLU
             SupportedActions.GCDCast(AID.TheLook, 0, 2.0f);
             SupportedActions.GCDCast(AID.DrillCannons, 20, 2.0f);
             SupportedActions.GCDCast(AID.SonicBoom, 25, 1.0f);
-            SupportedActions.GCDCast(AID.A1000Needles, 0, 6.0f);
+            SupportedActions.GCDCast(AID.ThousandNeedles, 0, 6.0f);
             SupportedActions.GCDCast(AID.BloodDrain, 25, 2.0f);
             SupportedActions.GCDCast(AID.MindBlast, 0, 1.0f);
             SupportedActions.GCDCast(AID.Bristle, 0, 1.0f);
@@ -378,7 +378,7 @@ namespace BossMod.BLU
             SupportedActions.GCDCast(AID.HighVoltage, 0, 2.0f);
             SupportedActions.GCDCast(AID.SongOfTorment, 25, 2.0f);
             SupportedActions.GCDCast(AID.WaterCannon, 25, 2.0f);
-            SupportedActions.GCDCast(AID.A4TonzeWeight, 25, 2.0f);
+            SupportedActions.GCDCast(AID.FourTonzeWeight, 25, 2.0f);
             SupportedActions.GCDCast(AID.Snort, 0, 2.0f);
             SupportedActions.GCDCast(AID.BombToss, 25, 2.0f);
             SupportedActions.GCDCast(AID.StickyTongue, 25, 2.0f);

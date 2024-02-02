@@ -47,7 +47,7 @@ namespace BossMod.BLU
                 return AID.MortalFlame;
 
             if (
-                state.TargetBoMLeft <= state.GCD + 2.22
+                state.TargetBoMLeft <= state.GCD + state.SpellGCDTime
                 && state.OnSlot(AID.BreathOfMagic)
                 && state.OnSlot(AID.Bristle)
                 && state.RangeToTarget <= 10
@@ -58,12 +58,12 @@ namespace BossMod.BLU
             if (state.TargetBoMLeft <= state.GCD && state.OnSlot(AID.BreathOfMagic) && state.RangeToTarget <= 10)
                 return AID.BreathOfMagic;
 
-            if (state.OnSlot(AID.TripleTrident) && state.RangeToTarget < 3)
+            if (state.OnSlot(AID.TripleTrident) && state.RangeToTarget <= 3)
             {
                 if (
                     state.OnSlot(AID.Whistle)
-                    && state.CD(CDGroup.TripleTrident) - 2.22 <= state.GCD
-                    && state.HarmonizedLeft - 2.22 <= state.GCD
+                    && state.CD(CDGroup.TripleTrident) <= state.GCD + state.SpellGCDTime
+                    && state.HarmonizedLeft <= state.GCD + state.SpellGCDTime
                 )
                     return AID.Whistle;
 

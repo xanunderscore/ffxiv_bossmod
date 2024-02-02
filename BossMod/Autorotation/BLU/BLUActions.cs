@@ -65,11 +65,7 @@ namespace BossMod.BLU
             _state.TargetDropsyLeft = StatusDetails(Autorot.PrimaryTarget, SID.Dropsy, Player.InstanceID).Left;
             _state.TargetSlowLeft = StatusDetails(Autorot.PrimaryTarget, SID.Slow, Player.InstanceID).Left;
             _state.TargetBindLeft = StatusDetails(Autorot.PrimaryTarget, SID.Bind, Player.InstanceID).Left;
-            _state.TargetLightheadedLeft = StatusDetails(
-                Autorot.PrimaryTarget,
-                SID.Lightheaded,
-                Player.InstanceID
-            ).Left;
+            _state.TargetLightheadedLeft = StatusDetails(Autorot.PrimaryTarget, SID.Lightheaded, Player.InstanceID).Left;
             _state.TargetBegrimedLeft = StatusDetails(Autorot.PrimaryTarget, SID.Begrimed, Player.InstanceID).Left;
 
             _state.SurpanakhasFury = StatusDetails(Player, SID.SurpanakhasFury, Player.InstanceID);
