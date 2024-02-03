@@ -98,6 +98,7 @@ namespace BossMod.NIN
         {
             public bool NonCombatHide;
             public bool AllowDashRaiju;
+            public bool UseAOERotation;
 
             public int NumPointBlankAOETargets;
             public int NumKatonTargets;
@@ -144,6 +145,15 @@ namespace BossMod.NIN
 
             if (!state.TargetingEnemy)
                 return AID.None;
+
+            if (
+                !strategy.UseAOERotation
+                && state.TargetTrickLeft == 0
+                && state.CD(CDGroup.TrickAttack) < 20
+                && state.SuitonLeft == 0
+                && PerformNinjutsu(state, AID.Suiton, out act)
+            )
+                return act;
 
             if (state.KamaitachiLeft > state.GCD && state.HutonLeft < 50)
                 return AID.PhantomKamaitachi;
