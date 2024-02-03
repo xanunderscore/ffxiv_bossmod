@@ -143,17 +143,8 @@ namespace BossMod.NIN
                     return AID.None;
             }
 
-            if (!state.TargetingEnemy)
+            if (!HaveTarget(state, strategy))
                 return AID.None;
-
-            if (
-                !strategy.UseAOERotation
-                && state.TargetTrickLeft == 0
-                && state.CD(CDGroup.TrickAttack) < 20
-                && state.SuitonLeft == 0
-                && PerformNinjutsu(state, AID.Suiton, out act)
-            )
-                return act;
 
             if (state.KamaitachiLeft > state.GCD && state.HutonLeft < 50)
                 return AID.PhantomKamaitachi;
@@ -191,13 +182,10 @@ namespace BossMod.NIN
                 }
             }
 
-            // strategy overview: spending charges on suiton + trick on dungeon packs is generally a potency loss. it's
-            // better to spend on katon and/or doton. because the autorotation can't tell the difference between one
-            // tanky dungeon mob and a boss, we try to ensure that charges are spent on katon first in order to avoid
-            // this issue
+            // spending charges on suiton + trick on dungeon packs is generally a potency loss
             if (
-                state.CD(CDGroup.TrickAttack) < 20
-                && strategy.NumKatonTargets == 1
+                !strategy.UseAOERotation
+                && state.CD(CDGroup.TrickAttack) < 20
                 && state.SuitonLeft == 0
                 && PerformNinjutsu(state, AID.Suiton, out act)
             )
@@ -211,13 +199,23 @@ namespace BossMod.NIN
                     return AID.ForkedRaiju;
             }
 
-            if (state.ComboLastMove == AID.GustSlash)
-                return state.HutonLeft < 30 ? AID.ArmorCrush : AID.AeolianEdge;
+            if (strategy.NumPointBlankAOETargets >= 3)
+            {
+                if (state.ComboLastMove == AID.DeathBlossom)
+                    return AID.HakkeMujinsatsu;
 
-            if (state.ComboLastMove == AID.SpinningEdge)
-                return AID.GustSlash;
+                return AID.DeathBlossom;
+            }
+            else
+            {
+                if (state.ComboLastMove == AID.GustSlash)
+                    return state.HutonLeft < 30 ? AID.ArmorCrush : AID.AeolianEdge;
 
-            return AID.SpinningEdge;
+                if (state.ComboLastMove == AID.SpinningEdge)
+                    return AID.GustSlash;
+
+                return AID.SpinningEdge;
+            }
         }
 
         public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline)
@@ -250,7 +248,7 @@ namespace BossMod.NIN
                 return ActionID.MakeSpell(AID.Bhavacakra);
             }
 
-            if (state.TargetTrickLeft > 0)
+            if (state.TargetTrickLeft > 0 || strategy.UseAOERotation)
             {
                 if (state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
                     return ActionID.MakeSpell(AID.DreamWithinADream);
@@ -307,7 +305,7 @@ namespace BossMod.NIN
         private static bool ShouldUseDamageNinjutsu(State state, Strategy strategy)
         {
             // when fighting packs in dungeons, use all mudra charges
-            if (strategy.NumKatonTargets >= 3)
+            if (strategy.UseAOERotation)
                 return true;
 
             // spam raiton in trick windows
@@ -324,7 +322,7 @@ namespace BossMod.NIN
 
             // if a conditional flipped while we were in the middle of a combo, finish the combo anyway; some cases where this can happen:
             // * trick runs out while casting raiton
-            // * enemy dies while casting katon, changing potential targets from 3 to 2
+            // * maybe some others idk lol. kassatsu expire?
             if (state.Mudra.Left > 0)
                 return true;
 
@@ -333,7 +331,7 @@ namespace BossMod.NIN
 
         private static bool ShouldUseMug(State state, Strategy strategy)
         {
-            if (!state.Unlocked(AID.Mug))
+            if (!state.Unlocked(AID.Mug) || strategy.UseAOERotation)
                 return false;
 
             if (strategy.CombatTimer < 30)
@@ -344,7 +342,11 @@ namespace BossMod.NIN
 
         private static bool ShouldUseTrick(State state, Strategy strategy)
         {
-            if (!state.Unlocked(AID.TrickAttack) || (strategy.CombatTimer > 0 && state.SuitonLeft == 0))
+            if (
+                !state.Unlocked(AID.TrickAttack)
+                || (strategy.CombatTimer > 0 && state.SuitonLeft == 0)
+                || strategy.UseAOERotation
+            )
                 return false;
 
             if (strategy.CombatTimer < 30)
@@ -358,7 +360,7 @@ namespace BossMod.NIN
             if (!state.Unlocked(AID.Bunshin) || state.Ninki < 50)
                 return false;
 
-            if (strategy.CombatTimer < 30)
+            if (strategy.CombatTimer < 30 && !strategy.UseAOERotation)
                 return state.TargetMugLeft > 0;
 
             return true;
@@ -370,9 +372,12 @@ namespace BossMod.NIN
                 return false;
 
             if (state.TargetTrickLeft > 0)
-                return state.CD(CDGroup.Meisui) > 0;
+                return state.CD(CDGroup.Meisui) > 0 || !state.Unlocked(AID.Meisui);
 
-            return state.Ninki == 100;
+            return state.Ninki >= (strategy.UseAOERotation ? 50 : 90);
         }
+
+        private static bool HaveTarget(State state, Strategy strategy) =>
+            state.TargetingEnemy || strategy.NumPointBlankAOETargets > 0;
     }
 }

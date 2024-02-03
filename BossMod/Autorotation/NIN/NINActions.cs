@@ -89,6 +89,7 @@ namespace BossMod.NIN
                     : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 6);
             _strategy.NumTargetsInDoton =
                 _state.DotonLeft > 0 ? Autorot.Hints.NumPriorityTargetsInAOECircle(_lastDotonPos, 5) : 0;
+            _strategy.UseAOERotation = autoAction == AutoActionAOE;
         }
 
         private void UpdatePlayerState()
