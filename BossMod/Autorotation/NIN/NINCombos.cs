@@ -4,7 +4,7 @@ namespace BossMod.NIN
 {
     class Combos {
         static readonly AID[] Sequences =
-            [ AID.Jin, AID.FumaShuriken, AID.FumaShuriken, AID.FumaShuriken, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None
+            [ AID.Ten, AID.FumaShuriken, AID.FumaShuriken, AID.FumaShuriken, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None
             , AID.Jin, AID.None, AID.Ten2, AID.Ten2, AID.None, AID.None, AID.Katon, AID.Katon, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None
             , AID.Jin, AID.Chi2, AID.None, AID.Chi2, AID.None, AID.None, AID.None, AID.None, AID.None, AID.Raiton, AID.None, AID.Raiton, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None
             , AID.Ten, AID.Jin2, AID.Jin2, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.Hyoton, AID.Hyoton, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None, AID.None
@@ -42,7 +42,7 @@ namespace BossMod.NIN
                 return AID.None;
             }
             try {
-            return Sequences[ix * 58 + comboState];
+                return Sequences[ix * 58 + comboState];
             } catch (IndexOutOfRangeException) {
                 Service.Log($"index {ix * 58 + comboState} is invalid");
                 return AID.None;

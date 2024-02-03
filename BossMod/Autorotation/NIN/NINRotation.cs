@@ -17,7 +17,7 @@ namespace BossMod.NIN
             public float TargetMugLeft;
             public float TargetTrickLeft;
             public float MeisuiLeft;
-            public float HiddenLeft;
+            public bool Hidden;
             public float KamaitachiLeft;
 
             public (float Left, int Combo) TenChiJin;
@@ -96,7 +96,8 @@ namespace BossMod.NIN
 
         public class Strategy : CommonRotation.Strategy
         {
-            public bool NonCombatHide;
+            public bool AutoHide;
+            public bool AutoUnhide;
             public bool AllowDashRaiju;
             public bool UseAOERotation;
 
@@ -163,7 +164,13 @@ namespace BossMod.NIN
                 if (state.CurrentNinjutsu is AID.GokaMekkyaku or AID.HyoshoRanryu or AID.Katon or AID.Raiton)
                     return state.CurrentNinjutsu;
 
-                if (state.KassatsuLeft > state.GCD + (2 - state.CurrentComboLength))
+                if (!state.Unlocked(AID.Chi))
+                {
+                    // level <35, raiton is not unlocked yet
+                    if (PerformNinjutsu(state, AID.FumaShuriken, out act))
+                        return act;
+                }
+                else if (state.KassatsuLeft > state.GCD + (2 - state.CurrentComboLength))
                 {
                     if (strategy.NumKatonTargets >= 3 && PerformNinjutsu(state, AID.GokaMekkyaku, out act))
                         return act;
@@ -199,19 +206,19 @@ namespace BossMod.NIN
                     return AID.ForkedRaiju;
             }
 
-            if (strategy.NumPointBlankAOETargets >= 3)
+            if (strategy.NumPointBlankAOETargets >= 3 && state.Unlocked(AID.DeathBlossom))
             {
-                if (state.ComboLastMove == AID.DeathBlossom)
+                if (state.ComboLastMove == AID.DeathBlossom && state.Unlocked(AID.HakkeMujinsatsu))
                     return AID.HakkeMujinsatsu;
 
                 return AID.DeathBlossom;
             }
             else
             {
-                if (state.ComboLastMove == AID.GustSlash)
-                    return state.HutonLeft < 30 ? AID.ArmorCrush : AID.AeolianEdge;
+                if (state.ComboLastMove == AID.GustSlash && state.Unlocked(AID.AeolianEdge))
+                    return state.HutonLeft < 30 && state.Unlocked(AID.ArmorCrush) ? AID.ArmorCrush : AID.AeolianEdge;
 
-                if (state.ComboLastMove == AID.SpinningEdge)
+                if (state.ComboLastMove == AID.SpinningEdge && state.Unlocked(AID.GustSlash))
                     return AID.GustSlash;
 
                 return AID.SpinningEdge;
@@ -227,11 +234,14 @@ namespace BossMod.NIN
 
             if (
                 state.CD(CDGroup.Ten) > 0
-                && strategy.NonCombatHide
+                && strategy.AutoHide
                 && state.CanWeave(CDGroup.Hide, 0.6f, deadline)
                 && strategy.CombatTimer < 0
             )
                 return ActionID.MakeSpell(AID.Hide);
+
+            if (strategy.CombatTimer < 0 && strategy.AutoUnhide && state.Hidden)
+                return ActionID.MakeSpell(AID.Unhide_DO_NOT_USE);
 
             if (
                 strategy.CombatTimer > -1
@@ -250,8 +260,11 @@ namespace BossMod.NIN
 
             if (state.TargetTrickLeft > 0 || strategy.UseAOERotation)
             {
-                if (state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
+                if (state.Unlocked(AID.DreamWithinADream) && state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
                     return ActionID.MakeSpell(AID.DreamWithinADream);
+
+                if (state.Unlocked(AID.Assassinate) && state.CanWeave(CDGroup.Assassinate, 0.6f, deadline))
+                    return ActionID.MakeSpell(AID.Assassinate);
 
                 if (
                     // TCJ can't be used during kassatsu
@@ -304,8 +317,12 @@ namespace BossMod.NIN
 
         private static bool ShouldUseDamageNinjutsu(State state, Strategy strategy)
         {
-            // when fighting packs in dungeons, use all mudra charges
-            if (strategy.UseAOERotation)
+            // target is out of range
+            if (state.RangeToTarget > 25)
+                return false;
+
+            // when fighting packs in dungeons, or if we don't have access to suiton, use all mudra charges
+            if (strategy.UseAOERotation || !state.Unlocked(AID.Suiton))
                 return true;
 
             // spam raiton in trick windows
@@ -342,11 +359,9 @@ namespace BossMod.NIN
 
         private static bool ShouldUseTrick(State state, Strategy strategy)
         {
-            if (
-                !state.Unlocked(AID.TrickAttack)
-                || (strategy.CombatTimer > 0 && state.SuitonLeft == 0)
-                || strategy.UseAOERotation
-            )
+            var canTrick = strategy.CombatTimer > 0 ? state.SuitonLeft > 0 : state.Hidden;
+
+            if (!state.Unlocked(AID.TrickAttack) || !canTrick || strategy.UseAOERotation)
                 return false;
 
             if (strategy.CombatTimer < 30)
