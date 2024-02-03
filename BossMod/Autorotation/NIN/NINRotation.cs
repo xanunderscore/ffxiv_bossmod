@@ -57,7 +57,7 @@ namespace BossMod.NIN
                             11 or 14 => [AID.TCJHuton, AID.None, AID.None],
                             _ => [AID.None, AID.None, AID.None]
                         };
-                    else if (Mudra.Left > 0)
+                    else if (Mudra.Left > 0 || KassatsuLeft > 0)
                         return [AID.Ten2, AID.Chi2, AID.Jin2];
                     else
                         return [AID.Ten, AID.Chi, AID.Jin];
