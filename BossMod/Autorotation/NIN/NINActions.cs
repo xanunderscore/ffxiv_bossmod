@@ -47,21 +47,24 @@ namespace BossMod.NIN
             if (AutoAction < AutoActionAIFight)
                 return new();
 
+            if (_strategy.CombatTimer < 0 && _strategy.AutoUnhide && _state.Hidden)
+                StatusOff((uint)SID.Hidden);
+
             var aid = Rotation.GetNextBestGCD(_state, _strategy);
 
             return MakeResult(aid, Autorot.PrimaryTarget);
         }
 
-        private unsafe void Unhide()
+        private unsafe void StatusOff(uint sid)
         {
             var obj = Service.ObjectTable[Player.SpawnIndex] as Dalamud.Game.ClientState.Objects.Types.BattleChara;
             if (obj == null)
                 return;
             var man = (FFXIVClientStructs.FFXIV.Client.Game.StatusManager*)obj.StatusList.Address;
-            var hide = man->GetStatusIndex((uint)SID.Hidden);
-            if (hide < 0)
+            var stat = man->GetStatusIndex(sid);
+            if (stat < 0)
                 return;
-            man->RemoveStatus(hide);
+            man->RemoveStatus(stat);
         }
 
         protected override NextAction CalculateAutomaticOGCD(float deadline)
@@ -74,11 +77,6 @@ namespace BossMod.NIN
                 res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength);
             if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
                 res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
-
-            if (res.ID == (uint)AID.Unhide_DO_NOT_USE) {
-                Unhide();
-                return new();
-            }
 
             return MakeResult(res, Autorot.PrimaryTarget);
         }

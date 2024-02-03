@@ -41,7 +41,7 @@ namespace BossMod.NIN
 
             public AID CurrentNinjutsu => Combos.GetCurrentNinjutsu(Mudra.Combo, KassatsuLeft > 0);
 
-            public AID[] TCJAdjust
+            private AID[] TCJAdjust
             {
                 get
                 {
@@ -147,6 +147,13 @@ namespace BossMod.NIN
             if (!HaveTarget(state, strategy))
                 return AID.None;
 
+            if (strategy.CombatTimer > 0 && state.HutonLeft == 0 && state.Unlocked(AID.Huraijin))
+                return AID.Huraijin;
+
+            // spending charges on suiton + trick on dungeon packs is generally a potency loss
+            if (ShouldUseSuiton(state, strategy) && PerformNinjutsu(state, AID.Suiton, out act))
+                return act;
+
             if (state.KamaitachiLeft > state.GCD && state.HutonLeft < 50)
                 return AID.PhantomKamaitachi;
 
@@ -160,7 +167,7 @@ namespace BossMod.NIN
 
             if (ShouldUseDamageNinjutsu(state, strategy))
             {
-                // escape hatch. one of the conditions below might have changed during our cast, but the rotation isn't smart enough to know that
+                // escape hatch. one of the conditions below changed during our cast, but the rotation isn't smart enough to know that
                 if (state.CurrentNinjutsu is AID.GokaMekkyaku or AID.HyoshoRanryu or AID.Katon or AID.Raiton)
                     return state.CurrentNinjutsu;
 
@@ -170,14 +177,27 @@ namespace BossMod.NIN
                     if (PerformNinjutsu(state, AID.FumaShuriken, out act))
                         return act;
                 }
-                else if (state.KassatsuLeft > state.GCD + (2 - state.CurrentComboLength))
+                else if (
+                    // if kassatsu expires this will hopefully fall through to case 4 below where we use regular katon
+                    // since katon's combo start is raiton's combo end it's not possible to be in a state where we can
+                    // choose which one we want to use (see escape hatch above)
+                    state.KassatsuLeft > state.GCD
+                    && state.Unlocked(AID.GokaMekkyaku)
+                    && strategy.NumKatonTargets >= 3
+                    && PerformNinjutsu(state, AID.GokaMekkyaku, out act)
+                )
                 {
-                    if (strategy.NumKatonTargets >= 3 && PerformNinjutsu(state, AID.GokaMekkyaku, out act))
-                        return act;
-
+                    return act;
+                }
+                else if (
                     // wait until trick application to use hyosho
-                    if (state.SuitonLeft == 0 && PerformNinjutsu(state, AID.HyoshoRanryu, out act))
-                        return act;
+                    // extra check here that kassatsu won't expire within 2 mudra casts. unlike goka, which downgrades
+                    // to katon (which serves the same purpose), hyosho downgrades to hyoton which is generally worthless
+                    state.KassatsuLeft > state.GCD + (2 - state.CurrentComboLength)
+                    && PerformNinjutsu(state, AID.HyoshoRanryu, out act)
+                )
+                {
+                    return act;
                 }
                 else
                 {
@@ -188,15 +208,6 @@ namespace BossMod.NIN
                         return act;
                 }
             }
-
-            // spending charges on suiton + trick on dungeon packs is generally a potency loss
-            if (
-                !strategy.UseAOERotation
-                && state.CD(CDGroup.TrickAttack) < 20
-                && state.SuitonLeft == 0
-                && PerformNinjutsu(state, AID.Suiton, out act)
-            )
-                return act;
 
             if (state.RaijuReady.Left > state.GCD)
             {
@@ -216,6 +227,9 @@ namespace BossMod.NIN
             else
             {
                 if (state.ComboLastMove == AID.GustSlash && state.Unlocked(AID.AeolianEdge))
+                    // TODO: flank armor crush is 420 vs flank aeolian 380
+                    // also don't need to refresh armor crush at exactly 29s if we aren't on flank, since 30s is a long
+                    // time and aeolian is higher potency
                     return state.HutonLeft < 30 && state.Unlocked(AID.ArmorCrush) ? AID.ArmorCrush : AID.AeolianEdge;
 
                 if (state.ComboLastMove == AID.SpinningEdge && state.Unlocked(AID.GustSlash))
@@ -240,12 +254,10 @@ namespace BossMod.NIN
             )
                 return ActionID.MakeSpell(AID.Hide);
 
-            if (strategy.CombatTimer < 0 && strategy.AutoUnhide && state.Hidden)
-                return ActionID.MakeSpell(AID.Unhide_DO_NOT_USE);
-
             if (
                 strategy.CombatTimer > -1
                 && state.CanWeave(CDGroup.Kassatsu, 0.6f, deadline)
+                && !ShouldUseSuiton(state, strategy)
                 && state.Unlocked(AID.Kassatsu)
             )
                 return ActionID.MakeSpell(AID.Kassatsu);
@@ -260,11 +272,16 @@ namespace BossMod.NIN
 
             if (state.TargetTrickLeft > 0 || strategy.UseAOERotation)
             {
-                if (state.Unlocked(AID.DreamWithinADream) && state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
-                    return ActionID.MakeSpell(AID.DreamWithinADream);
-
-                if (state.Unlocked(AID.Assassinate) && state.CanWeave(CDGroup.Assassinate, 0.6f, deadline))
+                // these two have a different cdgroup for some reason
+                if (state.Unlocked(AID.DreamWithinADream))
+                {
+                    if (state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
+                        return ActionID.MakeSpell(AID.DreamWithinADream);
+                }
+                else if (state.Unlocked(AID.Assassinate) && state.CanWeave(CDGroup.Assassinate, 0.6f, deadline))
+                {
                     return ActionID.MakeSpell(AID.Assassinate);
+                }
 
                 if (
                     // TCJ can't be used during kassatsu
@@ -298,19 +315,21 @@ namespace BossMod.NIN
             if (!state.Unlocked(ninjutsu) || (state.Mudra.Left == 0 && state.NextMudraCD > state.GCD))
                 return false;
 
-            act = Combos.GetNextAction(ninjutsu, state.Mudra.Combo);
+            var kass = state.KassatsuLeft > state.GCD;
 
-            if (act == AID.None)
+            act = Combos.GetNextAction(ninjutsu, state.Mudra.Combo) switch
             {
-                act = AID.RabbitMedium;
-            }
-            else
-            {
-                if (act == AID.Hyoton && ninjutsu == AID.HyoshoRanryu)
-                    act = AID.HyoshoRanryu;
-                if (act == AID.Katon && ninjutsu == AID.GokaMekkyaku)
-                    act = AID.GokaMekkyaku;
-            }
+                AID.None => AID.RabbitMedium,
+                AID.Hyoton => kass ? AID.HyoshoRanryu : AID.Hyoton,
+                AID.Katon => kass ? AID.GokaMekkyaku : AID.Katon,
+                AID.Ten => kass ? AID.Ten2 : AID.Ten,
+                AID.Chi => kass ? AID.Chi2 : AID.Chi,
+                AID.Jin => kass ? AID.Jin2 : AID.Jin,
+                var x => x
+            };
+
+            if (act == AID.RabbitMedium)
+                Service.Log($"error - broken combo: wanted {ninjutsu} (combo state: {state.Mudra.Combo})");
 
             return true;
         }
@@ -340,8 +359,8 @@ namespace BossMod.NIN
             // if a conditional flipped while we were in the middle of a combo, finish the combo anyway; some cases where this can happen:
             // * trick runs out while casting raiton
             // * maybe some others idk lol. kassatsu expire?
-            if (state.Mudra.Left > 0)
-                return true;
+            // if (state.Mudra.Left > 0)
+            //     return true;
 
             return false;
         }
@@ -391,6 +410,13 @@ namespace BossMod.NIN
 
             return state.Ninki >= (strategy.UseAOERotation ? 50 : 90);
         }
+
+        private static bool ShouldUseSuiton(State state, Strategy strategy) =>
+            !strategy.UseAOERotation
+            && state.Unlocked(AID.Suiton)
+            && state.SuitonLeft == 0
+            // TODO is 20 too long? this gives us 3.5 seconds of trick being off cd
+            && state.CD(CDGroup.TrickAttack) < 20;
 
         private static bool HaveTarget(State state, Strategy strategy) =>
             state.TargetingEnemy || strategy.NumPointBlankAOETargets > 0;
