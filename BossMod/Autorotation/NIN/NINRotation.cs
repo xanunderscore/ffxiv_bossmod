@@ -262,14 +262,6 @@ namespace BossMod.NIN
             )
                 return ActionID.MakeSpell(AID.Kassatsu);
 
-            if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
-            {
-                if (!state.Unlocked(AID.Bhavacakra) || strategy.NumFrogTargets >= (state.MeisuiLeft > deadline ? 4 : 3))
-                    return ActionID.MakeSpell(AID.HellfrogMedium);
-
-                return ActionID.MakeSpell(AID.Bhavacakra);
-            }
-
             if (state.TargetTrickLeft > 0 || strategy.UseAOERotation)
             {
                 // these two have a different cdgroup for some reason
@@ -294,6 +286,14 @@ namespace BossMod.NIN
 
                 if (state.SuitonLeft > state.GCD && state.CanWeave(CDGroup.Meisui, 0.6f, deadline))
                     return ActionID.MakeSpell(AID.Meisui);
+            }
+
+            if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
+            {
+                if (!state.Unlocked(AID.Bhavacakra) || strategy.NumFrogTargets >= (state.MeisuiLeft > deadline ? 4 : 3))
+                    return ActionID.MakeSpell(AID.HellfrogMedium);
+
+                return ActionID.MakeSpell(AID.Bhavacakra);
             }
 
             if (ShouldUseMug(state, strategy) && state.CanWeave(CDGroup.Mug, 0.6f, deadline))
