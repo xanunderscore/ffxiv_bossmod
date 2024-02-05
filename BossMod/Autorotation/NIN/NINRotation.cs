@@ -423,7 +423,7 @@ namespace BossMod.NIN
         {
             var canTrick = strategy.CombatTimer > 0 ? state.SuitonLeft > 0 : state.Hidden;
 
-            if (!state.Unlocked(AID.TrickAttack) || !canTrick || strategy.NumKatonTargets >= 3 || state.TargetTrickLeft > 0)
+            if (!state.Unlocked(AID.TrickAttack) || !canTrick || state.TargetTrickLeft > 0)
                 return false;
 
             if (strategy.CombatTimer < 30)
