@@ -175,7 +175,7 @@ namespace BossMod.NIN
             if (ShouldUseSuiton(state, strategy) && PerformNinjutsu(state, AID.Suiton, out act))
                 return act;
 
-            if (state.KamaitachiLeft > state.GCD && state.HutonLeft < 50)
+            if (state.KamaitachiLeft > state.GCD && state.Ninki <= 90)
                 return AID.PhantomKamaitachi;
 
             if (state.TenChiJin.Left > 0)
@@ -281,9 +281,15 @@ namespace BossMod.NIN
             )
                 return ActionID.MakeSpell(AID.Kassatsu);
 
-            // we might use trick on an add or something, after which assassinate should still be used even if we switch targets (because it's a waste of a cd otherwise)
-            // (ideally shouldn't be using trick on adds but whatever)
-            // trick cd (60) - duration (15) = 45
+            // TODO we kinda want to save TCJ/Meisui for trick windows, but if we get too much drift, is it better to just use it or hold it?
+            if (
+                state.SuitonLeft > state.GCD
+                && state.CD(CDGroup.TrickAttack) > 20
+                && state.Unlocked(AID.Meisui)
+                && state.CanWeave(CDGroup.Meisui, 0.6f, deadline)
+            )
+                return ActionID.MakeSpell(AID.Meisui);
+
             if (state.IsTrickActive || strategy.UseAOERotation)
             {
                 // these two have a different cdgroup for some reason
@@ -306,13 +312,6 @@ namespace BossMod.NIN
                     && state.CanWeave(CDGroup.TenChiJin, 0.6f, deadline)
                 )
                     return ActionID.MakeSpell(AID.TenChiJin);
-
-                if (
-                    state.SuitonLeft > state.GCD
-                    && state.Unlocked(AID.Meisui)
-                    && state.CanWeave(CDGroup.Meisui, 0.6f, deadline)
-                )
-                    return ActionID.MakeSpell(AID.Meisui);
             }
 
             if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
@@ -481,13 +480,26 @@ namespace BossMod.NIN
             return state.Ninki >= (strategy.NumFrogTargets > 2 ? 50 : 90);
         }
 
-        private static bool ShouldUseSuiton(State state, Strategy strategy) =>
-            !strategy.UseAOERotation
-            && state.Unlocked(AID.Suiton)
-            && state.SuitonLeft == 0
-            && state.KassatsuLeft == 0
-            // TODO is 20 too long? this gives us 3.5 seconds of trick being off cd
-            && state.CD(CDGroup.TrickAttack) < 20;
+        private static bool ShouldUseSuiton(State state, Strategy strategy)
+        {
+            if (
+                strategy.UseAOERotation
+                || !state.Unlocked(AID.Suiton)
+                || state.SuitonLeft > 0
+                || state.KassatsuLeft > 0
+            )
+                return false;
+
+            if (
+                state.Unlocked(AID.TenChiJin)
+                && !state.Unlocked(AID.Meisui)
+                && state.CD(CDGroup.TenChiJin) <= state.CD(CDGroup.TrickAttack)
+            )
+                return false;
+
+            // TODO tweak this threshold a bit maybe
+            return state.CD(CDGroup.TrickAttack) < 18;
+        }
 
         private static bool HaveTarget(State state, Strategy strategy) =>
             state.TargetingEnemy || strategy.NumPointBlankAOETargets > 0;
