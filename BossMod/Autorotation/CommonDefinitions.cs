@@ -85,6 +85,8 @@ public static class CommonDefinitions
         => res[ActionID.MakeSpell(aid)] = new(range, castTime, GCDGroup, 2.5f, 1, animationLock);
     public static ActionDefinition OGCD<AID, CDGroup>(this Dictionary<ActionID, ActionDefinition> res, AID aid, float range, CDGroup cdGroup, float cooldown, float animationLock = 0.6f) where AID : Enum where CDGroup : Enum
         => res[ActionID.MakeSpell(aid)] = new(range, 0, (int)(object)cdGroup, cooldown, 1, animationLock);
+    public static ActionDefinition OGCDCast<AID, CDGroup>(this Dictionary<ActionID, ActionDefinition> res, AID aid, float range, float castTime, CDGroup cdGroup, float cooldown, float animationLock = 0.1f) where AID : Enum where CDGroup : Enum
+        => res[ActionID.MakeSpell(aid)] = new(range, castTime, (int)(object)cdGroup, cooldown, 1, animationLock);
     public static ActionDefinition OGCDWithCharges<AID, CDGroup>(this Dictionary<ActionID, ActionDefinition> res, AID aid, float range, CDGroup cdGroup, float cooldown, int maxChargesAtCap, float animationLock = 0.6f) where AID : Enum where CDGroup : Enum
         => res[ActionID.MakeSpell(aid)] = new(range, 0, (int)(object)cdGroup, cooldown, maxChargesAtCap, animationLock);
     public static ActionDefinition GCDWithCharges<AID, CDGroup>(this Dictionary<ActionID, ActionDefinition> res, AID aid, float range, CDGroup cdGroup, float cooldown, int maxChargesAtCap, float animationLock = 0.6f) where AID : Enum where CDGroup : Enum
@@ -101,5 +103,13 @@ public static class CommonDefinitions
             _ => 0u
         };
         return stanceSID != 0 && a.FindStatus(stanceSID) != null;
+    }
+
+    public static bool IsGCDLike(uint actionID)
+    {
+        // update when definitions are added:
+        // - SGE: Pneuma
+        // - BLU: like 20 spells (triple trident, rose of destruction, angel's whisper, ...)
+        return false;
     }
 }

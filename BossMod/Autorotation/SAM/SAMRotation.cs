@@ -147,8 +147,8 @@ public static class Rotation
             [PropertyDisplay("Never use", 0xff000080)]
             Never = 1,
 
-            [PropertyDisplay("Ignore downtime prediction", 0xff008080)]
-            Eager = 2,
+            [PropertyDisplay("Use as soon as possible", 0xff008080)]
+            Force = 2,
         }
 
         public HiganbanaUse HiganbanaStrategy;
@@ -162,6 +162,8 @@ public static class Rotation
         public int NumTenkaTargets;
         public int NumOgiTargets;
         public int NumGurenTargets;
+
+        public float ActualFightEndIn => FightEndIn == 0 ? 10000f : FightEndIn;
 
         public bool UseAOERotation => NumAOETargets >= 3;
 
@@ -255,6 +257,9 @@ public static class Rotation
 
         if (state.SenCount == 3 && canCast)
             return AID.MidareSetsugekka;
+
+        if (strategy.HiganbanaStrategy == Strategy.HiganbanaUse.Force && state.SenCount == 1)
+            return canCast ? AID.Higanbana : AID.None;
 
         if (state.HasCombatBuffs && canCast)
         {
@@ -359,7 +364,7 @@ public static class Rotation
     {
         if (strategy.CombatTimer > -100 && strategy.CombatTimer < -0.7f)
         {
-            if (strategy.CombatTimer > -9 && state.MeikyoLeft == 0)
+            if (strategy.CombatTimer > -9 && state.MeikyoLeft == 0 && strategy.MeikyoStrategy != Strategy.MeikyoUse.Never)
                 return ActionID.MakeSpell(AID.MeikyoShisui);
             if (
                 strategy.CombatTimer > -5
@@ -389,7 +394,22 @@ public static class Rotation
         if (!state.TargetingEnemy)
             return default;
 
+        // if (
+        //     (state.CD(CDGroup.Ikishoten) < 10 || state.CD(CDGroup.Ikishoten) > 110)
+        //     && state.CanWeave(state.DutyActionCD(LostActionID.LostFontofPower), 0.6f, deadline)
+        // )
+        //     return ActionID.MakeSpell(LostActionID.LostFontofPower);
+
+        // if (
+        //     state.FoPLeft > 0
+        //     && state.CanWeave(state.DutyActionCD(LostActionID.BannerHonoredSacrifice), 0.6f, deadline)
+        // )
+        //     return ActionID.MakeSpell(LostActionID.BannerHonoredSacrifice);
+
         if (state.MeikyoLeft == 0 && state.LastTsubame < state.GCDTime * 3)
+            return ActionID.MakeSpell(AID.MeikyoShisui);
+
+        if (!state.Unlocked(AID.TsubameGaeshi) && !state.InCombo && state.CanWeave(state.CD(CDGroup.MeikyoShisui) - 55f, 0.6f, deadline))
             return ActionID.MakeSpell(AID.MeikyoShisui);
 
         if (state.RangeToTarget > 3 && strategy.DashStrategy == Strategy.DashUse.UseOutsideMelee)
@@ -463,7 +483,7 @@ public static class Rotation
     {
         return state.RaidBuffsLeft > deadline
             // fight will end before next window, use everything
-            || strategy.RaidBuffsIn > strategy.FightEndIn
+            || strategy.RaidBuffsIn > strategy.ActualFightEndIn
             // general combat, no module active. yolo
             || strategy.RaidBuffsIn > 9000;
     }
@@ -473,15 +493,14 @@ public static class Rotation
         if (strategy.HiganbanaStrategy == Strategy.HiganbanaUse.Never || !state.HasCombatBuffs)
             return false;
 
+        if (strategy.HiganbanaStrategy == Strategy.HiganbanaUse.Force)
+            return true;
+
         if (strategy.NumAOETargets > 0)
             return false;
 
         // force use to get shoha even if the target is dying, dot overwrite doesn't matter
-        if (
-            strategy.HiganbanaStrategy != Strategy.HiganbanaUse.Eager
-            && strategy.FightEndIn > 0
-            && (strategy.FightEndIn - state.GCD) < 45
-        )
+        if (strategy.ActualFightEndIn - state.GCD < 45)
             return state.MeditationStacks == 2;
 
         return state.TargetHiganbanaLeft < (5 + state.GCD + state.GCDTime * gcdsInAdvance);

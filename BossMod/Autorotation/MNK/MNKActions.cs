@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using System;
+using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.MNK;
 
@@ -7,6 +8,7 @@ class Actions : CommonActions
     public const int AutoActionST = AutoActionFirstCustom + 0;
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
     public const int AutoActionFiller = AutoActionFirstCustom + 2;
+    public const int AutoActionSTQOpener = AutoActionFirstCustom + 3;
 
     private MNKConfig _config;
     private Rotation.State _state;
@@ -55,10 +57,13 @@ class Actions : CommonActions
     {
         UpdatePlayerState();
         FillCommonStrategy(_strategy, CommonDefinitions.IDPotionStr);
-        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
+        _strategy.NumBlitzTargets = NumTargetsHitByBlitz();
         _strategy.NumPointBlankAOETargets = autoAction == AutoActionST ? 0 : NumTargetsHitByPBAOE();
         _strategy.NumEnlightenmentTargets = Autorot.PrimaryTarget != null && autoAction != AutoActionST && _state.Unlocked(AID.HowlingFist) ? NumTargetsHitByEnlightenment(Autorot.PrimaryTarget) : 0;
+
         _strategy.UseAOE = _strategy.NumPointBlankAOETargets >= 3;
+        _strategy.UseSTQOpener = autoAction == AutoActionSTQOpener;
+
         if (autoAction == AutoActionFiller)
         {
             _strategy.FireUse = Rotation.Strategy.FireStrategy.Delay;
@@ -66,7 +71,10 @@ class Actions : CommonActions
             _strategy.BrotherhoodUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.PerfectBalanceUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
         }
+
         FillStrategyPositionals(_strategy, Rotation.GetNextPositional(_state, _strategy), _state.TrueNorthLeft > _state.GCD);
+
+        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
     }
 
     protected override void QueueAIActions()
@@ -77,6 +85,8 @@ class Actions : CommonActions
             SimulateManualActionForAI(ActionID.MakeSpell(AID.SecondWind), Player, Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.5f);
         if (_state.Unlocked(AID.Bloodbath))
             SimulateManualActionForAI(ActionID.MakeSpell(AID.Bloodbath), Player, Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f);
+        if (_state.Unlocked(AID.FormShift))
+            SimulateManualActionForAI(ActionID.MakeSpell(AID.FormShift), Player, !Player.InCombat && _state.FormShiftLeft < 5 && _state.PerfectBalanceLeft == 0);
     }
 
     protected override NextAction CalculateAutomaticGCD()
@@ -89,14 +99,14 @@ class Actions : CommonActions
 
     protected override NextAction CalculateAutomaticOGCD(float deadline)
     {
-        if (!Rotation.HaveTarget(_state, _strategy) || AutoAction < AutoActionAIFight)
+        if (AutoAction < AutoActionAIFight)
             return new();
 
         ActionID res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
-            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength);
+            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength, deadline);
         if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
-            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
+            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline, deadline);
         return MakeResult(res, Autorot.PrimaryTarget);
     }
 
@@ -116,6 +126,14 @@ class Actions : CommonActions
         _state.FormShiftLeft = StatusDetails(Player, SID.FormlessFist, Player.InstanceID).Left;
         _state.FireLeft = StatusDetails(Player, SID.RiddleOfFire, Player.InstanceID).Left;
         _state.TrueNorthLeft = StatusDetails(Player, SID.TrueNorth, Player.InstanceID).Left;
+
+        // these are functionally the same as far as the rotation is concerned
+        _state.LostExcellenceLeft = MathF.Max(
+            StatusDetails(Player, SID.LostExcellence, Player.InstanceID).Left,
+            StatusDetails(Player, SID.Memorable, Player.InstanceID).Left
+        );
+        _state.FoPLeft = StatusDetails(Player, SID.LostFontofPower, Player.InstanceID).Left;
+        _state.HsacLeft = StatusDetails(Player, SID.BannerHonoredSacrifice, Player.InstanceID).Left;
 
         _state.TargetDemolishLeft = StatusDetails(Autorot.PrimaryTarget, SID.Demolish, Player.InstanceID).Left;
     }
@@ -140,6 +158,7 @@ class Actions : CommonActions
         SupportedSpell(AID.Bootshine).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.ArmOfTheDestroyer).PlaceholderForAuto = SupportedSpell(AID.ShadowOfTheDestroyer).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
         SupportedSpell(AID.TrueStrike).PlaceholderForAuto = _config.FillerRotation ? AutoActionFiller : AutoActionNone;
+        SupportedSpell(AID.SnapPunch).PlaceholderForAuto = _config.FullRotation ? AutoActionSTQOpener : AutoActionNone;
 
         // combo replacement
         SupportedSpell(AID.FourPointFury).TransformAction = _config.AOECombos ? () => ActionID.MakeSpell(Rotation.GetNextComboAction(_state, _strategy)) : null;
@@ -150,9 +169,13 @@ class Actions : CommonActions
 
         SupportedSpell(AID.Thunderclap).TransformTarget = _config.SmartThunderclap ? (act) => Autorot.SecondaryTarget ?? act : null;
 
-        _strategy.PreCombatFormShift = _config.AutoFormShift;
-
         // smart targets
+    }
+
+    private int NumTargetsHitByBlitz() {
+        if (_state.BestBlitz is AID.TornadoKick or AID.PhantomRush)
+            return Autorot.PrimaryTarget == null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
+        return Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
     }
 
     private int NumTargetsHitByPBAOE() => Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);

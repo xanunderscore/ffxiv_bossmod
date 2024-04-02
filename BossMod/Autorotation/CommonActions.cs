@@ -51,6 +51,7 @@ abstract class CommonActions : IDisposable
         public int PlaceholderForAuto; // if set, attempting to execute this action would instead initiate auto-strategy
         public Func<ActionID>? TransformAction;
         public Func<Actor?, Actor?>? TransformTarget;
+        public Func<Vector3?>? TransformPosition;
 
         public SupportedAction(ActionDefinition definition, bool isGT)
         {
@@ -110,7 +111,8 @@ abstract class CommonActions : IDisposable
         else if (!Player.InCombat && wasInCombat)
         {
             _playerCombatStart = new();
-            _autoActionExpire = new(); // immediately expire auto actions, if any
+            if (Autorot.Config.AutoExpireAfterCombat)
+                _autoActionExpire = new(); // immediately expire auto actions, if any
         }
 
         // prepull expiration logic: if we queue up any action during countdown, and then countdown is cancelled, we don't really want to pull
@@ -238,6 +240,15 @@ abstract class CommonActions : IDisposable
             if (forcedGTPos != null)
             {
                 _mq.Push(action, null, forcedGTPos.Value, supportedAction.Definition, supportedAction.Condition);
+                return true;
+            }
+
+            if (supportedAction.TransformPosition != null)
+            {
+                var pos = supportedAction.TransformPosition();
+                if (pos == null)
+                    return false;
+                _mq.Push(action, null, pos.Value, supportedAction.Definition, supportedAction.Condition);
                 return true;
             }
 
@@ -382,6 +393,17 @@ abstract class CommonActions : IDisposable
         // TODO: also check damage-taken debuffs on target
     }
 
+    // private static CommonRotation.DutyAction GetDutyAction(ushort slot) 
+    // {
+    //     var d = FFXIVGame.ActionManager.GetDutyActionId(slot);
+    //     var hasCharge = false;
+
+    //     if (d > 0)
+    //         hasCharge = ActionManagerEx.Instance!.GetEventActionHasCharge(d);
+
+    //     return new CommonRotation.DutyAction { ActionID = d, HasCharge = hasCharge };
+    // }
+
     // fill common strategy properties
     protected void FillCommonStrategy(CommonRotation.Strategy strategy, ActionID potion)
     {
@@ -392,7 +414,7 @@ abstract class CommonActions : IDisposable
 
         strategy.CombatTimer = CombatTimer();
         strategy.ForbidDOTs = targetEnemy?.ForbidDOTs ?? false;
-        strategy.ForceMovementIn = MaxCastTime;
+        strategy.ForceMovementIn = ActionManagerEx.Instance!.InputOverride.IsMoveRequested() ? 0 : MaxCastTime;
         strategy.FightEndIn = downtime.Item1 ? 0 : downtime.Item2;
         strategy.RaidBuffsIn = vuln.Item1 ? 0 : vuln.Item2;
         if (Autorot.Bossmods.ActiveModule?.PlanConfig != null) // assumption: if there is no planning support for encounter (meaning it's something trivial, like outdoor boss), don't expect any cooldowns
@@ -427,6 +449,9 @@ abstract class CommonActions : IDisposable
 
         return null;
     }
+
+    protected Actor SmartTargetFriendlyOrSelf(Actor? primaryTarget)
+        => SmartTargetFriendly(primaryTarget) ?? Player;
 
     // smart targeting utility: return mouseover (if hostile and allowed) or target (otherwise)
     protected Actor? SmartTargetHostile(Actor? primaryTarget)
