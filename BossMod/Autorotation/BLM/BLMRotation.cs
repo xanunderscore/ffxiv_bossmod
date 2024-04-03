@@ -212,6 +212,7 @@ public static class Rotation
 
         return moveOk
             && strategy.ActualFightEndIn > castEndIn
+            && state.CurMP >= mpCost
             && state.ExpectedMPAfter(castEndIn) >= mpCost + minMP;
     }
 
