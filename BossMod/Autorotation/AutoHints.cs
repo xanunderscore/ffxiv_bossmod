@@ -38,6 +38,12 @@ public class AutoHints : IDisposable
                 hints.AddForbiddenZone(aoe.Shape, target, rot, aoe.Caster.CastInfo.NPCFinishAt);
             }
         }
+
+        foreach (var enemy in hints.PotentialTargets) {
+            if (enemy.Actor.HP.Cur == 1) {
+                enemy.Priority = -1;
+            }
+        }
     }
 
     private void OnCastStarted(object? sender, Actor actor)
