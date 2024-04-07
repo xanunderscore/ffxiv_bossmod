@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Interface.Utility;
+using ImGuiNET;
 using Newtonsoft.Json.Linq;
 
 namespace BossMod;
@@ -19,7 +20,7 @@ public class CooldownPlannerColumns : Timeline.ColumnGroup
     private ColumnPlannerTrackTarget _colTarget;
     private Dictionary<ActionID, int> _aidToColCooldown = new();
 
-    private float _trackWidth = 50;
+    private float _trackWidth = 50 * ImGuiHelpers.GlobalScale;
 
     public Class PlanClass => _plan.Class;
 
