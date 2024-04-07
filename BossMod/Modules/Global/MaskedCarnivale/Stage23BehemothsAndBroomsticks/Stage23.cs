@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage23;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2732, //R=5.8
     Maelstrom = 0x2733, //R=1.0
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -17,7 +16,7 @@ public enum AID : uint
     Comet = 15260, // Boss->self, 5,0s cast, single-target
     Comet2 = 15261, // Helper->location, 4,0s cast, range 10 circle
     EclipticMeteor = 15257, // Boss->location, 10,0s cast, range 50 circle
-};
+}
 
 
 class Charybdis : Components.LocationTargetedAOEs
@@ -67,7 +66,7 @@ class Stage23States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 633, NameID = 8124)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 633, NameID = 8124)]
 public class Stage23 : BossModule
 {
     public Stage23(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

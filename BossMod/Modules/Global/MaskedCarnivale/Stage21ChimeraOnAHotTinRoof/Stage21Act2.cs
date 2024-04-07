@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage21.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2730, //R=3.7
     ArenaImp = 0x2731, //R=0.45
     Voidzone = 0x1E972A,
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     TheDragonsVoice = 15080, // Boss->self, 4,0s cast, range 8-30 donut
     TheRamsKeeper = 15081, // Boss->location, 6,0s cast, range 9 circle
 
-};
+}
 
 class TheRamsKeeper : Components.PersistentVoidzoneAtCastTarget
 {
@@ -83,7 +82,7 @@ class Stage21Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 631, NameID = 8121, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 631, NameID = 8121, SortOrder = 2)]
 public class Stage21Act2 : BossModule
 {
     public Stage21Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

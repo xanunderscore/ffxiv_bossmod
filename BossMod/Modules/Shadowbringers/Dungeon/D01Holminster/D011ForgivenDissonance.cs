@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by legendoficeman & malediktus, not checked
-namespace BossMod.Shadowbringers.Dungeon.D01Holminser.D011ForgivenDissonance;
+﻿namespace BossMod.Shadowbringers.Dungeon.D01Holminser.D011ForgivenDissonance;
 
 public enum OID : uint
 {
@@ -7,7 +6,7 @@ public enum OID : uint
     Orbs = 0x2896, // R1.100, spawn during fight
     Helper = 0x233C, // x3
     Helper2 = 0x2A4B, // R3.450, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -20,7 +19,7 @@ public enum AID : uint
     LightShot = 15819, // Orbs->self, 3.0s cast, range 40 width 4 rect
     WoodenHorse = 15815, // Boss->self, 5.0s cast, range 40 90-degree cone
     Pillory = 15812, // Boss->player, 5.0s cast, single-target
-};
+}
 
 class Thumbscrew : Components.ChargeAOEs
 {
@@ -73,7 +72,7 @@ class D011ForgivenDissonanceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8299)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8299)]
 public class D011ForgivenDissonance : BossModule
 {
     public D011ForgivenDissonance(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-15, 240), 19.5f)) { }

@@ -6,7 +6,7 @@ public enum OID : uint
     NSapria = 0x3AD4, // R1.440, x2
     SBoss = 0x3ADC, // R4.000, x1
     SSapria = 0x3ADD, // R1.440, x2
-};
+}
 
 public enum AID : uint
 {
@@ -19,7 +19,7 @@ public enum AID : uint
     SHoneyedRight = 31092, // SBoss->self, 4.0s cast, range 30 180-degree cone
     SHoneyedFront = 31093, // SBoss->self, 4.0s cast, range 30 120-degree cone
     SBloodyCaress = 31095, // SSapria->self, 3.0s cast, range 12 120-degree cone
-};
+}
 
 class HoneyedLeft : Components.SelfTargetedAOEs
 {
@@ -68,7 +68,7 @@ class C010UdumbaraStates : StateMachineBuilder
 class C010NUdumbaraStates : C010UdumbaraStates { public C010NUdumbaraStates(BossModule module) : base(module, false) { } }
 class C010SUdumbaraStates : C010UdumbaraStates { public C010SUdumbaraStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11511, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11511, SortOrder = 3)]
 public class C010NUdumbara : SimpleBossModule
 {
     public C010NUdumbara(WorldState ws, Actor primary) : base(ws, primary) { }
@@ -80,7 +80,7 @@ public class C010NUdumbara : SimpleBossModule
     }
 }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11511, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11511, SortOrder = 3)]
 public class C010SUdumbara : SimpleBossModule
 {
     public C010SUdumbara(WorldState ws, Actor primary) : base(ws, primary) { }

@@ -1,4 +1,3 @@
-// CONTRIB: made by legendoficeman, changes by Malediktus, not checked
 namespace BossMod.Endwalker.DeepDungeon.EurekaOrthos.DD70Aeturna;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x3D1B, // R5.950, x1
     AllaganCrystal = 0x3D1C, // R1.500, x4
     Helper = 0x233C, // R0.500, x12, 523 type
-};
+}
 
 public enum AID : uint
 {
@@ -23,18 +22,18 @@ public enum AID : uint
     ShatterCone = 31440, // 3D1C->self, 2.5s cast, range 18+R 150-degree cone
     SteelClaw = 31445, // 3D1B->player, 5.0s cast, single-target
     Teleport = 31446, // 3D1B->location, no cast, single-target, boss teleports mid
-};
+}
 
 public enum IconID : uint
 {
     tankbuster = 198, // player
-};
+}
 
 public enum TetherID : uint
 {
     FerocityTetherGood = 1, // Boss->player
     FerocityTetherStretch = 57, // Boss->player
-};
+}
 
 class SteelClaw : Components.SingleTargetDelayableCast
 {
@@ -206,7 +205,7 @@ class DD70AeturnaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 903, NameID = 12246)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "legendoficeman, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 903, NameID = 12246)]
 public class DD70Aeturna : BossModule
 {
     public DD70Aeturna(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-300, -300), 20)) { }

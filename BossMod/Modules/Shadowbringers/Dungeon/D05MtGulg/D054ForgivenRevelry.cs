@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D05MtGulg.D054ForgivenRevelry;
 
 public enum OID : uint
@@ -17,7 +16,7 @@ public enum AID : uint
     LightShot = 16251, // Brightsphere->self, 4,0s cast, range 40 width 4 rect
     RightPalm = 16247, // Boss->self, no cast, single-target
     RightPalm2 = 16248, // 233C->self, 4,5s cast, range 30 width 15 rect
-};
+}
 
 class PalmAttacks : Components.GenericAOEs //Palm Attacks have a wrong origin, so i made a custom solution
 {
@@ -62,7 +61,7 @@ class D054ForgivenRevelryStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8270)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8270)]
 public class D054ForgivenRevelry : BossModule
 {
     public D054ForgivenRevelry(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-240, 176), 15)) { }

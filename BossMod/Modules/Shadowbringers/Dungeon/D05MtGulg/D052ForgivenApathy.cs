@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D05MtGulg.D052ForgivenApathy;
 
 public enum OID : uint
@@ -22,11 +21,11 @@ public enum AID : uint
     EarthShaker2 = 16245, // 233C->self, 5,0s cast, range 60 60-degree cone
     Sanctification = 16814, // 28F2->self, 5,0s cast, range 12 90-degree cone
     PunitiveLight = 16815, // 28F2->self, 5,0s cast, range 20 circle
-};
+}
 
 class PunitiveLight : Components.CastInterruptHint
 { //Note: this attack is a r20 circle, not drawing it because it is too big and the damage not all that high even if interrupt/stun fails
-    public PunitiveLight() : base(ActionID.MakeSpell(AID.PunitiveLight), true, true, "(Raidwide)") { }
+    public PunitiveLight() : base(ActionID.MakeSpell(AID.PunitiveLight), true, true, "Raidwide", true) { }
 }
 
 class Sanctification : Components.SelfTargetedAOEs
@@ -50,7 +49,7 @@ class D052ForgivenApathyStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8267)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8267)]
 public class D052ForgivenApathy : BossModule
 {
     public D052ForgivenApathy(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 0)) { }

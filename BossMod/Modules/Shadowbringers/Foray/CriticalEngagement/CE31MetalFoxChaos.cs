@@ -1,12 +1,11 @@
-﻿// CONTRIB: made by malediktus, not checked
-namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
+﻿namespace BossMod.Shadowbringers.Foray.CriticalEngagement.CE31MetalFoxChaos;
 
 public enum OID : uint
 {
     Boss = 0x2DB5, // R=8.0
     Helper = 0x233C, // R=0.500
     MagitekBit = 0x2DB6, // R=1.2
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     LaserShower2 = 20140, // Helper->location, 5,0s cast, range 10 circle
     Rush = 20139, // Boss->player, 3,0s cast, width 14 rect charge
     SatelliteLaser = 20137, // Boss->self, 10,0s cast, range 100 circle
-};
+}
 
 class MagitekBitLasers : Components.GenericAOEs
 {
@@ -126,7 +125,7 @@ class CE31MetalFoxChaosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 13)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 13)] // bnpcname=9424
 public class CE31MetalFoxChaos : BossModule
 {
     public CE31MetalFoxChaos(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-234, 262), 30.2f)) { }

@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankS.Aglaope;
 
 public enum OID : uint
 {
     Boss = 0x281E, // R=2.4
-};
+}
 
 public enum AID : uint
 {
@@ -16,17 +15,17 @@ public enum AID : uint
     AncientAero = 16823, // Boss->self, 3,0s cast, range 40+R width 6 rect
     SongOfTorment = 16825, // Boss->self, 5,0s cast, range 50 circle, interruptible raidwide with bleed
     AncientAeroIII = 18056, // Boss->self, 3,0s cast, range 30 circle, knockback 10, away from source
-};
+}
 
 public enum SID : uint
 {
     Seduced = 991, // Boss->player, extra=0x11
     Bleeding = 642, // Boss->player, extra=0x0
-};
+}
 
 class SongOfTorment : Components.CastInterruptHint
 {
-    public SongOfTorment() : base(ActionID.MakeSpell(AID.SongOfTorment), hint: "(Raidwide + Bleed)") { }
+    public SongOfTorment() : base(ActionID.MakeSpell(AID.SongOfTorment), hintExtra: "Raidwide + Bleed") { }
 }
 
 //TODO: ideally this AOE should just wait for Effect Results, since they can be delayed by over 2.1s, which would cause unknowning players and AI to run back into the death zone, 
@@ -110,7 +109,7 @@ class AglaopeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8653)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8653)]
 public class Aglaope : SimpleBossModule
 {
     public Aglaope(WorldState ws, Actor primary) : base(ws, primary) { }

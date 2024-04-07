@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage24.Act3;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2739, //R=3.0
     ArenaMagus = 0x273A, //R=1.0
     VacuumWave = 0x273B, //R=1.0
-};
+}
 
 public enum AID : uint
 {
@@ -19,7 +18,7 @@ public enum AID : uint
     BoneShaker = 15326, // 2739->self, 3,0s cast, range 50+R circle, raidwide + adds
     Fire = 14266, // 273A->player, 1,0s cast, single-target
     SelfDetonate = 15329, // 273A->player, 3,0s cast, single-target
-};
+}
 
 class MagicHammer : Components.LocationTargetedAOEs
 {
@@ -116,7 +115,7 @@ class Stage24Act3States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8125, SortOrder = 3)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8125, SortOrder = 3)]
 public class Stage24Act3 : BossModule
 {
     public Stage24Act3(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

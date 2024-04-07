@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage19.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2728, //R=5.775
     HotHip = 0x2779, //R=1.50
     voidzone = 0x1EA9F9, //R=0.5
-};
+}
 
 public enum AID : uint
 {
@@ -17,7 +16,7 @@ public enum AID : uint
     Schizocarps = 15077, // 2728->self, 5,0s cast, single-target
     ExplosiveDehiscence = 15078, // 2729->self, 6,0s cast, range 50 circle, gaze
     BadBreath = 15074, // 2728->self, 3,5s cast, range 12+R 120-degree cone, interruptible, voidzone
-};
+}
 
 public enum SID : uint
 {
@@ -32,7 +31,7 @@ public enum SID : uint
     Leaden = 67, // none->player, extra=0x3C
     Pollen = 19, // none->player, extra=0x0
     Stun = 149, // 2729->player, extra=0x0
-};
+}
 
 class ExplosiveDehiscence : Components.CastGaze
 {
@@ -143,7 +142,7 @@ class Stage19Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 629, NameID = 8117, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 629, NameID = 8117, SortOrder = 2)]
 public class Stage19Act2 : BossModule
 {
     public Stage19Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

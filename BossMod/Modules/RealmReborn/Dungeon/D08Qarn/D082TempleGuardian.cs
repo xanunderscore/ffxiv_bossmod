@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x6DB, // x1
     GolemSoulstone = 0x7FA, // x1, Part type, and more spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     Rockslide = 1419, // Boss->self, 2.5s cast, range 16.2 width 8 rect aoe
     StoneSkull = 1416, // Boss->player, no cast, random single-target
     Obliterate = 680, // Boss->self, 2.0s cast, range 6? ??? aoe
-};
+}
 
 class BoulderClap : Components.SelfTargetedLegacyRotationAOEs
 {
@@ -42,7 +42,7 @@ class D082TempleGuardianStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1569)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 9, NameID = 1569)]
 public class D082TempleGuardian : BossModule
 {
     public D082TempleGuardian(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(50, -10), 15)) { }

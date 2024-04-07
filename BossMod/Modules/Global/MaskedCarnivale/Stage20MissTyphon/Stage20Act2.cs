@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage20.Act2;
 
 public enum OID : uint
 {
     Boss = 0x272B, //R=5.1
     Helper = 0x233C, //R=0.5
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +13,7 @@ public enum AID : uint
     ImpSong = 14712, // 272B->self, 6,0s cast, range 50+R circle
     Waterspout = 14718, // 233C->location, 2,5s cast, range 4 circle
     LightningBolt = 14717, // 233C->location, 3,0s cast, range 3 circle
-};
+}
 
 class AquaBreath : Components.SelfTargetedAOEs
 {
@@ -64,7 +63,7 @@ class Stage20Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 7111, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 630, NameID = 7111, SortOrder = 2)]
 public class Stage20Act2 : BossModule
 {
     public Stage20Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

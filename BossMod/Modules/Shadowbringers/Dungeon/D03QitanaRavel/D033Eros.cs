@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D03QitanaRavel.D033Eros;
 
 public enum OID : uint
@@ -30,7 +29,7 @@ public enum AID : uint
     ConfessionOfFaithStack = 15525, // Helper->players, 5,8s cast, range 6 circle, stack
     ConfessionOfFaithCenter = 15522, // Helper->self, 5,5s cast, range 60 40-degree cone
     ConfessionOfFaithSpread = 15523, // Helper->player, 5,8s cast, range 5 circle, spread
-};
+}
 
 public enum IconID : uint
 {
@@ -38,13 +37,13 @@ public enum IconID : uint
     stack = 62, // player
     poisonbait = 171, // player
     spread = 96, // player
-};
+}
 
 public enum TetherID : uint
 {
     HoundOutOfHeavenTetherGood = 1, // Boss->player
     HoundOutOfHeavenTetherStretch = 57, // Boss->player
-};
+}
 
 class HoundOutOfHeavenGood : Components.BaitAwayTethers  //TODO: consider generalizing stretched tethers?
 {
@@ -240,7 +239,7 @@ class D033ErosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8233)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8233)]
 public class D033Eros : BossModule
 {
     public D033Eros(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsRect(new(17, -538), 15, 20)) { }

@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage24.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2736, //R=2.0
     ArenaViking = 0x2737, //R=1.0
     ArenaMagus = 0x2738, //R=1.0
-};
+}
 
 public enum AID : uint
 {
@@ -19,7 +18,7 @@ public enum AID : uint
     Starstorm = 15317, // 2738->location, 3,0s cast, range 5 circle
     RagingAxe = 15316, // 2737->self, 3,0s cast, range 4+R 90-degree cone
     Silence = 15321, // 2736->player, 5,0s cast, single-target
-};
+}
 
 class Starstorm : Components.LocationTargetedAOEs
 {
@@ -85,7 +84,7 @@ class Stage24Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8128, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 634, NameID = 8128, SortOrder = 2)]
 public class Stage24Act2 : BossModule
 {
     public Stage24Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by malediktus, not checked
-namespace BossMod.Shadowbringers.Dungeon.D01Holminser.D013Philia;
+﻿namespace BossMod.Shadowbringers.Dungeon.D01Holminser.D013Philia;
 
 public enum OID : uint
 {
@@ -7,7 +6,7 @@ public enum OID : uint
     IronChain = 0x2895, // R1.000, spawn during fight
     SludgeVoidzone = 0x1EABFA,
     Helper = 0x233C, // x3
-};
+}
 
 public enum AID : uint
 {
@@ -36,7 +35,7 @@ public enum AID : uint
     FierceBeating6 = 15838, // Helper->self, no cast, range 4 circle
     CatONineTails = 15840, // 278C->self, no cast, single-target
     CatONineTails2 = 15841, // Helper->self, 2,0s cast, range 25 120-degree cone
-};
+}
 
 public enum IconID : uint
 {
@@ -45,14 +44,14 @@ public enum IconID : uint
     ChainTarget = 92, // player
     Spread = 139, // player
     RotateCW = 167, // Boss
-};
+}
 
 public enum SID : uint
 {
     Fetters = 1849, // none->player, extra=0xEC4
     DownForTheCount = 783, // none->player, extra=0xEC7
     Sludge = 287, // none->player, extra=0x0
-};
+}
 
 class SludgeVoidzone : Components.PersistentVoidzone
 {
@@ -102,17 +101,13 @@ class Chains : BossComponent
     public override void AddAIHints(BossModule module, int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (chained && actor != chaintarget)
-        {
             foreach (var e in hints.PotentialTargets)
-            {
                 e.Priority = (OID)e.Actor.OID switch
                 {
                     OID.IronChain => 1,
                     OID.Boss => -1,
                     _ => 0
                 };
-            }
-        }
     }
 
     public override void OnEventIcon(BossModule module, Actor actor, uint iconID)
@@ -133,15 +128,25 @@ class Chains : BossComponent
 
 class Aethersup : Components.GenericAOEs
 {
-    private AOEInstance? _aoe;
+    private DateTime _activation;
+    private Angle _rotation;
+    private static readonly AOEShapeCone cone = new(24, 60.Degrees());
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
+    public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
+    {
+        if (_activation != default)
+            yield return new(cone, module.PrimaryActor.Position, _rotation, _activation, risky: module.Enemies(OID.IronChain).All(x => x.IsDead));
+    }
 
     public override void OnCastStarted(BossModule module, Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.Aethersup)
-            _aoe = new(new AOEShapeCone(24, 60.Degrees()), module.PrimaryActor.Position, spell.Rotation, spell.NPCFinishAt);
+        {
+            _rotation = spell.Rotation;
+            _activation = spell.NPCFinishAt;
+        }
     }
+
 
     public override void OnEventCast(BossModule module, Actor caster, ActorCastEvent spell)
     {
@@ -151,7 +156,7 @@ class Aethersup : Components.GenericAOEs
             case AID.Aethersup2:
                 if (++NumCasts == 4)
                 {
-                    _aoe = null;
+                    _activation = default;
                     NumCasts = 0;
                 }
                 break;
@@ -292,9 +297,9 @@ class FierceBeating : Components.Exaflare
 
     public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
     {
-        foreach (var (c, t) in FutureAOEs(module.WorldState.CurrentTime))
+        foreach (var (c, t, r) in FutureAOEs(module.WorldState.CurrentTime))
             yield return new(Shape, c, activation: t, color: FutureColor);
-        foreach (var (c, t) in ImminentAOEs())
+        foreach (var (c, t, r) in ImminentAOEs())
             yield return new(Shape, c, activation: t, color: ImminentColor);
         if (Lines.Count > 0 && linesstartedcount1 < 8)
             yield return new(circle, CalculateCirclePosition(linesstartedcount1, module.Bounds.Center, _casters[0]), activation: _activation.AddSeconds(linesstartedcount1 * 3.7f));
@@ -388,7 +393,7 @@ class D013PhiliaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8301)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 676, NameID = 8301)]
 public class D013Philia : BossModule
 {
     public D013Philia(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(134, -465), 19.5f)) { }

@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.PVP.HiddenGorge.GoblinMercenary;
 
 public enum OID : uint
 {
     Boss = 0x25FA, //R=2.0
     BossHelper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -18,13 +17,13 @@ public enum AID : uint
     GobswipeConklopsTelegraph = 14568, // BossHelper->self, 1,0s cast, single-target
     GobswipeConklops = 14560, // Boss->self, no cast, range 5-30 donut, knockback 15 away from source
     Discharge = 14561, // Boss->self, no cast, single-target
-};
+}
 
 public enum IconID : uint
 {
     RotateCCW = 168, // Boss
     RotateCW = 167, // Boss
-};
+}
 
 class GobspinSwipe : Components.GenericAOEs
 {
@@ -137,7 +136,7 @@ class GoblinMercenaryStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 599, NameID = 7906)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 599, NameID = 7906)]
 public class GoblinMercenary : BossModule
 {
     public GoblinMercenary(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 0)) { }

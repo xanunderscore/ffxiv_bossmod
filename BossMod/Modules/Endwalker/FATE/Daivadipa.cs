@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by malediktus, not checked
-namespace BossMod.Endwalker.FATE.Daivadipa;
+﻿namespace BossMod.Endwalker.FATE.Daivadipa;
 
 public enum OID : uint
 {
@@ -11,7 +10,7 @@ public enum OID : uint
     Helper1 = 0x3573, //R=0.5
     Helper2 = 0x3574, //R=0.5
     Helper3 = 0x3575, //R=0.5
-};
+}
 
 public enum AID : uint
 {
@@ -40,7 +39,7 @@ public enum AID : uint
     DivineCall2 = 26520, // Boss->self, 4,0s cast, range 65 circle, forced right march
     DivineCall3 = 27079, // Boss->self, 4,0s cast, range 65 circle, forced forward march
     DivineCall4 = 26519, // Boss->self, 4,0s cast, range 65 circle, forced left march
-};
+}
 
 public enum SID : uint
 {
@@ -50,7 +49,7 @@ public enum SID : uint
     ForwardMarch = 1958, // Boss->player, extra=0x0
     LeftFace = 1960, // Boss->player, extra=0x0
     ForcedMarch = 1257, // Boss->player, extra=0x2/0x8/0x1/0x4
-};
+}
 
 class LitPath : Components.GenericAOEs
 {
@@ -307,7 +306,7 @@ class DaivadipaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1763, NameID = 10269)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1763, NameID = 10269)]
 public class Daivadipa : BossModule
 {
     public Daivadipa(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-608, 811), 24.5f)) { }

@@ -8,7 +8,7 @@ public enum OID : uint
     VorticalOrb1 = 0x3239, // R0.500, spawn during fight
     VorticalOrb2 = 0x323A, // R0.500, spawn during fight
     VorticalOrb3 = 0x31D2, // R0.500, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -28,22 +28,22 @@ public enum AID : uint
     ForeshadowingPulse = 24133, // AlkonostsShadow->self, 5.0s cast, range 8-25 donut
     ForeshadowingStorm = 24134, // AlkonostsShadow->self, 5.0s cast, range 36 130-degree cone aoe
     ForeshadowingGust = 24135, // AlkonostsShadow->self, 5.0s cast, range 20 circle aoe
-};
+}
 
 public enum SID : uint
 {
     OrbMovement = 2234, // none->VorticalOrb1/VorticalOrb2/VorticalOrb3, extra=0x1E (fast)/0x49 (slow)
     Transfiguration = 705, // AlkonostsShadow->AlkonostsShadow, extra=0x1A4
-};
+}
 
 public enum TetherID : uint
 {
     Foreshadowing = 45, // AlkonostsShadow->Boss
-};
+}
 
 class Stormcall : Components.GenericAOEs
 {
-    private List<(Actor source, WPos dest, DateTime activation)> _sources = new();
+    private readonly List<(Actor source, WPos dest, DateTime activation)> _sources = [];
     private static readonly AOEShapeCircle _shape = new(35);
 
     public Stormcall() : base(ActionID.MakeSpell(AID.Explosion)) { }
@@ -94,7 +94,7 @@ class Fantod : Components.LocationTargetedAOEs
 class Foreshadowing : Components.GenericAOEs
 {
     private AOEShape? _bossAOE;
-    private List<(Actor caster, AOEShape? shape)> _addAOEs = new(); // shape is null if add starts cast slightly before boss
+    private List<(Actor caster, AOEShape? shape)> _addAOEs = []; // shape is null if add starts cast slightly before boss
     private DateTime _addActivation;
 
     private static readonly AOEShapeDonut _shapePulse = new(8, 25);
@@ -173,7 +173,7 @@ class CE63WornToShadowStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 28)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 28)] // bnpcname=9973
 public class CE63WornToShadow : BossModule
 {
     public CE63WornToShadow(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-480, -690), 30)) { }

@@ -1,4 +1,3 @@
-// CONTRIB: made by dhoggpt, improvements by Malediktus, not checked
 namespace BossMod.Endwalker.Dungeon.D01TheTowerOfZot.D013MagusSisters;
 
 public enum OID : uint
@@ -9,7 +8,7 @@ public enum OID : uint
     BerserkerSphere = 0x33F0, // R=1.5-2.5
     Helper = 0x233C,
     Helper2 = 0x3610,
-};
+}
 
 public enum AID : uint
 {
@@ -48,7 +47,7 @@ public enum AID : uint
     PrakamyaSiddhi = 25278, // Sanduruva->self, 4,0s cast, range 5 circle
     ManusyaBlizzardIII = 25285, // Minduruva->self, 4,0s cast, single-target
     ManusyaBlizzardIII2 = 25286, // Helper->self, 4,0s cast, range 40+R 20-degree cone
-};
+}
 
 public enum SID : uint
 {
@@ -56,7 +55,7 @@ public enum SID : uint
     Burns = 2082, // Minduruva->player, extra=0x0
     Frostbite = 2083, // Minduruva->player, extra=0x0
     Electrocution = 2086, // Minduruva->player, extra=0x0
-};
+}
 
 class Dhrupad : BossComponent
 {
@@ -269,7 +268,7 @@ class D013MagusSistersStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10265)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10265)]
 class D013MagusSisters : BossModule
 {
     public D013MagusSisters(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-27.5f, -49.5f), 20)) { }

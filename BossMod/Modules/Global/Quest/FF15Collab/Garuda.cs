@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.Quest.FF15Collab.Garuda;
 
 public enum OID : uint
@@ -31,7 +30,7 @@ public enum AID : uint
     MistralGaol = 14621, // Boss->self, 5,0s cast, range 6 circle, quick time event starts
     Microburst2 = 14624, // Boss->self, no cast, range 25 circle, quick time event failed (enrage)
     warpstrike = 14597, //duty action for player
-};
+}
 
 class GustFront : Components.UniformStackSpread
 {
@@ -209,7 +208,7 @@ class GarudaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68696, NameID = 7893)] // also: CFC 646
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68696, NameID = 7893)] // also: CFC 646
 public class Garuda : BossModule
 {
     public Garuda(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 22)) { }

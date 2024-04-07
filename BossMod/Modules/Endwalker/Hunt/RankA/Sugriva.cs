@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x35FC, // R6.000, x1
-};
+}
 
 public enum AID : uint
 {
@@ -140,7 +140,7 @@ class SugrivaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10626)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10626)]
 public class Sugriva : SimpleBossModule
 {
     public Sugriva(WorldState ws, Actor primary) : base(ws, primary) { }

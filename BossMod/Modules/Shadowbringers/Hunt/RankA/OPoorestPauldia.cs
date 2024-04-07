@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.OPoorestPauldia;
 
 public enum OID : uint
 {
     Boss = 0x2820, // R=4.025
-};
+}
 
 public enum AID : uint
 {
@@ -13,7 +12,7 @@ public enum AID : uint
     TailDrive = 16831, // 2820->self, 5,0s cast, range 30+R 90-degree cone
     WordsOfWoe = 16832, // 2820->self, 3,0s cast, range 45+R width 6 rect
     TheSpin = 16833, // 2820->self, 3,0s cast, range 40 circle
-};
+}
 
 class RustingClaw : Components.SelfTargetedAOEs
 {
@@ -47,5 +46,5 @@ class OPoorestPauldiaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8655)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8655)]
 public class OPoorestPauldia(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x360A, // R6.000, x1
-};
+}
 
 public enum AID : uint
 {
@@ -17,7 +17,7 @@ public enum AID : uint
     QuintupleSneeze35 = 27693, // Boss->self, 0.5s cast, range 40 45-degree cone
     Uppercut = 27314, // Boss->self, 3.0s cast, range 15 120-degree cone
     RottenSpores = 27313, // Boss->location, 3.0s cast, range 6 circle
-};
+}
 
 class QuintupleSneeze : Components.GenericAOEs
 {
@@ -90,7 +90,7 @@ class BurfurlurStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10617)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10617)]
 public class Burfurlur : SimpleBossModule
 {
     public Burfurlur(WorldState ws, Actor primary) : base(ws, primary) { }

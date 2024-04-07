@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.Narkissos;
 
 public enum OID : uint
@@ -7,7 +6,7 @@ public enum OID : uint
     BossHelper = 0x233C,
     BonusAdds_Lampas = 0x3D4D, //R=2.001, bonus loot adds
     BonusAdds_Lyssa = 0x3D4E, //R=3.75, bonus loot adds
-};
+}
 
 public enum AID : uint
 {
@@ -24,7 +23,7 @@ public enum AID : uint
     BeguilingGas = 32331, // Boss->self, 5,0s cast, range 40 circle, Temporary Misdirection
     Brainstorm = 32334, // Boss->self, 5,0s cast, range 40 circle, Forced March debuffs
     PutridBreath = 32338, // Boss->self, 4,0s cast, range 25 90-degree cone
-};
+}
 
 public enum SID : uint
 {
@@ -35,7 +34,7 @@ public enum SID : uint
     ForwardMarch = 1958, // Boss->player, extra=0x0
     AboutFace = 1959, // Boss->player, extra=0x0
     LeftFace = 1960, // Boss->player, extra=0x0
-};
+}
 
 class Brainstorm : Components.StatusDrivenForcedMarch
 {
@@ -143,7 +142,7 @@ class NarkissosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12029)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12029)]
 public class Narkissos : BossModule
 {
     public Narkissos(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

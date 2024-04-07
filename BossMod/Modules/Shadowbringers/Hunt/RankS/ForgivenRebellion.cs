@@ -1,10 +1,9 @@
-﻿// CONTRIB: made by malediktus, not checked
-namespace BossMod.Shadowbringers.Hunt.RankS.ForgivenRebellion;
+﻿namespace BossMod.Shadowbringers.Hunt.RankS.ForgivenRebellion;
 
 public enum OID : uint
 {
     Boss = 0x28B6, // R=3.4
-};
+}
 
 public enum AID : uint
 {
@@ -24,7 +23,7 @@ public enum AID : uint
     Mindjack = 17599, // Boss->self, 4,0s cast, range 40 circle, applies forced march buffs
     RagingFire = 17601, // Boss->self, 5,0s cast, range 5-40 donut
     Interference = 17602, // Boss->self, 4,5s cast, range 28 180-degree cone
-};
+}
 
 public enum SID : uint
 {
@@ -33,13 +32,13 @@ public enum SID : uint
     RightFace = 1961, // Boss->player, extra=0x0
     LeftFace = 1960, // Boss->player, extra=0x0
     ForcedMarch = 1257, // Boss->player, extra=0x2/0x1/0x8/0x4
-};
+}
 
 public enum IconID : uint
 {
     RotateCCW = 168, // Boss
     RotateCW = 167, // Boss
-};
+}
 
 class SanctifiedBlizzardChain : Components.GenericRotatingAOE
 {
@@ -229,7 +228,7 @@ class ForgivenRebellionStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.SS, NameID = 8915)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.SS, NameID = 8915)]
 public class ForgivenRebellion : SimpleBossModule
 {
     public ForgivenRebellion(WorldState ws, Actor primary) : base(ws, primary) { }

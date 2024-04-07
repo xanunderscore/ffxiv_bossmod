@@ -4,7 +4,7 @@ public enum OID : uint
 {
     NBoss = 0x3AD6, // R2.800, x1
     SBoss = 0x3ADF, // R2.800, x1
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +15,7 @@ public enum AID : uint
     SRightSweep = 31099, // SBoss->self, 4.0s cast, range 30 210-degree cone aoe
     SLeftSweep = 31100, // SBoss->self, 4.0s cast, range 30 210-degree cone aoe
     SCreepingIvy = 31101, // SBoss->self, 3.0s cast, range 10 90-degree cone aoe
-};
+}
 
 class RightSweep : Components.SelfTargetedAOEs
 {
@@ -54,8 +54,8 @@ class C010KalukStates : StateMachineBuilder
 class C010NKalukStates : C010KalukStates { public C010NKalukStates(BossModule module) : base(module, false) { } }
 class C010SKalukStates : C010KalukStates { public C010SKalukStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11510, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11510, SortOrder = 2)]
 public class C010NKaluk : SimpleBossModule { public C010NKaluk(WorldState ws, Actor primary) : base(ws, primary) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11510, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11510, SortOrder = 2)]
 public class C010SKaluk : SimpleBossModule { public C010SKaluk(WorldState ws, Actor primary) : base(ws, primary) { } }

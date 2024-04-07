@@ -1,16 +1,15 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage14.Act2;
 
 public enum OID : uint
 {
     Boss = 0x271E, //R=2.0
-};
+}
 
 public enum AID : uint
 {
     Syrup = 14757, // 271E->player, no cast, range 4 circle, applies heavy to player
     TheLastSong = 14756, // 271E->self, 6,0s cast, range 60 circle, heavy dmg, applies silence to player
-};
+}
 
 class LastSong : Components.GenericLineOfSightAOE
 {
@@ -59,7 +58,7 @@ class Stage14Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 624, NameID = 8108, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 624, NameID = 8108, SortOrder = 2)]
 public class Stage14Act2 : BossModule
 {
     public Stage14Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

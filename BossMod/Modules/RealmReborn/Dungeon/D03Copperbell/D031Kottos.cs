@@ -15,7 +15,7 @@ public enum AID : uint
     LumberingLeapJumpRest = 28549, // Boss->location, no cast, teleport
     ColossalSlam = 28546, // Boss->self, 4.0s cast, range 30 60-degree cone aoe
     Catapult = 28547, // Boss->player, 5.0s cast, single target damage at random target
-};
+}
 
 class GrandSlam : Components.SingleTargetCast
 {
@@ -49,7 +49,7 @@ class D031KottosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 548)]
 public class D031Kottos : BossModule
 {
     public D031Kottos(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(43, -89.56f), 15)) { }

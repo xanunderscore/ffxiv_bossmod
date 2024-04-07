@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.TreasureHunt.ShiftingAltarsOfUznair.AltarMandragora;
 
 public enum OID : uint
@@ -11,7 +10,7 @@ public enum OID : uint
     AltarTomato = 0x2549, // R0,840, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     AltarOnion = 0x2546, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     AltarEgg = 0x2547, // R0,840, icon 2, needs to be killed in order from 1 to 5 for maximum rewards
-};
+}
 
 public enum AID : uint
 {
@@ -28,7 +27,7 @@ public enum AID : uint
     Pollen = 6452, // AltarQueen->self, 3,5s cast, range 6+R circle
     HeirloomScream = 6451, // AltarTomato->self, 3,5s cast, range 6+R circle
     Telega = 9630, // bonusadds->self, no cast, single-target, bonus add disappear
-};
+}
 
 class OpticalIntrusion : Components.SingleTargetDelayableCast
 {
@@ -93,7 +92,7 @@ class MandragoraStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7600)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7600)]
 public class Mandragora : BossModule
 {
     public Mandragora(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

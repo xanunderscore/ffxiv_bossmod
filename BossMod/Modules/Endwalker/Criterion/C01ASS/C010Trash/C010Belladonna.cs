@@ -4,7 +4,7 @@ public enum OID : uint
 {
     NBoss = 0x3AD5, // R4.000, x1
     SBoss = 0x3ADE, // R4.000, x1
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +15,7 @@ public enum AID : uint
     SAtropineSpore = 31096, // SBoss->self, 4.0s cast, range 10-40 donut aoe
     SFrondAffront = 31097, // SBoss->self, 3.0s cast, gaze
     SDeracinator = 31098, // SBoss->player, 4.0s cast, single-target tankbuster
-};
+}
 
 class AtropineSpore : Components.SelfTargetedAOEs
 {
@@ -54,8 +54,8 @@ class C010BelladonnaStates : StateMachineBuilder
 class C010NBelladonnaStates : C010BelladonnaStates { public C010NBelladonnaStates(BossModule module) : base(module, false) { } }
 class C010SBelladonnaStates : C010BelladonnaStates { public C010SBelladonnaStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11514, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11514, SortOrder = 1)]
 public class C010NBelladonna : SimpleBossModule { public C010NBelladonna(WorldState ws, Actor primary) : base(ws, primary) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11514, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11514, SortOrder = 1)]
 public class C010SBelladonna : SimpleBossModule { public C010SBelladonna(WorldState ws, Actor primary) : base(ws, primary) { } }

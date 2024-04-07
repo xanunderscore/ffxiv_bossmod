@@ -1,11 +1,10 @@
-﻿// CONTRIB: made by dhoggpt, improvements by Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D122Arkas;
+﻿namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D122Arkas;
 
 public enum OID : uint
 {
     Boss = 0x3EEA, //R=5.1
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -30,13 +29,13 @@ public enum AID : uint
     SpinningClaw = 33362, // Boss->self, 3.5s cast, range 10 circle
     ForkedFissures = 33361, // Helper->location, 1.0s cast, width 4 rect charge
     SpunLightning = 33363, // Helper->self, 3.5s cast, range 30 width 8 rect
-};
+}
 
 public enum IconID : uint
 {
     Tankbuster = 218, // player
     Stackmarker = 161, // 39D7/3DC2
-};
+}
 
 class Voidzone : BossComponent
 {
@@ -103,19 +102,19 @@ class ForkedFissures : Components.GenericAOEs
                 _patternStart.AddRange(patternIndex01Start);
                 _patternEnd.AddRange(patternIndex01End);
             }
-            for (int i = 0; i < _patternEnd.Count; ++i)
+            for (int i = _patternStart.Count - 1; i >= 0; i--)
+            {
                 _aoes.Add(new(new AOEShapeRect((_patternEnd[i] - _patternStart[i]).Length(), 2), _patternStart[i], Angle.FromDirection(_patternEnd[i] - _patternStart[i]), module.WorldState.CurrentTime.AddSeconds(6)));
+                _patternStart.RemoveAt(i);
+                _patternEnd.RemoveAt(i);
+            }
         }
     }
 
     public override void OnCastFinished(BossModule module, Actor caster, ActorCastInfo spell)
     {
-        if ((AID)spell.Action.ID == AID.ForkedFissures && _aoes.Count > 0 && _patternStart.Count > 0 && _patternEnd.Count > 0)
-        {
+        if (_aoes.Count > 0 && (AID)spell.Action.ID == AID.ForkedFissures)
             _aoes.RemoveAt(0);
-            _patternStart.RemoveAt(0);
-            _patternEnd.RemoveAt(0);
-        }
     }
 }
 
@@ -197,7 +196,7 @@ class D122ArkasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12337)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12337)]
 public class D122Arkas : BossModule
 {
     public D122Arkas(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(425, -440), 14.5f)) { }

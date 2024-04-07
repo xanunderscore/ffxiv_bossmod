@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.Hunt.RankS.BoneCrawler;
 
 public enum OID : uint
 {
     Boss = 0x1AB5, // R=6.2
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     HotCharge = 7922, // Boss->location, 2,5s cast, width 12 rect charge
     Haste = 7926, // Boss->self, no cast, single-target, boss applies Haste to self
     BoneShaker = 7925, // Boss->self, no cast, range 30+R circle, raidwide player stun
-};
+}
 
 class HeatBreath : Components.SelfTargetedAOEs
 {
@@ -70,7 +69,7 @@ class BoneCrawlerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 5988)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 5988)]
 public class BoneCrawler : SimpleBossModule
 {
     public BoneCrawler(WorldState ws, Actor primary) : base(ws, primary) { }

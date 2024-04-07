@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.GymnasiouPithekos;
 
 public enum OID : uint
@@ -8,7 +7,7 @@ public enum OID : uint
     BossAdd = 0x3D2C, //R=4.2
     BossHelper = 0x233C,
     BonusAdd_Lyssa = 0x3D4E, //R=3.75, bonus loot adds
-};
+}
 
 public enum AID : uint
 {
@@ -22,12 +21,12 @@ public enum AID : uint
     RockThrow = 32217, // BossAdds->location, 3,0s cast, range 6 circle
     SweepingGouge = 32211, // Boss->player, 5,0s cast, single-target
     HeavySmash = 32317, // BossAdd_Lyssa -> location 3,0s cast, range 6 circle
-};
+}
 
 public enum IconID : uint
 {
     Thundercall = 111, // Thundercall marker
-};
+}
 
 class Spark : Components.SelfTargetedAOEs
 {
@@ -120,7 +119,7 @@ class PithekosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12001)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12001)]
 public class Pithekos : BossModule
 {
     public Pithekos(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

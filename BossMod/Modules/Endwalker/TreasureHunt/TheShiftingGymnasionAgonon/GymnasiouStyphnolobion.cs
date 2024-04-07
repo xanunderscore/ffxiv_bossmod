@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.GymnasiouStyphnolobion;
 
 public enum OID : uint
@@ -12,7 +11,7 @@ public enum OID : uint
     GymnasticOnion = 0x3D4F, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     GymnasticTomato = 0x3D52, // R0,840, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     BonusAdds_Lyssa = 0x3D4E, //R=3.75
-};
+}
 
 public enum AID : uint
 {
@@ -37,7 +36,7 @@ public enum AID : uint
     TearyTwirl = 32301, // GymnasticOnion->self, 3,5s cast, range 7 circle
     Telega = 9630, // bonusadds->self, no cast, single-target, bonus add disappear
     HeavySmash = 32317, // 3D4E->location, 3,0s cast, range 6 circle
-};
+}
 
 class Rake : Components.SingleTargetCast
 {
@@ -139,7 +138,7 @@ class StyphnolobionStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12012)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12012)]
 public class Styphnolobion : BossModule
 {
     public Styphnolobion(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

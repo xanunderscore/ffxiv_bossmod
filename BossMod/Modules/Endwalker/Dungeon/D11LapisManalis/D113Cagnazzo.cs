@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.Dungeon.D11LapisManalis.D113Cagnazzo;
 
 public enum OID : uint
@@ -38,25 +37,25 @@ public enum AID : uint
     Lifescleaver = 31112, // Boss->self, 4,0s cast, single-target
     Lifescleaver2 = 31113, // Helper->self, 5,0s cast, range 50 30-degree cone
     VoidTorrent = 31118, // Boss->self/player, 5,0s cast, range 60 width 8 rect
-};
+}
 
 public enum IconID : uint
 {
     Stackmarker = 161, // player
     Spreadmarker = 139, // player
     Tankbuster = 230, // player
-};
+}
 
 public enum TetherID : uint
 {
     LimitBreakCharger = 3, // FearsomeFlotsam->Boss
     BaitAway = 1, // 3E97->player
-};
+}
 
 public enum NPCYell : uint
 {
     LimitBreakStart = 15175,
-};
+}
 
 class VoidTorrent : Components.BaitAwayCast
 {
@@ -234,7 +233,7 @@ class D113CagnazzoStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 11995)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 11995)]
 public class D113Cagnazzo : BossModule
 {
     public D113Cagnazzo(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-250, 130), 20)) { }

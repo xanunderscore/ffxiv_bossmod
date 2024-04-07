@@ -5,7 +5,7 @@ public enum OID : uint
     Boss = 0x38C7, // x1
     MaelstromVisual = 0x38C8, // spawn during fight
     MaelstromHelper = 0x38D0, // x4
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     SonicStorm = 29053, // Boss->location, 3.0s cast, range 6 aoe
     Typhoon = 28730, // Boss->self, 3.0s cast, visual
     TyphoonAOE = 28731, // MaelstromHelper->self, no cast, range 3 aoe
-};
+}
 
 class SpikedTail : Components.SingleTargetCast
 {
@@ -84,7 +84,7 @@ class D102KoshcheiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1678)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 11, NameID = 1678)]
 public class D102Koshchei : BossModule
 {
     public D102Koshchei(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(40, -80), 10)) { }

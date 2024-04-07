@@ -29,7 +29,7 @@ class Actions : CommonActions
         SupportedSpell(AID.Amplifier).Condition = _ => _state.Polyglot < 2;
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override void Dispose()
@@ -203,7 +203,7 @@ class Actions : CommonActions
         return s == null ? 0 : StatusDuration(s.Value.ExpireAt);
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         // placeholders
         SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(AID.Fire4).PlaceholderForAuto =

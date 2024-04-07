@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D05MtGulg.D051ForgivenCruelty;
 
 public enum OID : uint
@@ -22,7 +21,7 @@ public enum AID : uint
     CycloneWing = 15612, // 27CA->self, 3,0s cast, single-target
     CycloneWing2 = 15613, // 233C->self, 4,0s cast, range 40 circle
     HurricaneWing = 15619, // 233C->self, 5,0s cast, range 10 circle
-};
+}
 
 class Rake : Components.SingleTargetDelayableCast
 {
@@ -68,7 +67,7 @@ class D051ForgivenCrueltyStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8260)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8260)]
 public class D051ForgivenCruelty : BossModule
 {
     public D051ForgivenCruelty(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(188, -170), 20)) { }

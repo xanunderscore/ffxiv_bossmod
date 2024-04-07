@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D03QitanaRavel.D030RonkanDreamer;
 
 public enum OID : uint
@@ -22,12 +21,12 @@ public enum AID : uint
     AutoAttack = 872, // 28DD/28DC->player, no cast, single-target
     AutoAttack2 = 17949, // 28E3->player, no cast, single-target
     BurningBeam = 15923, // 28E3->self, 3,0s cast, range 15 width 4 rect
-};
+}
 
 public enum TetherID : uint
 {
     StatueActivate = 37, // 28E8->Boss
-};
+}
 
 class RonkanFire : Components.SingleTargetCast
 {
@@ -176,7 +175,7 @@ class D030RonkanDreamerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8639)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8639)]
 public class D030RonkanDreamer : BossModule
 {
     public D030RonkanDreamer(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 0)) { }

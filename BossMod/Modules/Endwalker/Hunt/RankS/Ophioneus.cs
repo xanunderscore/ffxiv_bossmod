@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x35DC, // R5.875, x1
-};
+}
 
 public enum AID : uint
 {
@@ -17,7 +17,7 @@ public enum AID : uint
     LeapingPyricCircleAOE = 27346, // Boss->self, 1.0s cast, range 5-40 donut
     LeapingPyricBurstAOE = 27347, // Boss->self, 1.0s cast, range 40 circle with ? falloff
     Scratch = 27348, // Boss->player, 5.0s cast, single-target
-};
+}
 
 class RightMaw : Components.SelfTargetedAOEs
 {
@@ -83,7 +83,7 @@ class OphioneusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10621)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 10621)]
 public class Ophioneus : SimpleBossModule
 {
     public Ophioneus(WorldState ws, Actor primary) : base(ws, primary) { }

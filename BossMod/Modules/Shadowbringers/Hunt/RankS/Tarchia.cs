@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankS.Tarchia;
 
 public enum OID : uint
 {
     Boss = 0x2873, // R=9.86
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     Trounce = 18027, // Boss->self, 4,0s cast, range 40 60-degree cone
     MetamorphicBlast = 18031, // Boss->self, 4,0s cast, range 40 circle
     Groundstorm = 18023, // Boss->self, 5,0s cast, range 5-40 donut
-};
+}
 
 class WildHorn : Components.SelfTargetedAOEs
 {
@@ -96,7 +95,7 @@ class TarchiaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8900)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8900)]
 public class Tarchia : SimpleBossModule
 {
     public Tarchia(WorldState ws, Actor primary) : base(ws, primary)

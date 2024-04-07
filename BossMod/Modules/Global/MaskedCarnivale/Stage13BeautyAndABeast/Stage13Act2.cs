@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage13.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x26F8, // R=2.0
     Succubus = 0x26F7, //R=1.0
     Helper = 0x233C, //R=0.5
-};
+}
 
 public enum AID : uint
 {
@@ -24,7 +23,7 @@ public enum AID : uint
     BeguilingMist = 15045, // 26F7->self, 7,0s cast, range 50+R circle, interruptable, applies hysteria
     FatalAllure = 14952, // 26F8->self, no cast, range 50+R circle, attract, applies terror
     BloodRain = 14882, // 26F8->location, 3,0s cast, range 50 circle
-};
+}
 
 class VoidFireII : Components.LocationTargetedAOEs
 {
@@ -96,7 +95,7 @@ class Stage13Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 623, NameID = 8107, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 623, NameID = 8107, SortOrder = 2)]
 public class Stage13Act2 : BossModule
 {
     public Stage13Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

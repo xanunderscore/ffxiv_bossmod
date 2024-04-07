@@ -46,7 +46,7 @@ public class Ex1UltimaStates : StateMachineBuilder
         // garuda end is PATE 0655 on UltimaGaruda
         // titan end is PATE 0656 on UltimaTitan
         // ifrit end is PATE 0657 on UltimaIfrit
-        TrivialPhase(600)
+        TrivialPhase(0, 600)
             .ActivateOnEnter<ViscousAetheroplasm>()
             .ActivateOnEnter<MistralSongVulcanBurst>()
             .ActivateOnEnter<EyeOfTheStormGeocrush>()
@@ -66,7 +66,7 @@ public class Ex1UltimaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 68, NameID = 2137)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 68, NameID = 2137)]
 public class Ex1Ultima : BossModule
 {
     public Ex1Ultima(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 20)) { }

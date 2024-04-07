@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage06.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x26FF, //R=2.53
     Eye = 0x25CE, //R=1.35
     Mandragora = 0x2701, //R=0.3
-};
+}
 
 public enum AID : uint
 {
@@ -17,12 +16,12 @@ public enum AID : uint
     Stone = 14695, // 25CE->player, 1,0s cast, single-target
     DreadGaze = 14694, // 25CE->self, 3,0s cast, range 6+R ?-degree cone
 
-};
+}
 public enum SID : uint
 {
     Blind = 571, // Mandragora->player, extra=0x0
 
-};
+}
 class DemonEye : Components.CastGaze
 {
     private BitMask _blinded;
@@ -141,7 +140,7 @@ class Stage06Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8092, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8092, SortOrder = 2)]
 public class Stage06Act2 : BossModule
 {
     public Stage06Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

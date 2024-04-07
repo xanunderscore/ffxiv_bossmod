@@ -4,7 +4,7 @@ public enum OID : uint
 {
     NBoss = 0x3AD8, // R2.500, x1
     SBoss = 0x3AE1, // R2.500, x1
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +15,7 @@ public enum AID : uint
     SDominionSlash = 31106, // Boss->self, 3.5s cast, range 12 90-degree cone aoe
     SInfernalWeight = 31107, // Boss->self, 5.0s cast, raidwide
     SHellsNebula = 31108, // Boss->self, 4.0s cast, raidwide set hp to 1
-};
+}
 
 class DominionSlash : Components.SelfTargetedAOEs
 {
@@ -54,8 +54,8 @@ class C010ArmorStates : StateMachineBuilder
 class C010NArmorStates : C010ArmorStates { public C010NArmorStates(BossModule module) : base(module, false) { } }
 class C010SArmorStates : C010ArmorStates { public C010SArmorStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11515, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11515, SortOrder = 6)]
 public class C010NArmor : SimpleBossModule { public C010NArmor(WorldState ws, Actor primary) : base(ws, primary) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11515, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11515, SortOrder = 6)]
 public class C010SArmor : SimpleBossModule { public C010SArmor(WorldState ws, Actor primary) : base(ws, primary) { } }

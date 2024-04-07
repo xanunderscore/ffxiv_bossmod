@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage26.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2C58, //R=3.6
     Thunderhead = 0x2C59, //R=1.0
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -17,18 +16,18 @@ public enum AID : uint
     LightningBolt = 18606, // 2C59->self, no cast, range 8 circle
     DadJoke = 18605, // 2C58->self, no cast, range 25+R 120-degree cone, knockback 15, dir forward
     VoidThunderIII = 18603, // 2C58->player, 4,0s cast, range 20 circle
-};
+}
 
 public enum SID : uint
 {
     CriticalStrikes = 1797, // Boss->Boss, extra=0x0
     Electrocution = 271, // Boss/2C59->player, extra=0x0
-};
+}
 
 public enum IconID : uint
 {
     BaitKnockback = 23, // player
-};
+}
 
 class Thunderhead : Components.PersistentVoidzone
 {
@@ -129,7 +128,7 @@ class Stage26Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9231, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 695, NameID = 9231, SortOrder = 2)]
 public class Stage26Act2 : BossModule
 {
     public Stage26Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

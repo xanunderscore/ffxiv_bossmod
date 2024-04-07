@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage27;
 
 public enum OID : uint
@@ -7,7 +6,7 @@ public enum OID : uint
     Bomb = 0x2CF9, //R=0.8
     MagitekExplosive = 0x2CEC, //R=0.8
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     Fungahhh = 19257, // Boss->self, no cast, range 8+R 90-degree cone, knockback 15 away from source
     Snort = 19266, // Boss->self, 10,0s cast, range 60+R circle, knockback 15 away from source
     MassiveExplosion = 19261, // 2CEC->self, no cast, range 60 circle, wipe, failed to destroy Magitek Explosive in time
-};
+}
 
 class Fireball : Components.LocationTargetedAOEs
 {
@@ -179,7 +178,7 @@ class Stage27States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 696, NameID = 3046)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 696, NameID = 3046)]
 public class Stage27 : BossModule
 {
     public Stage27(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

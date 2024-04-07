@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.GymnasiouTigris;
 
 public enum OID : uint
@@ -12,7 +11,7 @@ public enum OID : uint
     GymnasticOnion = 0x3D4F, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     GymnasticTomato = 0x3D52, // R0,840, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
     BonusAdds_Lyssa = 0x3D4E, //R=3.75, bonus loot adds
-};
+}
 
 public enum AID : uint
 {
@@ -30,7 +29,7 @@ public enum AID : uint
     TearyTwirl = 32301, // GymnasticOnion->self, 3,5s cast, range 7 circle
     Telega = 9630, // bonusadds->self, no cast, single-target, bonus add disappear
     HeavySmash = 32317, // BossAdd->location, 3,0s cast, range 6 circle
-};
+}
 
 class HeavySmash : Components.LocationTargetedAOEs
 {
@@ -107,7 +106,7 @@ class TigrisStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 11999)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 11999)]
 public class Tigris : BossModule
 {
     public Tigris(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

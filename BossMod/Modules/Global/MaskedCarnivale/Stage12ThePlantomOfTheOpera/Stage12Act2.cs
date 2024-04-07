@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage12.Act2;
 
 public enum OID : uint
 {
     Boss = 0x271B, //R=6.96
     Roselet = 0x271C, //R=0.8
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +13,7 @@ public enum AID : uint
     Seedvolley = 14750, // 271C->player, no cast, single-target
     Trounce = 14754, // 271B->self, 4,5s cast, range 40+R 60-degree cone
     InflammableFumes = 14753, // 271B->self, 15,0s cast, range 50 circle
-};
+}
 
 class WildHorn : Components.SelfTargetedAOEs
 {
@@ -57,7 +56,7 @@ class Stage12Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 622, NameID = 8102, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 622, NameID = 8102, SortOrder = 2)]
 public class Stage12Act2 : BossModule
 {
     public Stage12Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

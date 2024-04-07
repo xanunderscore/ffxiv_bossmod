@@ -5,7 +5,7 @@ public enum OID : uint
     Boss = 0xCF, // x1
     InfernalNail = 0xD0, // spawn during fight
     Helper = 0x191, // x19
-};
+}
 
 public enum AID : uint
 {
@@ -17,7 +17,7 @@ public enum AID : uint
     Hellfire = 458, // Boss->self, 2.0s cast, infernal nail 'enrage'
     RadiantPlume = 456, // Boss->self, 2.2s cast, visual
     RadiantPlumeAOE = 734, // Helper->location, 3.0s cast, range 8 aoe
-};
+}
 
 class Hints : BossComponent
 {
@@ -64,7 +64,7 @@ class T01IfritNStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 56, NameID = 1185)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 56, NameID = 1185)]
 public class T01IfritN : BossModule
 {
     public T01IfritN(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-0, 0), 20)) { }

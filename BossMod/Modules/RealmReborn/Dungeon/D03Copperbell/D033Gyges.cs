@@ -14,7 +14,7 @@ public enum AID : uint
     GiganticBlast = 28761, // Helper->self, 6.0s cast, range 8 aoe
     GrandSlam = 28764, // Boss->player, 5.0s cast, tankbuster
     ColossalSlam = 28763, // Boss->self, 4.0s cast, range 40 60-degree cone aoe
-};
+}
 
 class GiganticSwing : Components.SelfTargetedAOEs
 {
@@ -54,7 +54,7 @@ class D033GygesStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 101)]
 public class D033Gyges : BossModule
 {
     public D033Gyges(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-100.42f, 6.67f), 20)) { }

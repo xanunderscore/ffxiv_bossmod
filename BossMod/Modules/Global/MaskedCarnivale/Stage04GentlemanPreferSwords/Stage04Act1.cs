@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage04.Act1;
 
 public enum OID : uint
 {
     Boss = 0x25C8, //R=1.65
     Bat = 0x25D2, //R=0.4
-};
+}
 
 public enum AID : uint
 {
@@ -13,7 +12,7 @@ public enum AID : uint
     AutoAttack2 = 6499, // 25D2->player, no cast, single-target
     BloodDrain = 14360, // 25D2->player, no cast, single-target
     SanguineBite = 14361, // 25C8->self, no cast, range 3+R width 2 rect
-};
+}
 
 class Hints : BossComponent
 {
@@ -42,7 +41,7 @@ class Stage04Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 614, NameID = 8086, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 614, NameID = 8086, SortOrder = 1)]
 public class Stage04Act1 : BossModule
 {
     public Stage04Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

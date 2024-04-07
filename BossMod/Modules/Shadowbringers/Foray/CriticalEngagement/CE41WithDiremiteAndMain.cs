@@ -7,7 +7,7 @@ public enum OID : uint
     DimCrystal = 0x31CD, // R1.600, spawn during fight
     CorruptedCrystal = 0x31CE, // R1.600, spawn during fight
     SandSphere = 0x31CF, // R4.000, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -34,7 +34,7 @@ public enum AID : uint
     Hailfire = 24088, // Boss->self, 8.0s cast, single-target, visual
     HailfireAOE = 24089, // Boss->self, no cast, range 40 width 4 rect aoe
     Teleport = 24090, // Boss->location, no cast, single-target
-};
+}
 
 public enum IconID : uint
 {
@@ -43,7 +43,7 @@ public enum IconID : uint
     Hailfire2 = 80, // player
     Hailfire3 = 81, // player
     Hailfire4 = 82, // player
-};
+}
 
 class CrystallineFracture : Components.SelfTargetedAOEs
 {
@@ -80,7 +80,7 @@ class Subduction : Components.SelfTargetedAOEs
 // next aoe starts casting slightly before previous, so use a custom component
 class Earthbreaker : Components.GenericAOEs
 {
-    private List<(Actor caster, AOEShape shape)> _active = new();
+    private readonly List<(Actor caster, AOEShape shape)> _active = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
     {
@@ -119,7 +119,7 @@ class Shardstrike : Components.SpreadFromCastTargets
 // TODO: this should probably be generalized
 class Hailfire : Components.GenericAOEs
 {
-    private Actor?[] _targets = new Actor?[4];
+    private readonly Actor?[] _targets = new Actor?[4];
     private DateTime _activation;
 
     private static readonly AOEShapeRect _shape = new(40, 2);
@@ -187,7 +187,7 @@ class CE41WithDiremiteAndMainStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 21)] // bnpcname=9969
 public class CE41WithDiremiteAndMain : BossModule
 {
     private IReadOnlyList<Actor> _dimCrystals;

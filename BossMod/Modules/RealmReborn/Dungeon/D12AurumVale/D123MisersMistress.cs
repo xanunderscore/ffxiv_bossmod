@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x3AF, // x1
     MorbolFruit = 0x5BC, // spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     BurrBurrow = 1038, // Boss->self, 3.0s cast, raidwide?
     HookedBurrs = 1039, // Boss->player, 1.5s cast, single-target
     Sow = 1081, // Boss->player, 3.0s cast, single-target, spawns adds
-};
+}
 
 class VineProbe : Components.Cleave
 {
@@ -47,7 +47,7 @@ class D123MisersMistressStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 5, NameID = 1532)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 5, NameID = 1532)]
 public class D123MisersMistress : BossModule
 {
     public D123MisersMistress(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-400, -130), 25)) { }

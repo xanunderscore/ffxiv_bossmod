@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.TreasureHunt.LostCanalsOfUznair.CanalIcebeast;
 
 public enum OID : uint
@@ -8,7 +7,7 @@ public enum OID : uint
     BossAdd1 = 0x1F0E, // R1.560
     BossAdd2 = 0x1F0F, // R1.600
     BonusAdd_Abharamu = 0x1EBF, // R3.420
-};
+}
 
 public enum AID : uint
 {
@@ -26,7 +25,7 @@ public enum AID : uint
     RaucousScritch = 8598, // BonusAdd_Abharamu->self, 2,5s cast, range 5+R 120-degree cone
     Hurl = 5352, // BonusAdd_Abharamu->location, 3,0s cast, range 6 circle
     Telega = 9630, // BonusAdds->self, no cast, single-target, bonus adds disappear
-};
+}
 
 class Eyeshine : Components.CastGaze
 {
@@ -79,7 +78,7 @@ class IcebeastStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 268, NameID = 6650)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 268, NameID = 6650)]
 public class Icebeast : BossModule
 {
     public Icebeast(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, -420), 20)) { }

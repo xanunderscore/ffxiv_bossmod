@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by dhoggpt, improvements by Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D121Lyngbakr;
+﻿namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D121Lyngbakr;
 
 public enum OID : uint
 {
@@ -7,7 +6,7 @@ public enum OID : uint
     Helper = 0x233C,
     SmallCrystal = 0x1EB882, // R=0.5
     BigCrystal = 0x1EB883, // R=0.5
-};
+}
 
 public enum AID : uint
 {
@@ -21,7 +20,7 @@ public enum AID : uint
     Upsweep = 33338, // Boss->self, 5.0s cast, range 40 circle
     Floodstide = 33341, // Boss->self, 3.0s cast, single-target        
     Waterspout = 33342, // Helper->player, 5.0s cast, range 5 circle, spread
-};
+}
 
 class Frequencies : Components.GenericAOEs
 {
@@ -111,7 +110,7 @@ class D121LyngbakrStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12336)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12336)]
 public class D121Lyngbakr : BossModule
 {
     public D121Lyngbakr(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-322, 120), 20)) { }

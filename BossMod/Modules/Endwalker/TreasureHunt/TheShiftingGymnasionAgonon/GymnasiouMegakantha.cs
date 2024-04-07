@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.GymnasiouMegakantha;
 
 public enum OID : uint
@@ -9,7 +8,7 @@ public enum OID : uint
     BossAdd1 = 0x3D35, //R=1.76 
     BossAdd2 = 0x3D36, //R=1.56
     BonusAdds_Lampas = 0x3D4D, //R=2.001, bonus loot adds
-};
+}
 
 public enum AID : uint
 {
@@ -29,7 +28,7 @@ public enum AID : uint
 
     HeavySmash = 32317, // BossAdd->location, 3,0s cast, range 6 circle
     Telega = 9630, // BonusAdds->self, no cast, single-target, bonus add disappear
-};
+}
 
 class HeavySmash : Components.LocationTargetedAOEs
 {
@@ -107,7 +106,7 @@ class MegakanthaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12009)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12009)]
 public class Megakantha : BossModule
 {
     public Megakantha(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

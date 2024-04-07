@@ -46,7 +46,7 @@ public class AutoHints : IDisposable
         }
     }
 
-    private void OnCastStarted(object? sender, Actor actor)
+    private void OnCastStarted(Actor actor)
     {
         if (actor.Type != ActorType.Enemy || actor.IsAlly)
             return;
@@ -79,7 +79,7 @@ public class AutoHints : IDisposable
         _activeAOEs[actor.InstanceID] = (actor, target, shape, data.CastType == 8);
     }
 
-    private void OnCastFinished(object? sender, Actor actor)
+    private void OnCastFinished(Actor actor)
     {
         _activeAOEs.Remove(actor.InstanceID);
     }

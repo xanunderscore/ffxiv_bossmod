@@ -1,15 +1,14 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage11.Act1;
 
 public enum OID : uint
 {
     Boss = 0x2718, //R=1.2
-};
+}
 
 public enum AID : uint
 {
     Fulmination = 14583, // 2718->self, 23,0s cast, range 60 circle
-};
+}
 
 class Hints : BossComponent
 {
@@ -29,7 +28,7 @@ class Stage11Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 621, NameID = 2280, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 621, NameID = 2280, SortOrder = 1)]
 public class Stage11Act1 : BossModule
 {
     public Stage11Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

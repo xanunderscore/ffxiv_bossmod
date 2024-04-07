@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.TreasureHunt.ShiftingAltarsOfUznair.TheGreatGoldWhisker;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x2541, //R=2.4
     BossHelper = 0x233C,
     BonusAdd_GoldWhisker = 0x2544, // R0.540
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +14,7 @@ public enum AID : uint
     Tingle = 13365, // Boss->self, 4,0s cast, range 10+R circle
     FishOutOfWater = 13366, // Boss->self, 3,0s cast, single-target
     Telega = 9630, // BonusAdd_GoldWhisker->self, no cast, single-target
-};
+}
 
 class TripleTrident : Components.SingleTargetDelayableCast
 {
@@ -44,7 +43,7 @@ class TheGreatGoldWhiskerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7599)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7599)]
 public class TheGreatGoldWhisker : BossModule
 {
     public TheGreatGoldWhisker(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

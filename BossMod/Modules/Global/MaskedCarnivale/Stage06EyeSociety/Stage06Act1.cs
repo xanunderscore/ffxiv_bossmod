@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage06.Act1;
 
 public enum OID : uint
 {
     Boss = 0x25CD, //R=2.53
     Mandragora = 0x2700, //R=0.3
-};
+}
 
 public enum AID : uint
 {
@@ -13,12 +12,12 @@ public enum AID : uint
     DemonEye = 14691, // 25CD->self, 5,0s cast, range 50+R circle
     Attack = 6499, // 2700/25CD->player, no cast, single-target
     ColdStare = 14692, // 25CD->self, 2,5s cast, range 40+R 90-degree cone
-};
+}
 
 public enum SID : uint
 {
     Blind = 571, // Mandragora->player, extra=0x0
-};
+}
 
 class DemonEye : Components.CastGaze
 {
@@ -114,7 +113,7 @@ class Stage06Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8090, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 616, NameID = 8090, SortOrder = 1)]
 public class Stage06Act1 : BossModule
 {
     public Stage06Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

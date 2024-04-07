@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.Grassman;
 
 public enum OID : uint
 {
     Boss = 0x283A, // R=4.0
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +13,7 @@ public enum AID : uint
     StoolPelt = 17861, // 283A->location, 3,0s cast, range 5 circle
     Browbeat = 17860, // 283A->player, 4,0s cast, single-target
     Streak = 17862, // 283A->location, 3,0s cast, width 6 rect charge, knockback 10, away from source
-};
+}
 
 class ChestThump : BossComponent
 {
@@ -96,5 +95,5 @@ class GrassmanStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8892)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8892)]
 public class Grassman(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x35C0, // R7.200, x1
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     SonicHowl = 27272, // Boss->self, 5.0s cast, range 30 circle
     SteelFang = 27273, // Boss->player, 5.0s cast, single-target
     FangedLunge = 27274, // Boss->player, no cast, single-target
-};
+}
 
 class EnergyWave : Components.SelfTargetedAOEs
 {
@@ -54,7 +54,7 @@ class ArchEtaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10634)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10634)]
 public class ArchEta : SimpleBossModule
 {
     public ArchEta(WorldState ws, Actor primary) : base(ws, primary) { }

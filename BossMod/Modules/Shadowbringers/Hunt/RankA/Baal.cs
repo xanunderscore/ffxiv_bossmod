@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.Baal;
 
 public enum OID : uint
 {
     Boss = 0x2854, // R=3.2
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +14,7 @@ public enum AID : uint
     SewageWave1 = 17422, // 2854->self, no cast, range 30 180-degree cone
     SewageWave2 = 17424, // 2854->self, 5,0s cast, range 30 180-degree cone
     SewageWave3 = 17421, // 2854->self, no cast, range 30 180-degree cone
-};
+}
 
 class SewerWater : Components.SelfTargetedAOEs
 {
@@ -83,5 +82,5 @@ class BaalStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8897)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8897)]
 public class Baal(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

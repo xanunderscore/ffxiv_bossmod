@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.TreasureHunt.ShiftingOubliettesOfLyheGhiah.SecretSwallow;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x302B, //R=4.0
     BossAdd = 0x302C, //R=2.0 
     BossHelper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +17,7 @@ public enum AID : uint
     SeventhWave = 21719, // 302B->self, 4,5s cast, range 11 circle
     BodySlam = 21718, // 302B->location, 4,0s cast, range 10 circle, knockback 20, away from source
     PrevailingCurrent = 21717, // 302C->self, 3,0s cast, range 22+R width 6 rect
-};
+}
 
 class ElectricWhorl : Components.SelfTargetedAOEs
 {
@@ -76,7 +75,7 @@ class SwallowStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9782)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9782)]
 public class Swallow : BossModule
 {
     public Swallow(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 19)) { }

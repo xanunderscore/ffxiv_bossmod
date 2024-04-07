@@ -1,17 +1,16 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage13.Act1;
 
 public enum OID : uint
 {
     Boss = 0x26F5, //R=1.4
     Vodoriga = 0x26F6, //R=1.2
-};
+}
 
 public enum AID : uint
 {
     Attack = 6497, // Boss/Vodoriga->player, no cast, single-target
     Mow = 14879, // Boss->self, 3,0s cast, range 6+R 120-degree cone
-};
+}
 
 class Mow : Components.SelfTargetedAOEs
 {
@@ -37,7 +36,7 @@ class Stage13Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 623, NameID = 8104, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 623, NameID = 8104, SortOrder = 1)]
 public class Stage13Act1 : BossModule
 {
     public Stage13Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

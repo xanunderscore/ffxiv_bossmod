@@ -15,7 +15,7 @@ public enum OID : uint
     AetherialBolt = 0x3119, // R0.600, spawn during fight (small bomb)
     AetherialBurst = 0x311A, // R1.200, spawn during fight (big bomb)
     ProtectiveDome = 0x1EB12C, // R0.500, EventObj type, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -96,6 +96,8 @@ public enum AID : uint
     AboveBoard = 23051, // QueensWarrior->self, 6.0s cast, range 60 circle, visual (throw up)
     AboveBoardExtra = 23438, // Helper->self, 6.0s cast, range 60 circle, visual (???)
     LotsCastBigShort = 23433, // AetherialBurst->location, no cast, range 10 circle
+    LotsCastSmallShort = 23053, // AetherialBolt->location, no cast, range 10 circle
+    LotsCastBigLong = 23052, // AetherialBurst->location, no cast, range 10 circle visual
     LotsCastSmallLong = 23432, // AetherialBolt->location, no cast, range 10 circle visual
     LotsCastLong = 23478, // Helper->location, 1.2s cast, range 10 circle
 
@@ -107,7 +109,7 @@ public enum AID : uint
     SoftEnrageGAOE = 23414, // Helper->self, 5.0s cast, range 60 circle, raidwide
     SoftEnrageS = 23075, // QueensSoldier->self, 5.0s cast, range 60 circle, visual (raidwide)
     SoftEnrageSAOE = 23413, // Helper->self, 5.0s cast, range 60 circle, raidwide
-};
+}
 
 public enum SID : uint
 {
@@ -134,4 +136,4 @@ public enum SID : uint
     AboveBoardPlayerShort = 2427, // none->player, extra=0x3E8
     AboveBoardBombLong = 2428, // none->AetherialBurst/AetherialBolt, extra=0x3E8
     AboveBoardBombShort = 2429, // none->AetherialBolt/AetherialBurst, extra=0x3E8
-};
+}

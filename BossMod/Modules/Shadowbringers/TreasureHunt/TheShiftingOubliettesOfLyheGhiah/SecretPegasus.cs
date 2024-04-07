@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.TreasureHunt.ShiftingOubliettesOfLyheGhiah.SecretPegasus;
 
 public enum OID : uint
@@ -7,7 +6,7 @@ public enum OID : uint
     Thunderhead = 0x3017, //R=1.0, untargetable
     BossHelper = 0x233C,
     BonusAdd_TheKeeperOfTheKeys = 0x3034, // R3.230
-};
+}
 
 public enum AID : uint
 {
@@ -23,7 +22,7 @@ public enum AID : uint
     Inhale = 21770, // 3034->self, no cast, range 20 120-degree cone, attract 25 between hitboxes, shortly before Spin
     Spin = 21769, // 3034->self, 4,0s cast, range 11 circle
     Scoop = 21768, // 3034->self, 4,0s cast, range 15 120-degree cone
-};
+}
 
 class BurningBright : Components.SelfTargetedAOEs
 {
@@ -76,7 +75,7 @@ class PegasusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9793)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 745, NameID = 9793)]
 public class Pegasus : BossModule
 {
     public Pegasus(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 19)) { }

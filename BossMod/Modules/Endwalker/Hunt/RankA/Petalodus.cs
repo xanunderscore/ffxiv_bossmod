@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x35FB, // R5.400, x1
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +18,7 @@ public enum AID : uint
 
 class MarineMayhem : Components.CastInterruptHint
 {
-    public MarineMayhem() : base(ActionID.MakeSpell(AID.MarineMayhem), hint: "(Raidwide x3)") { }
+    public MarineMayhem() : base(ActionID.MakeSpell(AID.MarineMayhem), hintExtra: "Raidwide x3") { }
 }
 
 class Waterga : Components.SpreadFromCastTargets
@@ -48,7 +48,7 @@ class PetalodusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10632)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 10632)]
 public class Petalodus : SimpleBossModule
 {
     public Petalodus(WorldState ws, Actor primary) : base(ws, primary) { }

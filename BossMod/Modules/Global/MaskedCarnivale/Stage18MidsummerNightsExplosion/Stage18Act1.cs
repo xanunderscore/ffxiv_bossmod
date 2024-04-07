@@ -1,11 +1,10 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage18.Act1;
 
 public enum OID : uint
 {
     Boss = 0x2724, //R=3.0
     Keg = 0x2726, //R=0.65
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +14,7 @@ public enum AID : uint
     Fireball = 15051, // 2724->location, 4,0s cast, range 6 circle
     BoneShaker = 15053, // 2724->self, no cast, range 50 circle
     TailSmash = 15052, // 2724->self, 4,0s cast, range 12+R 90-degree cone
-};
+}
 
 class Explosion : Components.SelfTargetedAOEs
 {
@@ -100,7 +99,7 @@ class Stage18Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 628, NameID = 8116, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 628, NameID = 8116, SortOrder = 1)]
 public class Stage18Act1 : BossModule
 {
     public Stage18Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.DeepDungeon.EurekaOrthos.DD30TiamatsClone;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x3D9A, // R19.000
     DarkWanderer = 0x3D9B, // R2.000
     Helper = 0x233C, // R0.500
-};
+}
 
 public enum AID : uint
 {
@@ -21,12 +20,12 @@ public enum AID : uint
     DarkWyrmwing2 = 31846, // 233C->self, 6.0s cast, range 40 width 16 rect  // Summon Heads Heading E/W from E/W Walls
     WheiMornFirst = 31847, // 3D9A->location, 5.0s cast, range 6 circle
     WheiMornRest = 31848, // 3D9A->location, no cast, range 6 circle
-};
+}
 
 public enum IconID : uint
 {
     ChasingAOE = 197, // player
-};
+}
 
 class WheiMorn : Components.StandardChasingAOEs
 {
@@ -88,7 +87,7 @@ class DD30TiamatsCloneStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 899, NameID = 12242)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 899, NameID = 12242)]
 public class DD30TiamatsClone : BossModule
 {
     public DD30TiamatsClone(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-300, -300), 20)) { }

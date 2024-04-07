@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 //Note: This module exists because of the mini raidwide, to not confuse the AI
 namespace BossMod.Shadowbringers.Dungeon.D05MtGulg.D050ForgivenPrejudice;
 
@@ -19,7 +18,7 @@ public enum AID : uint
     SanctifiedAero = 16813, // 28F1->self, 5,0s cast, range 40 width 8 rect
     PunitiveLight = 16815, // Boss->self, 5,0s cast, range 20 circle
     Sanctification = 16814, // Boss->self, 5,0s cast, range 12 90-degree cone
-};
+}
 
 class SanctifiedAero : Components.SelfTargetedAOEs
 {
@@ -28,7 +27,7 @@ class SanctifiedAero : Components.SelfTargetedAOEs
 
 class PunitiveLight : Components.CastInterruptHint
 { //Note: this attack is a r20 circle, not drawing it because it is too big and the damage not all that high even if interrupt/stun fails
-    public PunitiveLight() : base(ActionID.MakeSpell(AID.PunitiveLight), true, true, "(Raidwide)") { }
+    public PunitiveLight() : base(ActionID.MakeSpell(AID.PunitiveLight), true, true, "Raidwide", true) { }
 }
 
 class Sanctification : Components.SelfTargetedAOEs
@@ -48,7 +47,7 @@ class D050ForgivenPrejudiceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8269)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 659, NameID = 8269)]
 public class D050ForgivenPrejudice : SimpleBossModule
 {
     public D050ForgivenPrejudice(WorldState ws, Actor primary) : base(ws, primary) { }

@@ -1,12 +1,11 @@
-﻿// CONTRIB: made by Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D133Durante;
+﻿namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D133Durante;
 
 public enum OID : uint
 {
     Boss = 0x4042, // R=6.0
     AethericCharge = 0x4043, // R=1.0
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -36,7 +35,7 @@ public enum AID : uint
     DeathsJourney = 34995, // Boss->self, 6,0s cast, range 8 circle
     DeathsJourney2 = 34996, // Helper->self, 6,5s cast, range 30 30-degree cone, this does the damage
     DeathsJourney3 = 35872, // Helper->self, 6,5s cast, range 30 30-degree cone, visual
-};
+}
 
 class Voidzone : BossComponent
 {
@@ -194,7 +193,7 @@ class D133DuranteStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12584)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12584)]
 class D133Durante : BossModule
 {
     public D133Durante(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, -422), 23)) { }

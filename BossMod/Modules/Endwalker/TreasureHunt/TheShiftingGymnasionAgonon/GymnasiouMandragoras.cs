@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.GymnasiouMandragoras;
 
 public enum OID : uint
@@ -11,7 +10,7 @@ public enum OID : uint
     GymnasticEggplant = 0x3D50, // R0,840, icon 2, needs to be killed in order from 1 to 5 for maximum rewards
     GymnasticOnion = 0x3D4F, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     GymnasticTomato = 0x3D52, // R0,840, icon 4, needs to be killed in order from 1 to 5 for maximum rewards
-};
+}
 
 public enum AID : uint
 {
@@ -25,7 +24,7 @@ public enum AID : uint
     PungentPirouette = 32303, // GymnasticGarlic->self, 3,5s cast, range 7 circle
     TearyTwirl = 32301, // GymnasticOnion->self, 3,5s cast, range 7 circle
     Telega = 9630, // bonusadds->self, no cast, single-target, bonus add disappear
-};
+}
 
 class Ram : Components.SingleTargetCast
 {
@@ -84,7 +83,7 @@ class MandragorasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12022)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12022)]
 public class Mandragoras : BossModule
 {
     public Mandragoras(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

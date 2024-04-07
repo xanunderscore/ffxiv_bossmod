@@ -6,7 +6,7 @@ public enum OID : uint
     Helper = 0x233C, // R0.500, x32
     RottenMandragora = 0x2E30, // R1.050, spawn during fight
     Pheromones = 0x2E31, // R1.500, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -29,13 +29,13 @@ public enum AID : uint
     PlayfulBreeze = 20525, // Boss->self, 4.0s cast, single-target, visual (raidwide)
     PlayfulBreezeAOE = 20526, // Helper->self, 4.0s cast, range 60 circle raidwide
     Budbutt = 20527, // Boss->player, 4.0s cast, single-target, tankbuster
-};
+}
 
 public enum SID : uint
 {
     TenderAnaphylaxis = 2301, // Helper->player, extra=0x0
     JealousAnaphylaxis = 2302, // Helper->player, extra=0x0
-};
+}
 
 class Pheromones : Components.PersistentVoidzone
 {
@@ -46,8 +46,8 @@ class DeadLeaves : Components.GenericAOEs
 {
     private BitMask _tenderStatuses;
     private BitMask _jealousStatuses;
-    private List<Actor> _tenderCasters = new();
-    private List<Actor> _jealousCasters = new();
+    private readonly List<Actor> _tenderCasters = [];
+    private readonly List<Actor> _jealousCasters = [];
 
     private static readonly AOEShapeCone _shape = new(30, 45.Degrees());
 
@@ -147,7 +147,7 @@ class CE13KillItWithFireStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 1)] // bnpcname=9391
 public class CE13KillItWithFire : BossModule
 {
     public CE13KillItWithFire(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-90, 700), 25)) { }

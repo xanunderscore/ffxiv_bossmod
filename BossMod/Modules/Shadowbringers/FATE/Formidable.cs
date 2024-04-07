@@ -1,5 +1,4 @@
-﻿// CONTRIB: changes by malediktus, not checked
-namespace BossMod.Shadowbringers.FATE.Formidable;
+﻿namespace BossMod.Shadowbringers.FATE.Formidable;
 
 public enum OID : uint
 {
@@ -17,7 +16,7 @@ public enum OID : uint
     //_Gen_Actor1eadec = 0x1EADEC, // R0.500, EventObj type, spawn during fight
     //_Gen_Actor1eadee = 0x1EADEE, // R0.500, EventObj type, spawn during fight
     //_Gen_Actor1eaded = 0x1EADED, // R0.500, EventObj type, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -39,17 +38,17 @@ public enum AID : uint
     DwarvenDischargeCircle = 17405, // DwarvenChargeCircle->self, 3.0s cast, range 8 circle
     SteamDome = 17394, // Boss->self, 3.0s cast, range 30 circle knockback 15
     DynamicSensoryJammer = 17407, // Boss->self, 3.0s cast, range 70 circle
-};
+}
 
 public enum IconID : uint
 {
     DrillShot = 62, // player
-};
+}
 public enum SID : uint
 {
     AlteredStates = 1387, // ExpandHelper-->GiantGrenade
     ExtremeCaution = 1269, // Boss->players
-};
+}
 
 class Spincrush : Components.SelfTargetedAOEs
 {
@@ -271,5 +270,5 @@ class FormidableStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1464, NameID = 8822)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Fate, GroupID = 1464, NameID = 8822)]
 public class Formidable(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

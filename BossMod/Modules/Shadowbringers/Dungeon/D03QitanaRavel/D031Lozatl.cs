@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Dungeon.D03QitanaRavel.D031Lozatl;
 
 public enum OID : uint
@@ -19,7 +18,7 @@ public enum AID : uint
     HeatUp2 = 15501, // 27AF->self, 3,0s cast, single-target
     LozatlsFuryA = 15504, // 27AF->self, 4,0s cast, range 60 width 20 rect
     LozatlsFuryB = 15503, // 27AF->self, 4,0s cast, range 60 width 20 rect
-};
+}
 
 class LozatlsFuryA : Components.SelfTargetedAOEs
 {
@@ -85,7 +84,7 @@ class D031LozatlStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8231)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 651, NameID = 8231)]
 public class D031Lozatl : BossModule
 {
     public D031Lozatl(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 315), 20)) { }

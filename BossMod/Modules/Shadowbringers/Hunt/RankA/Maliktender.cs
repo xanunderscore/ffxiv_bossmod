@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.Maliktender;
 
 public enum OID : uint
 {
     Boss = 0x2874, // R=3.06
-};
+}
 
 public enum AID : uint
 {
@@ -19,7 +18,7 @@ public enum SID : uint
 {
     Haste = 1962,
     Stun = 149,
-};
+}
 
 class Sabotendance : Components.SelfTargetedAOEs
 {
@@ -63,5 +62,5 @@ class MaliktenderStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8901)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8901)]
 public class Maliktender(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.TreasureHunt.DungeonsOfLyheGhiah.Goliath;
 
 public enum OID : uint
@@ -12,7 +11,7 @@ public enum OID : uint
     DungeonOnion = 0x2A06, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     DungeonEgg = 0x2A07, // R0,840, icon 2, needs to be killed in order from 1 to 5 for maximum rewards
     BonusAdd_TheKeeperOfTheKeys = 0x2A05, // R3.230
-};
+}
 
 public enum AID : uint
 {
@@ -35,7 +34,7 @@ public enum AID : uint
     Scoop = 17853, // 2A05->self, 4,0s cast, range 15 120-degree cone
     Inhale = 17855, // 2A05->self, no cast, range 20 120-degree cone, attract 25 between hitboxes, shortly before Spin
     Spin = 17854, // 2A05->self, 2,5s cast, range 11 circle
-};
+}
 
 class Wellbore : Components.SelfTargetedAOEs
 {
@@ -132,7 +131,7 @@ class GoliathStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 688, NameID = 8953)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 688, NameID = 8953)]
 public class Goliath : BossModule
 {
     public Goliath(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, -390), 20)) { }

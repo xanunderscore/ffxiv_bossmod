@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x38C5, // x1
     Helper = 0x233C, // x14
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     ToxicVomitAOE = 28657, // Helper->self, 5.0s cast, range 2 aoe
     Burst = 28658, // Helper->self, 9.0s cast, range 10 aoe
     DragonBreath = 28660, // Boss->self, 3.0s cast, range 30 width 8 rect
-};
+}
 
 class SalivousSnap : Components.SingleTargetCast
 {
@@ -48,7 +48,7 @@ class D074AiatarStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 8, NameID = 1279)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 8, NameID = 1279)]
 public class D074Aiatar : BossModule
 {
     public D074Aiatar(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-25, -235), 20)) { }

@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.TreasureHunt.ShiftingAltarsOfUznair.AltarDullahan;
 
 public enum OID : uint
@@ -12,7 +11,7 @@ public enum OID : uint
     AltarOnion = 0x2546, // R0,840, icon 1, needs to be killed in order from 1 to 5 for maximum rewards
     AltarEgg = 0x2547, // R0,840, icon 2, needs to be killed in order from 1 to 5 for maximum rewards
     BonusAdd_AltarMatanga = 0x2545, // R3.420
-};
+}
 
 public enum AID : uint
 {
@@ -36,7 +35,7 @@ public enum AID : uint
     Hurl = 5352, // BonusAdd_AltarMatanga->location, 3,0s cast, range 6 circle
 
     Telega = 9630, // bonusadds->self, no cast, single-target, bonus add disappear
-};
+}
 
 class IronJustice : Components.SelfTargetedAOEs
 {
@@ -136,7 +135,7 @@ class DullahanStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7585)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7585)]
 public class Dullahan : BossModule
 {
     public Dullahan(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

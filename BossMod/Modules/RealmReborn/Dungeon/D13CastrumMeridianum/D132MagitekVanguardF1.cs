@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x38CD, // x1
     Helper = 0x233C, // x7
-};
+}
 
 public enum AID : uint
 {
@@ -18,7 +18,7 @@ public enum AID : uint
     TargetedSupportAOE = 28784, // Helper->self, 3.0s cast, range 5 circle aoe
     CermetDrill = 28785, // Boss->player, 5.0s cast, single-target tankbuster
     Overcharge = 29146, // Boss->self, 3.0s cast, range 11 120-degree cone aoe
-};
+}
 
 class ThermobaricCharge : Components.SelfTargetedAOEs
 {
@@ -64,7 +64,7 @@ class D132MagitekVanguardF1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2116)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 15, NameID = 2116)]
 public class D132MagitekVanguardF1 : BossModule
 {
     public D132MagitekVanguardF1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsRect(new(-13, 31), 20, 20, 20.Degrees())) { }

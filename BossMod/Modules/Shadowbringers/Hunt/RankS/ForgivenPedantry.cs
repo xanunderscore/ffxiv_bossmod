@@ -1,10 +1,9 @@
-﻿// CONTRIB: made by malediktus, not checked
-namespace BossMod.Shadowbringers.Hunt.RankS.ForgivenPedantry;
+﻿namespace BossMod.Shadowbringers.Hunt.RankS.ForgivenPedantry;
 
 public enum OID : uint
 {
     Boss = 0x298A, // R=5.5
-};
+}
 
 public enum AID : uint
 {
@@ -21,7 +20,7 @@ public enum AID : uint
     SanctifiedShock = 17900, // 298A->player, no cast, single-target, stuns target before WitchHunt
     WitchHunt = 17444, // 298A->players, 3,0s cast, width 10 rect charge
     WitchHunt2 = 17445, // 298A->players, no cast, width 10 rect charge, targets main tank
-};
+}
 
 class LeftRightCheek : Components.GenericAOEs
 {
@@ -159,7 +158,7 @@ class ForgivenPedantryStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8910)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8910)]
 public class ForgivenPedantry : SimpleBossModule
 {
     public ForgivenPedantry(WorldState ws, Actor primary) : base(ws, primary) { }

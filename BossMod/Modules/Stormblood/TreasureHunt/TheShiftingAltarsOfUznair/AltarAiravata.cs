@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Stormblood.TreasureHunt.ShiftingAltarsOfUznair.AltarAiravata;
 
 public enum OID : uint
@@ -7,7 +6,7 @@ public enum OID : uint
     BonusAdd_AltarMatanga = 0x2545, // R3.420
     BonusAdd_GoldWhisker = 0x2544, // R0.540
     BossHelper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -24,12 +23,12 @@ public enum AID : uint
     RaucousScritch = 8598, // BonusAdd_AltarMatanga->self, 2,5s cast, range 5+R 120-degree cone
     Hurl = 5352, // BonusAdd_AltarMatanga->location, 3,0s cast, range 6 circle
     Telega = 9630, // BonusAdds->self, no cast, single-target, bonus adds disappear
-};
+}
 
 public enum IconID : uint
 {
     BuffetTarget = 23, // player
-};
+}
 
 class HurlBoss : Components.LocationTargetedAOEs
 {
@@ -161,7 +160,7 @@ class AiravataStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7601)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 586, NameID = 7601)]
 public class Airavata : BossModule
 {
     public Airavata(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

@@ -1,17 +1,16 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage07.Act2;
 
 public enum OID : uint
 {
     Boss = 0x2705, //R=1.6
     Sprite = 0x2704, //R=0.8
-};
+}
 
 public enum AID : uint
 {
     Detonation = 14696, // 2705->self, no cast, range 6+R circle
     Blizzard = 14709, // 2704->player, 1,0s cast, single-target
-};
+}
 
 class SlimeExplosion : Components.GenericStackSpread
 {
@@ -52,7 +51,7 @@ class Stage07Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8094, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 617, NameID = 8094, SortOrder = 2)]
 public class Stage07Act2 : BossModule
 {
     public Stage07Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

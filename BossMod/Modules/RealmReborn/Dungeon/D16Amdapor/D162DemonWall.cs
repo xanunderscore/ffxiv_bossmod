@@ -5,7 +5,7 @@ public enum OID : uint
     Helper = 0x19A, // x3
     Boss = 0x283, // x1
     Pollen = 0x1E86B1, // x1, EventObj type
-};
+}
 
 public enum AID : uint
 {
@@ -13,7 +13,7 @@ public enum AID : uint
     LiquefyCenter = 1045, // Helper->self, 3.0s cast, range 50+R width 8 rect
     LiquefySides = 1046, // Helper->self, 2.0s cast, range 50+R width 7 rect
     Repel = 1047, // Boss->self, 3.0s cast, range 40+R 180?-degree cone knockback 20 (non-immunable)
-};
+}
 
 class LiquefyCenter : Components.SelfTargetedAOEs
 {
@@ -67,7 +67,7 @@ class D162DemonWallStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1694)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 14, NameID = 1694)]
 public class D162DemonWall : BossModule
 {
     public D162DemonWall(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsRect(new(200, -131), 10, 21)) { }

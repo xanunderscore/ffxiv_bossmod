@@ -1,12 +1,11 @@
-﻿// CONTRIB: made by Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D131DarkElf;
+﻿namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D131DarkElf;
 
 public enum OID : uint
 {
     Boss = 0x3FE2, // R=5.0
     HexingStaff = 0x3FE3, // R=1.2
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -24,12 +23,12 @@ public enum AID : uint
     VoidDarkII2 = 34788, // 233C->player, 5,0s cast, range 6 circle
     StaffSmite = 35204, // 3FE2->player, 5,0s cast, single-target
     AbyssalOutburst = 34782, // 3FE2->self, 5,0s cast, range 60 circle
-};
+}
 
 public enum SID : uint
 {
     Doom = 3364, // none->player, extra=0x0
-};
+}
 
 class HexingStaves : Components.GenericAOEs
 {
@@ -145,7 +144,7 @@ class D131DarkElfStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12500)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12500)]
 public class D131DarkElf : BossModule
 {
     public D131DarkElf(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-401, -231), 15.5f)) { }

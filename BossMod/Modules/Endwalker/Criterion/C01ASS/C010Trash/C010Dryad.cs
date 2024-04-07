@@ -6,7 +6,7 @@ public enum OID : uint
     NOdqan = 0x3AD2, // R1.050, x2
     SBoss = 0x3ADA, // R3.000, x1
     SOdqan = 0x3ADB, // R1.050, x2
-};
+}
 
 public enum AID : uint
 {
@@ -19,7 +19,7 @@ public enum AID : uint
     SAcornBomb = 31088, // SBoss->location, 3.0s cast, range 6 circle
     SGelidGale = 31089, // SOdqan->location, 3.0s cast, range 6 circle
     SUproot = 31090, // SOdqan->self, 3.0s cast, range 6 circle
-};
+}
 
 class ArborealStorm : Components.SelfTargetedAOEs
 {
@@ -68,7 +68,7 @@ class C010DryadStates : StateMachineBuilder
 class C010NDryadStates : C010DryadStates { public C010NDryadStates(BossModule module) : base(module, false) { } }
 class C010SDryadStates : C010DryadStates { public C010SDryadStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11513, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11513, SortOrder = 4)]
 public class C010NDryad : SimpleBossModule
 {
     public C010NDryad(WorldState ws, Actor primary) : base(ws, primary) { }
@@ -80,7 +80,7 @@ public class C010NDryad : SimpleBossModule
     }
 }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11513, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11513, SortOrder = 4)]
 public class C010SDryad : SimpleBossModule
 {
     public C010SDryad(WorldState ws, Actor primary) : base(ws, primary) { }

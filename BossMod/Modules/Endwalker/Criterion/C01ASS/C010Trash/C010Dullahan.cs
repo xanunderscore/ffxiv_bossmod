@@ -4,7 +4,7 @@ public enum OID : uint
 {
     NBoss = 0x3AD7, // R2.500, x1
     SBoss = 0x3AE0, // R2.500, x1
-};
+}
 
 public enum AID : uint
 {
@@ -15,7 +15,7 @@ public enum AID : uint
     SBlightedGloom = 31102, // Boss->self, 4.0s cast, range 10 circle aoe
     SKingsWill = 31104, // Boss->self, 2.5s cast, single-target damage up
     SInfernalPain = 31105, // Boss->self, 5.0s cast, raidwide
-};
+}
 
 class BlightedGloom : Components.SelfTargetedAOEs
 {
@@ -54,8 +54,8 @@ class C010DullahanStates : StateMachineBuilder
 class C010NDullahanStates : C010DullahanStates { public C010NDullahanStates(BossModule module) : base(module, false) { } }
 class C010SDullahanStates : C010DullahanStates { public C010SDullahanStates(BossModule module) : base(module, true) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11506, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.NBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 878, NameID = 11506, SortOrder = 7)]
 public class C010NDullahan : SimpleBossModule { public C010NDullahan(WorldState ws, Actor primary) : base(ws, primary) { } }
 
-[ModuleInfo(PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11506, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.SBoss, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 879, NameID = 11506, SortOrder = 7)]
 public class C010SDullahan : SimpleBossModule { public C010SDullahan(WorldState ws, Actor primary) : base(ws, primary) { } }

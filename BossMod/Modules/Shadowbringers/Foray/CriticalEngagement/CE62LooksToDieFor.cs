@@ -8,7 +8,7 @@ public enum OID : uint
     BallOfFire = 0x31CB, // R1.000, spawn during fight
     //_Gen_Actor1ea1a1 = 0x1EA1A1, // R2.000, x2, EventObj type
     //_Gen_Actor1eb180 = 0x1EB180, // R0.500, x0, EventObj type, and more spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -36,7 +36,7 @@ public enum AID : uint
     LevinboltAOE = 23984, // Helper->players, 5.0s cast, range 6 circle spread
     SerpentsEdge = 23985, // Boss->player, 5.0s cast, single-target, tankbuster
     Deathwall = 24711, // Helper->self, no cast, range 20-30 donut
-};
+}
 
 class Thundercall : Components.RaidwideCast
 {
@@ -45,7 +45,7 @@ class Thundercall : Components.RaidwideCast
 
 class LightningBoltDistantClap : Components.GenericAOEs
 {
-    private List<AOEInstance> _aoes = new();
+    private readonly List<AOEInstance> _aoes = [];
 
     private static readonly AOEShapeCircle _shapeBolt = new(4);
     private static readonly AOEShapeDonut _shapeClap = new(4, 10);
@@ -116,7 +116,7 @@ class Flame : Components.RaidwideCast
 class Burn : Components.GenericAOEs
 {
     private IReadOnlyList<Actor> _flames = ActorEnumeration.EmptyList;
-    private List<(Actor actor, AOEInstance? aoe)> _casters = new();
+    private List<(Actor actor, AOEInstance? aoe)> _casters = [];
 
     private static readonly AOEShapeCircle _shape = new(8);
 
@@ -204,7 +204,7 @@ class CE62LooksToDieForStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 30)] // bnpcname=9925
 public class CE62LooksToDieFor : BossModule
 {
     public CE62LooksToDieFor(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-200, -580), 20)) { }

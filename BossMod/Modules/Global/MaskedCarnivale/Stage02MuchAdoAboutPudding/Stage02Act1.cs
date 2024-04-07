@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage02.Act1;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x25C0, //R=1.8
     Marshmallow = 0x25C2, //R1.8
     Bavarois = 0x25C4, //R1.8
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +13,7 @@ public enum AID : uint
     Aero = 14269, // 25C2->player, 1,0s cast, single-target
     Thunder = 14268, // 25C4->player, 1,0s cast, single-target
     GoldenTongue = 14265, // 25C0/25C2/25C4->self, 5,0s cast, single-target
-};
+}
 
 class GoldenTongue : Components.CastHint
 {
@@ -49,7 +48,7 @@ class Stage02Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 612, NameID = 8078, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 612, NameID = 8078, SortOrder = 1)]
 public class Stage02Act1 : BossModule
 {
     public Stage02Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

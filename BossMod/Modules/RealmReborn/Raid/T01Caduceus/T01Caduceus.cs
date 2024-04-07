@@ -8,7 +8,7 @@ public enum OID : uint
     Platform = 0x1E8729, // x13
     Regorge = 0x1E8B20, // EventObj type, spawn during fight
     Syrup = 0x1E88F1, // EventObj type, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -23,12 +23,12 @@ public enum AID : uint
     Syrup = 1214, // DarkMatterSlime->location, 0.5s cast, range 4 circle aoe that leaves voidzone
     Rupture = 1213, // DarkMatterSlime->self, no cast, range 16+R circle aoe suicide (damage depends on cur hp?)
     Devour = 1454, // Boss->DarkMatterSlime, no cast, single-target visual
-};
+}
 
 public enum SID : uint
 {
     SteelScales = 349, // Boss->Boss, extra=1-8 (num stacks)
-};
+}
 
 class HoodSwing : Components.Cleave
 {
@@ -119,7 +119,7 @@ public class T01CaduceusConfig : CooldownPlanningConfigNode
     public T01CaduceusConfig() : base(50) { }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 93, NameID = 1466, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 93, NameID = 1466, SortOrder = 2)]
 public class T01Caduceus : BossModule
 {
     public T01Caduceus(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsRect(new(-26, -407), 35, 43))

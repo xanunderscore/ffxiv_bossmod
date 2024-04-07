@@ -1,11 +1,10 @@
-// CONTRIB: made by dhoggpt, improvements by Malediktus, not checked
 namespace BossMod.Endwalker.Dungeon.D01TowerOfZot.D011Minduruva;
 
 public enum OID : uint
 {
     Boss = 0x33EE, // R=2.04
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -29,7 +28,7 @@ public enum AID : uint
     ManusyaThunder = 25247, // Boss->player, no cast, single-target
     TransmuteBlizzardIII = 25371, // Boss->self, 2,7s cast, single-target
     TransmuteThunderIII = 25372, // Boss->self, 2,7s cast, single-target
-};
+}
 
 public enum SID : uint
 {
@@ -41,7 +40,7 @@ public enum SID : uint
     IceAlchemy = 2752, // Boss->Boss, extra=0x0
     ToxicAlchemy = 2754, // Boss->Boss, extra=0x0
     FireAlchemy = 2751, // Boss->Boss, extra=0x0
-};
+}
 
 class ManusyaBio : Components.SingleTargetCast
 {
@@ -152,7 +151,7 @@ class D011MinduruvaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10256)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 783, NameID = 10256)]
 public class D011Minduruva : BossModule
 {
     public D011Minduruva(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(68, -124), 19.5f)) { }

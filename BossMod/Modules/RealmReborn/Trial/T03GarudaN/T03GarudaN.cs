@@ -7,7 +7,7 @@ public enum OID : uint
     EyeOfTheStormHelper = 0x622, // x1
     RazorPlumeP1 = 0xEE, // spawn during fight
     RazorPlumeP2 = 0x2B0, // spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -22,7 +22,7 @@ public enum AID : uint
     MistralSongP2 = 660, // Boss->self, 4.0s cast, range 30+1.7 ?-degree cone aoe
     MistralShriek = 661, // Boss->self, 4.0s cast, range 23+1.7 circle aoe
     Featherlance = 665, // RazorPlumeP1/RazorPlumeP2->self, no cast, range 8 circle, suicide attack if not killed in ~25s
-};
+}
 
 // disallow clipping monoliths
 class Friction : BossComponent
@@ -91,7 +91,7 @@ class T03GarudaNStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 58, NameID = 1644)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 58, NameID = 1644)]
 public class T03GarudaN : BossModule
 {
     public T03GarudaN(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(0, 0), 21)) { }

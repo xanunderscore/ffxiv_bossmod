@@ -14,7 +14,7 @@ public enum AID : uint
     Divide = 28463, // Boss->self, 3.0s cast, visual
     DivideAppear = 28464, // IchorousDrip->location, no cast, teleport/appear
     Burst = 28465, // IchorousDrip->self, 6.0s cast, range 8 aoe
-};
+}
 
 class Syrup : Components.LocationTargetedAOEs
 {
@@ -42,7 +42,7 @@ class D032IchorousIreStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 554)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 3, NameID = 554)]
 public class D032IchorousIre : BossModule
 {
     public D032IchorousIre(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(26.97f, 113.97f), 20)) { }

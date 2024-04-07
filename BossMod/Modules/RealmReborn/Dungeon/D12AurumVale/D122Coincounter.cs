@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x5BE, // x1
-};
+}
 
 public enum AID : uint
 {
@@ -14,7 +14,7 @@ public enum AID : uint
     Glower = 629, // Boss->self, 3.0s cast, range 17+R width 7 rect aoe
     AnimalInstinct = 630, // Boss->self, no cast, single-target
     EyeOfTheBeholder = 631, // Boss->self, 2.5s cast, range 8-15+R donut 270-degree cone aoe
-};
+}
 
 class TenTonzeSwipe : Components.Cleave
 {
@@ -54,7 +54,7 @@ class D122CoincounterStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 5, NameID = 1533)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 5, NameID = 1533)]
 public class D122Coincounter : BossModule
 {
     public D122Coincounter(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(-150, -150), 20)) { }

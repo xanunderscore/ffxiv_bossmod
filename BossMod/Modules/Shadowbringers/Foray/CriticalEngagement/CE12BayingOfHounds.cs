@@ -5,7 +5,7 @@ public enum OID : uint
     Boss = 0x2E66, // R7.020, x1
     Helper = 0x233C, // R0.500, x14
     Hellsfire = 0x2E67, // R1.000-2.500, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -30,7 +30,7 @@ public enum AID : uint
     VoidQuakeAOE1 = 20549, // Helper->self, 3.0s cast, range 10 circle aoe
     VoidQuakeAOE2 = 20550, // Helper->self, 3.0s cast, range 10-20 donut aoe
     VoidQuakeAOE3 = 20551, // Helper->self, 3.0s cast, range 20-30 donut aoe
-};
+}
 
 class Hellclaw : Components.SingleTargetCast
 {
@@ -110,7 +110,7 @@ class VoidTornado : Components.CastHint
 
 class VoidQuake : Components.GenericAOEs //this concentric AOE can happen forwards or backwards in order with the same AID as the starter
 {
-    private List<(Actor caster, AOEShape shape)> _active = new();
+    private readonly List<(Actor caster, AOEShape shape)> _active = [];
 
     public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
     {
@@ -154,7 +154,7 @@ class CE12BayingOfHoundsStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 735, NameID = 2)] // bnpcname=9394
 public class CE12BayingOfHounds : BossModule
 {
     public CE12BayingOfHounds(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(154, 785), 25)) { }

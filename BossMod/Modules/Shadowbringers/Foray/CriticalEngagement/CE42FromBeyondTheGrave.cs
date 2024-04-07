@@ -13,7 +13,7 @@ public enum OID : uint
     Monoceros = 0x3237, // R1.800, x1
     PurifyingLight = 0x1EB173, // R0.500, EventObj type, spawn during fight
     LivingCorpseSpawn = 0x1EB07A, // R0.500, EventObj type, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -52,7 +52,7 @@ public enum AID : uint
     Ruin = 24119, // LlofiiTheForthright->Boss, 2.5s cast, single-target, autoattack
     Cleanse = 24969, // LlofiiTheForthright->location, 5.0s cast, range 6 circle, damages boss
     SoothingGlimmer = 24970, // LlofiiTheForthright->self, 2.5s cast, single-target, heal
-};
+}
 
 public enum SID : uint
 {
@@ -61,7 +61,7 @@ public enum SID : uint
     LeftFace = 2163, // Boss->player, extra=0x0
     RightFace = 2164, // Boss->player, extra=0x0
     ForcedMarch = 1257, // Boss->player, extra=0x2/0x1/0x8/0x4
-};
+}
 
 class DevourSoul : Components.SingleTargetCast
 {
@@ -94,7 +94,7 @@ class ShockSphere : Components.PersistentVoidzone
 class SoulPurge : Components.GenericAOEs
 {
     private bool _dualcast;
-    private List<AOEInstance> _imminent = new();
+    private readonly List<AOEInstance> _imminent = [];
 
     private static readonly AOEShapeCircle _shapeCircle = new(10);
     private static readonly AOEShapeDonut _shapeDonut = new(10, 30);
@@ -151,7 +151,7 @@ class Aethertide : Components.SpreadFromCastTargets
 
 class MarchingBreath : Components.CastInterruptHint //heals all allies by 20% of max health (raidwide)
 {
-    public MarchingBreath() : base(ActionID.MakeSpell(AID.MarchingBreath), hint: "(20% HP AOE heal)") { }
+    public MarchingBreath() : base(ActionID.MakeSpell(AID.MarchingBreath), showNameInHint: true) { }
 }
 
 class TacticalAero : Components.SelfTargetedAOEs
@@ -171,7 +171,7 @@ class DarkFlare : Components.LocationTargetedAOEs
 
 class SoulSacrifice : Components.CastInterruptHint //WarWraith sacrifices itself to give boss a damage buff
 {
-    public SoulSacrifice() : base(ActionID.MakeSpell(AID.SoulSacrifice), hint: "(Dmg buff on boss)") { }
+    public SoulSacrifice() : base(ActionID.MakeSpell(AID.SoulSacrifice), showNameInHint: true) { }
 }
 
 class PurifyingLight : Components.LocationTargetedAOEs
@@ -205,7 +205,7 @@ class CE42FromBeyondTheGraveStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 20)] // bnpcname=9931
 public class CE42FromBeyondTheGrave : BossModule
 {
     public CE42FromBeyondTheGrave(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-60, 800), 30)) { }

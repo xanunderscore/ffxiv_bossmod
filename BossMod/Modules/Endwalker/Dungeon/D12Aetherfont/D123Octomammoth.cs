@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by dhoggpt, improvements by veyn & Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D123Octomammoth;
+﻿namespace BossMod.Endwalker.Dungeon.D12Aetherfont.D123Octomammoth;
 
 public enum OID : uint
 {
@@ -7,7 +6,7 @@ public enum OID : uint
     MammothTentacle = 0x3EAB, // R=6.0
     Crystals = 0x3EAC, // R=0.5
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -25,7 +24,7 @@ public enum AID : uint
     WaterDrop = 34436, // Helper->player, 5.0s cast, range 6 circle
     WallopVisual = 33350, // Boss->self, no cast, single-target, visual, starts tentacle wallops
     Wallop = 33346, // MammothTentacle->self, 3.0s cast, range 22 width 8 rect
-};
+}
 
 class Border : BossComponent
 {
@@ -141,7 +140,7 @@ class D123OctomammothStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12334)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "dhoggpt, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 822, NameID = 12334)]
 class D123Octomammoth : BossModule
 {
     public D123Octomammoth(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-370, -368), 33.3f))

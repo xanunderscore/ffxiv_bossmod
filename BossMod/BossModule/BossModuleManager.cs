@@ -72,10 +72,12 @@ public class BossModuleManager : IDisposable
             var m = _loadedModules[i];
             m.StateMachine.PrepullTimer = WorldState.Client.CountdownRemaining ?? 10000;
             bool wasActive = m.StateMachine.ActiveState != null;
+            bool allowUpdate = wasActive || !_loadedModules.Any(other => other.StateMachine.ActiveState != null && other.GetType() == m.GetType()); // hack: forbid activating multiple modules of the same type
             bool isActive;
             try
             {
-                m.Update();
+                if (allowUpdate)
+                    m.Update();
                 isActive = m.StateMachine.ActiveState != null;
             }
             catch (Exception ex)
@@ -132,7 +134,7 @@ public class BossModuleManager : IDisposable
 
         WorldState.Actors.Added += ActorAdded;
         foreach (var a in WorldState.Actors)
-            ActorAdded(null, a);
+            ActorAdded(a);
     }
 
     private void Shutdown()
@@ -184,19 +186,19 @@ public class BossModuleManager : IDisposable
 
     private BossModule CreateDemoModule()
     {
-        return new DemoModule(WorldState, new(0, 0, -1, "", ActorType.None, Class.None, 0, new()));
+        return new DemoModule(WorldState, new(0, 0, -1, "", 0, ActorType.None, Class.None, 0, new()));
     }
 
-    private void ActorAdded(object? sender, Actor actor)
+    private void ActorAdded(Actor actor)
     {
-        var m = ModuleRegistry.CreateModuleForActor(WorldState, actor);
+        var m = ModuleRegistry.CreateModuleForActor(WorldState, actor, WindowConfig.MinMaturity);
         if (m != null)
         {
             LoadModule(m);
         }
     }
 
-    private void ConfigChanged(object? sender, EventArgs args)
+    private void ConfigChanged()
     {
         if (WindowConfig.Enable)
             Startup();

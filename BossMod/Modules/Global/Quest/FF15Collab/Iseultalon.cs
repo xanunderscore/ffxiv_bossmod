@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.Quest.FF15Collab.Iseultalon;
 
 public enum OID : uint
@@ -27,13 +26,13 @@ public enum AID : uint
     Electrocution2 = 14981, // 25B3->location, 10,0s cast, range 3 circle, tower
     FatalCurrent = 14610, // Helper/Helper2->self, 2,0s cast, range 80 circle, tower fail
     TailWhip = 14607, // Boss->self, 3,0s cast, range 12 270-degree cone
-};
+}
 
 public enum IconID : uint
 {
     stack = 93, // 2650
     spread = 129, // player/2650
-};
+}
 
 class Thunderbolt : Components.UniformStackSpread
 {
@@ -154,7 +153,7 @@ class IseultalonStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68695, NameID = 7895)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68695, NameID = 7895)]
 public class Iseultalon : BossModule
 {
     public Iseultalon(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-289, -30), 25)) { } //note the arena is actually a 6 sided polygon

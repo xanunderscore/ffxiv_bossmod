@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.Huracan;
 
 public enum OID : uint
 {
     Boss = 0x28B5, // R=4.9
-};
+}
 
 public enum AID : uint
 {
@@ -16,7 +15,7 @@ public enum AID : uint
     DawnsEdge = 17495, // Boss->self, 3,5s cast, range 15 width 10 rect
     SpringBreeze = 17496, // Boss->self, 3,5s cast, range 80 width 10 rect
     AutumnWreath = 17498, // Boss->self, 4,0s cast, range 10-20 donut
-};
+}
 
 class SpringBreeze : Components.SelfTargetedAOEs
 {
@@ -102,5 +101,5 @@ class HuracanStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8912)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8912)]
 public class Huracan(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

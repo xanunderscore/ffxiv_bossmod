@@ -7,7 +7,7 @@ public enum OID : uint
     ImperialAssaultCraft = 0x2EE8, // R0.500, x22, also helper?
     Cavalry = 0x31C6, // R4.000, x9, and more spawn during fight
     FireShot = 0x1EB1D3, // R0.500, EventObj type, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -37,12 +37,12 @@ public enum AID : uint
     CallControlledBurn = 23950, // Boss->self, 5.0s cast, single-target, visual (spread)
     CallControlledBurnAOE = 23951, // ImperialAssaultCraft->players, 5.0s cast, range 6 circle spread
     MagitekBlaster = 23952, // Boss->players, 5.0s cast, range 8 circle stack
-};
+}
 
 public enum TetherID : uint
 {
     RawSteel = 57, // Boss->player
-};
+}
 
 class StormSlash : Components.SelfTargetedAOEs
 {
@@ -84,7 +84,7 @@ class RideDownAOE : Components.SelfTargetedAOEs
 // TODO: generalize to reusable component
 class RideDownKnockback : Components.Knockback
 {
-    private List<Source> _sources = new();
+    private readonly List<Source> _sources = [];
     private static readonly AOEShapeCone _shape = new(30, 90.Degrees());
 
     public RideDownKnockback() : base(ActionID.MakeSpell(AID.RideDownAOE), false, 1) { }
@@ -199,7 +199,7 @@ class CE53HereComesTheCavalryStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 22)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 22)] // bnpcname=9929
 public class CE53HereComesTheCavalry : BossModule
 {
     public CE53HereComesTheCavalry(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(-750, 790), 25)) { }

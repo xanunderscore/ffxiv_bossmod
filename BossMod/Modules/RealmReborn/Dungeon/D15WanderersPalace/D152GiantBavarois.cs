@@ -7,7 +7,7 @@ public enum OID : uint
     GreenBavarois = 0x41F, // spawn during fight
     PurpleBavarois = 0x421, // spawn during fight
     BlueBavarois = 0x422, // spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -18,12 +18,12 @@ public enum AID : uint
     Aero = 1397, // GreenBavarois->player, 1.0s cast, single-target
     Thunder = 1396, // PurpleBavarois->player, 1.0s cast, single-target
     Water = 971, // BlueBavarois->player, 1.0s cast, single-target
-};
+}
 
 public enum IconID : uint
 {
     AmorphicFlail = 1, // player
-};
+}
 
 class Fire : Components.SingleTargetCast
 {
@@ -64,7 +64,7 @@ class D152GiantBavaroisStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1549)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1549)]
 public class D152GiantBavarois : BossModule
 {
     public D152GiantBavarois(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(43, -232), 20)) { }

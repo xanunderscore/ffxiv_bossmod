@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.Dungeon.D11LapisManalis.D112GalateaMagna;
 
 public enum OID : uint
@@ -26,7 +25,7 @@ public enum AID : uint
     Burst = 31383, // Helper->self, no cast, range 5 circle, tower success
     BigBurst = 31384, // Helper->self, no cast, range 60 circle, tower fail
     StonyGaze = 31385, // Helper->self, no cast, gaze
-};
+}
 
 public enum IconID : uint
 {
@@ -35,7 +34,7 @@ public enum IconID : uint
     Icon3 = 338, // 3D06
     Icon4 = 339, // 3D06
     PlayerGaze = 73, // player
-};
+}
 
 public enum SID : uint
 {
@@ -43,7 +42,7 @@ public enum SID : uint
     ScarecrowChase = 2056, // none->Boss, extra=0x22B
     Doom = 3364, // Helper->player, extra=0x0
     GlassyEyed = 3511, // Boss->player, extra=0x0, takes possession of the player after status ends and does a petrifying attack in all direction
-};
+}
 
 class ScarecrowChase : Components.GenericAOEs
 {
@@ -272,7 +271,7 @@ class D112GalateaMagnaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 10308)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 896, NameID = 10308)]
 public class D112GalateaMagna : BossModule
 {
     public D112GalateaMagna(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(350, -394), 19.5f)) { }

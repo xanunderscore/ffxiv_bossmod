@@ -7,7 +7,7 @@ public enum OID : uint
     IceSprite = 0x319D, // R0.800, spawn during fight
     Icicle = 0x319E, // R3.000, spawn during fight
     Imaginifer = 0x319F, // R0.500, spawn during fight
-};
+}
 
 public enum AID : uint
 {
@@ -43,7 +43,7 @@ public enum AID : uint
     TeleportBoss = 23621, // Boss->location, no cast, teleport
     TeleportImaginifer = 23622, // Imaginifer->location, no cast, ???, teleport
     ActivateImaginifer = 23623, // Imaginifer->self, no cast, single-target, visual
-};
+}
 
 class IcePillar : Components.SelfTargetedAOEs
 {
@@ -76,7 +76,7 @@ class BracingWind : Components.KnockbackFromCastTarget
 
 class LunarCry : Components.CastLineOfSightAOE
 {
-    private List<Actor> _safePillars = new();
+    private readonly List<Actor> _safePillars = [];
     private BracingWind? _knockback;
 
     public LunarCry() : base(ActionID.MakeSpell(AID.LunarCry), 80, false) { }
@@ -109,7 +109,7 @@ class LunarCry : Components.CastLineOfSightAOE
 // this AOE only got 2s cast time, but the actors already spawn 4.5s earlier, so we can use that to our advantage
 class ThermalGust : Components.GenericAOEs
 {
-    private List<Actor> _casters = new();
+    private readonly List<Actor> _casters = [];
     private DateTime _activation;
 
     private static readonly AOEShapeRect _shape = new(60, 2);
@@ -135,7 +135,7 @@ class ThermalGust : Components.GenericAOEs
 class AgeOfEndlessFrost : Components.GenericAOEs
 {
     private Angle _increment;
-    private List<Angle> _angles = new();
+    private readonly List<Angle> _angles = [];
     private DateTime _nextActivation;
 
     private static readonly AOEShapeCone _shape = new(40, 10.Degrees());
@@ -227,7 +227,7 @@ class CE54NeverCryWolfStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 25)] // bnpcname=9941
 public class CE54NeverCryWolf : BossModule
 {
     private IReadOnlyList<Actor> _adds;

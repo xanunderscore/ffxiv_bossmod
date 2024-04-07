@@ -1,18 +1,17 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage17.Act1;
 
 public enum OID : uint
 {
     Boss = 0x2720, //R=2.0
     RightClaw = 0x271F, //R=2.0
-};
+}
 
 public enum AID : uint
 {
     AutoAttack = 6499, // 2720/271F->player, no cast, single-target
     TheHand = 14760, // 271F/2720->self, 3,0s cast, range 6+R 120-degree cone, knockback away from source, dist 10
     Shred = 14759, // 2720/271F->self, 2,5s cast, range 4+R width 4 rect, stuns player
-};
+}
 
 class TheHand : Components.SelfTargetedAOEs
 {
@@ -62,7 +61,7 @@ class Stage17Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 627, NameID = 8115, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 627, NameID = 8115, SortOrder = 1)]
 public class Stage17Act1 : BossModule
 {
     public Stage17Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 16))

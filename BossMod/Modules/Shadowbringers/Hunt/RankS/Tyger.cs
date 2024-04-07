@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankS.Tyger;
 
 public enum OID : uint
 {
     Boss = 0x288E, // R=5.92
-};
+}
 
 public enum AID : uint
 {
@@ -16,7 +15,7 @@ public enum AID : uint
     TheRamsEmbrace = 16960, // Boss->location, 3,0s cast, range 9 circle
     TheDragonsVoice = 16963, // Boss->self, 4,0s cast, range 8-30 donut, interruptible raidwide donut
     TheRamsVoice = 16962, // Boss->self, 4,0s cast, range 9 circle
-};
+}
 
 class TheLionsBreath : Components.SelfTargetedAOEs
 {
@@ -85,7 +84,7 @@ class TheDragonsVoice : Components.SelfTargetedAOEs
 
 class TheDragonsVoiceHint : Components.CastInterruptHint
 {
-    public TheDragonsVoiceHint() : base(ActionID.MakeSpell(AID.TheDragonsVoice), hint: "(Donut Raidwide)") { }
+    public TheDragonsVoiceHint() : base(ActionID.MakeSpell(AID.TheDragonsVoice), hintExtra: "Donut Raidwide") { }
 }
 
 class TygerStates : StateMachineBuilder
@@ -105,7 +104,7 @@ class TygerStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8905)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.S, NameID = 8905)]
 public class Tyger : SimpleBossModule
 {
     public Tyger(WorldState ws, Actor primary) : base(ws, primary) { }

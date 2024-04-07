@@ -1,5 +1,4 @@
-﻿// CONTRIB: made by Malediktus, not checked
-namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D132DamcyanAntilon;
+﻿namespace BossMod.Endwalker.Dungeon.D13LunarSubterrane.D132DamcyanAntilon;
 
 public enum OID : uint
 {
@@ -8,7 +7,7 @@ public enum OID : uint
     StonePillar2 = 0x3FD1, // R=1.5
     QuicksandVoidzone = 0x1EB90E,
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -24,7 +23,7 @@ public enum AID : uint
     EarthenGeyser = 34821, // Boss->self, 4,0s cast, single-target
     EarthenGeyser2 = 34822, // Helper->players, 5,0s cast, range 10 circle
     PoundSand = 34443, // Boss->location, 6,0s cast, range 12 circle
-};
+}
 
 class Sandblast : Components.RaidwideCast
 {
@@ -184,7 +183,7 @@ class D132DamcyanAntilonStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12484)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 823, NameID = 12484)]
 public class D132DamcyanAntilon : BossModule
 {
     public D132DamcyanAntilon(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsRect(new(0, 60), 19.5f, 25)) { }

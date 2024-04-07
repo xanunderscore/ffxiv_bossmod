@@ -6,7 +6,7 @@ public enum OID : uint
     Escort1 = 0x31A1, // R2.800, x24
     Escort2 = 0x32FD, // R2.800, spawn during fight
     Helper = 0x233C, // R0.500, x26
-};
+}
 
 public enum AID : uint
 {
@@ -28,20 +28,20 @@ public enum AID : uint
     SuppressiveMagitekRaysAOE = 23617, // Helper->self, 5.5s cast, ???, raidwide
     Analysis = 23607, // Boss->self, 3.0s cast, single-target, visual
     PreciseStrike = 23619, // Escort1->self, 5.0s cast, range 60 width 6 rect aoe (should orient correctly to avoid vuln)
-};
+}
 
 public enum SID : uint
 {
     Tracking = 2056, // none->Escort2, extra=0x87
     FrontUnseen = 2644, // Boss->player, extra=0x120
     BackUnseen = 1709, // Boss->player, extra=0xE8
-};
+}
 
 public enum IconID : uint
 {
     BallisticImpact = 261, // Helper
     ChainCannon = 164, // player
-};
+}
 
 class DiveFormation : Components.SelfTargetedAOEs
 {
@@ -50,7 +50,7 @@ class DiveFormation : Components.SelfTargetedAOEs
 
 class AntiPersonnelMissile : Components.GenericAOEs
 {
-    private List<WPos> _positions = new();
+    private readonly List<WPos> _positions = [];
     private static readonly AOEShapeRect _shape = new(12, 12, 12);
 
     public AntiPersonnelMissile() : base(ActionID.MakeSpell(AID.BallisticImpact)) { }
@@ -76,7 +76,7 @@ class AntiPersonnelMissile : Components.GenericAOEs
 
 class ChainCannonEscort : Components.GenericAOEs
 {
-    private List<(Actor caster, int numCasts, DateTime activation)> _casters = new();
+    private readonly List<(Actor caster, int numCasts, DateTime activation)> _casters = [];
     private static readonly AOEShapeRect _shape = new(60, 2.5f);
 
     public override IEnumerable<AOEInstance> ActiveAOEs(BossModule module, int slot, Actor actor)
@@ -181,7 +181,7 @@ class CE64FeelingTheBurnStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 18)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.BozjaCE, GroupID = 778, NameID = 18)] // bnpcname=9945
 public class CE64FeelingTheBurn : BossModule
 {
     public IReadOnlyList<Actor> Escorts;

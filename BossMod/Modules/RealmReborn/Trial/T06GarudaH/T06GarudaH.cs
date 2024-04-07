@@ -14,7 +14,7 @@ public enum OID : uint
     Monolith2 = 0x1E8707, // x1, EventObj type
     Monolith3 = 0x1E8708, // x1, EventObj type
     Monolith4 = 0x1E8709, // x1, EventObj type
-};
+}
 
 public enum AID : uint
 {
@@ -30,13 +30,13 @@ public enum AID : uint
     EyeOfTheStorm = 1387, // EyeOfTheStorm->self, 3.0s cast, range 12-25 donut
     Featherlance = 1388, // RazorPlume->self, no cast, range 8 circle, suicide attack if not killed in ~25s
     ThermalTumult = 1389, // SatinPlume->self, no cast, range 6 circle, suicide attack (applies sleep) if not killed in ~25s
-};
+}
 
 public enum TetherID : uint
 {
     Rehabilitation = 4, // Chirada/Suparna->Boss, green (heal)
     DamageUp = 11, // Chirada/Suparna->Boss, red (damage up)
-};
+}
 
 // disallow clipping monoliths
 class Friction : BossComponent
@@ -102,7 +102,7 @@ class T06GarudaHStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 61, NameID = 1644)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 61, NameID = 1644)]
 public class T06GarudaH : BossModule
 {
     private IReadOnlyList<Actor> _monoliths;

@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage25.Act2;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x267F, //R=1.2
     BlazingAngon = 0x2682, //R=0.6
     Helper = 0x233C,
-};
+}
 
 public enum AID : uint
 {
@@ -17,13 +16,13 @@ public enum AID : uint
     TheRamsVoice = 14763, // 267F->self, 3,5s cast, range 8 circle
     TheDragonsVoice = 14764, // 267F->self, 3,5s cast, range 6-30 donut
     ApocalypticRoar = 14767, // 267F->self, 5,0s cast, range 35+R 120-degree cone
-};
+}
 
 public enum SID : uint
 {
     RepellingSpray = 556, // Boss->Boss, extra=0x64
     Doom = 910, // Boss->player, extra=0x0
-};
+}
 
 class ApocalypticBolt : Components.SelfTargetedAOEs
 {
@@ -86,7 +85,7 @@ class Stage25Act2States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 635, NameID = 8129, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 635, NameID = 8129, SortOrder = 2)]
 public class Stage25Act2 : BossModule
 {
     public Stage25Act2(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

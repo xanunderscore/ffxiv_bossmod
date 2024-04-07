@@ -30,7 +30,7 @@ class Actions : CommonActions
         SupportedSpell(AID.PerfectBalance).Condition = _ => _state.PerfectBalanceLeft == 0;
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override void Dispose()
@@ -152,7 +152,7 @@ class Actions : CommonActions
         return (Rotation.Form.None, 0);
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         // placeholders
         SupportedSpell(AID.Bootshine).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;

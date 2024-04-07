@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Global.MaskedCarnivale.Stage08.Act1;
 
 public enum OID : uint
@@ -6,14 +5,14 @@ public enum OID : uint
     Boss = 0x2708, //R=0.6
     Bomb = 0x2709, //R=1.2
     Snoll = 0x270A, //R=0.9
-};
+}
 
 public enum AID : uint
 {
     SelfDestruct = 14687, // 2708->self, no cast, range 10 circle
     HypothermalCombustion = 14689, // 270A->self, no cast, range 6 circle
     SelfDestruct2 = 14688, // 2709->self, no cast, range 6 circle
-};
+}
 
 class Selfdetonations : BossComponent
 {
@@ -80,7 +79,7 @@ class Stage08Act1States : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 618, NameID = 8140, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.MaskedCarnivale, GroupID = 618, NameID = 8140, SortOrder = 1)]
 public class Stage08Act1 : BossModule
 {
     public Stage08Act1(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 25))

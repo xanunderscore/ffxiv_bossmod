@@ -1,4 +1,3 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Endwalker.TreasureHunt.ShiftingGymnasionAgonon.LampasChrysine;
 
 public enum OID : uint
@@ -6,7 +5,7 @@ public enum OID : uint
     Boss = 0x3D40, //R=6
     BossHelper = 0x233C,
     BonusAdds_Lampas = 0x3D4D, //R=2.001, bonus loot adds
-};
+}
 
 public enum AID : uint
 {
@@ -20,7 +19,7 @@ public enum AID : uint
     Shine2 = 32292, // BossHelper->location, 3,0s cast, range 5 circle
     Summon = 32288, // Boss->self, 1,3s cast, single-target, spawns bonus loot adds
     Telega = 9630, // BonusAdds_Lampas->self, no cast, single-target, bonus loot add despawn
-};
+}
 
 class Shine : Components.LocationTargetedAOEs
 {
@@ -66,7 +65,7 @@ class LampasStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12021)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 909, NameID = 12021)]
 public class Lampas : BossModule
 {
     public Lampas(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsCircle(new(100, 100), 20)) { }

@@ -3,7 +3,7 @@
 public enum OID : uint
 {
     Boss = 0x41C,
-};
+}
 
 public enum AID : uint
 {
@@ -13,7 +13,7 @@ public enum AID : uint
     Inhale = 950, // Boss->self, 2.5s cast, range 20+R 90-degree cone
     GoobbuesGrief = 942, // Boss->self, 0.5s cast, range 6+R circle
     MoldyPhlegm = 941, // Boss->location, 2.5s cast, range 6 circle
-};
+}
 
 class MoldySneeze : Components.Cleave
 {
@@ -81,7 +81,7 @@ class D151KeeperOfHalidomStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1548)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 10, NameID = 1548)]
 public class D151KeeperOfHalidom : BossModule
 {
     public D151KeeperOfHalidom(WorldState ws, Actor primary) : base(ws, primary, new ArenaBoundsSquare(new(125, 108), 20)) { }

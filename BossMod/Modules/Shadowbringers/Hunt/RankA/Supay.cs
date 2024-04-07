@@ -1,10 +1,9 @@
-// CONTRIB: made by malediktus, not checked
 namespace BossMod.Shadowbringers.Hunt.RankA.Supay;
 
 public enum OID : uint
 {
     Boss = 0x2839, // R=3.6
-};
+}
 
 public enum AID : uint
 {
@@ -12,12 +11,12 @@ public enum AID : uint
     BlasphemousHowl = 17858, // Boss->players, 3,0s cast, range 8 circle, spread, applies terror
     PetroEyes = 17856, // Boss->self, 3,0s cast, range 40 circle, gaze, inflicts petrification
     Beakaxe = 17857, // Boss->player, no cast, single-target, instantlyy kills petrified players
-};
+}
 
 public enum IconID : uint
 {
     Baitaway = 159, // player
-};
+}
 
 class BlasphemousHowl : Components.GenericBaitAway
 {
@@ -66,5 +65,5 @@ class SupayStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8891)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.Hunt, GroupID = (uint)BossModuleInfo.HuntRank.A, NameID = 8891)]
 public class Supay(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
