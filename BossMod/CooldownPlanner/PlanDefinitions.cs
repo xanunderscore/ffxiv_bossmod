@@ -132,6 +132,7 @@ public static class PlanDefinitions
         c.CooldownTracks.Add(new("Kerachole", ActionID.MakeSpell(SGE.AID.Kerachole), 50));
         c.CooldownTracks.Add(new("Holos", ActionID.MakeSpell(SGE.AID.Holos), 76));
         c.CooldownTracks.Add(new("Panhaima", ActionID.MakeSpell(SGE.AID.Panhaima), 80));
+        c.StrategyTracks.Add(new("GCDShield", typeof(SGE.Rotation.Strategy.GCDShieldStrategy)));
         return c;
     }
 
