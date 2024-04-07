@@ -163,7 +163,9 @@ public static class PlanDefinitions
         c.StrategyTracks.Add(new("BH", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("TFC", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("PB", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
-        c.StrategyTracks.Add(new("PBForm", typeof(MNK.Rotation.Strategy.FormChoice)));
+        c.StrategyTracks.Add(new("PB1", typeof(MNK.Rotation.Strategy.FormChoice)));
+        c.StrategyTracks.Add(new("PB2", typeof(MNK.Rotation.Strategy.FormChoice)));
+        c.StrategyTracks.Add(new("PB3", typeof(MNK.Rotation.Strategy.FormChoice)));
         c.StrategyTracks.Add(new("FS", typeof(MNK.Rotation.Strategy.FormShiftStrategy)));
         c.StrategyTracks.Add(new("FSForm", typeof(MNK.Rotation.Strategy.FormChoice)));
         c.StrategyTracks.Add(new("Blitz", typeof(MNK.Rotation.Strategy.BlitzStrategy)));

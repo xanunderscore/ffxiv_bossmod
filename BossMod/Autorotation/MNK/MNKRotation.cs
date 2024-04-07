@@ -168,29 +168,25 @@ public static class Rotation
             Automatic = 0,
             [PropertyDisplay("Delay")]
             Delay = 1,
-            [PropertyDisplay("Delay until Disciplined Fist is active")]
-            DelayUntilFist = 2,
-            [PropertyDisplay("Delay until Riddle of Fire is active")]
-            DelayUntilFire = 3,
             [PropertyDisplay("Delay until at least two targets are in range")]
-            DelayUntilMultiTarget = 4,
+            DelayUntilMultiTarget = 2,
         }
         public BlitzStrategy BlitzUse;
 
         public enum DragonKickStrategy : uint {
             // standard rotation, use in opo-opo form to proc leaden fist
             Automatic = 0,
-            [PropertyDisplay("Replace all GCDs, unless it would allow Disciplined Fist to expire")]
+            [PropertyDisplay("Replace all GCDs unless Leaden Fist is active or Disciplined Fist will expire")]
             Filler = 1,
-            [PropertyDisplay("Replace all GCDs")]
-            FillHarder = 2,
         }
 
         public OffensiveAbilityUse WindUse;
         public OffensiveAbilityUse BrotherhoodUse;
         public OffensiveAbilityUse TFCUse;
         public OffensiveAbilityUse PerfectBalanceUse;
-        public FormChoice PerfectBalanceForm;
+        public FormChoice PBForm1;
+        public FormChoice PBForm2;
+        public FormChoice PBForm3;
         public OffensiveAbilityUse SSSUse;
         public OffensiveAbilityUse TrueNorthUse;
         public OffensiveAbilityUse DisciplinedFistUse;
@@ -219,13 +215,15 @@ public static class Rotation
                 BrotherhoodUse = (OffensiveAbilityUse)overrides[7];
                 TFCUse = (OffensiveAbilityUse)overrides[8];
                 PerfectBalanceUse = (OffensiveAbilityUse)overrides[9];
-                PerfectBalanceForm = (FormChoice)overrides[10];
-                FormShiftUse = (FormShiftStrategy)overrides[11];
-                FormShiftForm = (FormChoice)overrides[12];
-                BlitzUse = (BlitzStrategy)overrides[13];
-                DragonKickUse = (DragonKickStrategy)overrides[14];
-                SSSUse = (OffensiveAbilityUse)overrides[15];
-                PotionUse = (OffensiveAbilityUse)overrides[16];
+                PBForm1 = (FormChoice)overrides[10];
+                PBForm2 = (FormChoice)overrides[11];
+                PBForm3 = (FormChoice)overrides[12];
+                FormShiftUse = (FormShiftStrategy)overrides[13];
+                FormShiftForm = (FormChoice)overrides[14];
+                BlitzUse = (BlitzStrategy)overrides[15];
+                DragonKickUse = (DragonKickStrategy)overrides[16];
+                SSSUse = (OffensiveAbilityUse)overrides[17];
+                PotionUse = (OffensiveAbilityUse)overrides[18];
             }
             else
             {
@@ -239,7 +237,9 @@ public static class Rotation
                 BrotherhoodUse = OffensiveAbilityUse.Automatic;
                 TFCUse = OffensiveAbilityUse.Automatic;
                 PerfectBalanceUse = OffensiveAbilityUse.Automatic;
-                PerfectBalanceForm = FormChoice.Automatic;
+                PBForm1 = FormChoice.Automatic;
+                PBForm2 = FormChoice.Automatic;
+                PBForm3 = FormChoice.Automatic;
                 FormShiftUse = FormShiftStrategy.Automatic;
                 FormShiftForm = FormChoice.Automatic;
                 BlitzUse = BlitzStrategy.Automatic;
@@ -284,7 +284,14 @@ public static class Rotation
         if (rofIsAligned && NeedDemolishRefresh(state, strategy, 4))
             return AID.TwinSnakes;
 
-        if (state.FireLeft >= state.GCD + state.AttackGCDTime * 3 && !state.HaveLunar && NeedDFRefresh(state, strategy, 5))
+        // force refresh if we anticipate another PB use in this buff window
+        if (
+            state.FireLeft >= state.GCD + state.AttackGCDTime * 3 &&
+            state.CanWeave(state.CD(CDGroup.PerfectBalance), 0.6f, state.GCD) &&
+            state.BeastCount == 0 &&
+            state.HaveSolar &&
+            NeedDFRefresh(state, strategy, 5)
+        )
             return AID.TwinSnakes;
 
         // normal refresh
@@ -340,7 +347,7 @@ public static class Rotation
                 // form shift on countdown. TODO: ignore Never here? don't think there's ever any reason not to use it on countdown
                 if (
                     strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
-                    && state.FormShiftLeft < 15
+                    && state.FormShiftLeft == 0
                     && state.Unlocked(AID.FormShift)
                 )
                     return AID.FormShift;
@@ -534,17 +541,16 @@ public static class Rotation
     {
         if (state.PerfectBalanceLeft > state.GCD)
         {
-            if (state.BeastCount == 0) {
-                switch (strategy.PerfectBalanceForm) {
-                    case Strategy.FormChoice.Opo:
-                        return Form.OpoOpo;
-                    case Strategy.FormChoice.Coeurl:
-                        return Form.Coeurl;
-                    case Strategy.FormChoice.Raptor:
-                        return Form.Raptor;
-                    default:
-                        break;
-                }
+            Strategy.FormChoice[] formOverrides = [strategy.PBForm1, strategy.PBForm2, strategy.PBForm3];
+            switch (formOverrides[state.BeastCount]) {
+                case Strategy.FormChoice.Opo:
+                    return Form.OpoOpo;
+                case Strategy.FormChoice.Coeurl:
+                    return Form.Coeurl;
+                case Strategy.FormChoice.Raptor:
+                    return Form.Raptor;
+                default:
+                    break;
             }
 
             bool canCoeurl, canRaptor, canOpo, forcedSolar;
@@ -630,19 +636,18 @@ public static class Rotation
     }
 
     private static bool ShouldBlitz(State state, Strategy strategy) =>
-            strategy.BlitzUse switch {
+        state.DisciplinedFistLeft > state.GCD &&
+        (strategy.BlitzUse switch
+        {
             Strategy.BlitzStrategy.Delay => false,
-            Strategy.BlitzStrategy.DelayUntilFist => state.DisciplinedFistLeft > state.GCD,
-            Strategy.BlitzStrategy.DelayUntilFire => state.FireLeft > state.GCD,
             Strategy.BlitzStrategy.DelayUntilMultiTarget => strategy.NumBlitzTargets > 1,
             _ => true,
-        };
+        });
 
     private static bool ShouldDKSpam(State state, Strategy strategy) =>
         strategy.DragonKickUse switch
         {
             Strategy.DragonKickStrategy.Filler => state.LeadenFistLeft == 0 && state.DisciplinedFistLeft > state.GCD,
-            Strategy.DragonKickStrategy.FillHarder => true,
             _ => false,
         };
 
