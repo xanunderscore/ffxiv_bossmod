@@ -157,7 +157,9 @@ abstract class CommonActions : IDisposable
     {
         if (actor == null)
             return (0, 0);
-        var pending = Autorot.WorldState.PendingEffects.PendingStatus(actor.InstanceID, sid, sourceID);
+        byte? pending = null;
+        if (pendingDuration > 0)
+            pending = Autorot.WorldState.PendingEffects.PendingStatus(actor.InstanceID, sid, sourceID);
         if (pending != null)
             return (pendingDuration, pending.Value);
         var status = actor.FindStatus(sid, sourceID);
