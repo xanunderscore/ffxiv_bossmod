@@ -209,8 +209,15 @@ class Actions : HealerActions
             SupportedSpell(AID.CombustIII).PlaceholderForAuto =
                 _config.FullRotation ? AutoActionFiller : AutoActionNone;
 
-        SupportedSpell(AID.Ascend).TransformTarget = SupportedSpell(AID.Synastry).TransformTarget =
+        SupportedSpell(AID.Synastry).TransformTarget =
             _config.Mouseover ? (tar) => Autorot.SecondaryTarget ?? tar : null;
+
+        SupportedSpell(AID.Ascend).TransformTarget =
+            _config.AutoRaise == ASTConfig.RaiseBehavior.SmartManual
+                ? ((act) => Autorot.SecondaryTarget ?? FindRaiseTarget())
+                : _config.Mouseover
+                    ? SmartTargetFriendly
+                    : null;
 
         SupportedSpell(AID.Benefic).TransformTarget =
             SupportedSpell(AID.BeneficII).TransformTarget =
