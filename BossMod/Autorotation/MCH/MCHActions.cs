@@ -22,7 +22,7 @@ class Actions : CommonActions
         SupportedSpell(AID.HotShot).TransformAction = () => ActionID.MakeSpell(_state.BestHotShot);
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -150,7 +150,7 @@ class Actions : CommonActions
             _state.PelotonLeft = 0;
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.SplitShot).PlaceholderForAuto = SupportedSpell(AID.HeatedSplitShot).PlaceholderForAuto =
             _config.FullRotation ? AutoActionST : AutoActionNone;

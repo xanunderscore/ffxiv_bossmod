@@ -35,7 +35,7 @@ class Actions : HealerActions
         SupportedSpell(AID.Scatter).TransformAction = () => ActionID.MakeSpell(_state.BestScatter);
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -139,7 +139,7 @@ class Actions : HealerActions
 
     protected override void QueueAIActions() { }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.Jolt).PlaceholderForAuto = SupportedSpell(AID.JoltII).PlaceholderForAuto =
             _config.FullRotation ? AutoActionST : AutoActionNone;

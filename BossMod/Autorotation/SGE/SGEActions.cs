@@ -22,7 +22,7 @@ class Actions : HealerActions
         _strategy = new();
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override void Dispose()
@@ -154,7 +154,7 @@ class Actions : HealerActions
         _kardiaTarget = _config.AutoKardia ? FindKardiaTarget() : null;
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         // placeholders
         SupportedSpell(AID.Dosis).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;

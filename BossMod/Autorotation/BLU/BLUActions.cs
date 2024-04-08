@@ -22,7 +22,7 @@ class Actions : CommonActions
         _strategy = new();
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override void Dispose()
@@ -80,7 +80,7 @@ class Actions : CommonActions
         _state.FlurryLeft = StatusDetails(Player, SID.PhantomFlurry, Player.InstanceID).Left;
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.SonicBoom).PlaceholderForAuto =
             SupportedSpell(AID.WaterCannon).PlaceholderForAuto =

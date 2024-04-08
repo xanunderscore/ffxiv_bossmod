@@ -27,7 +27,7 @@ class Actions : TankActions
             ActionID.MakeSpell(_state.HaveTankStance ? AID.ReleaseGrit : AID.Grit);
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override void Dispose()
@@ -138,7 +138,7 @@ class Actions : TankActions
         return MakeResult(res, Autorot.PrimaryTarget);
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.HardSlash).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.Unleash).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;

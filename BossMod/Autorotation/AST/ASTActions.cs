@@ -32,7 +32,7 @@ class Actions : HealerActions
         SupportedSpell(AID.Horoscope).TransformAction = () => ActionID.MakeSpell(_state.BestHoroscope);
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -194,7 +194,7 @@ class Actions : HealerActions
             : null;
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.Malefic).PlaceholderForAuto =
             SupportedSpell(AID.MaleficII).PlaceholderForAuto =

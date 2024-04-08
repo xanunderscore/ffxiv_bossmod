@@ -36,7 +36,7 @@ class Actions : CommonActions
         SupportedSpell(AID.Ninjutsu).TransformAction = () => ActionID.MakeSpell(_state.CurrentNinjutsu);
 
         _config.Modified += OnConfigModified;
-        OnConfigModified(null, EventArgs.Empty);
+        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -213,7 +213,7 @@ class Actions : CommonActions
             );
     }
 
-    private void OnConfigModified(object? sender, EventArgs args)
+    private void OnConfigModified()
     {
         SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.DeathBlossom).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
