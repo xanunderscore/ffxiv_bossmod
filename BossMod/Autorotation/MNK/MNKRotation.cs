@@ -287,7 +287,7 @@ public static class Rotation
         // force refresh if we anticipate another PB use in this buff window
         if (
             state.FireLeft >= state.GCD + state.AttackGCDTime * 3 &&
-            state.CanWeave(state.CD(CDGroup.PerfectBalance), 0.6f, state.GCD) &&
+            state.CanWeave(state.CD(CDGroup.PerfectBalance) - 40, 0.6f, state.GCD + state.AttackGCDTime) &&
             state.BeastCount == 0 &&
             state.HaveSolar &&
             NeedDFRefresh(state, strategy, 5)
