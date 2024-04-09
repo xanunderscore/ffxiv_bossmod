@@ -133,7 +133,7 @@ class Actions : CommonActions
             res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
 
         if (res.ID == (uint)AID.LeyLines)
-            return new NextAction(res, null, Player.PosRot.XYZ(), ActionSource.Automatic);
+            return new NextAction(res, null, Player.PosRot.XYZ(), null, ActionSource.Automatic);
 
         return MakeResult(res, Autorot.PrimaryTarget);
     }
