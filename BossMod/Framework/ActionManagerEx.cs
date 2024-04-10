@@ -282,11 +282,9 @@ unsafe class ActionManagerEx : IDisposable
     // skips queueing etc
     public bool UseActionRaw(ActionID action, ulong targetID = GameObject.InvalidGameObjectId, Vector3 targetPos = new(), uint itemLocation = 0, float? facingAngleOverride = null)
     {
-        if (facingAngleOverride != null) {
-            var pl = Service.ClientState.LocalPlayer!.Address;
-            var playerObj = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)pl;
-            _setGameObjectRotationFunc.Invoke(playerObj, facingAngleOverride.Value);
-        }
+        if (facingAngleOverride != null)
+            FaceDirection(facingAngleOverride.Value.Radians().ToDirection());
+
         return UseActionLocationDetour(_inst, action.Type, action.ID, targetID, &targetPos, itemLocation);
     }
 

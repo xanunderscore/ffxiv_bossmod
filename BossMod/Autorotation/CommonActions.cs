@@ -277,10 +277,8 @@ abstract class CommonActions : IDisposable
 
         float? angleOverride = null;
         if (supportedAction.TransformAngle != null)
-        {
             angleOverride = supportedAction.TransformAngle();
-            Service.Log($"Transform angle: null -> {angleOverride}");
-        }
+
         _mq.Push(action, target, new(), angleOverride, supportedAction.Definition, supportedAction.Condition);
         return true;
     }
