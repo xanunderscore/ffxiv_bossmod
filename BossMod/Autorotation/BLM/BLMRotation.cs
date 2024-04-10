@@ -469,7 +469,8 @@ public static class Rotation
                 return AID.Blizzard3;
 
             // in umbral ice, paradox costs no mp and has no cast time, so no check
-            if (state.Paradox)
+            // (unless element runs out, then level 0 paradox works like a worse version of Fire 1)
+            if (state.Paradox && state.ElementalLevel < 0)
                 return AID.Paradox;
 
             if (CanPoly(state, strategy, 1))
