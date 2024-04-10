@@ -91,6 +91,7 @@ public static class Rotation
         public OffensiveAbilityUse TechStepUse; // default: on cooldown, if there are enemies
         public OffensiveAbilityUse FeatherUse;
         public OffensiveAbilityUse GaugeUse;
+        public OffensiveAbilityUse PotionUse;
 
         public void ApplyStrategyOverrides(uint[] overrides)
         {
@@ -100,6 +101,7 @@ public static class Rotation
                 FeatherUse = (OffensiveAbilityUse)overrides[1];
                 TechStepUse = (OffensiveAbilityUse)overrides[2];
                 StdStepUse = (OffensiveAbilityUse)overrides[3];
+                PotionUse = (OffensiveAbilityUse)overrides[4];
             }
             else
             {
@@ -107,6 +109,7 @@ public static class Rotation
                 FeatherUse = OffensiveAbilityUse.Automatic;
                 TechStepUse = OffensiveAbilityUse.Automatic;
                 StdStepUse = OffensiveAbilityUse.Automatic;
+                PotionUse = OffensiveAbilityUse.Automatic;
             }
         }
 
@@ -225,8 +228,8 @@ public static class Rotation
         if (canSymmetry)
             return symmetryCombo;
 
-        // (possibly buffed) standard step
-        if (shouldStdStep)
+        // buffed standard step
+        if (shouldStdStep && state.TechFinishLeft > 0)
             return AID.StandardStep;
 
         if (haveCombo2)
@@ -253,6 +256,9 @@ public static class Rotation
         )
             return ActionID.MakeSpell(AID.Peloton);
 
+        if (strategy.PotionUse == CommonRotation.Strategy.OffensiveAbilityUse.Force && state.CanWeave(state.PotionCD, 1.1f, deadline))
+            return CommonDefinitions.IDPotionDex;
+
         // only permitted OGCDs while dancing are role actions, shield samba, and curing waltz
         if (state.IsDancing)
             return new();
@@ -264,7 +270,7 @@ public static class Rotation
         )
             return ActionID.MakeSpell(AID.Devilment);
 
-        if (state.CD(CDGroup.Devilment) > 55 && state.CanWeave(CDGroup.Flourish, 0.6f, deadline))
+        if (state.CD(CDGroup.Devilment) > 55 && state.CanWeave(CDGroup.Flourish, 0.6f, deadline) && HaveTarget(state, strategy))
             return ActionID.MakeSpell(AID.Flourish);
 
         if (
