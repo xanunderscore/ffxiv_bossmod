@@ -169,7 +169,7 @@ class Actions : HealerActions
             SupportedSpell(AID.Haima).TransformTarget =
             SupportedSpell(AID.Esuna).TransformTarget =
             SupportedSpell(AID.Rescue).TransformTarget =
-                _config.MouseoverFriendly ? SmartTargetFriendly : null;
+                _config.MouseoverFriendly ? SmartTargetFriendlyOrSelf : null;
 
         SupportedSpell(AID.Icarus).TransformTarget = _config.MouseoverIcarus
             ? (act) => Autorot.SecondaryTarget ?? act
