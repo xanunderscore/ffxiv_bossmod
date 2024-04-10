@@ -447,7 +447,7 @@ public static class Rotation
             )
                 return ActionID.MakeSpell(AID.Thunderclap);
 
-            if (strategy.PotionUse == CommonRotation.Strategy.OffensiveAbilityUse.Force && state.CanWeave(state.PotionCD, 1.1f, float.MaxValue))
+            if (strategy.PotionUse == CommonRotation.Strategy.OffensiveAbilityUse.Force && state.CanWeave(state.PotionCD, 1.1f, deadline))
                 return CommonDefinitions.IDPotionStr;
 
             return new();
