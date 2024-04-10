@@ -183,7 +183,7 @@ public static class Definitions
         SupportedActions.GCD(AID.HardSlash, 3);
         SupportedActions.GCD(AID.SyphonStrike, 3);
         SupportedActions.GCD(AID.Unleash, 0);
-        SupportedActions.OGCD(AID.Rampart, 0, CDGroup.Rampart, 90.0f);
+        SupportedActions.OGCD(AID.Rampart, 0, CDGroup.Rampart, 90.0f).EffectDuration = 20f;
         SupportedActions.OGCD(AID.ReleaseGrit, 0, CDGroup.ReleaseGrit, 1.0f);
         SupportedActions.OGCD(AID.Grit, 0, CDGroup.ReleaseGrit, 2.0f);
         SupportedActions.OGCD(AID.LowBlow, 3, CDGroup.LowBlow, 25.0f);
@@ -195,12 +195,12 @@ public static class Definitions
         SupportedActions.OGCD(AID.FloodOfDarkness, 10, CDGroup.FloodOfDarkness, 1.0f);
         SupportedActions.OGCD(AID.ArmsLength, 0, CDGroup.ArmsLength, 120.0f);
         SupportedActions.OGCD(AID.BloodWeapon, 0, CDGroup.BloodWeapon, 60.0f);
-        SupportedActions.OGCD(AID.ShadowWall, 0, CDGroup.ShadowWall, 120.0f);
+        SupportedActions.OGCD(AID.ShadowWall, 0, CDGroup.ShadowWall, 120.0f).EffectDuration = 15f;
         SupportedActions.GCD(AID.StalwartSoul, 0);
         SupportedActions.OGCD(AID.EdgeOfDarkness, 3, CDGroup.FloodOfDarkness, 1.0f);
-        SupportedActions.OGCD(AID.DarkMind, 0, CDGroup.DarkMind, 60.0f);
+        SupportedActions.OGCD(AID.DarkMind, 0, CDGroup.DarkMind, 60.0f).EffectDuration = 10f;
         SupportedActions.OGCD(AID.Shirk, 25, CDGroup.Shirk, 120.0f);
-        SupportedActions.OGCD(AID.LivingDead, 0, CDGroup.LivingDead, 300.0f);
+        SupportedActions.OGCD(AID.LivingDead, 0, CDGroup.LivingDead, 300.0f).EffectDuration = 10f;
         SupportedActions.OGCD(AID.SaltedEarth, 0, CDGroup.SaltedEarth, 90.0f);
         SupportedActions.OGCDWithCharges(AID.Plunge, 20, CDGroup.Plunge, 30.0f, 2);
         SupportedActions.OGCD(AID.AbyssalDrain, 20, CDGroup.AbyssalDrain, 60.0f);
@@ -208,10 +208,10 @@ public static class Definitions
         SupportedActions.GCD(AID.Bloodspiller, 3);
         SupportedActions.GCD(AID.Quietus, 0);
         SupportedActions.OGCD(AID.Delirium, 0, CDGroup.Delirium, 60.0f);
-        SupportedActions.OGCD(AID.TheBlackestNight, 30, CDGroup.TheBlackestNight, 15.0f);
+        SupportedActions.OGCD(AID.TheBlackestNight, 30, CDGroup.TheBlackestNight, 15.0f).EffectDuration = 7f;
         SupportedActions.OGCD(AID.FloodOfShadow, 10, CDGroup.FloodOfDarkness, 1.0f);
         SupportedActions.OGCD(AID.EdgeOfShadow, 3, CDGroup.FloodOfDarkness, 1.0f);
-        SupportedActions.OGCD(AID.DarkMissionary, 0, CDGroup.DarkMissionary, 90.0f);
+        SupportedActions.OGCD(AID.DarkMissionary, 0, CDGroup.DarkMissionary, 90.0f).EffectDuration = 15f;
         SupportedActions.OGCD(AID.LivingShadow, 0, CDGroup.LivingShadow, 120.0f);
         SupportedActions.OGCDWithCharges(AID.Oblation, 30, CDGroup.Oblation, 60.0f, 2);
         SupportedActions.OGCD(AID.SaltAndDarkness, 0, CDGroup.SaltAndDarkness, 20.0f);

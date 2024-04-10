@@ -57,6 +57,7 @@ public static class PlanDefinitions
     {
         Classes[Class.WAR] = DefineWAR();
         Classes[Class.PLD] = DefinePLD();
+        Classes[Class.DRK] = DefineDRK();
         Classes[Class.WHM] = DefineWHM();
         Classes[Class.SCH] = DefineSCH();
         Classes[Class.SGE] = DefineSGE();
@@ -106,6 +107,24 @@ public static class PlanDefinitions
         c.CooldownTracks.Add(new("Sheltron", ActionID.MakeSpell(PLD.AID.Sheltron), 35));
         c.CooldownTracks.Add(new("ArmsLength", ActionID.MakeSpell(PLD.AID.ArmsLength), 32));
         c.CooldownTracks.Add(new("Reprisal", ActionID.MakeSpell(PLD.AID.Reprisal), 22));
+        return c;
+    }
+
+    private static ClassData DefineDRK()
+    {
+        var c = new ClassData(typeof(DRK.AID), DRK.Definitions.SupportedActions);
+        c.CooldownTracks.Add(new("Wall", ActionID.MakeSpell(DRK.AID.ShadowWall), 38));
+        c.CooldownTracks.Add(new("Rampart", ActionID.MakeSpell(DRK.AID.Rampart), 8));
+        c.CooldownTracks.Add(new("DarkMind", ActionID.MakeSpell(DRK.AID.DarkMind), 45));
+        c.CooldownTracks.Add(new("LD", ActionID.MakeSpell(DRK.AID.LivingDead), 50));
+        c.CooldownTracks.Add(new("TBN", ActionID.MakeSpell(DRK.AID.TheBlackestNight), 70));
+        c.CooldownTracks.Add(new("Oblation", ActionID.MakeSpell(DRK.AID.Oblation), 82));
+        c.CooldownTracks.Add(new("ArmsL", ActionID.MakeSpell(DRK.AID.ArmsLength), 32));
+        c.CooldownTracks.Add(new("Reprisal", ActionID.MakeSpell(DRK.AID.Reprisal), 22));
+        c.CooldownTracks.Add(new("Missionary", ActionID.MakeSpell(DRK.AID.DarkMissionary), 76));
+        c.CooldownTracks.Add(new("Taunt", ActionID.MakeSpell(DRK.AID.Provoke), 15));
+        c.CooldownTracks.Add(new("Shirk", ActionID.MakeSpell(DRK.AID.Shirk), 15));
+        c.CooldownTracks.Add(new("Sprint", CommonDefinitions.IDSprint, 1));
         return c;
     }
 
@@ -207,6 +226,7 @@ public static class PlanDefinitions
         c.StrategyTracks.Add(new("Feather", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("TechStep", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("StdStep", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("Potion", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         return c;
     }
 
