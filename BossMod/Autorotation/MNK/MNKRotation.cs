@@ -347,7 +347,7 @@ public static class Rotation
                 // form shift on countdown. TODO: ignore Never here? don't think there's ever any reason not to use it on countdown
                 if (
                     strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
-                    && state.FormShiftLeft == 0
+                    && strategy.CombatTimer < -9
                     && state.Unlocked(AID.FormShift)
                 )
                     return AID.FormShift;
@@ -364,10 +364,10 @@ public static class Rotation
             if (strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic && state.CanFormShift && state.FormShiftLeft < 3)
                 return AID.FormShift;
 
-            if (strategy.NextNadi == Strategy.NadiChoice.LunarDowntime && state.BeastCount < 3)
+            if (strategy.NextNadi == Strategy.NadiChoice.LunarDowntime && state.BeastCount < 3 && state.PerfectBalanceLeft > 0)
                 return AID.ShadowOfTheDestroyer;
 
-            if (strategy.NextNadi == Strategy.NadiChoice.SolarDowntime)
+            if (strategy.NextNadi == Strategy.NadiChoice.SolarDowntime && state.PerfectBalanceLeft > 0)
                 return state.BeastCount switch {
                     0 => AID.ShadowOfTheDestroyer,
                     1 => AID.FourPointFury,
