@@ -75,7 +75,7 @@ class Actions : CommonActions
             AutoActionAIFight => _strategy.NumAOEGCDTargets >= 3 && (_state.Unlocked(AID.SonicThrust) || _state.PowerSurgeLeft > _state.GCD), // TODO: better AOE condition
             _ => false, // irrelevant...
         };
-        FillStrategyPositionals(_strategy, Rotation.GetNextPositional(_state, _strategy), _state.TrueNorthLeft > _state.GCD);
+        FillStrategyPositionals(_strategy, Rotation.GetNextPositional(_state, _strategy), _state.TrueNorthLeft > _state.GCD || _state.RightEyeLeft > _state.GCD);
     }
 
     protected override void QueueAIActions()
@@ -147,7 +147,7 @@ class Actions : CommonActions
         SupportedSpell(AID.ElusiveJump).TransformAngle = _config.ElusiveJump switch
         {
             DRGConfig.ElusiveJumpBehavior.CharacterForward => () => Player.Rotation + 180.Degrees(),
-            DRGConfig.ElusiveJumpBehavior.CameraBackward => () => new Angle(Camera.Instance!.CameraAzimuth + MathF.PI),
+            DRGConfig.ElusiveJumpBehavior.CameraBackward => () => new Angle(Camera.Instance!.CameraAzimuth) + 180.Degrees(),
             DRGConfig.ElusiveJumpBehavior.CameraForward => () => new Angle(Camera.Instance!.CameraAzimuth),
             _ => null
         };
