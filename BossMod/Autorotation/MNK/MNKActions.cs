@@ -64,6 +64,8 @@ class Actions : CommonActions
         _strategy.UseAOE = _strategy.NumPointBlankAOETargets >= 3;
         _strategy.UseSTQOpener = autoAction == AutoActionSTQOpener;
 
+        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
+
         if (autoAction == AutoActionFiller)
         {
             _strategy.FireUse = Rotation.Strategy.FireStrategy.Delay;
@@ -73,8 +75,6 @@ class Actions : CommonActions
         }
 
         FillStrategyPositionals(_strategy, Rotation.GetNextPositional(_state, _strategy), _state.TrueNorthLeft > _state.GCD);
-
-        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
     }
 
     protected override void QueueAIActions()
