@@ -30,6 +30,11 @@ public static class Rotation
         public float NextPolyglot => EnochianTimer;
         public int MaxHearts => Unlocked(TraitID.EnhancedFreeze) ? 3 : 0;
 
+        public bool ManafontPending;
+
+        // paradox with no active element is useless: even though it has 500 potency, it costs MP/time and does not grant fire
+        public bool CanParadox => Paradox && ElementalLevel != 0;
+
         // lowest remaining Flare Star duration on any enemy in range, plus primary target whether they are within 10y or not
         // max is ostensibly 60s, but will be set to float.MaxValue if there are no enemies in range in order to make logic easier
         public float TargetFlareStarLeft;
@@ -57,7 +62,8 @@ public static class Rotation
 
         public AID BestPolySpell => Unlocked(AID.Xenoglossy) ? AID.Xenoglossy : AID.Foul;
 
-        public State(WorldState ws) : base(ws) { }
+        public State(WorldState ws)
+            : base(ws) { }
 
         public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
 
@@ -149,10 +155,7 @@ public static class Rotation
             var castTime = action.BaseCastTime();
             var aspect = action.Aspect();
 
-            if (
-                aspect == BLM.Aspect.Ice && ElementalLevel == 3
-                || aspect == BLM.Aspect.Fire && ElementalLevel == -3
-            )
+            if (aspect == BLM.Aspect.Ice && ElementalLevel == 3 || aspect == BLM.Aspect.Fire && ElementalLevel == -3)
                 castTime *= 0.5f;
 
             return castTime * spsFactor;
@@ -174,8 +177,36 @@ public static class Rotation
     // strategy configuration
     public class Strategy : CommonRotation.Strategy
     {
+        public enum LeylinesUse : uint
+        {
+            [PropertyDisplay("Opener only")]
+            Automatic = 0,
+
+            [PropertyDisplay("Use ASAP")]
+            Force = 1,
+
+            [PropertyDisplay("Delay use")]
+            Delay = 2,
+
+            [PropertyDisplay("Place before pull")]
+            Prepull = 3,
+        }
+
+        public LeylinesUse LeylinesStrategy;
+
+        public enum TriplecastUse : uint
+        {
+            // during burst window (in leylines, during raid buffs)
+            Automatic = 0,
+            [PropertyDisplay("Delay")]
+            Delay = 1,
+            [PropertyDisplay("Force")]
+            Force = 2,
+            [PropertyDisplay("Use if moving and no instant cast is available")]
+            Movement = 3
+        }
+
         public OffensiveAbilityUse TriplecastStrategy;
-        public OffensiveAbilityUse LeylinesStrategy;
         public bool UseAOERotation;
         public int NumFlareStarTargets;
         public bool AutoRefresh;
@@ -188,12 +219,12 @@ public static class Rotation
             if (overrides.Length >= 2)
             {
                 TriplecastStrategy = (OffensiveAbilityUse)overrides[0];
-                LeylinesStrategy = (OffensiveAbilityUse)overrides[1];
+                LeylinesStrategy = (LeylinesUse)overrides[1];
             }
             else
             {
                 TriplecastStrategy = OffensiveAbilityUse.Automatic;
-                LeylinesStrategy = OffensiveAbilityUse.Automatic;
+                LeylinesStrategy = LeylinesUse.Automatic;
             }
         }
     }
@@ -253,7 +284,7 @@ public static class Rotation
                 && strategy.AutoRefresh
             )
                 return AID.UmbralSoul;
-            
+
             return AID.None;
         }
 
@@ -266,9 +297,7 @@ public static class Rotation
             && state.Unlocked(AID.Fire4)
             && state.ElementalLevel == 3
             && state.ElementalLeft
-                < state.GCD
-                    + MathF.Max(state.SpellGCDTime, state.GetCastTime(AID.Fire4))
-                    + state.GetCastTime(AID.Fire1)
+                < state.GCD + MathF.Max(state.SpellGCDTime, state.GetCastTime(AID.Fire4)) + state.GetCastTime(AID.Fire1)
         )
         {
             // use despair now if f1 will leave us with too little mana
@@ -363,13 +392,14 @@ public static class Rotation
                 return AID.Fire1;
         }
 
+        var instant = GetInstantCasts(state, strategy, allowF3P: false, allowT3P: true, allowXeno: true).FirstOrDefault();
+
         // use instant spell for manafont weave
         if (
-            state.Polyglot > 0
-            && CanUseManafont(state, strategy, state.GCD + state.SpellGCDTime)
-            && state.Unlocked(TraitID.EnhancedFoul)
+            CanUseManafont(state, strategy, state.GCD + state.SpellGCDTime)
+            && instant != AID.None
         )
-            return strategy.UseAOERotation ? AID.Foul : AID.Xenoglossy;
+            return instant;
 
         // if fight ending, dump resources instead of switching to ice
         // (assuming <800 MP left here, otherwise one of the earlier branches would have been taken)
@@ -382,6 +412,10 @@ public static class Rotation
                 return AID.Fire3;
         }
 
+        // prefer instant cast to enable double transpose instead of hardcasting B3
+        if (instant != AID.None)
+            return instant;
+
         // otherwise swap to ice
         if (strategy.UseAOERotation && CanCast(state, strategy, state.BestBlizzard2, 0))
             return state.BestBlizzard2;
@@ -389,7 +423,7 @@ public static class Rotation
         if (CanCast(state, strategy, AID.Blizzard3, 0))
             return AID.Blizzard3;
 
-        if (!state.Paradox && CanCast(state, strategy, AID.Blizzard1, 0))
+        if (!state.CanParadox && CanCast(state, strategy, AID.Blizzard1, 0))
             return AID.Blizzard1;
 
         return AID.None;
@@ -397,6 +431,9 @@ public static class Rotation
 
     public static AID GetIceGCD(State state, Strategy strategy)
     {
+        if (state.CanParadox)
+            return AID.Paradox;
+
         // get max hearts for swap
         if (state.UmbralHearts < 3 && state.Unlocked(TraitID.EnhancedFreeze) && state.ElementalLevel < 0)
         {
@@ -416,7 +453,10 @@ public static class Rotation
                     if (state.CurMP >= 9000 && state.CurMP < 10000)
                         return (AID)BozjaActionID.GetNormal(BozjaHolsterID.LostFlareStar).ID;
                 }
-                else if (state.DutyActionCD(BozjaActionID.GetNormal(BozjaHolsterID.LostFontOfMagic)) == 0 && CanFoM(state, strategy))
+                else if (
+                    state.DutyActionCD(BozjaActionID.GetNormal(BozjaHolsterID.LostFontOfMagic)) == 0
+                    && CanFoM(state, strategy)
+                )
                 {
                     if (state.LucidDreamingLeft == 0 && state.CD(CDGroup.LucidDreaming) == 0)
                         return AID.LucidDreaming;
@@ -446,9 +486,9 @@ public static class Rotation
         else
         {
             if (CanCast(state, strategy, AID.Fire3, 8200))
-                return AID.Fire3;
+                return state.CanParadox ? AID.Paradox : AID.Fire3;
 
-            if (!state.Paradox && CanCast(state, strategy, AID.Fire1, 8200))
+            if (!state.CanParadox && CanCast(state, strategy, AID.Fire1, 8200))
                 return AID.Fire1;
         }
 
@@ -470,7 +510,7 @@ public static class Rotation
 
             // in umbral ice, paradox costs no mp and has no cast time, so no check
             // (unless element runs out, then level 0 paradox works like a worse version of Fire 1)
-            if (state.Paradox && state.ElementalLevel < 0)
+            if (state.CanParadox)
                 return AID.Paradox;
 
             if (CanPoly(state, strategy, 1))
@@ -493,11 +533,8 @@ public static class Rotation
             return new();
         }
 
-        if (
-            !state.TargetingEnemy
-            && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
-            && strategy.AutoRefresh
-        ) {
+        if (!state.TargetingEnemy && state.CanWeave(CDGroup.Transpose, 0.6f, deadline) && strategy.AutoRefresh)
+        {
             if (state.ElementalLevel > 0)
                 return ActionID.MakeSpell(AID.Transpose);
 
@@ -505,35 +542,30 @@ public static class Rotation
                 return ActionID.MakeSpell(AID.Transpose);
         }
 
-        if (
-            state.FirestarterLeft > state.GCD
-            && state.ElementalLevel < 0
-            && state.CurMP >= 9600
-            && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
-        )
-            return ActionID.MakeSpell(AID.Transpose);
+        // end of F3 line
+        if (state.CurMP < 800) {
+            // pre transpose
+            if (state.ElementalLevel == 3) {
+                // in burst window we use manafont to enable another F4 -> Despair
+                if (CanUseManafont(state, strategy, deadline))
+                    return ActionID.MakeSpell(AID.Manafont);
 
-        if (state.CurMP < 800 && state.ElementalLevel == 3 && CanUseManafont(state, strategy, deadline))
-            return ActionID.MakeSpell(AID.Manafont);
+                // outside of burst window we transpose -> lucid -> paradox -> F3P or swiftcast F3
+                if (!state.ManafontPending && state.CanWeave(CDGroup.Transpose, 0.6f, deadline))
+                    return ActionID.MakeSpell(AID.Transpose);
+            }
 
-        if (state.TriplecastLeft > state.GCD)
-        {
-            if (
-                state.CanWeave(CDGroup.Amplifier, 0.6f, deadline)
-                && state.Unlocked(AID.Amplifier)
-                && state.Polyglot < 2
-                && state.ElementalLevel != 0
-            )
-                return ActionID.MakeSpell(AID.Amplifier);
-
-            if (
-                state.CanWeave(CDGroup.LeyLines, 0.6f, deadline)
-                && strategy.LeylinesStrategy != CommonRotation.Strategy.OffensiveAbilityUse.Delay
-                // don't place leylines after opener, let the player do it
-                && strategy.CombatTimer < 60
-            )
-                return ActionID.MakeSpell(AID.LeyLines);
+            // post transpose
+            if (state.ElementalLevel < 0 && state.FirestarterLeft < state.GCD + state.SpellGCDTime * 3 && state.CanWeave(CDGroup.Swiftcast, 0.6f, deadline)) {
+                return ActionID.MakeSpell(AID.Swiftcast);
+            }
         }
+
+        if (ShouldUseAmplifier(state, strategy, deadline))
+            return ActionID.MakeSpell(AID.Amplifier);
+
+        if (ShouldUseLeylines(state, strategy, deadline))
+            return ActionID.MakeSpell(AID.LeyLines);
 
         if (state.InLeyLines && state.InstantCastLeft < state.GCD)
         {
@@ -564,10 +596,31 @@ public static class Rotation
 
     private static bool CanUseManafont(State state, Strategy strategy, float deadline)
     {
-        if (strategy.LeylinesStrategy == CommonRotation.Strategy.OffensiveAbilityUse.Delay)
-            return false;
+        // if (strategy.LeylinesStrategy == Strategy.LeylinesUse.Delay)
+        //     return false;
 
         return state.CanWeave(CDGroup.Manafont, 0.6f, deadline);
+    }
+
+    private static bool ShouldUseAmplifier(State state, Strategy strategy, float deadline) =>
+        state.Unlocked(AID.Amplifier)
+        && state.CanWeave(CDGroup.Amplifier, 0.6f, deadline)
+        && state.Polyglot < 2
+        && state.NextPolyglot > state.SpellGCDTime
+        && state.ElementalLevel != 0;
+
+    private static bool ShouldUseLeylines(State state, Strategy strategy, float deadline)
+    {
+        if (!state.Unlocked(AID.LeyLines) || !state.CanWeave(CDGroup.LeyLines, 0.6f, deadline) || strategy.LeylinesStrategy == Strategy.LeylinesUse.Delay)
+            return false;
+
+        if (strategy.LeylinesStrategy == Strategy.LeylinesUse.Force)
+            return true;
+
+        if (strategy.LeylinesStrategy == Strategy.LeylinesUse.Automatic)
+            return strategy.CombatTimer < 60;
+
+        return false;
     }
 
     private static bool CanPoly(State state, Strategy strategy, int minStacks = 2) =>
@@ -584,5 +637,20 @@ public static class Rotation
     {
         return state.FindDutyActionSlot(BozjaActionID.GetNormal(BozjaHolsterID.LostFontOfMagic)) >= 0
             && strategy.TriplecastStrategy != CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+    }
+
+    private static IEnumerable<AID> GetInstantCasts(State state, Strategy strategy, bool allowF3P = true, bool allowT3P = true, bool allowXeno = true)
+    {
+        if (state.CanParadox)
+            yield return AID.Paradox;
+
+        if (state.FirestarterLeft > state.GCD && allowF3P)
+            yield return AID.Fire3;
+
+        if (state.ThundercloudLeft > state.GCD && allowT3P)
+            yield return AID.Thunder3;
+
+        if (state.Polyglot > 0 && allowXeno)
+            yield return AID.Xenoglossy;
     }
 }
