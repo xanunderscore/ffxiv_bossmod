@@ -14,7 +14,6 @@ class Actions : CommonActions
     private Rotation.Strategy _strategy;
     private DateTime _lastManaTick;
     private uint _prevMP;
-    private uint _preManafontMP;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -75,12 +74,12 @@ class Actions : CommonActions
 
         if (autoAction == AutoActionFiller)
         {
-            _strategy.LeylinesStrategy = Rotation.Strategy.LeylinesUse.Delay;
+            _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
         }
 
         if (_config.AutoLeylines is BLMConfig.AutoLL.None)
-            _strategy.LeylinesStrategy = Rotation.Strategy.LeylinesUse.Delay;
+            _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
     }
 
     protected override void QueueAIActions()
@@ -163,9 +162,6 @@ class Actions : CommonActions
                     : 0
             );
 
-        if (_state.CurMP >= _preManafontMP + 3000)
-            _state.ManafontPending = false;
-
         _state.ElementalLevel = gauge.InAstralFire ? gauge.AstralFireStacks : -gauge.UmbralIceStacks;
         _state.ElementalLeft = gauge.ElementTimeRemaining * 0.001f;
         _state.EnochianTimer = gauge.EnochianTimer * 0.001f;
@@ -199,14 +195,6 @@ class Actions : CommonActions
             .Select(LFSLeft);
 
         _state.TargetFlareStarLeft = lfs.Any() ? lfs.Min() : 0;
-    }
-
-    protected override void OnActionSucceeded(ActorCastEvent ev)
-    {
-        if (ev.Action.ID == (uint)AID.Manafont) {
-            _state.ManafontPending = true;
-            _preManafontMP = _state.CurMP;
-        }
     }
 
     private float LFSLeft(AIHints.Enemy a)
