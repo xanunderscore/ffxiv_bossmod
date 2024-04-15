@@ -136,7 +136,7 @@ class Actions : TankActions
         SupportedSpell(AID.DemonSlaughter).TransformAction = _config.AOECombos ? () => ActionID.MakeSpell(Rotation.GetNextAOEComboAction(ComboLastMove)) : null;
 
         // smart targets
-        SupportedSpell(AID.HeartOfCorundum).TransformTarget = SupportedSpell(AID.HeartOfStone).TransformTarget = _config.SmartHeartofCorundumShirkTarget ? SmartTargetFriendly : null;
+        SupportedSpell(AID.HeartOfCorundum).TransformTarget = SupportedSpell(AID.HeartOfStone).TransformTarget = _config.SmartHeartofCorundumShirkTarget ? SmartTargetFriendlyOrSelf : null;
         SupportedSpell(AID.Shirk).TransformTarget = _config.SmartHeartofCorundumShirkTarget ? SmartTargetCoTank : null;
         SupportedSpell(AID.Provoke).TransformTarget = _config.ProvokeMouseover ? SmartTargetHostile : null; // TODO: also interject/low-blow
     }
