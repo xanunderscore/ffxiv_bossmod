@@ -15,6 +15,7 @@ public static class Rotation
         public BeastChakra[] BeastChakra = [];
         public Nadi Nadi;
         public Form Form;
+        public float BlitzLeft; // 20 max
         public float FormLeft; // 0 if no form, 30 max
         public float DisciplinedFistLeft; // 15 max
         public float LeadenFistLeft; // 30 max
@@ -71,7 +72,7 @@ public static class Rotation
 
         public override string ToString()
         {
-            return $"RB={RaidBuffsLeft:f1}, Demo={TargetDemolishLeft:f1}, DF={DisciplinedFistLeft:f1}, Form={Form}/{FormLeft:f1}, LFist={LeadenFistLeft:f1}, PotCD={PotionCD:f1}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
+            return $"RB={RaidBuffsLeft:f1}, Demo={TargetDemolishLeft:f1}, DF={DisciplinedFistLeft:f1}, Blitz={BlitzLeft:f1}, Form={Form}/{FormLeft:f1}, LFist={LeadenFistLeft:f1}, PotCD={PotionCD:f1}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
         }
     }
 
@@ -641,7 +642,7 @@ public static class Rotation
         (strategy.BlitzUse switch
         {
             Strategy.BlitzStrategy.Delay => false,
-            Strategy.BlitzStrategy.DelayUntilMultiTarget => strategy.NumBlitzTargets > 1,
+            Strategy.BlitzStrategy.DelayUntilMultiTarget => strategy.NumBlitzTargets > 1 || state.BlitzLeft < state.AttackGCDTime,
             _ => true,
         });
 

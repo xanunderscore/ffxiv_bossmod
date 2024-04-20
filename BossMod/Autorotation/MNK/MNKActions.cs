@@ -72,6 +72,7 @@ class Actions : CommonActions
             _strategy.WindUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.BrotherhoodUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.PerfectBalanceUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
+            _strategy.TrueNorthUse = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
         }
 
         FillStrategyPositionals(_strategy, Rotation.GetNextPositional(_state, _strategy), _state.TrueNorthLeft > _state.GCD);
@@ -118,6 +119,7 @@ class Actions : CommonActions
         _state.Chakra = gauge.Chakra;
         _state.BeastChakra = gauge.BeastChakra;
         _state.Nadi = gauge.Nadi;
+        _state.BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
 
         (_state.Form, _state.FormLeft) = DetermineForm();
         _state.DisciplinedFistLeft = StatusDetails(Player, SID.DisciplinedFist, Player.InstanceID).Left;
