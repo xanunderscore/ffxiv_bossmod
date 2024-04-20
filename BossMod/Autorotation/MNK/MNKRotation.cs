@@ -338,7 +338,7 @@ public static class Rotation
             if (
                 strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
                 && state.FormShiftLeft < 3
-                && state.Unlocked(AID.FormShift)
+                && state.CanFormShift
             )
                 return AID.FormShift;
 
@@ -348,6 +348,7 @@ public static class Rotation
                 if (
                     strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
                     && strategy.CombatTimer < -9
+                    && state.FormShiftLeft < 15
                     && state.Unlocked(AID.FormShift)
                 )
                     return AID.FormShift;
