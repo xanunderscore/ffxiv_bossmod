@@ -132,7 +132,7 @@ public static class Rotation
     public class Strategy : CommonRotation.Strategy
     {
         public int NumGravityTargets; // 5y around target
-        public int NumBigAOETargets; // 20y around self, for microcosmos and lord of crowns
+        public int NumBigAOETargets; // 20y around self, for microcosmos and lady of crowns
         public int NumStarTargets; // 20y around earthly star location
 
         public bool HasRaidplan => RaidBuffsIn < 1000;
