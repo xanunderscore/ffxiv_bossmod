@@ -503,11 +503,11 @@ public static class Rotation
         if (strategy.PotionUse == CommonRotation.Strategy.OffensiveAbilityUse.Force && state.CanWeave(state.PotionCD, 1.1f, deadline))
             return CommonDefinitions.IDPotionStr;
 
-        if (ShouldUsePB(state, strategy, deadline))
-            return ActionID.MakeSpell(AID.PerfectBalance);
-
         if (ShouldUseBrotherhood(state, strategy, deadline))
             return ActionID.MakeSpell(AID.Brotherhood);
+
+        if (ShouldUsePB(state, strategy, deadline))
+            return ActionID.MakeSpell(AID.PerfectBalance);
 
         // 2. steel peek, if have chakra
         if (ShouldUseTFC(state, strategy, deadline))
@@ -758,15 +758,16 @@ public static class Rotation
 
         // bh1 and bh3 even windows where RoF is used no earlier than 2 GCDs before this; also odd windows where
         // natural demolish happens during RoF
-        // before level 68/RoF unlock, we have nothing to plan our blitzes around, so just use PB whenever it's off cooldown
+        // before level 68 (RoF unlock) we have nothing to plan our blitzes around, so just use PB whenever it's off cooldown
         // as long as buffs won't fall off
+        // TODO: before level 60 (blitz unlock) PB is just a free opo GCD generator so use it right after DF + demo
         if (ShouldUseRoF(state, strategy, deadline) || state.FireLeft > deadline + state.AttackGCDTime * 3 || !state.Unlocked(AID.RiddleOfFire))
         {
             if (!CanSolar(state, strategy))
                 return !NeedDFRefresh(state, strategy, 5) && !NeedDemolishRefresh(state, strategy, 6);
 
             // see haste note above; delay standard even window PB2 in favor of double lunar
-            if (NeedDFRefresh(state, strategy, 3) && !NeedDemolishRefresh(state, strategy, 5))
+            if (NeedDFRefresh(state, strategy, 3) && !NeedDemolishRefresh(state, strategy, 4))
                 return false;
 
             return true;
@@ -777,8 +778,12 @@ public static class Rotation
         if (!CanSolar(state, strategy) && ShouldUseRoF(state, strategy, state.GCD + state.AttackGCDTime))
             return !NeedDemolishRefresh(state, strategy, 7);
 
-        // bhood 2 window: natural demolish happens in the middle of RoF. i don't remember exactly why this is the rule
-        // but the first blitz has to be RP
+        // bhood 2 window: natural demolish happens in the middle of RoF. it's possible that only the blitz itself
+        // gets the RoF buff, so BH2 consists of
+        // 1. PB -> "weak" non-OPO gcds until RoF is active
+        // 2. RoF -> RP
+        // 3. opo, DF, demolish
+        // 4. PB -> lunar
         if (
             CanSolar(state, strategy)
             && !ShouldUseRoF(state, strategy, deadline)
