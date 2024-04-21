@@ -142,7 +142,7 @@ public static class PlanDefinitions
 
     private static ClassData DefineSGE()
     {
-        var c = new ClassData(typeof(SGE.AID), SCH.Definitions.SupportedActions);
+        var c = new ClassData(typeof(SGE.AID), SGE.Definitions.SupportedActions);
         c.CooldownTracks.Add(new("Surecast", ActionID.MakeSpell(SGE.AID.Surecast), 44));
         c.CooldownTracks.Add(new("Physis", [
             (ActionID.MakeSpell(SGE.AID.PhysisII), 60),

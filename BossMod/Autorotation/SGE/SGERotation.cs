@@ -68,21 +68,16 @@ public static class Rotation
 
         public int NumNearbyUnshieldedAllies; // up to 8 including self
 
-        public enum GCDShieldStrategy
+        public enum GCDShieldStrategy : uint
         {
             [PropertyDisplay("Manual shielding only")]
             Manual = 0,
 
-            [PropertyDisplay("Eukrasian Prognosis")]
+            [PropertyDisplay("EukProg")]
             Prog = 1,
 
-            [PropertyDisplay("Zoe + Eukrasian Prognosis")]
+            [PropertyDisplay("Zoe + EukProg")]
             ProgZoe = 2,
-
-            [PropertyDisplay(
-                "Apply Eukrasian Prognosis once another party member's healing buff is active (Mantra, Nature's Minne, etc)"
-            )]
-            ProgPartyBuffed = 3,
         }
 
         public GCDShieldStrategy GCDShieldUse;
@@ -121,9 +116,6 @@ public static class Rotation
                 case Strategy.GCDShieldStrategy.ProgZoe:
                     if (state.ZoeLeft > state.GCD)
                         return state.Eukrasia ? AID.EukrasianPrognosis : AID.Eukrasia;
-                    break;
-                case Strategy.GCDShieldStrategy.ProgPartyBuffed:
-                    // TODO: check for party buffs
                     break;
                 case Strategy.GCDShieldStrategy.Manual:
                     break;
