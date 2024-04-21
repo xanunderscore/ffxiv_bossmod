@@ -82,15 +82,19 @@ public static class Rotation
 
         public GCDShieldStrategy GCDShieldUse;
 
+        public OffensiveAbilityUse PneumaUse;
+
         public void ApplyStrategyOverrides(uint[] overrides)
         {
-            if (overrides.Length >= 1)
+            if (overrides.Length >= 2)
             {
                 GCDShieldUse = (GCDShieldStrategy)overrides[0];
+                PneumaUse = (OffensiveAbilityUse)overrides[1];
             }
             else
             {
                 GCDShieldUse = GCDShieldStrategy.Manual;
+                PneumaUse = OffensiveAbilityUse.Automatic;
             }
         }
 
@@ -122,26 +126,29 @@ public static class Rotation
             }
         }
 
-        var canCast = CanCast(state, strategy, 1.5f);
-
-        if (strategy.NumDyskrasiaTargets > 1 && state.Unlocked(state.BestDyskrasia))
-            return state.BestDyskrasia;
-
-        if (!canCast && state.Unlocked(AID.Toxikon) && state.Sting > 0 && strategy.NumToxikonTargets > 0)
-            return state.BestToxikon;
-
-        if (strategy.NumPneumaTargets >= 3 && state.Unlocked(AID.Pneuma) && state.CD(CDGroup.Pneuma) <= state.GCD)
-            return AID.Pneuma;
-
-        if (!state.TargetingEnemy && state.Unlocked(AID.Eukrasia))
-            return state.Eukrasia ? AID.None : AID.Eukrasia;
-
         if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
             return AID.None;
 
+        var canCast = CanCast(state, strategy, 1.5f);
+
+        // planned pneuma
+        if (
+            strategy.PneumaUse == CommonRotation.Strategy.OffensiveAbilityUse.Force
+            && state.CD(CDGroup.Pneuma) <= state.GCD
+            && state.TargetingEnemy
+        )
+        {
+            if (canCast)
+                return AID.Pneuma;
+            else if (state.CD(CDGroup.Swiftcast) == 0)
+                return AID.Swiftcast;
+        }
+
+        // dot refresh - this is instant cast so no check needed
         if (RefreshDOT(state, state.TargetDotLeft) && state.Unlocked(AID.Eukrasia))
             return state.Eukrasia ? state.BestDosis : AID.Eukrasia;
 
+        // phlegma in raid buff window
         if (
             state.RangeToTarget <= 6
             && state.CD(state.PhlegmaCD) <= 40
@@ -150,11 +157,33 @@ public static class Rotation
         )
             return state.BestPhlegma;
 
-        if (canCast)
-            return state.BestDosis;
-
-        if (strategy.NumDyskrasiaTargets > 0 && state.Unlocked(state.BestDyskrasia))
+        // dyskrasia is a gain on 2
+        if (strategy.NumDyskrasiaTargets > 1 && state.Unlocked(state.BestDyskrasia))
             return state.BestDyskrasia;
+
+        if (canCast)
+        {
+            // aoe pneuma for big damage
+            if (
+                strategy.NumPneumaTargets >= 3
+                && state.Unlocked(AID.Pneuma)
+                && state.CD(CDGroup.Pneuma) <= state.GCD
+                && strategy.PneumaUse != CommonRotation.Strategy.OffensiveAbilityUse.Delay
+            )
+                return AID.Pneuma;
+
+            if (state.TargetingEnemy)
+                return state.BestDosis;
+        } else {
+            if (state.Unlocked(AID.Toxikon) && state.Sting > 0 && strategy.NumToxikonTargets > 0)
+                return state.BestToxikon;
+
+            if (strategy.NumDyskrasiaTargets > 0 && state.Unlocked(state.BestDyskrasia))
+                return state.BestDyskrasia;
+        }
+
+        if (!state.TargetingEnemy && state.Unlocked(AID.Eukrasia))
+            return state.Eukrasia ? AID.None : AID.Eukrasia;
 
         return AID.None;
     }
