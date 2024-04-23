@@ -8,6 +8,8 @@ public static class Rotation
 {
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
+    static float SSSApplicationDelay = 0.62f;
+
     // full state needed for determining next action
     public class State : CommonRotation.PlayerState
     {
@@ -392,16 +394,16 @@ public static class Rotation
         if (state.BestBlitz != AID.MasterfulBlitz && strategy.NumBlitzTargets > 0 && ShouldBlitz(state, strategy))
             return state.BestBlitz;
 
-        if (state.Unlocked(AID.DragonKick) && ShouldDKSpam(state, strategy))
-            return AID.DragonKick;
-
         // TODO: calculate optimal DK spam before SSS
         if (
             strategy.SSSUse == Strategy.OffensiveAbilityUse.Automatic
-            && strategy.ActualFightEndIn < state.GCD + state.AttackGCDTime
+            && strategy.ActualFightEndIn < state.GCD + state.AttackGCDTime + SSSApplicationDelay
             && state.Unlocked(AID.SixSidedStar)
         )
             return AID.SixSidedStar;
+
+        if (state.Unlocked(AID.DragonKick) && ShouldDKSpam(state, strategy))
+            return AID.DragonKick;
 
         return GetNextComboAction(state, strategy);
     }
