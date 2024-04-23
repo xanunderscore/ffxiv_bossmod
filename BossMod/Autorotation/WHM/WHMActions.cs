@@ -173,6 +173,9 @@ class Actions : HealerActions
         if (_state.Unlocked(AID.PresenceOfMind) && _state.CanWeave(CDGroup.PresenceOfMind, 0.6f, deadline))
             return MakeResult(AID.PresenceOfMind, Player);
 
+        if (_strategy.EnableAssize && _state.Unlocked(AID.Assize) && _state.CanWeave(CDGroup.Assize, 0.6f, deadline))
+            return MakeResult(AID.Assize, Player);
+
         // lucid dreaming, if we won't waste mana (TODO: revise mp limit)
         if (_state.CurMP <= 7000 && _state.Unlocked(AID.LucidDreaming) && _state.CanWeave(CDGroup.LucidDreaming, 0.6f, deadline))
             return MakeResult(AID.LucidDreaming, Player);

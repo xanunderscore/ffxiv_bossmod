@@ -114,7 +114,7 @@ sealed class Autorotation : IDisposable
                 Class.BLU => typeof(BLU.Actions),
                 Class.SMN => Service.ClientState.LocalPlayer?.Level <= 30 ? typeof(SMN.Actions) : null,
                 Class.WHM => typeof(WHM.Actions),
-                Class.SCH => player.Level <= 60 ? typeof(SCH.Actions) : null,
+                Class.SCH => typeof(SCH.Actions),
                 Class.RPR => typeof(RPR.Actions),
                 Class.GNB => typeof(GNB.Actions),
                 Class.SAM => typeof(SAM.Actions),

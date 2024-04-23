@@ -1,4 +1,4 @@
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.SCH;
 
@@ -138,8 +138,11 @@ class Actions : HealerActions
         if (_strategy.BestSTHeal.Target != null && _state.AetherflowStacks > 0 && _state.Unlocked(AID.Lustrate) && _state.CanWeave(CDGroup.Lustrate, 0.6f, deadline))
             return MakeResult(AID.Lustrate, _strategy.BestSTHeal.Target);
 
+        if (_state.AetherflowStacks == 0 && _state.Fairy != null && _state.CanWeave(CDGroup.Dissipation, 0.6f, deadline) && _state.Unlocked(AID.Dissipation))
+            return MakeResult(AID.Dissipation, Player);
+
         // energy drain, if new aetherflow will come off cd soon (TODO: reconsider...)
-        if (Autorot.PrimaryTarget != null && _state.AetherflowStacks > 0 && _state.CD(CDGroup.Aetherflow) <= _state.GCD + _state.AetherflowStacks * 2.5f && _state.Unlocked(AID.EnergyDrain) && _state.CanWeave(CDGroup.EnergyDrain, 0.6f, deadline))
+        if (Autorot.PrimaryTarget != null && _state.AetherflowStacks > 0 && _state.Unlocked(AID.EnergyDrain) && _state.CanWeave(CDGroup.EnergyDrain, 0.6f, deadline))
             return MakeResult(AID.EnergyDrain, Autorot.PrimaryTarget);
 
         // swiftcast, if can't cast any gcd (TODO: current check is not very good...)

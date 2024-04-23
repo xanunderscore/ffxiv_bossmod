@@ -1,4 +1,4 @@
-namespace BossMod.SCH;
+﻿namespace BossMod.SCH;
 
 public static class Rotation
 {
@@ -52,36 +52,24 @@ public static class Rotation
 
     public static AID GetNextBestDamageGCD(State state, Strategy strategy)
     {
+        if (strategy.NumArtOfWarTargets >= 3)
+            return state.BestArtOfWar;
+
+        if (!strategy.ForbidDOTs && RefreshDOT(state, state.TargetBioLeft))
+            return state.BestBio;
+
+        // yes, art of war is a gain on 1 until broil is unlocked at level 54
+        var minAoeTargets = state.Unlocked(AID.Broil1) ? 2 : 1;
+
+        if (strategy.NumArtOfWarTargets >= minAoeTargets)
+            return state.BestArtOfWar;
+
         // TODO: priorities change at L54, L64, L72, L82
         bool allowRuin = CanCast(state, strategy, 1.5f);
-        if (state.Unlocked(AID.ArtOfWar1))
-        {
-            // L46: spam art of war at 3+ targets, otherwise bio > art of war (even at 1 target) > ruin (if out of range) > ruin2 (on the move)
-            if (strategy.NumArtOfWarTargets >= 3)
-                return AID.ArtOfWar1;
-            else if (!strategy.ForbidDOTs && RefreshDOT(state, state.TargetBioLeft))
-                return AID.Bio2;
-            else if (strategy.NumArtOfWarTargets >= 1)
-                return AID.ArtOfWar1;
-            else if (allowRuin)
-                return AID.Ruin1;
-            else
-                return AID.Ruin2;
-        }
-        else if (state.Unlocked(AID.Bio2))
-        {
-            // L26: bio2 on all targets is more important than ruin
-            // L38: cast ruin2 on the move
-            return !strategy.ForbidDOTs && RefreshDOT(state, state.TargetBioLeft) ? AID.Bio2 : allowRuin ? AID.Ruin1 : (state.Unlocked(AID.Ruin2) ? AID.Ruin2 : AID.None);
-        }
-        else if (state.Unlocked(AID.Bio1))
-        {
-            // L2: bio1 is only used on the move (TODO: it is slightly more potency than ruin on single target, but only if it ticks to the end)
-            return allowRuin ? AID.Ruin1 : !strategy.ForbidDOTs && RefreshDOT(state, state.TargetBioLeft) ? AID.Bio1 : AID.None;
-        }
-        else
-        {
-            return allowRuin ? AID.Ruin1 : AID.None;
-        }
+
+        if (allowRuin)
+            return state.BestBroil;
+
+        return AID.Ruin2;
     }
 }

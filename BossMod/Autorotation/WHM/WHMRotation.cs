@@ -71,7 +71,7 @@ public static class Rotation
         // 3. potion (TODO)
 
         // 4. assize, if allowed and if we have some mana deficit (TODO: consider delaying until raidbuffs?)
-        if (strategy.EnableAssize && state.CurMP <= 9000 && state.Unlocked(AID.Assize) && state.CanWeave(CDGroup.Assize, 0.6f, deadline))
+        if (strategy.EnableAssize && state.Unlocked(AID.Assize) && state.CanWeave(CDGroup.Assize, 0.6f, deadline))
             return ActionID.MakeSpell(AID.Assize);
 
         // 5. pom (TODO: consider delaying until raidbuffs?)
@@ -96,6 +96,9 @@ public static class Rotation
 
     public static AID GetNextBestSTDamageGCD(State state, Strategy strategy)
     {
+        if (!state.TargetingEnemy)
+            return AID.None;
+
         bool allowCasts = CanCast(state, strategy, 1.5f);
 
         // 0. just use glare before pull
