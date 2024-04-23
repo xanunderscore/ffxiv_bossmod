@@ -5,7 +5,7 @@ namespace BossMod.DRK;
 public static class Rotation
 {
     // 200 MP regen per tick in combat
-    const int MP_OVERCAP_THRESHOLD = 9800;
+    private const int MpOvercapThreshold = 9800;
 
     public class State(WorldState ws) : CommonRotation.PlayerState(ws)
     {
@@ -20,13 +20,11 @@ public static class Rotation
         public AID BestFlood => Unlocked(AID.FloodOfShadow) ? AID.FloodOfShadow : AID.FloodOfDarkness;
         public AID BestEdge => Unlocked(AID.EdgeOfShadow) ? AID.EdgeOfShadow : AID.EdgeOfDarkness;
 
-        public AID BestSalt =>
-            Unlocked(AID.SaltAndDarkness) && SaltedEarthLeft > 0 ? AID.SaltAndDarkness : AID.SaltedEarth;
+        public AID BestSalt => Unlocked(AID.SaltAndDarkness) && SaltedEarthLeft > 0 ? AID.SaltAndDarkness : AID.SaltedEarth;
 
         public AID ComboLastMove => (AID)ComboLastAction;
 
-        public int ImminentBloodGain =>
-            (BloodWeapon.Stacks > 0 ? 10 : 0) + (ComboLastMove is AID.SyphonStrike or AID.Unleash ? 20 : 0);
+        public int ImminentBloodGain => (BloodWeapon.Stacks > 0 ? 10 : 0) + (ComboLastMove is AID.SyphonStrike or AID.Unleash ? 20 : 0);
 
         public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
 
@@ -133,7 +131,7 @@ public static class Rotation
 
     public static AID GetNextBestGCD(State state, Strategy strategy)
     {
-        if (strategy.CombatTimer > -100 && strategy.CombatTimer < -0.7f)
+        if (strategy.CombatTimer is > (-100) and < (-0.7f))
             return AID.None;
 
         if (CanBlood(state, strategy))
@@ -303,12 +301,12 @@ public static class Rotation
             case Strategy.MPUse.AutomaticTBN:
                 if (ShouldUseBurst(state, strategy) || state.DarksideLeft < state.GCD)
                     return state.CurMP >= minimumMP;
-                return state.CurMP >= MP_OVERCAP_THRESHOLD;
+                return state.CurMP >= MpOvercapThreshold;
             case Strategy.MPUse.Force:
             case Strategy.MPUse.ForceTBN:
                 return state.CurMP >= minimumMP;
             case Strategy.MPUse.PreventOvercap:
-                return state.CurMP >= MP_OVERCAP_THRESHOLD;
+                return state.CurMP >= MpOvercapThreshold;
             case Strategy.MPUse.Delay:
                 return false;
             default:
@@ -345,24 +343,21 @@ public static class Rotation
         }
     }
 
-    private static bool ShouldUseBurst(State state, Strategy strategy) =>
-        state.RaidBuffsLeft > state.AnimationLock || strategy.RaidBuffsIn > 9000;
+    private static bool ShouldUseBurst(State state, Strategy strategy) => state.RaidBuffsLeft > state.AnimationLock || strategy.RaidBuffsIn > 9000;
 
-    private static bool ShouldUseBloodWeapon(State state, Strategy strategy) =>
-        strategy.BloodWeaponUse switch
-        {
-            CommonRotation.Strategy.OffensiveAbilityUse.Automatic => state.Blood < 50 || state.Delirium.Left > 0,
-            CommonRotation.Strategy.OffensiveAbilityUse.Force => true,
-            _ => false,
-        };
+    private static bool ShouldUseBloodWeapon(State state, Strategy strategy) => strategy.BloodWeaponUse switch
+    {
+        CommonRotation.Strategy.OffensiveAbilityUse.Automatic => state.Blood < 50 || state.Delirium.Left > 0,
+        CommonRotation.Strategy.OffensiveAbilityUse.Force => true,
+        _ => false,
+    };
 
-    private static bool ShouldUseDelirium(State state, Strategy strategy) =>
-        strategy.DeliriumUse switch
-        {
-            CommonRotation.Strategy.OffensiveAbilityUse.Automatic => state.Blood < 50 || state.BloodWeapon.Left > 0,
-            CommonRotation.Strategy.OffensiveAbilityUse.Force => true,
-            _ => false,
-        };
+    private static bool ShouldUseDelirium(State state, Strategy strategy) => strategy.DeliriumUse switch
+    {
+        CommonRotation.Strategy.OffensiveAbilityUse.Automatic => state.Blood < 50 || state.BloodWeapon.Left > 0,
+        CommonRotation.Strategy.OffensiveAbilityUse.Force => true,
+        _ => false,
+    };
 
     private static bool ShouldUsePlunge(State state, Strategy strategy)
     {

@@ -134,9 +134,6 @@ unsafe sealed class ActionManagerEx : IDisposable
     private delegate bool CancelStatusDelegate(uint statusId, uint sourceId);
     private readonly CancelStatusDelegate _cancelStatusFunc;
 
-    private delegate void SetGameObjectRotationDelegate(FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject* obj, float rotation);
-    private SetGameObjectRotationDelegate _setGameObjectRotationFunc;
-
     public ActionManagerEx()
     {
         InputOverride = new();
@@ -180,10 +177,6 @@ unsafe sealed class ActionManagerEx : IDisposable
         var cancelStatusAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 75 2C 48 8B 07");
         _cancelStatusFunc = Marshal.GetDelegateForFunctionPointer<CancelStatusDelegate>(cancelStatusAddress);
         Service.Log($"[AMEx] CancelStatus address = 0x{cancelStatusAddress:X}");
-
-        var setRotAddress = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 83 FE 4F");
-        _setGameObjectRotationFunc = Marshal.GetDelegateForFunctionPointer<SetGameObjectRotationDelegate>(setRotAddress);
-        Service.Log($"[AMEx] SetGameObjectRotation address = 0x{setRotAddress:X}");
     }
 
     public void Dispose()

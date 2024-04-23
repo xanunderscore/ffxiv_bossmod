@@ -1,5 +1,4 @@
 ﻿// CONTRIB: made by xan, not checked
-using System.Linq;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 
 namespace BossMod.MNK;
@@ -8,7 +7,7 @@ public static class Rotation
 {
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
-    static float SSSApplicationDelay = 0.62f;
+    private static readonly float SSSApplicationDelay = 0.62f;
 
     // full state needed for determining next action
     public class State(WorldState ws) : CommonRotation.PlayerState(ws)
@@ -164,7 +163,8 @@ public static class Rotation
 
         public FireStrategy FireUse;
 
-        public enum BlitzStrategy : uint {
+        public enum BlitzStrategy : uint
+        {
             // use when available
             Automatic = 0,
             [PropertyDisplay("Delay")]
@@ -174,7 +174,8 @@ public static class Rotation
         }
         public BlitzStrategy BlitzUse;
 
-        public enum DragonKickStrategy : uint {
+        public enum DragonKickStrategy : uint
+        {
             // standard rotation, use in opo-opo form to proc leaden fist
             Automatic = 0,
             [PropertyDisplay("Replace all GCDs unless Leaden Fist is active or Disciplined Fist will expire")]
@@ -370,7 +371,8 @@ public static class Rotation
                 return AID.ShadowOfTheDestroyer;
 
             if (strategy.NextNadi == Strategy.NadiChoice.SolarDowntime && state.PerfectBalanceLeft > 0)
-                return state.BeastCount switch {
+                return state.BeastCount switch
+                {
                     0 => AID.ShadowOfTheDestroyer,
                     1 => AID.FourPointFury,
                     2 => AID.Rockbreaker,
@@ -383,7 +385,7 @@ public static class Rotation
         if (state.RangeToTarget > 3 && strategy.DashUse == Strategy.DashStrategy.GapClose && state.CD(CDGroup.Thunderclap) <= 60 && state.Unlocked(AID.Thunderclap))
             return AID.Thunderclap;
 
-        if (state.Unlocked(AID.SixSidedStar) && strategy.SSSUse == Strategy.OffensiveAbilityUse.Force)
+        if (state.Unlocked(AID.SixSidedStar) && strategy.SSSUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return AID.SixSidedStar;
 
         if (strategy.UseSTQOpener && state.LostExcellenceLeft > 0 && state.FoPLeft == 0)
@@ -394,7 +396,7 @@ public static class Rotation
 
         // TODO: calculate optimal DK spam before SSS
         if (
-            strategy.SSSUse == Strategy.OffensiveAbilityUse.Automatic
+            strategy.SSSUse == CommonRotation.Strategy.OffensiveAbilityUse.Automatic
             && strategy.ActualFightEndIn < state.GCD + state.AttackGCDTime + SSSApplicationDelay
             && state.Unlocked(AID.SixSidedStar)
         )
@@ -465,9 +467,12 @@ public static class Rotation
             var hsacSlot = state.FindDutyActionSlot(hsac, fop);
             var exSlot = state.FindDutyActionSlot(ex, fop);
 
-            if (state.LostExcellenceLeft > 0) {
-                if (state.HsacLeft > 0) {
-                    if (state.FoPLeft > 0) {
+            if (state.LostExcellenceLeft > 0)
+            {
+                if (state.HsacLeft > 0)
+                {
+                    if (state.FoPLeft > 0)
+                    {
                         if (state.CanWeave(state.PotionCD, 0.6f, deadline))
                             return CommonDefinitions.IDPotionStr;
                     }
@@ -487,10 +492,12 @@ public static class Rotation
                 return ex;
         }
 
-        if (state.GCD <= 0.800f && ShouldUseRoF(state, strategy, deadline)) {
+        if (state.GCD <= 0.800f && ShouldUseRoF(state, strategy, deadline))
+        {
             // this is checked separately here because other functions (notably ShouldUsePB) make decisions
             // based on whether RoF is expected to be off cooldown by a given time
-            var shouldRoFDelayed = strategy.FireUse switch {
+            var shouldRoFDelayed = strategy.FireUse switch
+            {
                 Strategy.FireStrategy.DelayBeast1 => state.BeastCount >= 1,
                 Strategy.FireStrategy.DelayBeast2 => state.BeastCount >= 2,
                 Strategy.FireStrategy.DelayBeast3 => state.BeastCount == 3,
@@ -544,7 +551,8 @@ public static class Rotation
         if (state.PerfectBalanceLeft > state.GCD)
         {
             Strategy.FormChoice[] formOverrides = [strategy.PBForm1, strategy.PBForm2, strategy.PBForm3];
-            switch (formOverrides[state.BeastCount]) {
+            switch (formOverrides[state.BeastCount])
+            {
                 case Strategy.FormChoice.Opo:
                     return Form.OpoOpo;
                 case Strategy.FormChoice.Coeurl:
@@ -616,8 +624,10 @@ public static class Rotation
             return canOpo ? Form.OpoOpo : canCoeurl ? Form.Coeurl : Form.Raptor;
         }
 
-        if (state.FormShiftLeft > state.GCD) {
-            switch (strategy.FormShiftForm) {
+        if (state.FormShiftLeft > state.GCD)
+        {
+            switch (strategy.FormShiftForm)
+            {
                 case Strategy.FormChoice.Automatic:
                     break;
                 case Strategy.FormChoice.Coeurl:
@@ -637,17 +647,17 @@ public static class Rotation
         return state.Form;
     }
 
-    private static bool ShouldBlitz(State state, Strategy strategy) =>
-        state.DisciplinedFistLeft > state.GCD &&
-        (strategy.BlitzUse switch
+    private static bool ShouldBlitz(State state, Strategy strategy)
+        => state.DisciplinedFistLeft > state.GCD &&
+        strategy.BlitzUse switch
         {
             Strategy.BlitzStrategy.Delay => false,
             Strategy.BlitzStrategy.DelayUntilMultiTarget => strategy.NumBlitzTargets > 1 || state.BlitzLeft < state.AttackGCDTime,
             _ => true,
-        });
+        };
 
-    private static bool ShouldDKSpam(State state, Strategy strategy) =>
-        strategy.DragonKickUse switch
+    private static bool ShouldDKSpam(State state, Strategy strategy)
+        => strategy.DragonKickUse switch
         {
             Strategy.DragonKickStrategy.Filler => state.LeadenFistLeft == 0 && state.DisciplinedFistLeft > state.GCD,
             _ => false,
@@ -690,12 +700,12 @@ public static class Rotation
     {
         if (
             !state.Unlocked(AID.RiddleOfWind)
-            || strategy.WindUse == Strategy.OffensiveAbilityUse.Delay
+            || strategy.WindUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
             || !state.CanWeave(CDGroup.RiddleOfWind, 0.6f, deadline)
         )
             return false;
 
-        if (strategy.WindUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.WindUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
 
         if (!HaveTarget(state, strategy) || strategy.ActualFightEndIn < 15)
@@ -709,12 +719,12 @@ public static class Rotation
     {
         if (
             !state.Unlocked(AID.Brotherhood)
-            || strategy.BrotherhoodUse == Strategy.OffensiveAbilityUse.Delay
+            || strategy.BrotherhoodUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
             || !state.CanWeave(CDGroup.Brotherhood, 0.6f, deadline)
         )
             return false;
 
-        if (strategy.BrotherhoodUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.BrotherhoodUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
 
         if (!HaveTarget(state, strategy) || strategy.ActualFightEndIn < 15)
@@ -737,11 +747,11 @@ public static class Rotation
             state.PerfectBalanceLeft > 0
             || !state.Unlocked(AID.PerfectBalance)
             || !state.CanWeave(state.CD(CDGroup.PerfectBalance) - 40, 0.6f, deadline)
-            || strategy.PerfectBalanceUse == Strategy.OffensiveAbilityUse.Delay
+            || strategy.PerfectBalanceUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
         )
             return false;
 
-        if (strategy.PerfectBalanceUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.PerfectBalanceUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
 
         if (!HaveTarget(state, strategy) || strategy.ActualFightEndIn < state.GCD + state.AttackGCDTime * 3)
@@ -797,11 +807,11 @@ public static class Rotation
     private static bool ShouldUseTrueNorth(State state, Strategy strategy, float lastOgcdDeadline)
     {
         if (
-            strategy.TrueNorthUse == Strategy.OffensiveAbilityUse.Delay
+            strategy.TrueNorthUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
             || state.TrueNorthLeft > state.AnimationLock
         )
             return false;
-        if (strategy.TrueNorthUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.TrueNorthUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
         if (!HaveTarget(state, strategy))
             return false;
@@ -836,9 +846,11 @@ public static class Rotation
     // UseAOE is only true if enemies are in range
     public static bool HaveTarget(State state, Strategy strategy) => state.TargetingEnemy || strategy.UseAOE;
 
-    private static bool NeedDemolishRefresh(State state, Strategy strategy, int gcds) {
+    private static bool NeedDemolishRefresh(State state, Strategy strategy, int gcds)
+    {
         // don't care
-        if (strategy.UseAOE) return false;
+        if (strategy.UseAOE)
+            return false;
 
         if (strategy.DemolishUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
@@ -855,7 +867,8 @@ public static class Rotation
         return false;
     }
 
-    private static bool NeedDFRefresh(State state, Strategy strategy, int gcds) {
+    private static bool NeedDFRefresh(State state, Strategy strategy, int gcds)
+    {
         if (strategy.DisciplinedFistUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
 
@@ -865,8 +878,8 @@ public static class Rotation
         return WillStatusExpire(state, gcds, state.DisciplinedFistLeft);
     }
 
-    private static bool WillStatusExpire(State state, int gcds, float statusDuration) =>
-        statusDuration < state.GCD + (state.AttackGCDTime * gcds);
+    private static bool WillStatusExpire(State state, int gcds, float statusDuration)
+        => statusDuration < state.GCD + state.AttackGCDTime * gcds;
 
     private static bool CanSolar(State state, Strategy strategy) => strategy.NextNadi switch
     {

@@ -173,7 +173,8 @@ abstract class HealerActions(Autorotation autorot, Actor player, uint[] unlockDa
         return best;
     }
 
-    protected Actor? FindRaiseTarget() {
+    protected Actor? FindRaiseTarget()
+    {
         var party = Autorot
             .WorldState.Party.WithoutSlot(includeDead: true, partyOnly: true)
             .Where(x => (x.Position - Player.Position).Length() - x.HitboxRadius - Player.HitboxRadius <= 30);
@@ -203,8 +204,10 @@ abstract class HealerActions(Autorotation autorot, Actor player, uint[] unlockDa
 
     protected static bool IsHOT(uint sid)
     {
-        if ((WHM.SID)sid is WHM.SID.Medica2 or WHM.SID.Asylum or WHM.SID.Regen) return true;
-        if ((SGE.SID)sid is SGE.SID.PhysisII or SGE.SID.Kerakeia) return true;
+        if ((WHM.SID)sid is WHM.SID.Medica2 or WHM.SID.Asylum or WHM.SID.Regen)
+            return true;
+        if ((SGE.SID)sid is SGE.SID.PhysisII or SGE.SID.Kerakeia)
+            return true;
         return false;
     }
 

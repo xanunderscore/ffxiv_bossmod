@@ -253,8 +253,8 @@ public static class Definitions
         return res;
     }
 
-    public static Aspect Aspect(this AID action) =>
-        action switch
+    public static Aspect Aspect(this AID action)
+        => action switch
         {
             AID.Fire1
             or AID.Fire2

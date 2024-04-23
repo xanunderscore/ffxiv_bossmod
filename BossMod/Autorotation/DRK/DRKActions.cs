@@ -10,9 +10,9 @@ class Actions : TankActions
 
     private WPos _saltedEarthPosition;
 
-    private DRKConfig _config;
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
+    private readonly DRKConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -48,7 +48,7 @@ class Actions : TankActions
         _strategy.ApplyStrategyOverrides(
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
-                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0],
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? [],
             _config.AutomaticTBNFallback
         );
 
@@ -106,7 +106,8 @@ class Actions : TankActions
 
     protected override void QueueAIActions()
     {
-        if (_state.Unlocked(AID.Interject)) {
+        if (_state.Unlocked(AID.Interject))
+        {
             var interruptibleEnemy = Autorot.Hints.PotentialTargets.Find(e => e.ShouldBeInterrupted && (e.Actor.CastInfo?.Interruptible ?? false) && e.Actor.Position.InCircle(Player.Position, 3 + e.Actor.HitboxRadius + Player.HitboxRadius));
             SimulateManualActionForAI(ActionID.MakeSpell(AID.Interject), interruptibleEnemy?.Actor, interruptibleEnemy != null);
         }

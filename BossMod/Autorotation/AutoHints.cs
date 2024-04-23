@@ -27,10 +27,9 @@ public sealed class AutoHints : IDisposable
     public unsafe void CalculateAIHints(AIHints hints, WPos playerPos)
     {
         var fate = FateManager.Instance()->CurrentFate;
-        if (fate != null)
-            hints.Bounds = new ArenaBoundsCircle(new(fate->Location.X, fate->Location.Z), fate->Radius);
-        else
-            hints.Bounds = new ArenaBoundsSquare(playerPos, 30);
+        hints.Bounds = fate != null
+            ? new ArenaBoundsCircle(new(fate->Location.X, fate->Location.Z), fate->Radius)
+            : new ArenaBoundsSquare(playerPos, 30);
 
         foreach (var aoe in _activeAOEs.Values)
         {
@@ -46,11 +45,9 @@ public sealed class AutoHints : IDisposable
             }
         }
 
-        foreach (var enemy in hints.PotentialTargets) {
-            if (enemy.Actor.HP.Cur == 1) {
+        foreach (var enemy in hints.PotentialTargets)
+            if (enemy.Actor.HP.Cur == 1)
                 enemy.Priority = -1;
-            }
-        }
     }
 
     private void OnCastStarted(Actor actor)
