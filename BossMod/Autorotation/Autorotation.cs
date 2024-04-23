@@ -103,16 +103,16 @@ sealed class Autorotation : IDisposable
         {
             classType = player.Class switch
             {
-                Class.WAR => typeof(WAR.Actions),
-                Class.PLD => player.Level <= 60 ? typeof(PLD.Actions) : null,
-                Class.MNK => typeof(MNK.Actions),
+                Class.WAR or Class.MRD => typeof(WAR.Actions),
+                Class.PLD or Class.GLA => player.Level <= 60 ? typeof(PLD.Actions) : null,
+                Class.MNK or Class.PGL => typeof(MNK.Actions),
                 Class.MCH => typeof(MCH.Actions),
-                Class.DRG => typeof(DRG.Actions),
-                Class.BRD => typeof(BRD.Actions),
-                Class.BLM => typeof(BLM.Actions),
+                Class.DRG or Class.LNC => typeof(DRG.Actions),
+                Class.BRD or Class.ARC => typeof(BRD.Actions),
+                Class.BLM or Class.THM => typeof(BLM.Actions),
                 Class.RDM => typeof(RDM.Actions),
                 Class.BLU => typeof(BLU.Actions),
-                Class.SMN => Service.ClientState.LocalPlayer?.Level <= 30 ? typeof(SMN.Actions) : null,
+                Class.SMN or Class.ACN => Service.ClientState.LocalPlayer?.Level <= 30 ? typeof(SMN.Actions) : null,
                 Class.WHM => typeof(WHM.Actions),
                 Class.SCH => typeof(SCH.Actions),
                 Class.RPR => typeof(RPR.Actions),
