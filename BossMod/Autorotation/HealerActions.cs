@@ -3,7 +3,7 @@
 namespace BossMod;
 
 // extra utilities for healers
-abstract class HealerActions : CommonActions
+abstract class HealerActions(Autorotation autorot, Actor player, uint[] unlockData, Dictionary<ActionID, ActionDefinition> supportedActions) : CommonActions(autorot, player, unlockData, supportedActions)
 {
     public struct PartyMemberState
     {
@@ -15,18 +15,8 @@ abstract class HealerActions : CommonActions
     }
 
     protected bool AllowProtect { get; private set; }
-    protected PartyMemberState[] PartyMemberStates { get; private set; } = new PartyMemberState[PartyState.MaxPartySize];
-
+    protected readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
     protected Actor? RaiseTarget { get; private set; }
-
-    protected HealerActions(Autorotation autorot, Actor player, uint[] unlockData, Dictionary<ActionID, ActionDefinition> supportedActions)
-        : base(autorot, player, unlockData, supportedActions)
-    {
-    }
-
-    public override void Dispose()
-    {
-    }
 
     protected override void UpdateInternalState(int autoAction)
     {
@@ -248,7 +238,7 @@ abstract class HealerActions : CommonActions
             case (uint)WHM.AID.Cure3:
                 res = ws.Party.WithSlot().InRadius((ws.Actors.Find(a.CastInfo.TargetID) ?? a).Position, 20).Mask();
                 break;
-        };
+        }
         return res;
     }
 

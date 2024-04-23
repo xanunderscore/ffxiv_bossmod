@@ -5,71 +5,46 @@ namespace BossMod;
 
 public static class PlanDefinitions
 {
-    public class CooldownTrack
+    public class CooldownTrack(string name, (ActionID aid, int minLevel)[] actions)
     {
-        public string Name;
-        public (ActionID aid, int minLevel)[] Actions;
+        public string Name = name;
+        public (ActionID aid, int minLevel)[] Actions = actions;
 
-        public CooldownTrack(string name, (ActionID aid, int minLevel)[] actions)
-        {
-            Name = name;
-            Actions = actions;
-        }
-
-        public CooldownTrack(string name, ActionID aid, int minLevel)
-        {
-            Name = name;
-            Actions = new[] { (aid, minLevel) };
-        }
+        public CooldownTrack(string name, ActionID aid, int minLevel) : this(name, [(aid, minLevel)]) { }
     }
 
-    public class StrategyTrack
+    public class StrategyTrack(string name, Type? values = null, float cooldown = 0)
     {
-        public string Name;
-        public Type? Values;
-        public float Cooldown;
-
-        public StrategyTrack(string name, Type? values = null, float cooldown = 0)
-        {
-            Name = name;
-            Values = values;
-            Cooldown = cooldown;
-        }
+        public string Name = name;
+        public Type? Values = values;
+        public float Cooldown = cooldown;
     }
 
-    public class ClassData
+    public class ClassData(Type aidType, Dictionary<ActionID, ActionDefinition> supportedActions)
     {
-        public Type AIDType;
-        public Dictionary<ActionID, ActionDefinition> Abilities;
-        public List<CooldownTrack> CooldownTracks = new();
-        public List<StrategyTrack> StrategyTracks = new();
-
-        public ClassData(Type aidType, Dictionary<ActionID, ActionDefinition> supportedActions)
-        {
-            AIDType = aidType;
-            Abilities = supportedActions;
-        }
+        public Type AIDType = aidType;
+        public Dictionary<ActionID, ActionDefinition> Abilities = supportedActions;
+        public List<CooldownTrack> CooldownTracks = [];
+        public List<StrategyTrack> StrategyTracks = [];
     }
 
-    public static Dictionary<Class, ClassData> Classes = new();
-
-    static PlanDefinitions()
+    public static readonly Dictionary<Class, ClassData> Classes = new()
     {
-        Classes[Class.WAR] = DefineWAR();
-        Classes[Class.PLD] = DefinePLD();
-        Classes[Class.DRK] = DefineDRK();
-        Classes[Class.WHM] = DefineWHM();
-        Classes[Class.SCH] = DefineSCH();
-        Classes[Class.SGE] = DefineSGE();
-        Classes[Class.DRG] = DefineDRG();
-        Classes[Class.MNK] = DefineMNK();
-        Classes[Class.BRD] = DefineBRD();
-        Classes[Class.DNC] = DefineDNC();
-        Classes[Class.BLM] = DefineBLM();
-        Classes[Class.RPR] = DefineRPR();
-        Classes[Class.GNB] = DefineGNB();
-        Classes[Class.SAM] = DefineSAM();
-    }
+        [Class.WAR] = DefineWAR(),
+        [Class.PLD] = DefinePLD(),
+        [Class.DRK] = DefineDRK(),
+        [Class.WHM] = DefineWHM(),
+        [Class.SCH] = DefineSCH(),
+        [Class.SGE] = DefineSGE(),
+        [Class.DRG] = DefineDRG(),
+        [Class.MNK] = DefineMNK(),
+        [Class.BRD] = DefineBRD(),
+        [Class.DNC] = DefineDNC(),
+        [Class.BLM] = DefineBLM(),
+        [Class.RPR] = DefineRPR(),
+        [Class.GNB] = DefineGNB(),
+        [Class.SAM] = DefineSAM()
+    };
 
     private static ClassData DefineWAR()
     {
@@ -96,7 +71,6 @@ public static class PlanDefinitions
         c.StrategyTracks.Add(new("Special", typeof(WAR.Rotation.Strategy.SpecialAction)));
         return c;
     }
-
 
     private static ClassData DefinePLD()
     {

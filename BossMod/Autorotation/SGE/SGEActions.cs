@@ -25,10 +25,10 @@ class Actions : HealerActions
         OnConfigModified();
     }
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
         _config.Modified -= OnConfigModified;
-        base.Dispose();
+        base.Dispose(disposing);
     }
 
     public override CommonRotation.PlayerState GetState() => _state;

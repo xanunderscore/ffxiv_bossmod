@@ -82,9 +82,10 @@ class Actions : CommonActions
         }
     }
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
         _config.Modified -= OnConfigModified;
+        base.Dispose(disposing);
     }
 
     protected override void UpdateInternalState(int autoAction)

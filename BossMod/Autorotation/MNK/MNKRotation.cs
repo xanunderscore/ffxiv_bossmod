@@ -11,7 +11,7 @@ public static class Rotation
     static float SSSApplicationDelay = 0.62f;
 
     // full state needed for determining next action
-    public class State : CommonRotation.PlayerState
+    public class State(WorldState ws) : CommonRotation.PlayerState(ws)
     {
         public int Chakra; // 0-5
         public BeastChakra[] BeastChakra = [];
@@ -66,8 +66,6 @@ public static class Rotation
                 return AID.CelestialRevolution;
             }
         }
-
-        public State(WorldState ws) : base(ws) { }
 
         public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
         public bool Unlocked(TraitID tid) => Definitions.Unlocked(tid, Level, UnlockProgress);
@@ -441,7 +439,7 @@ public static class Rotation
     {
         // TODO: potion
 
-        if (strategy.CombatTimer < 0 && strategy.CombatTimer > -100)
+        if (strategy.CombatTimer is < 0 and > -100)
         {
             if (
                 strategy.CombatTimer > -0.2

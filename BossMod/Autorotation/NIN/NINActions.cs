@@ -43,9 +43,10 @@ class Actions : CommonActions
 
     public override CommonRotation.Strategy GetStrategy() => _strategy;
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
         _config.Modified -= OnConfigModified;
+        base.Dispose(disposing);
     }
 
     protected override NextAction CalculateAutomaticGCD()

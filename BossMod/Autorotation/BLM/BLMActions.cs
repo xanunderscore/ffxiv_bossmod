@@ -9,9 +9,9 @@ class Actions : CommonActions
     public const int AutoActionFiller = AutoActionFirstCustom + 2;
     public const int AutoActionLFS = AutoActionFirstCustom + 3;
 
-    private BLMConfig _config;
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
+    private readonly BLMConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
     private DateTime _lastManaTick;
     private uint _prevMP;
 
@@ -32,9 +32,10 @@ class Actions : CommonActions
         OnConfigModified();
     }
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
         _config.Modified -= OnConfigModified;
+        base.Dispose(disposing);
     }
 
     public override CommonRotation.PlayerState GetState() => _state;

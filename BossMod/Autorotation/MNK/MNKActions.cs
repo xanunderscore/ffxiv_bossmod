@@ -10,9 +10,9 @@ class Actions : CommonActions
     public const int AutoActionFiller = AutoActionFirstCustom + 2;
     public const int AutoActionSTQOpener = AutoActionFirstCustom + 3;
 
-    private MNKConfig _config;
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
+    private readonly MNKConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -33,9 +33,10 @@ class Actions : CommonActions
         OnConfigModified();
     }
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
         _config.Modified -= OnConfigModified;
+        base.Dispose(disposing);
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -58,13 +59,12 @@ class Actions : CommonActions
         UpdatePlayerState();
         FillCommonStrategy(_strategy, CommonDefinitions.IDPotionStr);
         _strategy.NumBlitzTargets = NumTargetsHitByBlitz();
+        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []);
         _strategy.NumPointBlankAOETargets = autoAction == AutoActionST ? 0 : NumTargetsHitByPBAOE();
         _strategy.NumEnlightenmentTargets = Autorot.PrimaryTarget != null && autoAction != AutoActionST && _state.Unlocked(AID.HowlingFist) ? NumTargetsHitByEnlightenment(Autorot.PrimaryTarget) : 0;
 
         _strategy.UseAOE = _strategy.NumPointBlankAOETargets >= 3;
         _strategy.UseSTQOpener = autoAction == AutoActionSTQOpener;
-
-        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
 
         if (autoAction == AutoActionFiller)
         {
