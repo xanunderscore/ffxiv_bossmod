@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
+using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.SCH;
 
@@ -68,7 +68,7 @@ class Actions : HealerActions
     protected override NextAction CalculateAutomaticGCD()
     {
         // TODO: rework, implement non-ai...
-        if (_state.Unlocked(AID.SummonSelene) && _state.Fairy == null)
+        if (_state.Unlocked(AID.SummonSelene) && _state.Fairy == null && _state.DissipationLeft == 0)
             return MakeResult(_config.PreferSelene ? AID.SummonSelene : AID.SummonEos, Player);
 
         // AI: aoe heals > st heals > esuna > damage
@@ -95,7 +95,7 @@ class Actions : HealerActions
             return MakeResult(AID.Adloquium, preshieldTarget);
 
         // finally perform damage rotation
-        if (_state.CurMP > 3000 && Autorot.PrimaryTarget != null)
+        if (_state.CurMP > 3000 && _state.TargetingEnemy)
             return MakeResult(Rotation.GetNextBestDamageGCD(_state, _strategy), Autorot.PrimaryTarget);
 
         return new(); // chill
@@ -172,6 +172,7 @@ class Actions : HealerActions
 
         _state.SwiftcastLeft = StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
         _state.TargetBioLeft = StatusDetails(Autorot.PrimaryTarget, _state.ExpectedBio, Player.InstanceID).Left;
+        _state.DissipationLeft = StatusDetails(Player, SID.Dissipation, Player.InstanceID).Left;
     }
 
     private bool WithoutDOT(Actor a) => Rotation.RefreshDOT(_state, StatusDetails(a, _state.ExpectedBio, Player.InstanceID).Left);
@@ -186,6 +187,6 @@ class Actions : HealerActions
         SupportedSpell(AID.Physick).TransformTarget = SupportedSpell(AID.Adloquium).TransformTarget = SupportedSpell(AID.Lustrate).TransformTarget
             = SupportedSpell(AID.DeploymentTactics).TransformTarget = SupportedSpell(AID.Excogitation).TransformTarget = SupportedSpell(AID.Aetherpact).TransformTarget
             = SupportedSpell(AID.Resurrection).TransformTarget = SupportedSpell(AID.Esuna).TransformTarget = SupportedSpell(AID.Rescue).TransformTarget
-            = _config.MouseoverFriendly ? SmartTargetFriendly : null;
+            = _config.MouseoverFriendly ? SmartTargetFriendlyOrSelf : null;
     }
 }

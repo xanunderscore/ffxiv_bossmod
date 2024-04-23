@@ -129,12 +129,24 @@ public enum SID : uint
     None = 0,
     Bio1 = 179, // applied by Bio1 to target, dot
     Bio2 = 189, // applied by Bio2 to target, dot
-    Biolysis = 0xFFFFFF, // TODO!
-    Galvanize = 297, // applied by Adloquium to target, shield
+    Biolysis = 1895, // applied by Biolysis to target
+    Galvanize = 297, // applied by Succor, Adloquium to self
+    Sprint = 50, // applied by Sprint to self
+    SacredSoil = 1944, // applied by Sacred Soil to self
+    DesperateMeasures = 2711, // applied by Expedient to self
+    Expedience = 2712, // applied by Expedient to self
+    Protraction = 2710, // applied by Protraction to self
+    Recitation = 1896, // applied by Recitation to self
+    Catalyze = 1918, // applied by Adloquium to self
+    EmergencyTactics = 792, // applied by Emergency Tactics to self
+    Dissipation = 791, // applied by Dissipation to self
+    ChainStratagem = 1221, // applied by Chain Stratagem to target
+    Excogitation = 1220, // applied by Excogitation to self
     LucidDreaming = 1204, // applied by Lucid Dreaming to self
     Swiftcast = 167, // applied by Swiftcast to self
     Sleep = 3, // applied by Repose to target
 }
+
 
 public static class Definitions
 {

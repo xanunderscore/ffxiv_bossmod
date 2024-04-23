@@ -1,4 +1,4 @@
-﻿namespace BossMod.SCH;
+namespace BossMod.SCH;
 
 public static class Rotation
 {
@@ -9,6 +9,7 @@ public static class Rotation
         public int AetherflowStacks; // 3 max
         public float SwiftcastLeft; // 0 if buff not up, max 10
         public float TargetBioLeft; // 0 if debuff not up, max 30
+        public float DissipationLeft; // 30 max
 
         // upgrade paths
         public AID BestBroil => Unlocked(AID.Broil4) ? AID.Broil4 : Unlocked(AID.Broil3) ? AID.Broil3 : Unlocked(AID.Broil2) ? AID.Broil2 : Unlocked(AID.Broil1) ? AID.Broil1 : AID.Ruin1;
