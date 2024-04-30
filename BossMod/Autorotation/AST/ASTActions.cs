@@ -11,9 +11,9 @@ class Actions : HealerActions
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
     public const int AutoActionFiller = AutoActionFirstCustom + 1;
 
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
-    private ASTConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
+    private readonly ConfigListener<ASTConfig> _config;
 
     private WPos _starPos;
     private Actor? _autoRaiseTarget;
@@ -21,7 +21,7 @@ class Actions : HealerActions
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<ASTConfig>();
+        _config = Service.Config.GetAndSubscribe<ASTConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
@@ -30,9 +30,6 @@ class Actions : HealerActions
         SupportedSpell(AID.EarthlyStar).TransformAction = () => ActionID.MakeSpell(_state.BestStar);
         SupportedSpell(AID.Macrocosmos).TransformAction = () => ActionID.MakeSpell(_state.BestCosmos);
         SupportedSpell(AID.Horoscope).TransformAction = () => ActionID.MakeSpell(_state.BestHoroscope);
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -41,7 +38,7 @@ class Actions : HealerActions
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -55,14 +52,14 @@ class Actions : HealerActions
                 initial,
                 25,
                 e =>
-                    Autorot.Hints.NumPriorityTargetsInAOECircle(e.Actor.Position, 5) * 1000000 + (int)e.Actor.HP.Cur
+                    Autorot.Hints.NumPriorityTargetsInAOECircle(e.Actor.Position, 5) * 1000000 + (int)e.Actor.HPMP.CurHP
             ).Target;
         return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
     }
 
     protected override NextAction CalculateAutomaticGCD()
     {
-        if (_config.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
+        if (_config.Data.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
         {
             var esunaTarget = FindEsunaTarget();
             if (esunaTarget != null)
@@ -71,10 +68,10 @@ class Actions : HealerActions
 
         if (_autoRaiseTarget != null && _state.Unlocked(AID.Ascend))
         {
-            if (_config.AutoRaise == ASTConfig.RaiseBehavior.Auto && _state.SwiftcastLeft > _state.GCD)
+            if (_config.Data.AutoRaise == ASTConfig.RaiseBehavior.Auto && _state.SwiftcastLeft > _state.GCD)
                 return MakeResult(AID.Ascend, _autoRaiseTarget);
 
-            if (_config.AutoRaise == ASTConfig.RaiseBehavior.AutoSlow)
+            if (_config.Data.AutoRaise == ASTConfig.RaiseBehavior.AutoSlow)
                 return MakeResult(AID.Ascend, _autoRaiseTarget);
         }
 
@@ -131,7 +128,7 @@ class Actions : HealerActions
         _strategy.ApplyStrategyOverrides(
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
-                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
         );
 
         _strategy.NumBigAOETargets = Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 20);
@@ -190,33 +187,33 @@ class Actions : HealerActions
             Player.InstanceID
         ).Left;
 
-        _autoRaiseTarget = _config.AutoRaise is ASTConfig.RaiseBehavior.Auto or ASTConfig.RaiseBehavior.AutoSlow
+        _autoRaiseTarget = _config.Data.AutoRaise is ASTConfig.RaiseBehavior.Auto or ASTConfig.RaiseBehavior.AutoSlow
             ? FindRaiseTarget()
             : null;
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(ASTConfig config)
     {
         SupportedSpell(AID.Malefic).PlaceholderForAuto =
             SupportedSpell(AID.MaleficII).PlaceholderForAuto =
             SupportedSpell(AID.MaleficIII).PlaceholderForAuto =
             SupportedSpell(AID.MaleficIV).PlaceholderForAuto =
             SupportedSpell(AID.FallMalefic).PlaceholderForAuto =
-                _config.FullRotation ? AutoActionST : AutoActionNone;
+                config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.Gravity).PlaceholderForAuto = SupportedSpell(AID.GravityII).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionAOE : AutoActionNone;
+            config.FullRotation ? AutoActionAOE : AutoActionNone;
         SupportedSpell(AID.Combust).PlaceholderForAuto =
             SupportedSpell(AID.CombustII).PlaceholderForAuto =
             SupportedSpell(AID.CombustIII).PlaceholderForAuto =
-                _config.FullRotation ? AutoActionFiller : AutoActionNone;
+                config.FullRotation ? AutoActionFiller : AutoActionNone;
 
         SupportedSpell(AID.Synastry).TransformTarget =
-            _config.Mouseover ? (tar) => Autorot.SecondaryTarget ?? tar : null;
+            config.Mouseover ? (tar) => Autorot.SecondaryTarget ?? tar : null;
 
         SupportedSpell(AID.Ascend).TransformTarget =
-            _config.AutoRaise == ASTConfig.RaiseBehavior.SmartManual
+            config.AutoRaise == ASTConfig.RaiseBehavior.SmartManual
                 ? ((act) => Autorot.SecondaryTarget ?? FindRaiseTarget())
-                : _config.Mouseover
+                : config.Mouseover
                     ? SmartTargetFriendly
                     : null;
 
@@ -227,27 +224,27 @@ class Actions : HealerActions
             SupportedSpell(AID.Exaltation).TransformTarget =
             SupportedSpell(AID.CelestialIntersection).TransformTarget =
             SupportedSpell(AID.Esuna).TransformTarget =
-                _config.Mouseover ? SmartTargetFriendlyOrSelf : null;
+                config.Mouseover ? SmartTargetFriendlyOrSelf : null;
 
         SupportedSpell(AID.TheBalance).TransformTarget =
             SupportedSpell(AID.TheArrow).TransformTarget =
             SupportedSpell(AID.TheSpear).TransformTarget =
-                _config.SmartCard
+                config.SmartCard
                     ? (tar) => SmartCardTarget(tar, MeleePriority)
-                    : _config.Mouseover
+                    : config.Mouseover
                         ? SmartTargetFriendlyOrSelf
                         : null;
 
         SupportedSpell(AID.TheBole).TransformTarget =
             SupportedSpell(AID.TheEwer).TransformTarget =
             SupportedSpell(AID.TheSpire).TransformTarget =
-                _config.SmartCard
+                config.SmartCard
                     ? (tar) => SmartCardTarget(tar, RangedPriority)
-                    : _config.Mouseover
+                    : config.Mouseover
                         ? SmartTargetFriendlyOrSelf
                         : null;
 
-        SupportedSpell(AID.EarthlyStar).TransformPosition = _config.SmartStar switch
+        SupportedSpell(AID.EarthlyStar).TransformPosition = config.SmartStar switch
         {
             ASTConfig.StarLocation.Target => () => Autorot.PrimaryTarget?.PosRot.XYZ(),
             ASTConfig.StarLocation.Self => () => Player.PosRot.XYZ(),
@@ -278,8 +275,8 @@ class Actions : HealerActions
     // 6m
     // melee: SAM -> NIN -> DRK -> MNK -> DRG -> RPR
     // ranged: BLM -> DNC -> SMN -> MCH -> BRD -> RDM
-    private Actor? SmartCardTarget(Actor? primaryTarget, Func<Class, int> prioFunc) =>
-        SmartTargetFriendly(primaryTarget)
+    private Actor? SmartCardTarget(Actor? primaryTarget, Func<Class, int> prioFunc)
+        => SmartTargetFriendly(primaryTarget)
         ?? Autorot.WorldState.Party.WithoutSlot(false, true).MaxBy(act => CardPriority(act, prioFunc));
 
     private static int CardPriority(Actor act, Func<Class, int> prioFunc)
@@ -309,8 +306,8 @@ class Actions : HealerActions
         return prio;
     }
 
-    private static int MeleePriority(Class c) =>
-        c switch
+    private static int MeleePriority(Class c)
+        => c switch
         {
             Class.SAM => 100,
             Class.NIN or Class.ROG => 99,
@@ -322,8 +319,8 @@ class Actions : HealerActions
             _ => 0
         };
 
-    private static int RangedPriority(Class c) =>
-        c switch
+    private static int RangedPriority(Class c)
+        => c switch
         {
             Class.BLM or Class.THM => 100,
             Class.SMN or Class.ACN => 99,
@@ -334,8 +331,8 @@ class Actions : HealerActions
             _ => 0
         };
 
-    private static bool HasCardBuff(Actor act) =>
-        act.Statuses.Any(
+    private static bool HasCardBuff(Actor act)
+        => act.Statuses.Any(
             x =>
                 (SID)x.ID
                     is SID.TheArrow

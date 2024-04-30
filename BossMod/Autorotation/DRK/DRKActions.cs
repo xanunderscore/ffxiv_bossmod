@@ -10,14 +10,14 @@ class Actions : TankActions
 
     private WPos _saltedEarthPosition;
 
-    private readonly DRKConfig _config;
+    private readonly ConfigListener<DRKConfig> _config;
     private readonly Rotation.State _state;
     private readonly Rotation.Strategy _strategy;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<DRKConfig>();
+        _config = Service.Config.GetAndSubscribe<DRKConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
@@ -25,14 +25,11 @@ class Actions : TankActions
         SupportedSpell(AID.Oblation).Condition = (tar) => tar?.FindStatus((uint)SID.Oblation) == null;
         SupportedSpell(AID.Grit).TransformAction = SupportedSpell(AID.ReleaseGrit).TransformAction = () =>
             ActionID.MakeSpell(_state.HaveTankStance ? AID.ReleaseGrit : AID.Grit);
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -49,10 +46,10 @@ class Actions : TankActions
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
                 ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? [],
-            _config.AutomaticTBNFallback
+            _config.Data.AutomaticTBNFallback
         );
 
-        if (!_config.AutoPlunge)
+        if (!_config.Data.AutoPlunge)
             _strategy.PlungeStrategy = Rotation.Strategy.PlungeUse.Delay;
 
         _strategy.NumSaltTargets = Autorot.Hints.NumPriorityTargetsInAOECircle(
@@ -140,13 +137,13 @@ class Actions : TankActions
         return MakeResult(res, Autorot.PrimaryTarget);
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(DRKConfig config)
     {
-        SupportedSpell(AID.HardSlash).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
-        SupportedSpell(AID.Unleash).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+        SupportedSpell(AID.HardSlash).PlaceholderForAuto = config.FullRotation ? AutoActionST : AutoActionNone;
+        SupportedSpell(AID.Unleash).PlaceholderForAuto = config.FullRotation ? AutoActionAOE : AutoActionNone;
 
-        SupportedSpell(AID.Shirk).TransformTarget = _config.SmartTargetShirk ? SmartTargetCoTank : null;
+        SupportedSpell(AID.Shirk).TransformTarget = config.SmartTargetShirk ? SmartTargetCoTank : null;
         SupportedSpell(AID.TheBlackestNight).TransformTarget = SupportedSpell(AID.Oblation).TransformTarget =
-            _config.SmartTargetFriendly ? SmartTargetFriendlyOrSelf : null;
+            config.SmartTargetFriendly ? SmartTargetFriendlyOrSelf : null;
     }
 }

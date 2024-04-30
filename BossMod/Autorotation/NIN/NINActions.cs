@@ -12,9 +12,9 @@ class Actions : CommonActions
     public const int AutoActionST = AutoActionFirstCustom + 0;
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
-    private NINConfig _config;
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
+    private readonly ConfigListener<NINConfig> _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
 
     private WPos _lastDotonPos;
 
@@ -23,7 +23,7 @@ class Actions : CommonActions
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<NINConfig>();
+        _config = Service.Config.GetAndSubscribe<NINConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
@@ -34,9 +34,6 @@ class Actions : CommonActions
         SupportedSpell(AID.Jin).TransformAction = SupportedSpell(AID.Jin2).TransformAction = () =>
             ActionID.MakeSpell(_state.BestJin);
         SupportedSpell(AID.Ninjutsu).TransformAction = () => ActionID.MakeSpell(_state.CurrentNinjutsu);
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -45,7 +42,7 @@ class Actions : CommonActions
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -86,7 +83,7 @@ class Actions : CommonActions
         _strategy.ApplyStrategyOverrides(
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
-                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
         );
 
         FillStrategyPositionals(
@@ -96,7 +93,7 @@ class Actions : CommonActions
         );
 
         var isSTMode =
-            autoAction == AutoActionST || (autoAction == AutoActionAIFight && Utils.IsBoss(Autorot.PrimaryTarget));
+            autoAction == AutoActionST || autoAction == AutoActionAIFight && Utils.IsBoss(Autorot.PrimaryTarget);
 
         _strategy.NumPointBlankAOETargets = isSTMode
             ? 0
@@ -148,7 +145,7 @@ class Actions : CommonActions
         _state.TrueNorthLeft = StatusDetails(Player, SID.TrueNorth, Player.InstanceID).Left;
     }
 
-    protected override void OnActionExecuted(ClientActionRequest request)
+    protected override void OnActionExecuted(in ClientActionRequest request)
     {
         // prevent instant auto hide if the user inputs a mudra manually
         // the mudra CD (which is how we check for missing charges) increases before the status is applied, even the pending one
@@ -192,19 +189,19 @@ class Actions : CommonActions
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.SecondWind),
                 Player,
-                Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.5f && useAIActions
+                Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.5f && useAIActions
             );
         if (_state.Unlocked(AID.Bloodbath))
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.Bloodbath),
                 Player,
-                Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f && useAIActions
+                Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8f && useAIActions
             );
         if (_state.Unlocked(AID.ShadeShift))
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.ShadeShift),
                 Player,
-                Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.8f && useAIActions
+                Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8f && useAIActions
             );
         if (_state.Unlocked(AID.Ten))
             SimulateManualActionForAI(
@@ -214,12 +211,12 @@ class Actions : CommonActions
             );
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(NINConfig config)
     {
-        SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
-        SupportedSpell(AID.DeathBlossom).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+        SupportedSpell(AID.SpinningEdge).PlaceholderForAuto = config.FullRotation ? AutoActionST : AutoActionNone;
+        SupportedSpell(AID.DeathBlossom).PlaceholderForAuto = config.FullRotation ? AutoActionAOE : AutoActionNone;
 
-        _strategy.AutoHide = _config.AutoHide;
-        _strategy.AutoUnhide = _config.AutoUnhide;
+        _strategy.AutoHide = config.AutoHide;
+        _strategy.AutoUnhide = config.AutoUnhide;
     }
 }

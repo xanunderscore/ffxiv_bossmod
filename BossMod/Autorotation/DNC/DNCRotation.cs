@@ -360,10 +360,10 @@ public static class Rotation
 
     private static bool ShouldSpendFeathers(State state, Strategy strategy)
     {
-        if (state.Feathers == 0 || strategy.FeatherUse == Strategy.OffensiveAbilityUse.Delay)
+        if (state.Feathers == 0 || strategy.FeatherUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay)
             return false;
 
-        if (state.Feathers == 4 || strategy.FeatherUse == Strategy.OffensiveAbilityUse.Force || !state.Unlocked(AID.TechnicalStep))
+        if (state.Feathers == 4 || strategy.FeatherUse == CommonRotation.Strategy.OffensiveAbilityUse.Force || !state.Unlocked(AID.TechnicalStep))
             return true;
 
         return state.TechFinishLeft > state.AnimationLock;
@@ -373,12 +373,12 @@ public static class Rotation
     {
         if (
             state.Esprit < 50
-            || strategy.GaugeUse == Strategy.OffensiveAbilityUse.Delay
+            || strategy.GaugeUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
             || !state.Unlocked(AID.SaberDance)
         )
             return false;
 
-        if (strategy.GaugeUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.GaugeUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
 
         return state.Esprit >= minimumEsprit && strategy.NumRangedAOETargets > 0;

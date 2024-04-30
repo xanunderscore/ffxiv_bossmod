@@ -68,7 +68,7 @@ class Actions : CommonActions
         _strategy.ApplyStrategyOverrides(
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
-                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
         );
 
         if (autoAction == AutoActionFiller)
@@ -76,6 +76,9 @@ class Actions : CommonActions
             _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
         }
+
+        if (_config.Data.AutoLeylines is BLMConfig.AutoLL.None)
+            _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
     }
 
     protected override void QueueAIActions()
@@ -209,8 +212,8 @@ class Actions : CommonActions
         _strategy.AutoRefresh = config.AutoIceRefresh;
     }
 
-    private int NumTargetsHitByAOE(Actor primary) =>
-        Autorot.Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
+    private int NumTargetsHitByAOE(Actor primary)
+        => Autorot.Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
 
     private bool ShouldAITranspose()
     {

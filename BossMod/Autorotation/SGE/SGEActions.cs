@@ -8,24 +8,21 @@ class Actions : HealerActions
     public const int AutoActionST = AutoActionFirstCustom + 0;
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
-    private readonly SGEConfig _config;
+    private readonly ConfigListener<SGEConfig> _config;
     private readonly Rotation.State _state;
     private readonly Rotation.Strategy _strategy;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<SGEConfig>();
+        _config = Service.Config.GetAndSubscribe<SGEConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -86,7 +83,7 @@ class Actions : HealerActions
         if (shieldGcd != default)
             return shieldGcd;
 
-        if (_config.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
+        if (_config.Data.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
         {
             var esunaTarget = FindEsunaTarget();
             if (esunaTarget != null)
@@ -95,10 +92,10 @@ class Actions : HealerActions
 
         if (_autoRaiseTarget != null && _state.Unlocked(AID.Egeiro))
         {
-            if (_config.AutoRaise == SGEConfig.RaiseBehavior.Auto && _state.SwiftcastLeft > _state.GCD)
+            if (_config.Data.AutoRaise == SGEConfig.RaiseBehavior.Auto && _state.SwiftcastLeft > _state.GCD)
                 return MakeResult(AID.Egeiro, _autoRaiseTarget);
 
-            if (_config.AutoRaise == SGEConfig.RaiseBehavior.AutoSlow)
+            if (_config.Data.AutoRaise == SGEConfig.RaiseBehavior.AutoSlow)
                 return MakeResult(AID.Egeiro, _autoRaiseTarget);
         }
 
@@ -162,7 +159,7 @@ class Actions : HealerActions
 
         if (
             !ogcd
-            && _config.PreventGallOvercap
+            && _config.Data.PreventGallOvercap
             && (_state.Gall == 3 || _state.Gall == 2 && _state.NextGall < 2.5)
             && _state.CurMP <= 9000
         )
@@ -178,23 +175,23 @@ class Actions : HealerActions
         var gauge = Service.JobGauges.Get<SGEGauge>();
         _state.Gall = gauge.Addersgall;
         _state.Sting = gauge.Addersting;
-        _state.NextGall = MathF.Max(0, 20f - (gauge.AddersgallTimer / 1000f));
+        _state.NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
         _state.Eukrasia = gauge.Eukrasia;
 
         _state.SwiftcastLeft = StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
         _state.TargetDotLeft = StatusDetails(Autorot.PrimaryTarget, _state.ExpectedEudosis, Player.InstanceID).Left;
 
-        _autoRaiseTarget = _config.AutoRaise is SGEConfig.RaiseBehavior.Auto or SGEConfig.RaiseBehavior.AutoSlow
+        _autoRaiseTarget = _config.Data.AutoRaise is SGEConfig.RaiseBehavior.Auto or SGEConfig.RaiseBehavior.AutoSlow
             ? FindRaiseTarget()
             : null;
-        _kardiaTarget = _config.AutoKardia ? FindKardiaTarget() : null;
+        _kardiaTarget = _config.Data.AutoKardia ? FindKardiaTarget() : null;
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(SGEConfig config)
     {
         // placeholders
-        SupportedSpell(AID.Dosis).PlaceholderForAuto = _config.FullRotation ? AutoActionST : AutoActionNone;
-        SupportedSpell(AID.Dyskrasia).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+        SupportedSpell(AID.Dosis).PlaceholderForAuto = config.FullRotation ? AutoActionST : AutoActionNone;
+        SupportedSpell(AID.Dyskrasia).PlaceholderForAuto = config.FullRotation ? AutoActionAOE : AutoActionNone;
 
         // smart targets
         SupportedSpell(AID.Diagnosis).TransformTarget =
@@ -205,23 +202,23 @@ class Actions : HealerActions
             SupportedSpell(AID.Haima).TransformTarget =
             SupportedSpell(AID.Esuna).TransformTarget =
             SupportedSpell(AID.Rescue).TransformTarget =
-                _config.MouseoverFriendly ? SmartTargetFriendlyOrSelf : null;
+                config.MouseoverFriendly ? SmartTargetFriendlyOrSelf : null;
 
-        SupportedSpell(AID.Icarus).TransformTarget = _config.MouseoverIcarus
+        SupportedSpell(AID.Icarus).TransformTarget = config.MouseoverIcarus
             ? (act) => Autorot.SecondaryTarget ?? act
             : null;
 
         SupportedSpell(AID.Egeiro).TransformTarget =
-            _config.AutoRaise == SGEConfig.RaiseBehavior.SmartManual
+            config.AutoRaise == SGEConfig.RaiseBehavior.SmartManual
                 ? ((act) => Autorot.SecondaryTarget ?? FindRaiseTarget())
-                : _config.MouseoverFriendly
+                : config.MouseoverFriendly
                     ? SmartTargetFriendly
                     : null;
     }
 
     private Actor? FindKardiaTarget()
     {
-        if (!_config.AutoKardia)
+        if (!_config.Data.AutoKardia)
             return null;
 
         var party = Autorot.WorldState.Party.WithoutSlot(partyOnly: true);

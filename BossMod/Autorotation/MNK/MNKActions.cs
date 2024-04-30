@@ -172,7 +172,8 @@ class Actions : CommonActions
         // smart targets
     }
 
-    private int NumTargetsHitByBlitz() {
+    private int NumTargetsHitByBlitz()
+    {
         if (_state.BestBlitz is AID.TornadoKick or AID.PhantomRush)
             return Autorot.PrimaryTarget == null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
         return Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);

@@ -217,9 +217,9 @@ public static class Rotation
 
     private static bool CanCast(State state, Strategy strategy)
     {
-        if (strategy.IaijutsuUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.IaijutsuUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
-        if (strategy.IaijutsuUse == Strategy.OffensiveAbilityUse.Delay)
+        if (strategy.IaijutsuUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay)
             return false;
 
         return strategy.ForceMovementIn >= state.GCD + state.CastTime;
@@ -367,7 +367,7 @@ public static class Rotation
             if (
                 strategy.CombatTimer > -5
                 && state.TrueNorthLeft == 0
-                && strategy.TrueNorthUse != Strategy.OffensiveAbilityUse.Delay
+                && strategy.TrueNorthUse != CommonRotation.Strategy.OffensiveAbilityUse.Delay
             )
                 return ActionID.MakeSpell(AID.TrueNorth);
 
@@ -469,9 +469,9 @@ public static class Rotation
     {
         if (state.TrueNorthLeft > state.AnimationLock)
             return false;
-        if (strategy.TrueNorthUse == Strategy.OffensiveAbilityUse.Force)
+        if (strategy.TrueNorthUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
             return true;
-        if (!state.TargetingEnemy || strategy.TrueNorthUse == Strategy.OffensiveAbilityUse.Delay)
+        if (!state.TargetingEnemy || strategy.TrueNorthUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay)
             return false;
 
         return strategy.NextPositionalImminent && !strategy.NextPositionalCorrect;

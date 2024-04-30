@@ -12,17 +12,14 @@ class Actions : CommonActions
 
     private readonly Rotation.State _state;
     private readonly Rotation.Strategy _strategy;
-    private readonly BLUConfig _config;
+    private readonly ConfigListener<BLUConfig> _config;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<BLUConfig>();
+        _config = Service.Config.GetAndSubscribe<BLUConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
 
         SupportedSpell(AID.AethericMimicry).TransformAction = () =>
             ActionID.MakeSpell(
@@ -39,7 +36,7 @@ class Actions : CommonActions
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -71,7 +68,7 @@ class Actions : CommonActions
         if (AutoAction < AutoActionAIFight || !_state.TargetingEnemy)
             return new();
 
-        if (Player.HP.Cur * 2 < Player.HP.Max && _state.OnSlot(AID.Rehydration))
+        if (Player.HPMP.CurHP * 2 < Player.HPMP.MaxHP && _state.OnSlot(AID.Rehydration))
             return MakeResult(AID.Rehydration, Player);
 
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
@@ -160,12 +157,12 @@ class Actions : CommonActions
             _state.Mimic = Rotation.Mimic.Tank;
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(BLUConfig config)
     {
         SupportedSpell(AID.SonicBoom).PlaceholderForAuto =
             SupportedSpell(AID.WaterCannon).PlaceholderForAuto =
             SupportedSpell(AID.ChocoMeteor).PlaceholderForAuto =
-                _config.FullRotation ? AutoActionST : AutoActionNone;
+                config.FullRotation ? AutoActionST : AutoActionNone;
     }
 
     private Actor? SmartMimic(Actor? target)

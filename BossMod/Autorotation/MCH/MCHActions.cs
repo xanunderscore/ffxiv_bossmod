@@ -8,21 +8,18 @@ class Actions : CommonActions
     public const int AutoActionST = AutoActionFirstCustom + 0;
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
-    private MCHConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
+    private readonly ConfigListener<MCHConfig> _config;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<MCHConfig>();
+        _config = Service.Config.GetAndSubscribe<MCHConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
         SupportedSpell(AID.HotShot).TransformAction = () => ActionID.MakeSpell(_state.BestHotShot);
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -50,7 +47,8 @@ class Actions : CommonActions
         return MakeResult(ActionID.MakeSpell(Rotation.GetNextBestGCD(_state, _strategy)), Autorot.PrimaryTarget);
     }
 
-    protected override void QueueAIActions() {
+    protected override void QueueAIActions()
+    {
 
         if (_state.Unlocked(AID.HeadGraze))
         {
@@ -77,14 +75,14 @@ class Actions : CommonActions
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.SecondWind),
                 Player,
-                Player.InCombat && Player.HP.Cur < Player.HP.Max * 0.5f
+                Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.5f
             );
         }
     }
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -95,7 +93,7 @@ class Actions : CommonActions
         _strategy.ApplyStrategyOverrides(
             Autorot
                 .Bossmods.ActiveModule?.PlanExecution
-                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
         );
 
         _strategy.NumAOETargets =
@@ -109,13 +107,13 @@ class Actions : CommonActions
                 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
     }
 
-    private int NumChainsawTargets(Actor target) =>
-        Autorot.Hints.NumPriorityTargetsInAOERect(Player.Position, (target.Position - Player.Position).Normalized(), 25, 2);
+    private int NumChainsawTargets(Actor target)
+        => Autorot.Hints.NumPriorityTargetsInAOERect(Player.Position, (target.Position - Player.Position).Normalized(), 25, 2);
 
     private int NumFlameTargets() => Autorot.Hints.NumPriorityTargetsInAOECone(Player.Position, 8, Player.Rotation.ToDirection(), 45.Degrees());
 
-    private int NumConeTargets(Actor target, float range) =>
-        Autorot.Hints.NumPriorityTargetsInAOECone(Player.Position, range, (target.Position - Player.Position).Normalized(), 45.Degrees());
+    private int NumConeTargets(Actor target, float range)
+        => Autorot.Hints.NumPriorityTargetsInAOECone(Player.Position, range, (target.Position - Player.Position).Normalized(), 45.Degrees());
 
     public override Targeting SelectBetterTarget(AIHints.Enemy initial)
     {
@@ -151,11 +149,11 @@ class Actions : CommonActions
             _state.PelotonLeft = 0;
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(MCHConfig config)
     {
         SupportedSpell(AID.SplitShot).PlaceholderForAuto = SupportedSpell(AID.HeatedSplitShot).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionST : AutoActionNone;
+            config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.SpreadShot).PlaceholderForAuto = SupportedSpell(AID.Scattergun).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionAOE : AutoActionNone;
+            config.FullRotation ? AutoActionAOE : AutoActionNone;
     }
 }

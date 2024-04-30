@@ -11,12 +11,12 @@ class Actions : HealerActions
 
     private readonly Rotation.State _state;
     private readonly Rotation.Strategy _strategy;
-    private readonly RDMConfig _config;
+    private readonly ConfigListener<RDMConfig> _config;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<RDMConfig>();
+        _config = Service.Config.GetAndSubscribe<RDMConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
@@ -33,9 +33,6 @@ class Actions : HealerActions
         SupportedSpell(AID.VerthunderII).TransformAction = () => ActionID.MakeSpell(_state.BestThunder2);
         SupportedSpell(AID.Jolt).TransformAction = () => ActionID.MakeSpell(_state.BestJolt);
         SupportedSpell(AID.Scatter).TransformAction = () => ActionID.MakeSpell(_state.BestScatter);
-
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
@@ -44,7 +41,7 @@ class Actions : HealerActions
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -118,19 +115,19 @@ class Actions : HealerActions
             tar = FindBetterTargetBy(initial, 25, (e) => NumResolutionTargets(e.Actor)).Target;
             range = tar.StayAtLongRange ? 25 : 15;
         }
-        else if (_state.MinMana >= 60 - (_state.ManaStacks * 20) && _strategy.NumMoulinetTargets >= 3)
+        else if (_state.MinMana >= 60 - _state.ManaStacks * 20 && _strategy.NumMoulinetTargets >= 3)
         {
             tar = FindBetterTargetBy(initial, 8, (e) => NumMoulinetTargets(e.Actor)).Target;
             range = 8;
         }
-        else if (_state.InMeleeCombo || (_state.MinMana >= 50 && _strategy.NumMoulinetTargets < 3))
+        else if (_state.InMeleeCombo || _state.MinMana >= 50 && _strategy.NumMoulinetTargets < 3)
             range = 3;
         else
         {
             tar = FindBetterTargetBy(
                 initial,
                 25,
-                (e) => NumCircleTargets(e.Actor, 5) * 1000000 + (int)e.Actor.HP.Cur
+                (e) => NumCircleTargets(e.Actor, 5) * 1000000 + (int)e.Actor.HPMP.CurHP
             ).Target;
             range = tar.StayAtLongRange ? 25 : 15;
         }
@@ -140,16 +137,16 @@ class Actions : HealerActions
 
     protected override void QueueAIActions() { }
 
-    private void OnConfigModified()
+    private void OnConfigModified(RDMConfig config)
     {
         SupportedSpell(AID.Jolt).PlaceholderForAuto = SupportedSpell(AID.JoltII).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionST : AutoActionNone;
+            config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.Scatter).PlaceholderForAuto = SupportedSpell(AID.Impact).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionAOE : AutoActionNone;
+            config.FullRotation ? AutoActionAOE : AutoActionNone;
 
         SupportedSpell(AID.Vercure).TransformTarget = SmartTargetFriendlyOrSelf;
-        SupportedSpell(AID.Verraise).TransformAction = _config.SmartRaise ? SmartVerraise : null;
-        SupportedSpell(AID.Verraise).TransformTarget = _config.SmartRaise ? SmartTargetDead : null;
+        SupportedSpell(AID.Verraise).TransformAction = config.SmartRaise ? SmartVerraise : null;
+        SupportedSpell(AID.Verraise).TransformTarget = config.SmartRaise ? SmartTargetDead : null;
     }
 
     private ActionID SmartVerraise()
@@ -166,11 +163,11 @@ class Actions : HealerActions
         return ActionID.MakeSpell(AID.Vercure);
     }
 
-    private int NumCircleTargets(Actor? primary, float radius) =>
-        primary == null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(primary.Position, radius);
+    private int NumCircleTargets(Actor? primary, float radius)
+        => primary == null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(primary.Position, radius);
 
-    private int NumMoulinetTargets(Actor? primary) =>
-        primary == null
+    private int NumMoulinetTargets(Actor? primary)
+        => primary == null
             ? 0
             : Autorot.Hints.NumPriorityTargetsInAOECone(
                 Player.Position,
@@ -179,8 +176,8 @@ class Actions : HealerActions
                 60.Degrees()
             );
 
-    private int NumResolutionTargets(Actor? primary) =>
-        primary == null
+    private int NumResolutionTargets(Actor? primary)
+        => primary == null
             ? 0
             : Autorot.Hints.NumPriorityTargetsInAOERect(
                 Player.Position,
