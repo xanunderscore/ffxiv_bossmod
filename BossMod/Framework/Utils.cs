@@ -66,6 +66,21 @@ public static partial class Utils
     public static unsafe ulong CharacterTetherTargetID(Character chr) => ReadField<ulong>(CharacterInternal(chr), 0x12F0 + 0xA0 + 0x10);
     public static unsafe Vector3 BattleCharaCastLocation(BattleChara chara) => BattleCharaInternal(chara)->GetCastInfo->CastLocation; // see ActorCast -> Character::StartCast -> Character::StartOmen
 
+    public static bool IsBoss(Actor? tar)
+    {
+        if (tar == null)
+            return false;
+        var tarObject = Service.ObjectTable[tar.SpawnIndex] as BattleChara;
+        if (tarObject == null)
+            return false;
+        // striking dummy
+        if (tarObject.NameId == 541)
+            return true;
+        var isBoss = Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(tarObject.DataId)?.Rank is 1 or 2 or 6;
+        Service.Log($"{tar} is boss? {isBoss}");
+        return isBoss;
+    }
+
     public static unsafe uint FrameIndex() => FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->FrameCounter;
     public static unsafe ulong FrameQPF() => ReadField<ulong>(FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance(), 0x16A0);
     public static unsafe ulong FrameQPC() => ReadField<ulong>(FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance(), 0x16A8);

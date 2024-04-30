@@ -96,7 +96,7 @@ class Actions : CommonActions
         );
 
         var isSTMode =
-            autoAction == AutoActionST || (autoAction == AutoActionAIFight && IsBoss(Autorot.PrimaryTarget));
+            autoAction == AutoActionST || (autoAction == AutoActionAIFight && Utils.IsBoss(Autorot.PrimaryTarget));
 
         _strategy.NumPointBlankAOETargets = isSTMode
             ? 0
@@ -221,18 +221,5 @@ class Actions : CommonActions
 
         _strategy.AutoHide = _config.AutoHide;
         _strategy.AutoUnhide = _config.AutoUnhide;
-    }
-
-    private static bool IsBoss(Actor? tar)
-    {
-        if (tar == null)
-            return false;
-        var tarObject = Service.ObjectTable[tar.SpawnIndex] as BattleChara;
-        if (tarObject == null)
-            return false;
-        // striking dummy
-        if (tarObject.NameId == 541)
-            return true;
-        return Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(tarObject.DataId)?.Rank is 1 or 2 or 6;
     }
 }
