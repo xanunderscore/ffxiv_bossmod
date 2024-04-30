@@ -9,32 +9,30 @@ class Actions : CommonActions
     public const int AutoActionFiller = AutoActionFirstCustom + 2;
     public const int AutoActionLFS = AutoActionFirstCustom + 3;
 
-    private readonly BLMConfig _config;
     private readonly Rotation.State _state;
     private readonly Rotation.Strategy _strategy;
     private DateTime _lastManaTick;
     private uint _prevMP;
+    private readonly ConfigListener<BLMConfig> _config;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.Get<BLMConfig>();
         _state = new(autorot.WorldState);
         _strategy = new();
-        _prevMP = player.CurMP;
+        _prevMP = player.HPMP.CurMP;
 
         SupportedSpell(AID.Triplecast).Condition = _ => _state.TriplecastLeft == 0;
         SupportedSpell(AID.Sharpcast).Condition = _ => _state.SharpcastLeft == 0;
         SupportedSpell(AID.Manafont).Condition = _ => _state.CurMP <= 7000;
         SupportedSpell(AID.Amplifier).Condition = _ => _state.Polyglot < 2;
 
-        _config.Modified += OnConfigModified;
-        OnConfigModified();
+        _config = Service.Config.GetAndSubscribe<BLMConfig>(OnConfigModified);
     }
 
     protected override void Dispose(bool disposing)
     {
-        _config.Modified -= OnConfigModified;
+        _config.Dispose();
         base.Dispose(disposing);
     }
 
@@ -51,7 +49,7 @@ class Actions : CommonActions
             bestTarget = FindBetterTargetBy(
                 initial,
                 25,
-                e => NumTargetsHitByAOE(e.Actor) * 1000000 + (int)e.Actor.HP.Cur
+                e => NumTargetsHitByAOE(e.Actor) * 1000000 + (int)e.Actor.HPMP.CurHP
             ).Target;
         return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
     }
@@ -78,9 +76,6 @@ class Actions : CommonActions
             _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
             _strategy.TriplecastStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
         }
-
-        if (_config.AutoLeylines is BLMConfig.AutoLL.None)
-            _strategy.LeylinesStrategy = CommonRotation.Strategy.OffensiveAbilityUse.Delay;
     }
 
     protected override void QueueAIActions()
@@ -103,7 +98,7 @@ class Actions : CommonActions
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.Manaward),
                 Player,
-                Player.HP.Cur < Player.HP.Max * 0.8f && Player.InCombat
+                Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8f && Player.InCombat
             );
         if (_state.Unlocked(AID.Sharpcast))
             SimulateManualActionForAI(
@@ -146,22 +141,16 @@ class Actions : CommonActions
         var gauge = Service.JobGauges.Get<BLMGauge>();
 
         // track mana ticks
-        if (_prevMP < Player.CurMP && !gauge.InAstralFire)
+        if (_prevMP < Player.HPMP.CurMP && !gauge.InAstralFire)
         {
             var expectedTick = Rotation.MPTick(-gauge.UmbralIceStacks);
-            if (Player.CurMP - _prevMP == expectedTick)
+            if (Player.HPMP.CurMP - _prevMP == expectedTick)
             {
                 _lastManaTick = Autorot.WorldState.CurrentTime;
             }
         }
-        _prevMP = Player.CurMP;
-        _state.TimeToManaTick =
-            3
-            - (
-                _lastManaTick != default
-                    ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3
-                    : 0
-            );
+        _prevMP = Player.HPMP.CurMP;
+        _state.TimeToManaTick = 3 - (_lastManaTick != default ? (float)(Autorot.WorldState.CurrentTime - _lastManaTick).TotalSeconds % 3 : 0);
 
         _state.ElementalLevel = gauge.InAstralFire ? gauge.AstralFireStacks : -gauge.UmbralIceStacks;
         _state.ElementalLeft = gauge.ElementTimeRemaining * 0.001f;
@@ -204,20 +193,20 @@ class Actions : CommonActions
         return s == null ? 0 : StatusDuration(s.Value.ExpireAt);
     }
 
-    private void OnConfigModified()
+    private void OnConfigModified(BLMConfig config)
     {
         // placeholders
         SupportedSpell(AID.Fire1).PlaceholderForAuto = SupportedSpell(AID.Fire4).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionST : AutoActionNone;
-        SupportedSpell(AID.Fire2).PlaceholderForAuto = _config.FullRotation ? AutoActionAOE : AutoActionNone;
+            config.FullRotation ? AutoActionST : AutoActionNone;
+        SupportedSpell(AID.Fire2).PlaceholderForAuto = config.FullRotation ? AutoActionAOE : AutoActionNone;
         SupportedSpell(AID.Blizzard1).PlaceholderForAuto = SupportedSpell(AID.Blizzard4).PlaceholderForAuto =
-            _config.FullRotation ? AutoActionFiller : AutoActionNone;
-        SupportedSpell(AID.Thunder3).PlaceholderForAuto = _config.FullRotation ? AutoActionLFS : AutoActionNone;
+            config.FullRotation ? AutoActionFiller : AutoActionNone;
+        SupportedSpell(AID.Thunder3).PlaceholderForAuto = config.FullRotation ? AutoActionLFS : AutoActionNone;
 
         // smart targets
-        SupportedSpell(AID.AetherialManipulation).TransformTarget = _config.SmartDash ? SmartTargetFriendly : null;
+        SupportedSpell(AID.AetherialManipulation).TransformTarget = config.SmartDash ? SmartTargetFriendly : null;
 
-        _strategy.AutoRefresh = _config.AutoIceRefresh;
+        _strategy.AutoRefresh = config.AutoIceRefresh;
     }
 
     private int NumTargetsHitByAOE(Actor primary) =>

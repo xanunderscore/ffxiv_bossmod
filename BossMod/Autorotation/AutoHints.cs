@@ -10,27 +10,38 @@ public sealed class AutoHints : IDisposable
     private const float RaidwideSize = 20;
 
     private readonly WorldState _ws;
+    private readonly EventSubscriptions _subscriptions;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
+    private ArenaBoundsCircle? _activeFateBounds;
 
     public AutoHints(WorldState ws)
     {
         _ws = ws;
-        _ws.Actors.CastStarted += OnCastStarted;
-        _ws.Actors.CastFinished += OnCastFinished;
+        _subscriptions = new
+        (
+            ws.Actors.CastStarted.Subscribe(OnCastStarted),
+            ws.Actors.CastFinished.Subscribe(OnCastFinished),
+            ws.Client.ActiveFateChanged.Subscribe(_ => _activeFateBounds = null)
+        );
     }
 
-    public void Dispose()
-    {
-        _ws.Actors.CastStarted -= OnCastStarted;
-        _ws.Actors.CastFinished -= OnCastFinished;
-    }
+    public void Dispose() => _subscriptions.Dispose();
 
-    public unsafe void CalculateAIHints(AIHints hints, WPos playerPos)
+    public unsafe void CalculateAIHints(AIHints hints, Actor player)
     {
-        var fate = FateManager.Instance()->CurrentFate;
-        hints.Bounds = fate != null
-            ? new ArenaBoundsCircle(new(fate->Location.X, fate->Location.Z), fate->Radius)
-            : new ArenaBoundsSquare(playerPos, 30);
+        var currentFateId = _ws.Client.ActiveFate.ID;
+        var withinFateLevel = false;
+        if (currentFateId != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(currentFateId)?.ClassJobLevelMax)
+        {
+            withinFateLevel = true;
+            hints.Center = new(_ws.Client.ActiveFate.Center.XZ());
+            hints.Bounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius));
+        }
+        else
+        {
+            hints.Center = player.Position;
+            // keep default bounds
+        }
 
         foreach (var aoe in _activeAOEs.Values)
         {
@@ -58,7 +69,7 @@ public sealed class AutoHints : IDisposable
                     enemy.Priority = 0;
             }
 
-            if (enemy.Actor.HP.Cur == 1)
+            if (enemy.Actor.HPMP.CurHP == 1)
                 enemy.Priority = -1;
 
             var obj = Utils.GameObjectInternal(Service.ObjectTable[enemy.Actor.SpawnIndex]);
@@ -66,11 +77,11 @@ public sealed class AutoHints : IDisposable
                 continue;
 
             // enemy is part of fate we aren't in
-            if (fate == null && obj->FateId != 0)
+            if (currentFateId == 0 && obj->FateId != 0)
                 enemy.Priority = -1;
 
-            if (fate != null && obj->FateId == fate->FateId)
-                enemy.Priority = _ws.Party[0]!.Level <= fate->MaxLevel ? 0 : -1;
+            if (currentFateId > 0 && obj->FateId == currentFateId)
+                enemy.Priority = withinFateLevel ? 0 : -1;
         }
     }
 
