@@ -253,7 +253,7 @@ public static class Rotation
         if (CanEnpi(state, strategy) && state.RangeToTarget > 6)
             return AID.Enpi;
 
-        if (state.SenCount == 3 && canCast)
+        if (state.SenCount == 3 && state.HasCombatBuffs && canCast)
             return AID.MidareSetsugekka;
 
         if (strategy.HiganbanaStrategy == Strategy.HiganbanaUse.Force && state.SenCount == 1)
@@ -496,10 +496,6 @@ public static class Rotation
 
         if (strategy.NumAOETargets > 0)
             return false;
-
-        // force use to get shoha even if the target is dying, dot overwrite doesn't matter
-        if (strategy.ActualFightEndIn - state.GCD < 45)
-            return state.MeditationStacks == 2;
 
         return state.TargetHiganbanaLeft < (5 + state.GCD + state.GCDTime * gcdsInAdvance);
     }
