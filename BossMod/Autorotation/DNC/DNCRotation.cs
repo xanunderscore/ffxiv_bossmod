@@ -167,7 +167,7 @@ public static class Rotation
         var combo2 = strategy.NumAOETargets > 1 ? AID.Bladeshower : AID.Fountain;
         var haveCombo2 =
             state.Unlocked(combo2)
-            && state.ComboLastMove == (strategy.NumAOETargets > 1 ? AID.Windmill : AID.Cascade);
+            && state.ComboLastMove == (strategy.NumAOETargets > 1 && state.Unlocked(AID.Windmill) ? AID.Windmill : AID.Cascade);
 
         // prevent starfall expiration
         if (canStarfall && state.FlourishingStarfallLeft <= state.AttackGCDTime)
@@ -263,11 +263,7 @@ public static class Rotation
         if (state.IsDancing)
             return new();
 
-        if (
-            state.TechFinishLeft > state.GCD
-            && state.Unlocked(AID.Devilment)
-            && state.CanWeave(CDGroup.Devilment, 0.6f, deadline)
-        )
+        if (ShouldDevilment(state, strategy, deadline))
             return ActionID.MakeSpell(AID.Devilment);
 
         if (state.CD(CDGroup.Devilment) > 55 && state.CanWeave(CDGroup.Flourish, 0.6f, deadline) && HaveTarget(state, strategy))
@@ -337,6 +333,19 @@ public static class Rotation
                 || state.TechFinishLeft > state.GCD + 3.5
                 || !state.Unlocked(AID.TechnicalStep)
             );
+    }
+
+    private static bool ShouldDevilment(State state, Strategy strategy, float deadline)
+    {
+        if (!state.Unlocked(AID.Devilment) || !state.CanWeave(CDGroup.Devilment, 0.6f, deadline))
+            return false;
+
+        // devilment (62) is unlocked before tech step (70)
+        // pretty much all high end content is 70+ so this isn't super important. just try to align with raid buffs if possible
+        if (!state.Unlocked(AID.TechnicalStep))
+            return state.RaidBuffsLeft > state.GCD || strategy.RaidBuffsIn < 5 || strategy.RaidBuffsIn > 1000;
+
+        return state.TechFinishLeft > state.GCD;
     }
 
     private static bool ShouldFinishDance(float danceTimeLeft, State state, Strategy strategy)
