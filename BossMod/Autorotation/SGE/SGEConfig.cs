@@ -3,7 +3,8 @@
 [ConfigDisplay(Parent = typeof(AutorotationConfig))]
 class SGEConfig : ConfigNode
 {
-    public enum RaiseBehavior {
+    public enum RaiseBehavior
+    {
         [PropertyDisplay("Unchanged")]
         None = 0,
         [PropertyDisplay("Smart target (mouseover target, otherwise most valuable dead party member)")]

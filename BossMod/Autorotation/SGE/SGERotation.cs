@@ -1,12 +1,9 @@
-﻿using System.Linq;
-using static BossMod.CommonActions;
-
-namespace BossMod.SGE;
+﻿namespace BossMod.SGE;
 
 public static class Rotation
 {
     // full state needed for determining next action
-    public class State : CommonRotation.PlayerState
+    public class State(WorldState ws) : CommonRotation.PlayerState(ws)
     {
         public int Gall; // 3 max
         public float NextGall; // 20 max
@@ -17,30 +14,27 @@ public static class Rotation
         public float SwiftcastLeft; // 0 if buff not up, max 10
         public float TargetDotLeft; // i am not typing that shit out. max 30
 
-        public AID BestDosis =>
-            Eukrasia
+        public AID BestDosis
+            => Eukrasia
                 ? FindUnlocked(AID.EukrasianDosisIII, AID.EukrasianDosisII, AID.EukrasianDosis)
                 : FindUnlocked(AID.DosisIII, AID.DosisII, AID.Dosis);
         public AID BestPhlegma => FindUnlocked(AID.PhlegmaIII, AID.PhlegmaII, AID.Phlegma);
         public AID BestDyskrasia => FindUnlocked(AID.DyskrasiaII, AID.Dyskrasia);
         public AID BestToxikon => FindUnlocked(AID.ToxikonII, AID.Toxikon);
 
-        public SID ExpectedEudosis =>
-            Unlocked(AID.EukrasianDosisIII)
+        public SID ExpectedEudosis
+            => Unlocked(AID.EukrasianDosisIII)
                 ? SID.EukrasianDosisIII
                 : Unlocked(AID.EukrasianDosisII)
                     ? SID.EukrasianDosisII
                     : SID.EukrasianDosis;
 
-        public CDGroup PhlegmaCD =>
-            Unlocked(AID.PhlegmaIII)
+        public CDGroup PhlegmaCD
+            => Unlocked(AID.PhlegmaIII)
                 ? CDGroup.PhlegmaIII
                 : Unlocked(AID.PhlegmaII)
                     ? CDGroup.PhlegmaII
                     : CDGroup.Phlegma;
-
-        public State(WorldState ws)
-            : base(ws) { }
 
         public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
 
@@ -65,8 +59,6 @@ public static class Rotation
         public int NumToxikonTargets; // 5y around target
         public int NumPhlegmaTargets; // 5y around target
         public int NumPneumaTargets; // 25y/4y rect
-
-        public int NumNearbyUnshieldedAllies; // up to 8 including self
 
         public enum GCDShieldStrategy : uint
         {
@@ -104,30 +96,15 @@ public static class Rotation
         }
     }
 
-    public static bool CanCast(State state, Strategy strategy, float castTime) =>
-        state.SwiftcastLeft > state.GCD || strategy.ForceMovementIn >= state.GCD + castTime;
+    public static bool CanCast(State state, Strategy strategy, float castTime)
+        => state.SwiftcastLeft > state.GCD || strategy.ForceMovementIn >= state.GCD + castTime;
 
     public static bool RefreshDOT(State state, float timeLeft) => timeLeft < state.GCD + 3.0f; // TODO: tweak threshold so that we don't overwrite or miss ticks...
 
     public static AID GetNextBestGCD(State state, Strategy strategy)
     {
-        if (strategy.NumNearbyUnshieldedAllies > 0)
-        {
-            switch (strategy.GCDShieldUse)
-            {
-                case Strategy.GCDShieldStrategy.Prog:
-                    return state.Eukrasia ? AID.EukrasianPrognosis : AID.Eukrasia;
-                case Strategy.GCDShieldStrategy.ProgZoe:
-                    if (state.ZoeLeft > state.GCD)
-                        return state.Eukrasia ? AID.EukrasianPrognosis : AID.Eukrasia;
-                    break;
-                case Strategy.GCDShieldStrategy.Manual:
-                    break;
-            }
-        }
-
-        if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
-            return AID.None;
+        if (strategy.CombatTimer is > (-100) and < 0)
+            return state.Eukrasia ? AID.None : AID.Eukrasia;
 
         var canCast = CanCast(state, strategy, 1.5f);
 
@@ -174,7 +151,9 @@ public static class Rotation
 
             if (state.TargetingEnemy)
                 return state.BestDosis;
-        } else {
+        }
+        else
+        {
             if (state.Unlocked(AID.Toxikon) && state.Sting > 0 && strategy.NumToxikonTargets > 0)
                 return state.BestToxikon;
 
@@ -195,13 +174,6 @@ public static class Rotation
 
     public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline)
     {
-        if (
-            strategy.GCDShieldUse == Strategy.GCDShieldStrategy.ProgZoe
-            && strategy.NumNearbyUnshieldedAllies > 0
-            && state.CanWeave(CDGroup.Zoe, 0.6f, deadline)
-        )
-            return ActionID.MakeSpell(AID.Zoe);
-
         if (
             state.CurMP <= 7000
             && state.Unlocked(AID.LucidDreaming)

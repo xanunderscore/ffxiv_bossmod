@@ -125,7 +125,9 @@ public static class PlanDefinitions
         c.CooldownTracks.Add(new("Kerachole", ActionID.MakeSpell(SGE.AID.Kerachole), 50));
         c.CooldownTracks.Add(new("Holos", ActionID.MakeSpell(SGE.AID.Holos), 76));
         c.CooldownTracks.Add(new("Panhaima", ActionID.MakeSpell(SGE.AID.Panhaima), 80));
+        // c.CooldownTracks.Add(new("Zoe", ActionID.MakeSpell(SGE.AID.Panhaima), 56));
         c.StrategyTracks.Add(new("GCDShield", typeof(SGE.Rotation.Strategy.GCDShieldStrategy)));
+        c.StrategyTracks.Add(new("Pneuma", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         return c;
     }
 
@@ -155,6 +157,7 @@ public static class PlanDefinitions
         c.StrategyTracks.Add(new("RoW", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("BH", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("TFC", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("Meditate", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("PB", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
         c.StrategyTracks.Add(new("PB1", typeof(MNK.Rotation.Strategy.FormChoice)));
         c.StrategyTracks.Add(new("PB2", typeof(MNK.Rotation.Strategy.FormChoice)));

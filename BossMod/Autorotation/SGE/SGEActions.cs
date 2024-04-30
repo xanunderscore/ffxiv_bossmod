@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.SGE;
 
@@ -10,9 +8,9 @@ class Actions : HealerActions
     public const int AutoActionST = AutoActionFirstCustom + 0;
     public const int AutoActionAOE = AutoActionFirstCustom + 1;
 
-    private SGEConfig _config;
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
+    private readonly SGEConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -38,12 +36,21 @@ class Actions : HealerActions
     private Actor? _autoRaiseTarget;
     private Actor? _kardiaTarget;
 
+    private IEnumerable<Actor> AlliesNeedShield
+        => Autorot.WorldState.Party.WithoutSlot(partyOnly: true).Where(NeedShield);
+    private IEnumerable<Actor> NearbyAlliesNeedShield
+        => AlliesNeedShield.Where(x => x.Position.InCircle(Player.Position, 15));
+
     protected override void UpdateInternalState(int autoAction)
     {
         base.UpdateInternalState(autoAction);
         UpdatePlayerState();
         FillCommonStrategy(_strategy, CommonDefinitions.IDPotionMnd);
-        _strategy.ApplyStrategyOverrides(Autorot.Bossmods.ActiveModule?.PlanExecution?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? new uint[0]);
+        _strategy.ApplyStrategyOverrides(
+            Autorot
+                .Bossmods.ActiveModule?.PlanExecution
+                ?.ActiveStrategyOverrides(Autorot.Bossmods.ActiveModule.StateMachine) ?? []
+        );
         _strategy.NumDyskrasiaTargets =
             autoAction == AutoActionST ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5f);
         _strategy.NumToxikonTargets = _strategy.NumPhlegmaTargets =
@@ -51,17 +58,20 @@ class Actions : HealerActions
                 ? 0
                 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5f);
         _strategy.NumPneumaTargets = Autorot.PrimaryTarget == null ? 0 : NumPneumaTargets(Autorot.PrimaryTarget);
-
-        _strategy.NumNearbyUnshieldedAllies = Autorot
-            .WorldState.Party.WithoutSlot(partyOnly: true)
-            .InRadius(Player.Position, 15)
-            .Count(x => !HasShield(x));
     }
 
-    private static bool HasShield(Actor act) => act.Statuses.Any(s => (SID)s.ID is SID.EukrasianDiagnosis or SID.EukrasianPrognosis);
+    private static bool NeedShield(Actor act)
+    {
+        // already shielded
+        if (act.Statuses.Any(s => (SID)s.ID is SID.EukrasianDiagnosis or SID.EukrasianPrognosis))
+            return false;
 
-    private int NumPneumaTargets(Actor primary) =>
-        Autorot.Hints.NumPriorityTargetsInAOERect(
+        // tanks generally won't need GCD shield
+        return act.Role != Role.Tank;
+    }
+
+    private int NumPneumaTargets(Actor primary)
+        => Autorot.Hints.NumPriorityTargetsInAOERect(
             Player.Position,
             (primary.Position - Player.Position).Normalized(),
             25,
@@ -72,6 +82,10 @@ class Actions : HealerActions
 
     protected override NextAction CalculateAutomaticGCD()
     {
+        var shieldGcd = GetShieldGCD();
+        if (shieldGcd != default)
+            return shieldGcd;
+
         if (_config.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
         {
             var esunaTarget = FindEsunaTarget();
@@ -96,6 +110,10 @@ class Actions : HealerActions
         if (AutoAction < AutoActionAIFight)
             return new();
 
+        // just use zoe asap, it has a very long buff window
+        if (_strategy.GCDShieldUse == Rotation.Strategy.GCDShieldStrategy.ProgZoe && _state.CanWeave(CDGroup.Zoe, 0.6f, deadline))
+            return MakeResult(AID.Zoe, Player);
+
         NextAction res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
             res = GetNextBestOGCD(deadline - _state.OGCDSlotLength);
@@ -103,6 +121,28 @@ class Actions : HealerActions
             res = GetNextBestOGCD(deadline);
 
         return res;
+    }
+
+    private NextAction GetShieldGCD()
+    {
+        if (_strategy.GCDShieldUse == Rotation.Strategy.GCDShieldStrategy.Manual)
+            return default;
+
+        var zoe = _strategy.GCDShieldUse == Rotation.Strategy.GCDShieldStrategy.ProgZoe;
+        // if we haven't used zoe yet, wait for it to be used
+        // if zoe isn't active but is on cooldown, i.e. it was spent on some other heal GCD, then fall through, unboosted shield is more valuable than nothing
+        if (zoe && _state.ZoeLeft == 0 && _state.CD(CDGroup.Zoe) == 0)
+            return default;
+
+        // TODO: tweak threshold?
+        if (NearbyAlliesNeedShield.Count() > 5)
+            return _state.Eukrasia ? MakeResult(AID.EukrasianPrognosis, Player) : MakeResult(AID.Eukrasia, Player);
+
+        var nextAlly = AlliesNeedShield.FirstOrDefault();
+        if (nextAlly != null)
+            return _state.Eukrasia ? MakeResult(AID.EukrasianDiagnosis, nextAlly) : MakeResult(AID.Eukrasia, Player);
+
+        return default;
     }
 
     private NextAction GetNextBestOGCD(float deadline)
@@ -115,11 +155,7 @@ class Actions : HealerActions
         )
             return MakeResult(ActionID.MakeSpell(AID.Kardia), _kardiaTarget);
 
-        if (
-            _autoRaiseTarget != null
-            && _state.SwiftcastLeft == 0
-            && _state.CanWeave(CDGroup.Swiftcast, 0.6f, deadline)
-        )
+        if (_autoRaiseTarget != null && _state.SwiftcastLeft == 0 && _state.CanWeave(CDGroup.Swiftcast, 0.6f, deadline))
             return MakeResult(ActionID.MakeSpell(AID.Swiftcast), Player);
 
         var ogcd = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
@@ -127,7 +163,7 @@ class Actions : HealerActions
         if (
             !ogcd
             && _config.PreventGallOvercap
-            && (_state.Gall == 3 || (_state.Gall == 2 && _state.NextGall < 2.5))
+            && (_state.Gall == 3 || _state.Gall == 2 && _state.NextGall < 2.5)
             && _state.CurMP <= 9000
         )
             return MakeResult(ActionID.MakeSpell(AID.Druochole), FindBestSTHealTarget(1).Target ?? Player);

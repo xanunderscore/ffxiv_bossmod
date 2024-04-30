@@ -246,7 +246,7 @@ public static class Definitions
         SupportedActions.GCDCast(AID.DosisII, 25, 1.5f);
         SupportedActions.OGCDWithCharges(AID.PhlegmaII, 6, CDGroup.PhlegmaII, 40.0f, 2);
         SupportedActions.OGCD(AID.Rhizomata, 0, CDGroup.Rhizomata, 90.0f);
-        SupportedActions.OGCD(AID.Holos, 0, CDGroup.Holos, 120.0f).EffectDuration = 30;
+        SupportedActions.OGCD(AID.Holos, 0, CDGroup.Holos, 120.0f).EffectDuration = 20;
         SupportedActions.OGCD(AID.Panhaima, 0, CDGroup.Panhaima, 120.0f).EffectDuration = 15;
         SupportedActions.GCDCast(AID.DosisIII, 25, 1.5f);
         SupportedActions.OGCDWithCharges(AID.PhlegmaIII, 6, CDGroup.PhlegmaIII, 40.0f, 2);
