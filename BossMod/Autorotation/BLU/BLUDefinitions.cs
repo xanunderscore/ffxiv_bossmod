@@ -252,7 +252,7 @@ public enum SID : uint
 public static class Definitions
 {
     public static Dictionary<ActionID, ActionDefinition> SupportedActions;
-    public static uint[] UnlockQuests = { };
+    public static uint[] UnlockQuests = [];
 
     public static bool Unlocked(AID aid, int level, int questProgress)
     {

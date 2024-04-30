@@ -10,9 +10,9 @@ class Actions : CommonActions
     public const int AutoMimicH = AutoActionFirstCustom + 3;
     public const int AutoMimicT = AutoActionFirstCustom + 4;
 
-    private Rotation.State _state;
-    private Rotation.Strategy _strategy;
-    private BLUConfig _config;
+    private readonly Rotation.State _state;
+    private readonly Rotation.Strategy _strategy;
+    private readonly BLUConfig _config;
 
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
@@ -23,6 +23,18 @@ class Actions : CommonActions
 
         _config.Modified += OnConfigModified;
         OnConfigModified();
+
+        SupportedSpell(AID.AethericMimicry).TransformAction = () =>
+            ActionID.MakeSpell(
+                _state.Mimic switch
+                {
+                    Rotation.Mimic.DPS => AID.AethericMimicryReleaseDamage,
+                    Rotation.Mimic.Healer => AID.AethericMimicryReleaseHealer,
+                    Rotation.Mimic.Tank => AID.AethericMimicryReleaseTank,
+                    _ => AID.AethericMimicry
+                }
+            );
+        SupportedSpell(AID.AethericMimicry).TransformTarget = SmartMimic;
     }
 
     protected override void Dispose(bool disposing)
@@ -35,12 +47,32 @@ class Actions : CommonActions
 
     public override CommonRotation.Strategy GetStrategy() => _strategy;
 
-    protected override void QueueAIActions() { }
+    protected override void QueueAIActions()
+    {
+        SimulateManualActionForAI(
+            ActionID.MakeSpell(AID.AethericMimicry),
+            SmartMimic(Autorot.PrimaryTarget),
+            !Player.InCombat && _state.Mimic == Rotation.Mimic.None && _state.OnSlot(AID.AethericMimicry)
+        );
+    }
+
+    public override Targeting SelectBetterTarget(AIHints.Enemy initial)
+    {
+        var t = base.SelectBetterTarget(initial);
+        if (_state.HarmonizedLeft > _state.GCD)
+            t.PreferredRange = 3;
+        else
+            t.PreferredRange = initial.StayAtLongRange ? 25 : 15;
+        return t;
+    }
 
     protected override NextAction CalculateAutomaticGCD()
     {
-        if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
+        if (AutoAction < AutoActionAIFight || !_state.TargetingEnemy)
             return new();
+
+        if (Player.HP.Cur * 2 < Player.HP.Max && _state.OnSlot(AID.Rehydration))
+            return MakeResult(AID.Rehydration, Player);
 
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
         return MakeResult(aid, Autorot.PrimaryTarget);
@@ -48,13 +80,51 @@ class Actions : CommonActions
 
     protected override NextAction CalculateAutomaticOGCD(float deadline)
     {
-        return new();
+        if (AutoAction < AutoActionAIFight)
+            return new();
+
+        deadline += 0.4f;
+
+        ActionID res = new();
+        if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
+            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline - _state.OGCDSlotLength);
+        if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
+            res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
+
+        var next = MakeResult(res, Autorot.PrimaryTarget);
+
+        if (res.ID == (uint)AID.FeatherRain && next.Target != null)
+            next.TargetPos = next.Target.PosRot.XYZ();
+
+        return next;
     }
 
     protected override unsafe void UpdateInternalState(int autoAction)
     {
         FillCommonPlayerState(_state);
         FillCommonStrategy(_strategy, CommonDefinitions.IDPotionInt);
+
+        _strategy.Num15yTargets = Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 15);
+        _strategy.Num10yTargets = Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 10);
+        _strategy.Num6yTargets = Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 6);
+        _strategy.NumSurpanakhaTargets = Autorot.Hints.NumPriorityTargetsInAOECone(
+            Player.Position,
+            16,
+            Player.Rotation.ToDirection(),
+            60.Degrees()
+        );
+        _strategy.NumFrozenTargets = Autorot.Hints.NumPriorityTargetsInAOE(
+            e =>
+                e.Actor.Position.InCircle(Player.Position, 6 + Player.HitboxRadius)
+                && e.Actor.FindStatus(SID.DeepFreeze) != null
+        );
+
+        _state.TargetingBoss = Utils.IsBoss(Autorot.PrimaryTarget);
+
+        if (_state.Chocobo is null || _state.Chocobo.IsDestroyed)
+            _state.Chocobo = Autorot.WorldState.Actors.FirstOrDefault(
+                a => a.Type == ActorType.Chocobo && a.OwnerID == Player.InstanceID
+            );
 
         for (var i = 0; i < 24; i++)
             _state.BLUSlots[i] = (AID)
@@ -68,6 +138,7 @@ class Actions : CommonActions
         _state.TargetBindLeft = StatusDetails(Autorot.PrimaryTarget, SID.Bind, Player.InstanceID).Left;
         _state.TargetLightheadedLeft = StatusDetails(Autorot.PrimaryTarget, SID.Lightheaded, Player.InstanceID).Left;
         _state.TargetBegrimedLeft = StatusDetails(Autorot.PrimaryTarget, SID.Begrimed, Player.InstanceID).Left;
+        _state.TargetBleedingLeft = StatusDetails(Autorot.PrimaryTarget, SID.Bleeding, Player.InstanceID).Left;
 
         _state.SurpanakhasFury = StatusDetails(Player, SID.SurpanakhasFury, Player.InstanceID);
         _state.WaxingLeft = StatusDetails(Player, SID.WaxingNocturne, Player.InstanceID).Left;
@@ -79,6 +150,14 @@ class Actions : CommonActions
         _state.VeilLeft = StatusDetails(Player, SID.VeilOfTheWhorl, Player.InstanceID).Left;
         _state.ApokalypsisLeft = StatusDetails(Player, SID.Apokalypsis, Player.InstanceID).Left;
         _state.FlurryLeft = StatusDetails(Player, SID.PhantomFlurry, Player.InstanceID).Left;
+
+        _state.Mimic = Rotation.Mimic.None;
+        if (Player.FindStatus(SID.AethericMimicryDPS) != null)
+            _state.Mimic = Rotation.Mimic.DPS;
+        if (Player.FindStatus(SID.AethericMimicryHealer) != null)
+            _state.Mimic = Rotation.Mimic.Healer;
+        if (Player.FindStatus(SID.AethericMimicryTank) != null)
+            _state.Mimic = Rotation.Mimic.Tank;
     }
 
     private void OnConfigModified()
@@ -87,5 +166,18 @@ class Actions : CommonActions
             SupportedSpell(AID.WaterCannon).PlaceholderForAuto =
             SupportedSpell(AID.ChocoMeteor).PlaceholderForAuto =
                 _config.FullRotation ? AutoActionST : AutoActionNone;
+    }
+
+    private Actor? SmartMimic(Actor? target)
+    {
+        if (_state.Mimic != Rotation.Mimic.None)
+            return null;
+
+        if (target != null && target.IsAlly)
+            return target;
+
+        return Autorot.WorldState.Actors.FirstOrDefault(
+            x => x.Class.IsDD() && x.Position.InCircle(Player.Position, 25)
+        );
     }
 }
