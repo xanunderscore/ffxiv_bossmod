@@ -1,4 +1,5 @@
 ﻿using BossMod.Pathfinding;
+using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using ImGuiNET;
 
 namespace BossMod.AI;
@@ -21,7 +22,7 @@ sealed class AIBehaviour(AIController ctrl, Autorotation autorot) : IDisposable
     {
     }
 
-    public void Execute(Actor player, Actor master)
+    public unsafe void Execute(Actor player, Actor master)
     {
         if (player.IsDead || ctrl.InCutscene)
             return;
@@ -30,7 +31,7 @@ sealed class AIBehaviour(AIController ctrl, Autorotation autorot) : IDisposable
         if (_config.FocusTargetLeader)
             FocusMaster(master);
 
-        _afkMode = !master.InCombat && (autorot.WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 10;
+        _afkMode = !master.InCombat && (autorot.WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 10 && FateManager.Instance()->CurrentFate is null;
         bool forbidActions = _forbidActions || ctrl.IsMounted || _afkMode || autorot.ClassActions == null || autorot.ClassActions.AutoAction >= CommonActions.AutoActionFirstCustom;
 
         CommonActions.Targeting target = new();
@@ -61,9 +62,9 @@ sealed class AIBehaviour(AIController ctrl, Autorotation autorot) : IDisposable
     }
 
     // returns null if we're to be idle, otherwise target to attack
-    private CommonActions.Targeting SelectPrimaryTarget(Actor player, Actor master)
+    private unsafe CommonActions.Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
-        if (!autorot.Hints.PriorityTargets.Any() || !master.InCombat || autorot.ClassActions == null)
+        if (!autorot.Hints.PriorityTargets.Any() || (!master.InCombat && FateManager.Instance()->CurrentFate is null) || autorot.ClassActions == null)
             return new(); // there are no valid targets to attack, or we're not fighting - remain idle
 
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames

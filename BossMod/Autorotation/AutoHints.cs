@@ -1,4 +1,5 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Fate;
+﻿using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 
 namespace BossMod;
 
@@ -45,9 +46,32 @@ public sealed class AutoHints : IDisposable
             }
         }
 
+        var epicEcho = _ws.Party[0]!.FindStatus(2734) is not null;
+
         foreach (var enemy in hints.PotentialTargets)
+        {
+            if (epicEcho)
+            {
+                enemy.ForbidDOTs = true;
+
+                if (enemy.Actor.Position.InCircle(_ws.Party[0]!.Position, 25))
+                    enemy.Priority = 0;
+            }
+
             if (enemy.Actor.HP.Cur == 1)
                 enemy.Priority = -1;
+
+            var obj = Utils.GameObjectInternal(Service.ObjectTable[enemy.Actor.SpawnIndex]);
+            if (obj is null)
+                continue;
+
+            // enemy is part of fate we aren't in
+            if (fate == null && obj->FateId != 0)
+                enemy.Priority = -1;
+
+            if (fate != null && obj->FateId == fate->FateId)
+                enemy.Priority = _ws.Party[0]!.Level <= fate->MaxLevel ? 0 : -1;
+        }
     }
 
     private void OnCastStarted(Actor actor)
