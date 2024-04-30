@@ -142,13 +142,13 @@ class Actions : CommonActions
 
     private (Rotation.Form, float) DetermineForm()
     {
-        var s = StatusDetails(Player, SID.OpoOpoForm, Player.InstanceID, 0).Left;
+        var s = StatusDetails(Player, SID.OpoOpoForm, Player.InstanceID).Left;
         if (s > 0)
             return (Rotation.Form.OpoOpo, s);
-        s = StatusDetails(Player, SID.RaptorForm, Player.InstanceID, 0).Left;
+        s = StatusDetails(Player, SID.RaptorForm, Player.InstanceID).Left;
         if (s > 0)
             return (Rotation.Form.Raptor, s);
-        s = StatusDetails(Player, SID.CoeurlForm, Player.InstanceID, 0).Left;
+        s = StatusDetails(Player, SID.CoeurlForm, Player.InstanceID).Left;
         if (s > 0)
             return (Rotation.Form.Coeurl, s);
         return (Rotation.Form.None, 0);

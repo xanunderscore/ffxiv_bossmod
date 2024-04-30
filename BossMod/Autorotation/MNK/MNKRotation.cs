@@ -8,6 +8,7 @@ public static class Rotation
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
     private static readonly float SSSApplicationDelay = 0.62f;
+    private static readonly bool Debug = false;
 
     // full state needed for determining next action
     public class State(WorldState ws) : CommonRotation.PlayerState(ws)
@@ -29,15 +30,16 @@ public static class Rotation
         public float FoPLeft; // 30 max
         public float HsacLeft; // 15 max
 
-        public bool HaveLunar => Nadi.HasFlag(Nadi.LUNAR);
-        public bool HaveSolar => Nadi.HasFlag(Nadi.SOLAR);
+        public bool HasLunar => Nadi.HasFlag(Nadi.LUNAR);
+        public bool HasSolar => Nadi.HasFlag(Nadi.SOLAR);
+        public bool HasBothNadi => HasLunar && HasSolar;
 
         public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
 
         public int BeastCount => BeastChakra.Count(x => x != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.NONE);
 
-        public bool ForcedLunar => BeastCount > 1 && BeastChakra[0] == BeastChakra[1];
-        public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1];
+        public bool ForcedLunar => BeastCount > 1 && BeastChakra[0] == BeastChakra[1] && !HasBothNadi;
+        public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1] && !HasBothNadi;
 
         // upgrade paths
         public AID BestForbiddenChakra => Unlocked(AID.ForbiddenChakra) ? AID.ForbiddenChakra : AID.SteelPeak;
@@ -53,7 +55,7 @@ public static class Rotation
                 if (BeastCount != 3)
                     return AID.MasterfulBlitz;
 
-                if (HaveLunar && HaveSolar)
+                if (HasLunar && HasSolar)
                     return BestPhantomRush;
 
                 var bc = BeastChakra;
@@ -185,6 +187,7 @@ public static class Rotation
         public OffensiveAbilityUse WindUse;
         public OffensiveAbilityUse BrotherhoodUse;
         public OffensiveAbilityUse TFCUse;
+        public OffensiveAbilityUse MeditationUse;
         public OffensiveAbilityUse PerfectBalanceUse;
         public FormChoice PBForm1;
         public FormChoice PBForm2;
@@ -205,7 +208,7 @@ public static class Rotation
 
         public void ApplyStrategyOverrides(uint[] overrides)
         {
-            if (overrides.Length >= 17)
+            if (overrides.Length >= 18)
             {
                 DashUse = (DashStrategy)overrides[0];
                 TrueNorthUse = (OffensiveAbilityUse)overrides[1];
@@ -216,16 +219,17 @@ public static class Rotation
                 WindUse = (OffensiveAbilityUse)overrides[6];
                 BrotherhoodUse = (OffensiveAbilityUse)overrides[7];
                 TFCUse = (OffensiveAbilityUse)overrides[8];
-                PerfectBalanceUse = (OffensiveAbilityUse)overrides[9];
-                PBForm1 = (FormChoice)overrides[10];
-                PBForm2 = (FormChoice)overrides[11];
-                PBForm3 = (FormChoice)overrides[12];
-                FormShiftUse = (FormShiftStrategy)overrides[13];
-                FormShiftForm = (FormChoice)overrides[14];
-                BlitzUse = (BlitzStrategy)overrides[15];
-                DragonKickUse = (DragonKickStrategy)overrides[16];
-                SSSUse = (OffensiveAbilityUse)overrides[17];
-                PotionUse = (OffensiveAbilityUse)overrides[18];
+                MeditationUse = (OffensiveAbilityUse)overrides[9];
+                PerfectBalanceUse = (OffensiveAbilityUse)overrides[10];
+                PBForm1 = (FormChoice)overrides[11];
+                PBForm2 = (FormChoice)overrides[12];
+                PBForm3 = (FormChoice)overrides[13];
+                FormShiftUse = (FormShiftStrategy)overrides[14];
+                FormShiftForm = (FormChoice)overrides[15];
+                BlitzUse = (BlitzStrategy)overrides[16];
+                DragonKickUse = (DragonKickStrategy)overrides[17];
+                SSSUse = (OffensiveAbilityUse)overrides[18];
+                PotionUse = (OffensiveAbilityUse)overrides[19];
             }
             else
             {
@@ -238,6 +242,7 @@ public static class Rotation
                 WindUse = OffensiveAbilityUse.Automatic;
                 BrotherhoodUse = OffensiveAbilityUse.Automatic;
                 TFCUse = OffensiveAbilityUse.Automatic;
+                MeditationUse = OffensiveAbilityUse.Automatic;
                 PerfectBalanceUse = OffensiveAbilityUse.Automatic;
                 PBForm1 = FormChoice.Automatic;
                 PBForm2 = FormChoice.Automatic;
@@ -290,9 +295,8 @@ public static class Rotation
         if (
             state.FireLeft >= state.GCD + state.AttackGCDTime * 3 &&
             state.CanWeave(state.CD(CDGroup.PerfectBalance) - 40, 0.6f, state.GCD + state.AttackGCDTime) &&
-            state.BeastCount == 0 &&
-            state.HaveSolar &&
-            NeedDFRefresh(state, strategy, 5)
+            state.PerfectBalanceLeft == 0 &&
+            state.HasSolar
         )
             return AID.TwinSnakes;
 
@@ -361,7 +365,7 @@ public static class Rotation
 
         if (!HaveTarget(state, strategy))
         {
-            if (state.Chakra < 5 && state.Unlocked(AID.Meditation))
+            if (state.Chakra < 5 && state.Unlocked(AID.Meditation) && strategy.MeditationUse != CommonRotation.Strategy.OffensiveAbilityUse.Delay)
                 return AID.Meditation;
 
             if (strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic && state.CanFormShift && state.FormShiftLeft < 3)
@@ -563,22 +567,24 @@ public static class Rotation
                     break;
             }
 
-            bool canCoeurl, canRaptor, canOpo, forcedSolar;
+            bool canCoeurl, canRaptor, canOpo;
 
             var nextNadi = strategy.NextNadi;
             // if a blitz is already in progress, finish it even if buffs would fall off in the process, since celestial revolution is always a mistake
             var forcedLunar = nextNadi == Strategy.NadiChoice.Lunar || state.ForcedLunar;
-            forcedSolar = nextNadi == Strategy.NadiChoice.Solar || state.ForcedSolar;
+            var forcedSolar = nextNadi == Strategy.NadiChoice.Solar || state.ForcedSolar;
             canCoeurl = !forcedLunar;
             canRaptor = !forcedLunar;
-            // slightly annoying conditional because this is always true in lunar, but only true in solar if we haven't used it yet, just like the others
-            canOpo = !state.ForcedSolar || state.BeastChakra.All(b => b != BeastChakra.OPOOPO);
+            canOpo = true;
 
-            foreach (var chak in state.BeastChakra)
-            {
-                canCoeurl &= chak != BeastChakra.COEURL;
-                canRaptor &= chak != BeastChakra.RAPTOR;
-            }
+            if (!state.HasBothNadi)
+                foreach (var chak in state.BeastChakra)
+                {
+                    canCoeurl &= chak != BeastChakra.COEURL;
+                    canRaptor &= chak != BeastChakra.RAPTOR;
+                    if (forcedSolar)
+                        canOpo &= chak != BeastChakra.OPOOPO;
+                }
 
             // big pile of conditionals to check whether this is a forced solar (buffs are running out).
             // odd windows are planned out such that buffed demo was used right before perfect balance, so this
@@ -617,7 +623,9 @@ public static class Rotation
             //      if we try to delay both lunar/solar until RoF is up, like the standard opener (which is just BH3),
             //      pre-PB demolish will fall off for multiple GCDs;
             //      so early non-demo solar is the only way to prevent clipping
-            var isBH2 = state.FireLeft == 0 && (forcedSolar || !state.HaveSolar);
+
+            // TODO: full demo is more potency than any single gcd, so we should use opo before demo if a refresh is imminent
+            var isBH2 = state.FireLeft == 0 && (forcedSolar || !state.HasSolar) && state.Unlocked(AID.RiddleOfFire);
             if (isBH2)
                 return canRaptor ? Form.Raptor : canCoeurl ? Form.Coeurl : Form.OpoOpo;
 
@@ -749,22 +757,26 @@ public static class Rotation
             || !state.CanWeave(state.CD(CDGroup.PerfectBalance) - 40, 0.6f, deadline)
             || strategy.PerfectBalanceUse == CommonRotation.Strategy.OffensiveAbilityUse.Delay
         )
-            return false;
+            return LogWhy(false, "PB", $"PBLeft = {state.PerfectBalanceLeft}, cd = {state.CD(CDGroup.PerfectBalance)}");
 
         if (strategy.PerfectBalanceUse == CommonRotation.Strategy.OffensiveAbilityUse.Force)
-            return true;
+            return LogWhy(true, "PB", "forced");
 
         if (!HaveTarget(state, strategy) || strategy.ActualFightEndIn < state.GCD + state.AttackGCDTime * 3)
-            return false;
+            return LogWhy(false, "PB", $"target={HaveTarget(state, strategy)}, fight end={strategy.ActualFightEndIn}");
 
         // with enough haste/low enough GCD (< 1.6, currently exclusive to bozja), double lunar is possible without dropping buffs
         // via lunar -> opo -> snakes -> pb -> lunar
         // this is the only time PB use is not directly after an opo GCD
         if (state.Form == Form.Coeurl && state.FireLeft > deadline + state.AttackGCDTime * 3)
-            return !NeedDFRefresh(state, strategy, 5) && !NeedDemolishRefresh(state, strategy, 3);
+            return LogWhy(
+                !NeedDFRefresh(state, strategy, 5) && !NeedDemolishRefresh(state, strategy, 3),
+                "PB",
+                $"nonstandard (coeurl) lunar, DF={state.DisciplinedFistLeft}, Demo={state.TargetDemolishLeft}"
+            );
 
         if (state.Form != Form.Raptor)
-            return false;
+            return LogWhy(false, "PB", "not in raptor");
 
         // bh1 and bh3 even windows where RoF is used no earlier than 2 GCDs before this; also odd windows where
         // natural demolish happens during RoF
@@ -774,19 +786,29 @@ public static class Rotation
         if (ShouldUseRoF(state, strategy, deadline) || state.FireLeft > deadline + state.AttackGCDTime * 3 || !state.Unlocked(AID.RiddleOfFire))
         {
             if (!CanSolar(state, strategy))
-                return !NeedDFRefresh(state, strategy, 5) && !NeedDemolishRefresh(state, strategy, 6);
+            {
+                return LogWhy(
+                    !NeedDFRefresh(state, strategy, 5) && !NeedDemolishRefresh(state, strategy, 6),
+                    "PB",
+                    $"BH1 (RoF active or imminent), solar unavailable, DF={state.DisciplinedFistLeft}, Demo={state.TargetDemolishLeft}"
+                );
+            }
 
             // see haste note above; delay standard even window PB2 in favor of double lunar
             if (NeedDFRefresh(state, strategy, 3) && !NeedDemolishRefresh(state, strategy, 4))
-                return false;
+                return LogWhy(false, "PB", $"BH1 (RoF active or imminent), DF expiring = {state.DisciplinedFistLeft}");
 
-            return true;
+            return LogWhy(true, "PB", "BH1 (RoF active or imminent)");
         }
 
         // odd windows where natural demolish happens before RoF, at most 3 GCDs prior - raptor GCD is forced to
         // be twin snakes if this is the case, so we don't need to check DF timer
         if (!CanSolar(state, strategy) && ShouldUseRoF(state, strategy, state.GCD + state.AttackGCDTime))
-            return !NeedDemolishRefresh(state, strategy, 7);
+            return LogWhy(
+                !NeedDemolishRefresh(state, strategy, 7),
+                "PB",
+                $"odd window, solar unavailable, RoF imminent, demo = {state.TargetDemolishLeft}"
+            );
 
         // bhood 2 window: natural demolish happens in the middle of RoF. it's possible that only the blitz itself
         // gets the RoF buff, so BH2 consists of
@@ -799,9 +821,9 @@ public static class Rotation
             && !ShouldUseRoF(state, strategy, deadline)
             && ShouldUseRoF(state, strategy, deadline + state.AttackGCDTime * 3)
         )
-            return !NeedDemolishRefresh(state, strategy, 7);
+            return LogWhy(!NeedDemolishRefresh(state, strategy, 7), "PB", $"BH2 (early unbuffed solar), demo = {state.TargetDemolishLeft}");
 
-        return false;
+        return LogWhy(false, "PB", "fallback");
     }
 
     private static bool ShouldUseTrueNorth(State state, Strategy strategy, float lastOgcdDeadline)
@@ -885,6 +907,13 @@ public static class Rotation
     {
         Strategy.NadiChoice.Solar => true,
         Strategy.NadiChoice.Lunar => false,
-        _ => !state.HaveSolar
+        _ => !state.HasSolar
     };
+
+    private static T LogWhy<T>(T value, string tag, string message)
+    {
+        if (Debug)
+            Service.Log($"[{tag}] {value}: {message}");
+        return value;
+    }
 }
