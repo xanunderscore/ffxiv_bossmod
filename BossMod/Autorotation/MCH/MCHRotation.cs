@@ -121,7 +121,7 @@ public static class Rotation
         if (state.Unlocked(AID.Ricochet) && state.CanWeave(state.FullRicochetCD, 0.6f, deadline))
             return ActionID.MakeSpell(AID.Ricochet);
 
-        if (state.CD(CDGroup.Drill) > 0 && state.CanWeave(CDGroup.BarrelStabilizer, 0.6f, deadline))
+        if (state.CD(CDGroup.Drill) > 0 && state.Unlocked(AID.BarrelStabilizer) && state.CanWeave(CDGroup.BarrelStabilizer, 0.6f, deadline))
             return ActionID.MakeSpell(AID.BarrelStabilizer);
 
         if (ShouldUseBurst(state, strategy, deadline))
