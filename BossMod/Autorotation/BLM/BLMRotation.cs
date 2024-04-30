@@ -61,8 +61,8 @@ public static class Rotation
 
         public bool Unlocked(TraitID tid) => Definitions.Unlocked(tid, Level, UnlockProgress);
 
-        public int GetAdjustedFireCost(int mpCost) =>
-            AdjustCost(
+        public int GetAdjustedFireCost(int mpCost)
+            => AdjustCost(
                 ElementalLevel switch
                 {
                     0 => mpCost,
@@ -71,8 +71,8 @@ public static class Rotation
                 }
             );
 
-        public int GetAdjustedIceCost(int mpCost) =>
-            AdjustCost(
+        public int GetAdjustedIceCost(int mpCost)
+            => AdjustCost(
                 ElementalLevel switch
                 {
                     -3 => 0,
@@ -88,8 +88,8 @@ public static class Rotation
         private const int MAXIMUM_FOM_TICK = 1650;
 
         // Lucid Dreaming's refresh effect is then applied on top of that (so is Cure II, which is 1000 MP per tick, but i don't know the SID for it)
-        public int MPDrainPerHalfTick =>
-            (FontOfMagicLeft > 0 ? MAXIMUM_FOM_TICK : 0) - (LucidDreamingLeft > 0 ? 550 : 0);
+        public int MPDrainPerHalfTick
+            => (FontOfMagicLeft > 0 ? MAXIMUM_FOM_TICK : 0) - (LucidDreamingLeft > 0 ? 550 : 0);
 
         public int ExpectedMPAfter(float delay)
         {
@@ -214,8 +214,8 @@ public static class Rotation
             && state.ExpectedMPAfter(castEndIn) >= mpCost + minMP;
     }
 
-    private static bool CanCast(State state, Strategy strategy, AID action, int mpCost, bool preserveFoM = true) =>
-        state.Unlocked(action) && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost, preserveFoM);
+    private static bool CanCast(State state, Strategy strategy, AID action, int mpCost, bool preserveFoM = true)
+        => state.Unlocked(action) && CanCast(state, strategy, state.GetSlidecastTime(action), mpCost, preserveFoM);
 
     public static uint MPTick(int elementalLevel)
     {
@@ -251,7 +251,7 @@ public static class Rotation
                 && strategy.AutoRefresh
             )
                 return AID.UmbralSoul;
-            
+
             return AID.None;
         }
 
@@ -395,6 +395,10 @@ public static class Rotation
 
     public static AID GetIceGCD(State state, Strategy strategy)
     {
+        // in umbral ice, paradox costs no mp and has no cast time, so no check
+        if (state.Paradox)
+            return AID.Paradox;
+
         // get max hearts for swap
         if (state.UmbralHearts < 3 && state.Unlocked(TraitID.EnhancedFreeze) && state.ElementalLevel < 0)
         {
@@ -411,7 +415,7 @@ public static class Rotation
             {
                 if (state.FontOfMagicLeft > state.TimeToManaTick)
                 {
-                    if (state.CurMP >= 9000 && state.CurMP < 10000)
+                    if (state.CurMP is >= 9000 and < 10000)
                         return (AID)BozjaActionID.GetNormal(BozjaHolsterID.LostFlareStar).ID;
                 }
                 else if (state.DutyActionCD(BozjaActionID.GetNormal(BozjaHolsterID.LostFontOfMagic)) == 0 && CanFoM(state, strategy))
@@ -466,10 +470,6 @@ public static class Rotation
             if (CanCast(state, strategy, AID.Blizzard3, state.GetAdjustedIceCost(800)) && state.ElementalLevel > -3)
                 return AID.Blizzard3;
 
-            // in umbral ice, paradox costs no mp and has no cast time, so no check
-            if (state.Paradox)
-                return AID.Paradox;
-
             if (CanPoly(state, strategy, 1))
                 return state.BestPolySpell;
 
@@ -482,7 +482,7 @@ public static class Rotation
 
     public static ActionID GetNextBestOGCD(State state, Strategy strategy, float deadline)
     {
-        if (strategy.CombatTimer > -100 && strategy.CombatTimer < 0)
+        if (strategy.CombatTimer is > (-100) and < 0)
         {
             if (strategy.CombatTimer > -12 && state.SharpcastLeft == 0)
                 return ActionID.MakeSpell(AID.Sharpcast);
@@ -494,7 +494,8 @@ public static class Rotation
             !state.TargetingEnemy
             && state.CanWeave(CDGroup.Transpose, 0.6f, deadline)
             && strategy.AutoRefresh
-        ) {
+        )
+        {
             if (state.ElementalLevel > 0)
                 return ActionID.MakeSpell(AID.Transpose);
 
@@ -567,8 +568,8 @@ public static class Rotation
         return state.CanWeave(CDGroup.Manafont, 0.6f, deadline);
     }
 
-    private static bool CanPoly(State state, Strategy strategy, int minStacks = 2) =>
-        state.Polyglot >= minStacks && CanCast(state, strategy, state.BestPolySpell, 0);
+    private static bool CanPoly(State state, Strategy strategy, int minStacks = 2)
+        => state.Polyglot >= minStacks && CanCast(state, strategy, state.BestPolySpell, 0);
 
     private static bool CanFlareStar(State state, Strategy strategy)
     {
