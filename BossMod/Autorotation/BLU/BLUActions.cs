@@ -170,11 +170,11 @@ class Actions : CommonActions
         if (_state.Mimic != Rotation.Mimic.None)
             return null;
 
-        if (target != null && target.IsAlly)
+        if (target != null && target.Type is ActorType.Player)
             return target;
 
         return Autorot.WorldState.Actors.FirstOrDefault(
-            x => x.Class.IsDD() && x.Position.InCircle(Player.Position, 25)
+            x => x.Class.IsDD() && x.Position.InCircle(Player.Position, 25) && x.Type is ActorType.Player
         );
     }
 }
