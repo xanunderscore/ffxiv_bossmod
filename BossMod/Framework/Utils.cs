@@ -77,9 +77,7 @@ public static partial class Utils
         // striking dummy
         if (tarObject.NameId == 541)
             return true;
-        var isBoss = Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(tarObject.DataId)?.Rank is 1 or 2 or 6;
-        Service.Log($"{tar} is boss? {isBoss}");
-        return isBoss;
+        return Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(tarObject.DataId)?.Rank is 1 or 2 or 6;
     }
 
     public static unsafe uint FrameIndex() => FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->FrameCounter;
