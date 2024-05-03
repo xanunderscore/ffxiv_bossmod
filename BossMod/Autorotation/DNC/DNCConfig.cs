@@ -11,4 +11,7 @@ class DNCConfig : ConfigNode
 
     [PropertyDisplay("Automatically choose dance partner")]
     public bool AutoPartner = true;
+
+    [PropertyDisplay("Camera-relative dash")]
+    public bool CameraDash = true;
 }

@@ -43,6 +43,8 @@ class Actions : CommonActions
 
         _strategy.PauseDuringImprov = config.PauseDuringImprov;
         _strategy.AutoPartner = config.AutoPartner;
+
+        SupportedSpell(AID.EnAvant).TransformAngle = config.CameraDash ? () => new Angle(Camera.Instance!.CameraAzimuth) + 180.Degrees() : null;
     }
 
     protected override NextAction CalculateAutomaticGCD()
