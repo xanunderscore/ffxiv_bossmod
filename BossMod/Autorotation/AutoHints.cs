@@ -40,7 +40,6 @@ public sealed class AutoHints : IDisposable
         else
         {
             hints.Center = player.Position;
-            // keep default bounds
         }
 
         foreach (var aoe in _activeAOEs.Values)
@@ -61,6 +60,7 @@ public sealed class AutoHints : IDisposable
 
         foreach (var enemy in hints.PotentialTargets)
         {
+            var pendingHP = _ws.PendingEffects.PendingHPDifference(enemy.Actor.InstanceID);
             if (epicEcho)
             {
                 enemy.ForbidDOTs = true;
@@ -69,7 +69,8 @@ public sealed class AutoHints : IDisposable
                     enemy.Priority = 0;
             }
 
-            if (enemy.Actor.HPMP.CurHP == 1)
+            // enemy is either HP locked to 1 (in phase transition and invincible) or expected to die (pending spell/action damage)
+            if (pendingHP + enemy.Actor.HPMP.CurHP <= 0)
                 enemy.Priority = -1;
 
             var obj = Utils.GameObjectInternal(Service.ObjectTable[enemy.Actor.SpawnIndex]);
