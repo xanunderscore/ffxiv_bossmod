@@ -105,7 +105,7 @@ sealed class Autorotation : IDisposable
             classType = player.Class switch
             {
                 Class.WAR or Class.MRD => typeof(WAR.Actions),
-                Class.PLD or Class.GLA => player.Level <= 60 ? typeof(PLD.Actions) : null,
+                Class.PLD or Class.GLA => typeof(PLD.Actions),
                 Class.MNK or Class.PGL => typeof(MNK.Actions),
                 Class.MCH => typeof(MCH.Actions),
                 Class.DRG or Class.LNC => typeof(DRG.Actions),

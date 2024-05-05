@@ -113,6 +113,7 @@ public enum SID : uint
     HallowedGround = 82, // applied by Hallowed Ground to self, immune
     IronWill = 79, // applied by Iron Will to self, tank stance
     Stun = 2, // applied by Low Blow, Shield Bash to target
+    DivineMight = 2673,
 }
 
 public static class Definitions
