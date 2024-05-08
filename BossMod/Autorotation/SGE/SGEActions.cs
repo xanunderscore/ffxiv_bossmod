@@ -132,7 +132,7 @@ class Actions : HealerActions
             return default;
 
         // TODO: tweak threshold?
-        if (NearbyAlliesNeedShield.Count() > 5)
+        if (NearbyAlliesNeedShield.Count() > 3)
             return _state.Eukrasia ? MakeResult(AID.EukrasianPrognosis, Player) : MakeResult(AID.Eukrasia, Player);
 
         var nextAlly = AlliesNeedShield.FirstOrDefault();
