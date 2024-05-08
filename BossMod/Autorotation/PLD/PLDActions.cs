@@ -21,6 +21,7 @@ class Actions : TankActions
         SupportedSpell(AID.Interject).Condition = target => target?.CastInfo?.Interruptible ?? false;
         SupportedSpell(AID.Clemency).TransformTarget = SmartTargetFriendlyOrSelf;
         SupportedSpell(AID.Cover).TransformTarget = SmartTargetFriendly;
+        SupportedSpell(AID.IronWill).TransformAction = () => ActionID.MakeSpell(_state.HaveTankStance ? AID.ReleaseIronWill : AID.IronWill);
 
         _config = Service.Config.GetAndSubscribe<PLDConfig>(OnConfigModified);
     }
@@ -86,6 +87,9 @@ class Actions : TankActions
     private void UpdatePlayerState()
     {
         FillCommonPlayerState(_state);
+        if (_state.AnimationLockDelay < 0.1f)
+            _state.AnimationLockDelay = 0.1f;
+
         _state.HaveTankStance = Player.FindStatus(SID.IronWill) != null;
 
         var gauge = Service.JobGauges.Get<PLDGauge>();
@@ -94,6 +98,8 @@ class Actions : TankActions
 
         _state.FightOrFlightLeft = StatusDetails(Player, SID.FightOrFlight, Player.InstanceID).Left;
         _state.DivineMightLeft = StatusDetails(Player, SID.DivineMight, Player.InstanceID).Left;
+        _state.Requiescat = StatusDetails(Player, SID.Requiescat, Player.InstanceID);
+        _state.SwordOath = StatusDetails(Player, SID.SwordOath, Player.InstanceID);
     }
 
     private void OnConfigModified(PLDConfig config)

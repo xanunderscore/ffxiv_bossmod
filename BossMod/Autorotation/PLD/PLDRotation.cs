@@ -8,6 +8,8 @@ public static class Rotation
     {
         public float FightOrFlightLeft; // 0 if buff not up, max 25
         public float DivineMightLeft; // max 30
+        public (float Left, int Stacks) Requiescat; // max 30/4 stacks
+        public (float Left, int Stacks) SwordOath; // max 30/3 stacks
         public int OathGauge; // 0-100
 
         public AID ComboLastMove => (AID)ComboLastAction;
@@ -47,6 +49,9 @@ public static class Rotation
 
     public static AID GetNextBestGCD(State state, Strategy strategy)
     {
+        if (!state.TargetingEnemy)
+            return AID.None;
+
         if (state.RangeToTarget > 3 && state.DivineMightLeft > state.GCD)
             return AID.HolySpirit;
 
@@ -59,8 +64,17 @@ public static class Rotation
 
         if (strategy.NumAOETargets >= 3 && state.Unlocked(AID.TotalEclipse))
         {
+            // TODO change when confiteor is unlocked
+            if (state.Requiescat.Left > state.GCD && state.Unlocked(AID.HolyCircle) && state.CurMP >= 1000)
+                return AID.HolyCircle;
+
             if (state.Unlocked(AID.Prominence) && state.ComboLastMove == AID.TotalEclipse)
+            {
+                if (state.DivineMightLeft > state.GCD && state.Unlocked(AID.HolyCircle) && state.CurMP >= 1000)
+                    return AID.HolyCircle;
+
                 return AID.Prominence;
+            }
 
             return AID.TotalEclipse;
         }
@@ -73,11 +87,21 @@ public static class Rotation
             )
                 return AID.HolySpirit;
 
+            // TODO change when confiteor is unlocked
+            if (state.Requiescat.Left > state.GCD && state.CurMP >= 1000)
+                return AID.HolySpirit;
+
+            // use early in FoF window
+            if (state.SwordOath.Left > state.GCD && state.FightOrFlightLeft > state.GCD)
+                return AID.Atonement;
+
             if (state.Unlocked(AID.RageOfHalone) && state.ComboLastMove == AID.RiotBlade)
             {
                 if (state.DivineMightLeft > state.GCD && state.CurMP >= 1000)
-                    // TODO save if fof is coming up
                     return AID.HolySpirit;
+
+                if (state.SwordOath.Left > state.GCD)
+                    return AID.Atonement;
 
                 return state.BestRoyalAuthority;
             }
@@ -95,14 +119,30 @@ public static class Rotation
 
         var aoe = strategy.NumAOETargets >= 3;
 
-        // 2. fight or flight, if off gcd and late-weaving, after first combo action
         if (
-            state.Unlocked(AID.FightOrFlight)
-            && state.ComboLastMove == (aoe ? AID.TotalEclipse : AID.FastBlade)
+            (state.DivineMightLeft > 0 || state.Requiescat.Left > 0 || state.SwordOath.Left > 0)
             && state.CanWeave(CDGroup.FightOrFlight, 0.6f, deadline)
-            && state.GCD <= 1.0f
         )
             return ActionID.MakeSpell(AID.FightOrFlight);
+
+        if (!state.Unlocked(AID.Requiescat))
+        {
+            // pre-requiescat unlocked, use during basic GCD combo to buff
+            if (
+                state.Unlocked(AID.FightOrFlight)
+                && state.ComboLastMove == (aoe ? AID.TotalEclipse : AID.FastBlade)
+                && state.CanWeave(CDGroup.FightOrFlight, 0.6f, deadline)
+                && state.GCD <= 1.0f
+            )
+                return ActionID.MakeSpell(AID.FightOrFlight);
+        }
+
+        if (
+            state.FightOrFlightLeft > state.AnimationLock
+            && state.Unlocked(AID.Requiescat)
+            && state.CanWeave(CDGroup.Requiescat, 0.6f, deadline)
+        )
+            return ActionID.MakeSpell(AID.Requiescat);
 
         // 3. spirits within/circle of scorn, delayed until FoF if it's about to be off cooldown (TODO: think more about delay condition...)
         if (
@@ -119,6 +159,13 @@ public static class Rotation
             && strategy.NumAOETargets > 0
         )
             return ActionID.MakeSpell(AID.CircleOfScorn);
+
+        if (
+            state.FightOrFlightLeft > 0
+            && state.Unlocked(AID.Intervene)
+            && state.CanWeave(state.CD(CDGroup.Intervene) - 30, 0.6f, deadline)
+        )
+            return ActionID.MakeSpell(AID.Intervene);
 
         if (state.Unlocked(AID.Sheltron) && strategy.CombatTimer > 0 && state.OathGauge >= 95)
             return ActionID.MakeSpell(AID.Sheltron);

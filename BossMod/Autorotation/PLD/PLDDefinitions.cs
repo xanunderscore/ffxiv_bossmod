@@ -51,6 +51,7 @@ public enum AID : uint
     ShieldBash = 16, // L10, instant, range 3, single-target 0/0, targets=hostile
     ShieldLob = 24, // L15, instant, range 20, single-target 0/0, targets=hostile
     IronWill = 28, // L10, instant, 3.0s CD (group 3), range 0, single-target 0/0, targets=self
+    ReleaseIronWill = 32065, // L10, instant, 1.0s CD (group 3), range 0, single-target 0/0, targets=self
     Provoke = 7533, // L15, instant, 30.0s CD (group 42), range 25, single-target 0/0, targets=hostile
     Shirk = 7537, // L48, instant, 120.0s CD (group 45), range 25, single-target 0/0, targets=party
     LowBlow = 7540, // L12, instant, 25.0s CD (group 41), range 3, single-target 0/0, targets=hostile
@@ -114,6 +115,8 @@ public enum SID : uint
     IronWill = 79, // applied by Iron Will to self, tank stance
     Stun = 2, // applied by Low Blow, Shield Bash to target
     DivineMight = 2673,
+    Requiescat = 1368,
+    SwordOath = 1902,
 }
 
 public static class Definitions
@@ -226,6 +229,7 @@ public static class Definitions
         res.GCD(AID.ShieldBash, 3);
         res.GCD(AID.ShieldLob, 20);
         res.OGCD(AID.IronWill, 0, CDGroup.IronWill, 3.0f);
+        res.OGCD(AID.ReleaseIronWill, 0, CDGroup.IronWill, 1.0f);
         res.OGCD(AID.Provoke, 25, CDGroup.Provoke, 30.0f);
         res.OGCD(AID.Shirk, 25, CDGroup.Shirk, 120.0f);
         res.OGCD(AID.LowBlow, 3, CDGroup.LowBlow, 25.0f);
