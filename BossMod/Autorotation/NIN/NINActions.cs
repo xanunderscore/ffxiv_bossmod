@@ -23,7 +23,6 @@ class Actions : CommonActions
     public Actions(Autorotation autorot, Actor player)
         : base(autorot, player, Definitions.UnlockQuests, Definitions.SupportedActions)
     {
-        _config = Service.Config.GetAndSubscribe<NINConfig>(OnConfigModified);
         _state = new(autorot.WorldState);
         _strategy = new();
 
@@ -34,6 +33,8 @@ class Actions : CommonActions
         SupportedSpell(AID.Jin).TransformAction = SupportedSpell(AID.Jin2).TransformAction = () =>
             ActionID.MakeSpell(_state.BestJin);
         SupportedSpell(AID.Ninjutsu).TransformAction = () => ActionID.MakeSpell(_state.CurrentNinjutsu);
+
+        _config = Service.Config.GetAndSubscribe<NINConfig>(OnConfigModified);
     }
 
     public override CommonRotation.PlayerState GetState() => _state;
