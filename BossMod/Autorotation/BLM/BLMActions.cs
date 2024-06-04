@@ -109,6 +109,22 @@ class Actions : CommonActions
                 Player,
                 !Player.InCombat && _state.SharpcastLeft == 0
             );
+        if (_state.Unlocked(AID.LeyLines))
+            // the rotation expects the user to manually use leylines after fight opener at their own discretion
+            // manually place leylines in longer fights, if they are fully AI-controlled
+            SimulateManualActionForAI(
+                ActionID.MakeSpell(AID.LeyLines),
+                Player.PosRot.XYZ(),
+                Player.InCombat && _strategy.CombatTimer > 120f && _state.CD(CDGroup.LeyLines) == 0 && _strategy.ForceMovementIn > 30
+            );
+        if (_state.Unlocked(AID.BetweenTheLines))
+            // use BTL to return to LL if not needed to dodge mechanics
+            // TODO this should probably be integrated with AIController somehow
+            SimulateManualActionForAI(
+                ActionID.MakeSpell(AID.BetweenTheLines),
+                null,
+                _state.LeyLinesLeft > 0 && !_state.InLeyLines && _state.CD(CDGroup.BetweenTheLines) == 0 && _strategy.ForceMovementIn > 30
+            );
     }
 
     protected override NextAction CalculateAutomaticGCD()

@@ -332,6 +332,19 @@ abstract class CommonActions : IDisposable
         }
     }
 
+    protected void SimulateManualActionForAI(ActionID action, Vector3 pos, bool enable)
+    {
+        if (enable)
+        {
+            var data = SupportedActions[action];
+            _mq.Push(action, null, pos, null, data.Definition, data.Condition, true);
+        }
+        else
+        {
+            _mq.Pop(action, true);
+        }
+    }
+
     // fill common state properties
     protected void FillCommonPlayerState(CommonRotation.PlayerState s)
     {

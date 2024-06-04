@@ -47,7 +47,7 @@ public static class Rotation
         public AID BestThunder1 => Unlocked(AID.Thunder3) ? AID.Thunder3 : AID.Thunder1;
         public AID BestThunder2 => Unlocked(AID.Thunder4) ? AID.Thunder4 : AID.Thunder2;
 
-        public AID BestFire1 => Paradox ? AID.Paradox : AID.Fire1;
+        public AID BestFire1 => Paradox && ElementalLeft > 0 ? AID.Paradox : AID.Fire1;
         public AID BestFire2 => Unlocked(AID.HighFire2) ? AID.HighFire2 : AID.Fire2;
         public AID BestBlizzard2 => Unlocked(AID.HighBlizzard2) ? AID.HighBlizzard2 : AID.Blizzard2;
 
