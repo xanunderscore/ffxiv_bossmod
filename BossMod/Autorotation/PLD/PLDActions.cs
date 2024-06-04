@@ -94,12 +94,21 @@ class Actions : TankActions
 
         var gauge = Service.JobGauges.Get<PLDGauge>();
 
+        // TODO: worldstate doesn't track this type of buff-conditional combo at the moment
+        // Confiteor is usable when the Confiteor status is active, but no such corresponding status exists for the
+        // Blade of X combo actions, it's somewhere inside actionmanager
+        var confiteorID = ActionManagerEx.Instance!.GetAdjustedActionID((uint)AID.Confiteor);
+
         _state.OathGauge = gauge.OathGauge;
 
         _state.FightOrFlightLeft = StatusDetails(Player, SID.FightOrFlight, Player.InstanceID).Left;
         _state.DivineMightLeft = StatusDetails(Player, SID.DivineMight, Player.InstanceID).Left;
         _state.Requiescat = StatusDetails(Player, SID.Requiescat, Player.InstanceID);
         _state.SwordOath = StatusDetails(Player, SID.SwordOath, Player.InstanceID);
+        if (confiteorID == (uint)AID.Confiteor)
+            _state.ConfiteorCombo = StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None;
+        else
+            _state.ConfiteorCombo = (AID)confiteorID;
     }
 
     private void OnConfigModified(PLDConfig config)

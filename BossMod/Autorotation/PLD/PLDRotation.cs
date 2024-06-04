@@ -8,6 +8,7 @@ public static class Rotation
     {
         public float FightOrFlightLeft; // 0 if buff not up, max 25
         public float DivineMightLeft; // max 30
+        public AID ConfiteorCombo;
         public (float Left, int Stacks) Requiescat; // max 30/4 stacks
         public (float Left, int Stacks) SwordOath; // max 30/3 stacks
         public int OathGauge; // 0-100
@@ -15,6 +16,8 @@ public static class Rotation
         public AID ComboLastMove => (AID)ComboLastAction;
 
         public AID BestRoyalAuthority => Unlocked(AID.RoyalAuthority) ? AID.RoyalAuthority : AID.RageOfHalone;
+        public AID BestExpiacion => Unlocked(AID.Expiacion) ? AID.Expiacion : AID.SpiritsWithin;
+        public AID BestSheltron => Unlocked(AID.HolySheltron) ? AID.HolySheltron : AID.Sheltron;
 
         public bool Unlocked(AID aid) => Definitions.Unlocked(aid, Level, UnlockProgress);
 
@@ -22,7 +25,7 @@ public static class Rotation
 
         public override string ToString()
         {
-            return $"RB={RaidBuffsLeft:f1}, FF={FightOrFlightLeft:f1}/{CD(CDGroup.FightOrFlight):f1}, PotCD={PotionCD:f1}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
+            return $"RB={RaidBuffsLeft:f1}, Combo={ComboLastMove}, FF={FightOrFlightLeft:f1}/{CD(CDGroup.FightOrFlight):f1}, PotCD={PotionCD:f1}, GCD={GCD:f3}, ALock={AnimationLock:f3}+{AnimationLockDelay:f3}, lvl={Level}/{UnlockProgress}";
         }
     }
 
@@ -52,15 +55,23 @@ public static class Rotation
         if (!state.TargetingEnemy)
             return AID.None;
 
-        if (state.RangeToTarget > 3 && state.DivineMightLeft > state.GCD)
-            return AID.HolySpirit;
-
         if (
             state.Unlocked(AID.GoringBlade)
             && state.CD(CDGroup.GoringBlade) <= state.GCD
             && state.FightOrFlightLeft > state.GCD
+            // skip this conditional to allow confiteor/holy spirit if target is out of range
+            && state.RangeToTarget <= 3
         )
             return AID.GoringBlade;
+
+        if (state.ConfiteorCombo != AID.None && state.CurMP >= 1000)
+            return state.ConfiteorCombo;
+
+        if (state.RangeToTarget > 3 && state.DivineMightLeft > state.GCD)
+            return AID.HolySpirit;
+
+        if (state.SwordOath.Left > state.GCD && state.SwordOath.Stacks < 3)
+            return AID.Atonement;
 
         if (strategy.NumAOETargets >= 3 && state.Unlocked(AID.TotalEclipse))
         {
@@ -146,11 +157,11 @@ public static class Rotation
 
         // 3. spirits within/circle of scorn, delayed until FoF if it's about to be off cooldown (TODO: think more about delay condition...)
         if (
-            state.Unlocked(AID.SpiritsWithin)
+            state.Unlocked(state.BestExpiacion)
             && state.CanWeave(CDGroup.SpiritsWithin, 0.6f, deadline)
             && (state.FightOrFlightLeft > 0 || state.CD(CDGroup.FightOrFlight) > 15)
         )
-            return ActionID.MakeSpell(AID.SpiritsWithin);
+            return ActionID.MakeSpell(state.BestExpiacion);
 
         if (
             state.Unlocked(AID.CircleOfScorn)
@@ -167,8 +178,8 @@ public static class Rotation
         )
             return ActionID.MakeSpell(AID.Intervene);
 
-        if (state.Unlocked(AID.Sheltron) && strategy.CombatTimer > 0 && state.OathGauge >= 95)
-            return ActionID.MakeSpell(AID.Sheltron);
+        if (state.Unlocked(state.BestSheltron) && strategy.CombatTimer > 0 && state.OathGauge >= 95)
+            return ActionID.MakeSpell(state.BestSheltron);
 
         // no suitable oGCDs...
         return new();

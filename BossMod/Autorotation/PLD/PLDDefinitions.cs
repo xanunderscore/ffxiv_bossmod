@@ -117,6 +117,7 @@ public enum SID : uint
     DivineMight = 2673,
     Requiescat = 1368,
     SwordOath = 1902,
+    ConfiteorReady = 3019,
 }
 
 public static class Definitions
