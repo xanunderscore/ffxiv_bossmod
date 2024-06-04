@@ -8,6 +8,8 @@ public static class Rotation
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
     private static readonly float SSSApplicationDelay = 0.62f;
+
+    // make configurable? idk? only rotation devs would care about this
     private static readonly bool Debug = false;
 
     // full state needed for determining next action
@@ -336,7 +338,12 @@ public static class Rotation
 
     public static AID GetNextBestGCD(State state, Strategy strategy)
     {
-        if (strategy.CombatTimer < 0)
+        // tradeoff here between always using meditation + form shift when not in combat ("optimal") versus only using
+        // them during countdowns (mostly optimal).
+        // the tradeoff is that "not in combat" includes the scenario of manually targeting an enemy you want to attack,
+        // even if they're already in melee range, which incurs an annoying 3s delay
+        // maybe AI mode should separately handle the out of combat form shift + meditate usage?
+        if (strategy.CombatTimer is < 0 and > -100)
         {
             if (state.Chakra < 5 && state.Unlocked(AID.Meditation))
                 return AID.Meditation;
@@ -822,6 +829,11 @@ public static class Rotation
             && ShouldUseRoF(state, strategy, deadline + state.AttackGCDTime * 3)
         )
             return LogWhy(!NeedDemolishRefresh(state, strategy, 7), "PB", $"BH2 (early unbuffed solar), demo = {state.TargetDemolishLeft}");
+
+        // forced solar (cdplan or because we would otherwise overcap lunar)
+        // (we are guaranteed to be in raptor form due to conditional above)
+        if ((strategy.NextNadi == Strategy.NadiChoice.Solar || state.HasLunar && !state.HasSolar) && state.CD(CDGroup.RiddleOfFire) == 0)
+            return LogWhy(true, "PB", "Solar forced");
 
         return LogWhy(false, "PB", "fallback");
     }

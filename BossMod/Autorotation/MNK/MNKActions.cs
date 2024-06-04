@@ -78,14 +78,15 @@ class Actions : CommonActions
 
     protected override void QueueAIActions()
     {
-        if (_state.Unlocked(AID.SteelPeak))
-            SimulateManualActionForAI(ActionID.MakeSpell(AID.Meditation), Player, !Player.InCombat && _state.Chakra < 5);
         if (_state.Unlocked(AID.SecondWind))
             SimulateManualActionForAI(ActionID.MakeSpell(AID.SecondWind), Player, Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.5f);
         if (_state.Unlocked(AID.Bloodbath))
             SimulateManualActionForAI(ActionID.MakeSpell(AID.Bloodbath), Player, Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8f);
-        if (_state.Unlocked(AID.FormShift))
-            SimulateManualActionForAI(ActionID.MakeSpell(AID.FormShift), Player, !Player.InCombat && _state.FormShiftLeft < 5 && _state.PerfectBalanceLeft == 0);
+        if (_state.Unlocked(AID.Meditation))
+            SimulateManualActionForAI(ActionID.MakeSpell(AID.Meditation), Player, !Player.InCombat && _state.Chakra < 5);
+        // TODO: this ends up being super annoying in some cases, maybe reconsider conditions
+        // if (_state.Unlocked(AID.FormShift))
+        //     SimulateManualActionForAI(ActionID.MakeSpell(AID.FormShift), Player, !Player.InCombat && _state.FormShiftLeft == 0 && _state.PerfectBalanceLeft == 0);
     }
 
     protected override NextAction CalculateAutomaticGCD()
