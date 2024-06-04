@@ -50,6 +50,19 @@ public static partial class Utils
     public static unsafe FFXIVClientStructs.FFXIV.Client.Game.Character.Character* CharacterInternal(Character? chr) => chr != null ? (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)chr.Address : null;
     public static unsafe FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara* BattleCharaInternal(BattleChara? chara) => chara != null ? (FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara*)chara.Address : null;
 
+    public static bool IsBoss(Actor? tar)
+    {
+        if (tar == null)
+            return false;
+        var tarObject = Service.ObjectTable[tar.SpawnIndex] as BattleChara;
+        if (tarObject == null)
+            return false;
+        // striking dummy
+        if (tarObject.NameId == 541)
+            return true;
+        return Service.LuminaRow<Lumina.Excel.GeneratedSheets.BNpcBase>(tarObject.DataId)?.Rank is 1 or 2 or 6;
+    }
+
     public static unsafe ulong MouseoverID()
     {
         var pronoun = FFXIVClientStructs.FFXIV.Client.UI.Misc.PronounModule.Instance();
