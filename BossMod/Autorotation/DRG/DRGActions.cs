@@ -146,8 +146,8 @@ class Actions : CommonActions
         SupportedSpell(AID.ElusiveJump).TransformAngle = config.ElusiveJump switch
         {
             DRGConfig.ElusiveJumpBehavior.CharacterForward => () => Player.Rotation + 180.Degrees(),
-            DRGConfig.ElusiveJumpBehavior.CameraBackward => () => new Angle(Camera.Instance!.CameraAzimuth) + 180.Degrees(),
-            DRGConfig.ElusiveJumpBehavior.CameraForward => () => new Angle(Camera.Instance!.CameraAzimuth),
+            DRGConfig.ElusiveJumpBehavior.CameraBackward => () => Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees(),
+            DRGConfig.ElusiveJumpBehavior.CameraForward => () => Camera.Instance!.CameraAzimuth.Radians(),
             _ => null
         };
     }

@@ -14,7 +14,6 @@ public sealed class Plugin : IDalamudPlugin
 
     private ICommandManager CommandManager { get; init; }
 
-    private readonly Network.Logger _network;
     private readonly WorldState _ws;
     private readonly WorldStateGameSync _wsSync;
     private readonly BossModuleManager _bossmod;
@@ -31,14 +30,20 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ReplayManagementWindow _wndReplay;
     private readonly MainDebugWindow _wndDebug;
 
-    public Plugin(
+    public unsafe Plugin(
         [RequiredVersion("1.0")] DalamudPluginInterface dalamud,
         [RequiredVersion("1.0")] ICommandManager commandManager)
     {
+        if (!dalamud.ConfigDirectory.Exists)
+            dalamud.ConfigDirectory.Create();
         var dalamudRoot = dalamud.GetType().Assembly.
                 GetType("Dalamud.Service`1", true)!.MakeGenericType(dalamud.GetType().Assembly.GetType("Dalamud.Dalamud", true)!).
                 GetMethod("Get")!.Invoke(null, BindingFlags.Default, null, [], null);
         var dalamudStartInfo = dalamudRoot?.GetType().GetProperty("StartInfo", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(dalamudRoot) as DalamudStartInfo;
+        var gameVersion = dalamudStartInfo?.GameVersion?.ToString() ?? "unknown";
+        InteropGenerator.Runtime.Resolver.GetInstance.Setup(0, gameVersion, new(dalamud.ConfigDirectory.FullName + "/cs.json"));
+        FFXIVClientStructs.Interop.Generated.Addresses.Register();
+        InteropGenerator.Runtime.Resolver.GetInstance.Resolve();
 
         dalamud.Create<Service>();
         Service.LogHandler = (string msg) => Service.Logger.Debug(msg);
@@ -54,14 +59,13 @@ public sealed class Plugin : IDalamudPlugin
         Service.Config.LoadFromFile(dalamud.ConfigFile);
         Service.Config.Modified.Subscribe(() => Service.Config.SaveToFile(dalamud.ConfigFile));
 
-        BozjaInterop.Instance = new();
         ActionManagerEx.Instance = new(); // needs config
 
         CommandManager = commandManager;
         CommandManager.AddHandler("/vbm", new CommandInfo(OnCommand) { HelpMessage = "Show boss mod config UI" });
 
-        _network = new(dalamud.ConfigDirectory);
-        _ws = new(Utils.FrameQPF(), dalamudStartInfo?.GameVersion?.ToString() ?? "unknown");
+        var qpf = (ulong)FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->PerformanceCounterFrequency;
+        _ws = new(qpf, gameVersion);
         _wsSync = new(_ws);
         _bossmod = new(_ws);
         _autorotation = new(_bossmod);
@@ -90,12 +94,10 @@ public sealed class Plugin : IDalamudPlugin
         _wndBossmod.Dispose();
         _ipc.Dispose();
         _bossmod.Dispose();
-        _network.Dispose();
         _ai.Dispose();
         _autorotation.Dispose();
         _wsSync.Dispose();
         ActionManagerEx.Instance?.Dispose();
-        BozjaInterop.Instance?.Dispose();
         CommandManager.RemoveHandler("/vbm");
     }
 

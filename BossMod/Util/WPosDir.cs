@@ -23,6 +23,8 @@ public record struct WDir(float X, float Z)
     public readonly float Dot(WDir a) => X * a.X + Z * a.Z;
     public static float Cross(WDir a, WDir b) => a.X * b.Z - a.Z * b.X;
     public readonly float Cross(WDir b) => Cross(this, b);
+    public readonly WDir Rotate(WDir dir) => new(Dot(dir.OrthoL()), Dot(dir));
+    public readonly WDir Rotate(Angle dir) => Rotate(dir.ToDirection());
     public readonly float LengthSq() => X * X + Z * Z;
     public readonly float Length() => MathF.Sqrt(LengthSq());
     public static WDir Normalize(WDir a) => a / a.Length();
@@ -33,6 +35,7 @@ public record struct WDir(float X, float Z)
     public readonly bool AlmostEqual(WDir b, float eps) => AlmostZero(this - b, eps);
 
     public override readonly string ToString() => $"({X:f3}, {Z:f3})";
+    public override readonly int GetHashCode() => (X, Z).GetHashCode(); // TODO: this is a hack, the default should be good enough, but for whatever reason (X, -Z).GetHashCode() == (-X, Z).GetHashCode()...
 
     // area checks, assuming this is an offset from shape's center
     public readonly bool InRect(WDir direction, float lenFront, float lenBack, float halfWidth)
@@ -62,6 +65,7 @@ public record struct WPos(float X, float Z)
     public static WPos Lerp(WPos from, WPos to, float progress) => new(from.ToVec2() * (1 - progress) + to.ToVec2() * progress);
 
     public override readonly string ToString() => $"[{X:f3}, {Z:f3}]";
+    public override readonly int GetHashCode() => (X, Z).GetHashCode(); // TODO: this is a hack, the default should be good enough, but for whatever reason (X, -Z).GetHashCode() == (-X, Z).GetHashCode()...
 
     // area checks
     public readonly bool InTri(WPos v1, WPos v2, WPos v3)

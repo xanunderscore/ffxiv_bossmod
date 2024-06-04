@@ -235,10 +235,7 @@ abstract class CommonActions : IDisposable
             target = supportedAction.TransformTarget(target);
         }
 
-        Angle? angleOverride = null;
-        if (supportedAction.TransformAngle != null)
-            angleOverride = supportedAction.TransformAngle();
-
+        Angle? angleOverride = supportedAction.TransformAngle?.Invoke();
         _mq.Push(action, target, new(), angleOverride, supportedAction.Definition, supportedAction.Condition);
         return true;
     }
