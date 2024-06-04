@@ -50,10 +50,10 @@ public static class Rotation
             // 1. darkside gauge is empty
             // 2. in raid buff window
             // 3. over ~9000 MP (prevent overcap)
-            Automatic = 0,
+            AutomaticTBN = 0,
 
             // same as above, save MP for TBN
-            AutomaticTBN = 1,
+            AutomaticNoTBN = 1,
 
             // spend MP as soon as possible
             Force = 2,
@@ -111,7 +111,7 @@ public static class Rotation
             }
             else
             {
-                MPStrategy = defaultToAutoTBN ? MPUse.AutomaticTBN : MPUse.Automatic;
+                MPStrategy = defaultToAutoTBN ? MPUse.AutomaticTBN : MPUse.AutomaticNoTBN;
                 BloodUse = OffensiveAbilityUse.Automatic;
                 BloodWeaponUse = OffensiveAbilityUse.Automatic;
                 DeliriumUse = OffensiveAbilityUse.Automatic;
@@ -297,8 +297,8 @@ public static class Rotation
 
         switch (strategy.MPStrategy)
         {
-            case Strategy.MPUse.Automatic:
             case Strategy.MPUse.AutomaticTBN:
+            case Strategy.MPUse.AutomaticNoTBN:
                 if (ShouldUseBurst(state, strategy) || state.DarksideLeft < state.GCD)
                     return state.CurMP >= minimumMP;
                 return state.CurMP >= MpOvercapThreshold;

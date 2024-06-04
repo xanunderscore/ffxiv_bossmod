@@ -99,6 +99,14 @@ public static class PlanDefinitions
         c.CooldownTracks.Add(new("Taunt", ActionID.MakeSpell(DRK.AID.Provoke), 15));
         c.CooldownTracks.Add(new("Shirk", ActionID.MakeSpell(DRK.AID.Shirk), 15));
         c.CooldownTracks.Add(new("Sprint", CommonDefinitions.IDSprint, 1));
+        c.StrategyTracks.Add(new("MP", typeof(DRK.Rotation.Strategy.MPUse)));
+        c.StrategyTracks.Add(new("Blood", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("BW", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("Deli", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("SE", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("C&S", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("Shadow", typeof(CommonRotation.Strategy.OffensiveAbilityUse)));
+        c.StrategyTracks.Add(new("Dash", typeof(DRK.Rotation.Strategy.PlungeUse)));
         return c;
     }
 
