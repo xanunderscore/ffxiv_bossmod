@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 
 namespace BossMod;
@@ -62,21 +63,18 @@ public sealed class AutoHints : IDisposable
         foreach (var enemy in hints.PotentialTargets)
         {
             var pendingHP = _ws.PendingEffects.PendingHPDifference(enemy.Actor.InstanceID);
-            if (epicEcho)
-            {
-                enemy.ForbidDOTs = true;
-
-                if (enemy.Actor.Position.InCircle(_ws.Party[0]!.Position, 25))
-                    enemy.Priority = 0;
-            }
-
-            // enemy is either HP locked to 1 (in phase transition and invincible) or expected to die (pending spell/action damage)
-            if (pendingHP + enemy.Actor.HPMP.CurHP <= 0)
-                enemy.Priority = -1;
-
             var obj = Utils.GameObjectInternal(Service.ObjectTable[enemy.Actor.SpawnIndex]);
             if (obj is null)
                 continue;
+
+            if (epicEcho && enemy.Priority < 0 && ActionManager.GetActionInRangeOrLoS(24, Utils.GameObjectInternal(Service.ObjectTable[_ws.Party[0]!.SpawnIndex]), obj) == 0)
+            {
+                enemy.Priority = 0;
+            }
+
+            // enemy is either HP locked to 1 (in phase transition and invincible) or expected to die (pending spell/action damage)
+            if (pendingHP + enemy.Actor.HPMP.CurHP <= 1)
+                enemy.Priority = -1;
 
             // enemy is part of fate we aren't in
             if (currentFateId == 0 && obj->FateId != 0)
