@@ -33,6 +33,7 @@ public static class Rotation
     public class Strategy : CommonRotation.Strategy
     {
         public int NumAOETargets;
+        public int NumConfiteorTargets;
     }
 
     public static AID GetNextRiotBladeComboAction(AID comboLastMove)
@@ -178,8 +179,8 @@ public static class Rotation
         )
             return ActionID.MakeSpell(AID.Intervene);
 
-        if (state.Unlocked(state.BestSheltron) && strategy.CombatTimer > 0 && state.OathGauge >= 95)
-            return ActionID.MakeSpell(state.BestSheltron);
+        if (state.Unlocked(AID.Sheltron) && !state.Unlocked(AID.HolySheltron) && strategy.CombatTimer > 0 && state.OathGauge >= 95)
+            return ActionID.MakeSpell(AID.Sheltron);
 
         // no suitable oGCDs...
         return new();

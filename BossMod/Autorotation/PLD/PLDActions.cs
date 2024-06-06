@@ -40,9 +40,26 @@ class Actions : TankActions
         base.UpdateInternalState(autoAction);
 
         _strategy.NumAOETargets = Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
+        _strategy.NumConfiteorTargets = Autorot.PrimaryTarget is null ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
 
         UpdatePlayerState();
         FillCommonStrategy(_strategy, CommonDefinitions.IDPotionStr);
+    }
+
+    public override Targeting SelectBetterTarget(AIHints.Enemy initial)
+    {
+        var bestTarget = initial;
+        var range = 3;
+        if (_state.ConfiteorCombo != AID.None)
+        {
+            bestTarget = FindBetterTargetBy(
+                initial,
+                25,
+                e => Autorot.Hints.NumPriorityTargetsInAOECircle(e.Actor.Position, 5)
+            ).Target;
+            range = bestTarget.StayAtLongRange ? 25 : 15;
+        }
+        return new(bestTarget, range);
     }
 
     protected override void QueueAIActions()
@@ -125,5 +142,8 @@ class Actions : TankActions
         // smart targets
         SupportedSpell(AID.Shirk).TransformTarget = config.SmartShirkTarget ? SmartTargetCoTank : null;
         SupportedSpell(AID.Provoke).TransformTarget = config.ProvokeMouseover ? SmartTargetHostile : null; // TODO: also interject/low-blow
+        SupportedSpell(AID.Intervention).TransformTarget =
+            SupportedSpell(AID.Cover).TransformTarget =
+                config.SmartShirkTarget ? SmartTargetFriendly : null;
     }
 }
