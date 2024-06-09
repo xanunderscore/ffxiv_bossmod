@@ -76,8 +76,10 @@ public static class Rotation
 
         if (strategy.NumAOETargets >= 3 && state.Unlocked(AID.TotalEclipse))
         {
-            // TODO change when confiteor is unlocked
             if (state.Requiescat.Left > state.GCD && state.Unlocked(AID.HolyCircle) && state.CurMP >= 1000)
+                return AID.HolyCircle;
+
+            if (state.DivineMightLeft > state.GCD && state.CurMP >= 1000 && state.FightOrFlightLeft > state.GCD)
                 return AID.HolyCircle;
 
             if (state.Unlocked(AID.Prominence) && state.ComboLastMove == AID.TotalEclipse)
@@ -99,8 +101,11 @@ public static class Rotation
             )
                 return AID.HolySpirit;
 
-            // TODO change when confiteor is unlocked
+            // confiteor handled above
             if (state.Requiescat.Left > state.GCD && state.CurMP >= 1000)
+                return AID.HolySpirit;
+
+            if (state.DivineMightLeft > state.GCD && state.CurMP >= 1000 && state.FightOrFlightLeft > state.GCD)
                 return AID.HolySpirit;
 
             // use early in FoF window

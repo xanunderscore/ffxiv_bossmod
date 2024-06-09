@@ -19,9 +19,14 @@ class Actions : TankActions
 
         SupportedSpell(AID.Reprisal).Condition = _ => Autorot.Hints.PotentialTargets.Any(e => e.Actor.Position.InCircle(Player.Position, 5 + e.Actor.HitboxRadius)); // TODO: consider checking only target?..
         SupportedSpell(AID.Interject).Condition = target => target?.CastInfo?.Interruptible ?? false;
-        SupportedSpell(AID.Clemency).TransformTarget = SmartTargetFriendlyOrSelf;
-        SupportedSpell(AID.Cover).TransformTarget = SmartTargetFriendly;
         SupportedSpell(AID.IronWill).TransformAction = () => ActionID.MakeSpell(_state.HaveTankStance ? AID.ReleaseIronWill : AID.IronWill);
+        SupportedSpell(AID.Sheltron).TransformAction = () => ActionID.MakeSpell(_state.BestSheltron);
+        SupportedSpell(AID.SpiritsWithin).TransformAction = () => ActionID.MakeSpell(_state.BestExpiacion);
+        SupportedSpell(AID.RageOfHalone).TransformAction = () => ActionID.MakeSpell(_state.BestRoyalAuthority);
+
+        SupportedSpell(AID.Clemency).TransformTarget =
+            SupportedSpell(AID.Cover).TransformTarget =
+            SupportedSpell(AID.Intervention).TransformTarget = SmartTargetFriendly;
 
         _config = Service.Config.GetAndSubscribe<PLDConfig>(OnConfigModified);
     }
@@ -76,14 +81,14 @@ class Actions : TankActions
             var provokeEnemy = Autorot.Hints.PotentialTargets.Find(e => e.ShouldBeTanked && e.PreferProvoking && e.Actor.TargetID != Player.InstanceID && e.Actor.Position.InCircle(Player.Position, 25 + e.Actor.HitboxRadius + Player.HitboxRadius));
             SimulateManualActionForAI(ActionID.MakeSpell(AID.Provoke), provokeEnemy?.Actor, provokeEnemy != null);
         }
-        if (_state.Unlocked(AID.Clemency))
-            SimulateManualActionForAI(ActionID.MakeSpell(AID.Clemency), Player, Player.InCombat && Player.HPMP.CurHP * 4 <= Player.HPMP.MaxHP);
     }
 
     protected override NextAction CalculateAutomaticGCD()
     {
         if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
             return new();
+        if (AutoAction == AutoActionAIFight && !Autorot.PrimaryTarget.Position.InCircle(Player.Position, 3 + Autorot.PrimaryTarget.HitboxRadius + Player.HitboxRadius) && _state.Unlocked(AID.ShieldLob) && _state.DivineMightLeft < _state.GCD && _state.ConfiteorCombo == AID.None)
+            return MakeResult(AID.ShieldLob, Autorot.PrimaryTarget); // TODO: reconsider...
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
@@ -134,16 +139,8 @@ class Actions : TankActions
         SupportedSpell(AID.FastBlade).PlaceholderForAuto = config.FullRotation ? AutoActionST : AutoActionNone;
         SupportedSpell(AID.TotalEclipse).PlaceholderForAuto = config.FullRotation ? AutoActionAOE : AutoActionNone;
 
-        // combo replacement
-        SupportedSpell(AID.RiotBlade).TransformAction = config.STCombos ? () => ActionID.MakeSpell(Rotation.GetNextRiotBladeComboAction(_state.ComboLastMove)) : null;
-        SupportedSpell(AID.RageOfHalone).TransformAction = config.STCombos ? () => ActionID.MakeSpell(Rotation.GetNextSTComboAction(_state.ComboLastMove, AID.RageOfHalone)) : null;
-        SupportedSpell(AID.GoringBlade).TransformAction = config.STCombos ? () => ActionID.MakeSpell(Rotation.GetNextSTComboAction(_state.ComboLastMove, AID.GoringBlade)) : null;
-
         // smart targets
         SupportedSpell(AID.Shirk).TransformTarget = config.SmartShirkTarget ? SmartTargetCoTank : null;
         SupportedSpell(AID.Provoke).TransformTarget = config.ProvokeMouseover ? SmartTargetHostile : null; // TODO: also interject/low-blow
-        SupportedSpell(AID.Intervention).TransformTarget =
-            SupportedSpell(AID.Cover).TransformTarget =
-                config.SmartShirkTarget ? SmartTargetFriendly : null;
     }
 }
