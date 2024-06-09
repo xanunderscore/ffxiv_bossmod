@@ -1,3 +1,4 @@
+
 namespace BossMod.Shadowbringers.Dungeon.D07GrandCosmos.D071SeekerOfSolitude;
 
 public enum OID : uint
@@ -40,24 +41,44 @@ class Tribulation(BossModule module)
         0.8f
     );
 
-class DeepClean(BossModule module) : BossComponent(module)
+class DeepClean(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly IEnumerable<Actor> Brooms = module.Enemies((uint)OID.Broom);
+    private readonly IEnumerable<Actor> Brooms = module.Enemies(OID.Broom);
+    private readonly List<(WPos position, DateTime time)> broomDanger = [];
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID == AID.Tribulation)
+        {
+            foreach ((var b, var zcoord) in Brooms.OrderBy(x => x.Position.Z).Zip([175, 181, 187, 193, 199]))
+            {
+                var time = WorldState.CurrentTime.AddSeconds(7f);
+                var pos = new WPos(b.Position.X, zcoord);
+                var direction = b.Position.X > 0 ? new WDir(-1, 0) : new WDir(1, 0);
+                for (int i = 0; i < 20; i++)
+                {
+                    broomDanger.Add((pos, time));
+                    time = time.AddSeconds(1);
+                    pos += direction * 3.6f;
+                }
+            }
+        }
+    }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actors(Brooms, ArenaColor.Danger, true);
         foreach (var b in Brooms)
-            if (module.InBounds(b.Position))
-                // approximation of how close you need to be to the broom to get hit by Sweep
-                Arena.AddCircle(b.Position, 4.25f, ArenaColor.Danger);
+            Arena.Actor(b.Position, b.Rotation, ArenaColor.Danger);
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var b in Brooms)
-            if (module.InBounds(b.Position))
-                hints.AddForbiddenZone(new AOEShapeCircle(6), b.Position);
+        foreach (var aoe in broomDanger)
+        {
+            if (aoe.time < WorldState.CurrentTime || aoe.time > WorldState.CurrentTime.AddSeconds(3))
+                continue;
+            yield return new(new AOEShapeDonut(4, 4.1f), aoe.position, default, aoe.time);
+        }
     }
 }
 
@@ -78,7 +99,7 @@ class D071SeekerOfSolitudeStates : StateMachineBuilder
 }
 
 [ModuleInfo(
-    BossModuleInfo.Maturity.Contributed,
+    BossModuleInfo.Maturity.WIP,
     Contributors = "xan",
     GroupType = BossModuleInfo.GroupType.CFC,
     GroupID = 692,
