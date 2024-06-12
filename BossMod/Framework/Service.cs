@@ -24,6 +24,7 @@ public sealed class Service
     [PluginService] public static ICondition Condition { get; private set; }
     [PluginService] public static ITargetManager TargetManager { get; private set; }
     [PluginService] public static IFramework Framework { get; private set; }
+    [PluginService] public static IGameConfig GameConfig { get; private set; }
     [PluginService] public static ITextureProvider Texture { get; private set; }
     [PluginService] public static ICommandManager CommandManager { get; private set; }
     [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; }
