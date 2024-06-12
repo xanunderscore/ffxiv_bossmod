@@ -322,6 +322,9 @@ public static class Rotation
         if (strategy.CombatTimer is > -100 and < -0.7f)
             return AID.None;
 
+        if (!state.TargetingEnemy)
+            return AID.None;
+
         if (strategy.UseAOERotation)
         {
             return state.ComboLastMove switch
@@ -368,7 +371,7 @@ public static class Rotation
             if (state.LifeOfTheDragonLeft > state.AnimationLock && state.CanWeave(CDGroup.Nastrond, 0.6f, deadline))
                 return ActionID.MakeSpell(AID.Nastrond);
 
-            if (state.CD(CDGroup.LanceCharge) > 5 && state.CD(CDGroup.DragonSight) > 5 && state.CD(CDGroup.BattleLitany) > 5)
+            if (state.CD(CDGroup.LanceCharge) > 5 && (state.CD(CDGroup.DragonSight) > 5 || !state.Unlocked(AID.DragonSight)) && (state.CD(CDGroup.BattleLitany) > 5 || !state.Unlocked(AID.BattleLitany)))
             {
                 if (state.CanWeave(CDGroup.WyrmwindThrust, 0.6f, deadline) && ShouldUseWyrmWindThrust(state, strategy) && (GetNextBestGCD(state, strategy) == AID.DraconianFury || GetNextBestGCD(state, strategy) == AID.RaidenThrust))
                     return ActionID.MakeSpell(AID.WyrmwindThrust);
