@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.ClientState.Keys;
+﻿using BossMod.AI;
+using Dalamud.Game.ClientState.Keys;
 using Dalamud.Hooking;
 using ImGuiNET;
 using System.Reflection;
@@ -120,7 +121,7 @@ unsafe sealed class DebugInput : IDisposable
         _convertVirtualKey = Service.KeyState.GetType().GetMethod("ConvertVirtualKey", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<ConvertVirtualKeyDelegate>(Service.KeyState);
         _getKeyRef = Service.KeyState.GetType().GetMethod("GetRefValue", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<GetRefValueDelegate>(Service.KeyState);
         _ws = autorot.WorldState;
-        _navi = new();
+        _navi = AIController.Instance();
 
         _playerController = (PlayerController*)Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 3C 01 75 1E 48 8D 0D");
         Service.Log($"[DebugInput] playerController addess: 0x{(nint)_playerController:X}");
@@ -140,6 +141,7 @@ unsafe sealed class DebugInput : IDisposable
         _rmiWalkHook.Dispose();
         _rmiFlyHook.Dispose();
         _rmiCameraHook.Dispose();
+        _navi.Dispose();
     }
 
     public void Draw()
