@@ -87,14 +87,6 @@ sealed class AIBehaviour(AIController ctrl, Autorotation autorot) : IDisposable
         if (targeting.Target == null || targeting.PreferredPosition == Positional.Any)
             return; // nothing to adjust
 
-        if (targeting.PreferredPosition == Positional.Front)
-        {
-            // 'front' is tank-specific positional; no point doing anything if we're not tanking target
-            if (targeting.Target.Actor.TargetID != player.InstanceID)
-                targeting.PreferredPosition = Positional.Any;
-            return;
-        }
-
         // if target-of-target is player, don't try flanking, it's probably impossible... - unless target is currently casting (TODO: reconsider?)
         if (targeting.Target.Actor.TargetID == player.InstanceID && targeting.Target.Actor.CastInfo == null)
             targeting.PreferredPosition = Positional.Any;
