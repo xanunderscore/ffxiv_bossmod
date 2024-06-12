@@ -53,8 +53,13 @@ public static class Rotation
 
     public static AID GetNextBestGCD(State state, Strategy strategy)
     {
-        if (!state.TargetingEnemy)
+        if (strategy.CombatTimer is < 0 and > -100)
+        {
+            if (strategy.CombatTimer > -2 && state.Unlocked(AID.HolySpirit))
+                return AID.HolySpirit;
+
             return AID.None;
+        }
 
         if (
             state.Unlocked(AID.GoringBlade)

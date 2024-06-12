@@ -40,6 +40,7 @@ public enum AID : uint
     Cover = 27, // L45, instant, 120.0s CD (group 20), range 10, single-target 0/0, targets=party, animLock=???
     HolySheltron = 25746, // L82, instant, 5.0s CD (group 2), range 0, single-target 0/0, targets=self, animLock=???
     HallowedGround = 30, // L50, instant, 420.0s CD (group 24), range 0, single-target 0/0, targets=self
+    Bulwark = 22, // L52, instant, 90.0s CD (group 15), range 0, single-target 0/0, targets=self, animLock=0.600s
     Reprisal = 7535, // L22, instant, 60.0s CD (group 43), range 0, AOE circle 5/0, targets=self
     PassageOfArms = 7385, // L70, instant, 120.0s CD (group 21), range 0, Ground circle 8/0, targets=self, animLock=???
     DivineVeil = 3540, // L56, instant, 90.0s CD (group 14), range 0, single-target 0/0, targets=self, animLock=???
@@ -149,6 +150,7 @@ public static class Definitions
             AID.Shirk => level >= 48,
             AID.HallowedGround => level >= 50 && questProgress > 5,
             AID.CircleOfScorn => level >= 50,
+            AID.Bulwark => level >= 52,
             AID.GoringBlade => level >= 54 && questProgress > 6,
             AID.DivineVeil => level >= 56 && questProgress > 7,
             AID.Clemency => level >= 58 && questProgress > 8,
@@ -212,6 +214,7 @@ public static class Definitions
         res.OGCD(AID.SpiritsWithin, 3, CDGroup.SpiritsWithin, 30.0f);
         res.OGCD(AID.Expiacion, 3, CDGroup.SpiritsWithin, 30.0f);
         res.OGCD(AID.CircleOfScorn, 0, CDGroup.CircleOfScorn, 30.0f);
+        res.OGCD(AID.Bulwark, 0, CDGroup.Bulwark, 90.0f);
         res.OGCDWithCharges(AID.Intervene, 20, CDGroup.Intervene, 30.0f, 2);
         res.OGCD(AID.FightOrFlight, 0, CDGroup.FightOrFlight, 60.0f).EffectDuration = 25;
         res.OGCD(AID.Requiescat, 3, CDGroup.Requiescat, 60.0f);
