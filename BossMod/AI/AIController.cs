@@ -1,67 +1,28 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Keys;
+using Dalamud.Game.Config;
+using Dalamud.Hooking;
+using Dalamud.Utility.Signatures;
+using System.Runtime.InteropServices;
 
 namespace BossMod.AI;
+
+[StructLayout(LayoutKind.Explicit, Size = 0x18)]
+public unsafe struct PlayerMoveControllerFlyInput
+{
+    [FieldOffset(0x0)] public float Forward;
+    [FieldOffset(0x4)] public float Left;
+    [FieldOffset(0x8)] public float Up;
+    [FieldOffset(0xC)] public float Turn;
+    [FieldOffset(0x10)] public float u10;
+    [FieldOffset(0x14)] public byte DirMode;
+    [FieldOffset(0x15)] public byte HaveBackwardOrStrafe;
+}
 
 // utility for simulating user actions based on AI decisions:
 // - navigation
 // - using actions safely (without spamming, not in cutscenes, etc)
-sealed class AIController
+sealed unsafe class AIController : IDisposable
 {
-    private sealed class NaviAxis(VirtualKey keyFwd, VirtualKey keyBack)
-    {
-        private int _curDirection;
-
-        public int CurDirection
-        {
-            get => _curDirection;
-            set
-            {
-                if (_curDirection == value)
-                {
-                    if (value != 0 && !Service.KeyState[value > 0 ? keyFwd : keyBack])
-                        ActionManagerEx.Instance!.InputOverride.SimulatePress(value > 0 ? keyFwd : keyBack);
-                    return;
-                }
-
-                if (_curDirection > 0)
-                    ActionManagerEx.Instance!.InputOverride.SimulateRelease(keyFwd);
-                else if (_curDirection < 0)
-                    ActionManagerEx.Instance!.InputOverride.SimulateRelease(keyBack);
-                _curDirection = value;
-                if (value > 0)
-                    ActionManagerEx.Instance!.InputOverride.SimulatePress(keyFwd);
-                else if (value < 0)
-                    ActionManagerEx.Instance!.InputOverride.SimulatePress(keyBack);
-            }
-        }
-    }
-
-    private sealed class NaviInput(VirtualKey key)
-    {
-        private bool _held;
-
-        public bool Held
-        {
-            get => _held;
-            set
-            {
-                if (_held == value)
-                {
-                    if (value && !Service.KeyState[key])
-                        ActionManagerEx.Instance!.InputOverride.SimulatePress(key);
-                    return;
-                }
-
-                if (_held)
-                    ActionManagerEx.Instance!.InputOverride.SimulateRelease(key);
-                _held = value;
-                if (value)
-                    ActionManagerEx.Instance!.InputOverride.SimulatePress(key);
-            }
-        }
-    }
-
     public WPos? NaviTargetPos;
     public WDir? NaviTargetRot;
     public float? NaviTargetVertical;
@@ -70,17 +31,64 @@ sealed class AIController
     public bool ForceFacing;
     public bool WantJump;
 
-    private readonly NaviAxis _axisForward = new(VirtualKey.W, VirtualKey.S);
-    private readonly NaviAxis _axisStrafe = new(VirtualKey.D, VirtualKey.A);
-    private readonly NaviAxis _axisRotate = new(VirtualKey.LEFT, VirtualKey.RIGHT);
-    private readonly NaviAxis _axisVertical = new(VirtualKey.UP, VirtualKey.DOWN);
-    private readonly NaviInput _keyJump = new(VirtualKey.SPACE);
+    private delegate bool RMIWalkIsInputEnabled(void* self);
+    private readonly RMIWalkIsInputEnabled _rmiWalkIsInputEnabled1;
+    private readonly RMIWalkIsInputEnabled _rmiWalkIsInputEnabled2;
+
+    private Actor? Player;
+    public float Precision = 0.01f;
+
+    private bool _legacyMode;
+
+    private delegate void RMIWalkDelegate(void* self, float* sumLeft, float* sumForward, float* sumTurnLeft, byte* haveBackwardOrStrafe, byte* a6, byte bAdditiveUnk);
+    [Signature("E8 ?? ?? ?? ?? 80 7B 3E 00 48 8D 3D")]
+    private readonly Hook<RMIWalkDelegate> _rmiWalkHook = null!;
+
+    private delegate void RMIFlyDelegate(void* self, PlayerMoveControllerFlyInput* result);
+    [Signature("E8 ?? ?? ?? ?? 0F B6 0D ?? ?? ?? ?? B8")]
+    private readonly Hook<RMIFlyDelegate> _rmiFlyHook = null!;
 
     public bool InCutscene => Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.Occupied33] || Service.Condition[ConditionFlag.BetweenAreas] || Service.Condition[ConditionFlag.OccupiedInQuestEvent];
     public bool IsMounted => Service.Condition[ConditionFlag.Mounted];
     public bool IsVerticalAllowed => Service.Condition[ConditionFlag.InFlight];
     public Angle CameraFacing => ((Camera.Instance?.CameraAzimuth ?? 0).Radians() + 180.Degrees());
     public Angle CameraAltitude => (Camera.Instance?.CameraAltitude ?? 0).Radians();
+
+    private static AIController? _inst;
+
+    public static AIController Instance()
+    {
+        _inst ??= new();
+
+        _inst._rmiFlyHook.Enable();
+        _inst._rmiWalkHook.Enable();
+
+        return _inst;
+    }
+
+    private AIController()
+    {
+        var rmiWalkIsInputEnabled1Addr = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 75 10 38 43 3C");
+        var rmiWalkIsInputEnabled2Addr = Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 84 C0 75 03 88 47 3F");
+        Service.Log($"RMIWalkIsInputEnabled1 address: 0x{rmiWalkIsInputEnabled1Addr:X}");
+        Service.Log($"RMIWalkIsInputEnabled2 address: 0x{rmiWalkIsInputEnabled2Addr:X}");
+        _rmiWalkIsInputEnabled1 = Marshal.GetDelegateForFunctionPointer<RMIWalkIsInputEnabled>(rmiWalkIsInputEnabled1Addr);
+        _rmiWalkIsInputEnabled2 = Marshal.GetDelegateForFunctionPointer<RMIWalkIsInputEnabled>(rmiWalkIsInputEnabled2Addr);
+
+        Service.Hook.InitializeFromAttributes(this);
+        Service.Log($"RMIWalk address: 0x{_rmiWalkHook.Address:X}");
+        Service.Log($"RMIFly address: 0x{_rmiFlyHook.Address:X}");
+        Service.GameConfig.UiControlChanged += OnConfigChanged;
+        UpdateLegacyMode();
+    }
+
+    public void Dispose()
+    {
+        Clear();
+
+        _rmiWalkHook.Dispose();
+        _rmiFlyHook.Dispose();
+    }
 
     public void Clear()
     {
@@ -107,62 +115,59 @@ sealed class AIController
 
     public void Update(Actor? player)
     {
-        if (player == null || player.IsDead || InCutscene)
-        {
-            _axisForward.CurDirection = 0;
-            _axisStrafe.CurDirection = 0;
-            _axisRotate.CurDirection = 0;
-            _axisVertical.CurDirection = 0;
-            _keyJump.Held = false;
-            ActionManagerEx.Instance!.InputOverride.GamepadOverridesEnabled = false;
-            return;
-        }
+        Player = player;
+    }
 
-        if (ForceFacing && NaviTargetRot != null && player.Rotation.ToDirection().Dot(NaviTargetRot.Value) < 0.996f)
+    private void RMIWalkDetour(void* self, float* sumLeft, float* sumForward, float* sumTurnLeft, byte* haveBackwardOrStrafe, byte* a6, byte bAdditiveUnk)
+    {
+        _rmiWalkHook.Original(self, sumLeft, sumForward, sumTurnLeft, haveBackwardOrStrafe, a6, bAdditiveUnk);
+        // TODO: we really need to introduce some extra checks that PlayerMoveController::readInput does - sometimes it skips reading input, and returning something non-zero breaks stuff...
+        bool movementAllowed = bAdditiveUnk == 0 && _rmiWalkIsInputEnabled1(self) && _rmiWalkIsInputEnabled2(self); //&& !Service.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BeingMoved];
+        if (movementAllowed && (*sumLeft == 0 && *sumForward == 0) && DirectionToDestination(false) is var relDir && relDir != null)
         {
-            ActionManagerEx.Instance!.FaceDirection(NaviTargetRot.Value);
+            var dir = relDir.Value.h.ToDirection();
+            *sumLeft = dir.X;
+            *sumForward = dir.Z;
         }
+    }
 
-        bool moveRequested = ActionManagerEx.Instance!.InputOverride.IsMoveRequested();
-        var cameraFacing = CameraFacing;
-        var cameraFacingDir = cameraFacing.ToDirection();
-        if (!moveRequested && NaviTargetRot != null && NaviTargetRot.Value.Dot(cameraFacingDir) < 0.996f) // ~5 degrees
+    private void RMIFlyDetour(void* self, PlayerMoveControllerFlyInput* result)
+    {
+        _rmiFlyHook.Original(self, result);
+        // TODO: we really need to introduce some extra checks that PlayerMoveController::readInput does - sometimes it skips reading input, and returning something non-zero breaks stuff...
+        if ((result->Forward == 0 && result->Left == 0 && result->Up == 0) && DirectionToDestination(true) is var relDir && relDir != null)
         {
-            _axisRotate.CurDirection = cameraFacingDir.OrthoL().Dot(NaviTargetRot.Value) > 0 ? 1 : -1;
+            var dir = relDir.Value.h.ToDirection();
+            result->Forward = dir.Z;
+            result->Left = dir.X;
+            result->Up = relDir.Value.v.Rad;
         }
-        else
-        {
-            _axisRotate.CurDirection = 0;
-        }
+    }
 
-        bool castInProgress = player.CastInfo != null && !player.CastInfo.EventHappened;
-        bool forbidMovement = moveRequested || !AllowInterruptingCastByMovement && ActionManagerEx.Instance!.MoveMightInterruptCast;
-        if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.01f)
-        {
-            var dir = cameraFacing - Angle.FromDirection(NaviTargetPos.Value - player.Position);
-            ActionManagerEx.Instance!.InputOverride.GamepadOverridesEnabled = true;
-            ActionManagerEx.Instance!.InputOverride.GamepadOverrides[3] = (int)(100 * dir.Sin());
-            ActionManagerEx.Instance!.InputOverride.GamepadOverrides[4] = (int)(100 * dir.Cos());
-            _axisForward.CurDirection = ActionManagerEx.Instance!.InputOverride.GamepadOverrides[4] > 10 ? 1 : ActionManagerEx.Instance!.InputOverride.GamepadOverrides[4] < 10 ? -1 : 0; // this is a hack, needed to prevent afk :( this will be ignored anyway due to gamepad inputs
-            _keyJump.Held = !_keyJump.Held && WantJump;
-        }
-        else
-        {
-            ActionManagerEx.Instance!.InputOverride.GamepadOverridesEnabled = false;
-            _axisForward.CurDirection = ForceCancelCast && castInProgress ? 1 : 0; // this is a hack to cancel any cast...
-            _keyJump.Held = false;
-        }
+    private (Angle h, Angle v)? DirectionToDestination(bool allowVertical)
+    {
+        if (Player == null || NaviTargetPos == null)
+            return null;
 
-        if (NaviTargetVertical != null && IsVerticalAllowed && NaviTargetPos != null)
-        {
-            var deltaY = NaviTargetVertical.Value - player.PosRot.Y;
-            var deltaXZ = (NaviTargetPos.Value - player.Position).Length();
-            var deltaAltitude = (CameraAltitude - Angle.FromDirection(new(ActionManagerEx.Instance!.InputOverride.GamepadOverrides[4] < 0 ? deltaY : -deltaY, deltaXZ))).Deg;
-            ActionManagerEx.Instance!.InputOverride.GamepadOverrides[6] = Math.Clamp((int)(deltaAltitude * 5), -100, 100);
-        }
-        else
-        {
-            ActionManagerEx.Instance!.InputOverride.GamepadOverrides[6] = 0;
-        }
+        if (!AllowInterruptingCastByMovement && ActionManagerEx.Instance!.MoveMightInterruptCast)
+            return null;
+
+        var dist = NaviTargetPos.Value - Player.Position;
+        if (dist.LengthSq() <= Precision * Precision)
+            return null;
+
+        var dirH = Angle.FromDirection(dist);
+        var dirV = new Angle();
+
+        var refDir = _legacyMode
+            ? Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees()
+            : Player.Rotation;
+        return (dirH - refDir, dirV);
+    }
+    private void OnConfigChanged(object? sender, ConfigChangeEvent evt) => UpdateLegacyMode();
+    private void UpdateLegacyMode()
+    {
+        _legacyMode = Service.GameConfig.UiControl.TryGetUInt("MoveMode", out var mode) && mode == 1;
+        Service.Log($"Legacy mode is now {(_legacyMode ? "enabled" : "disabled")}");
     }
 }

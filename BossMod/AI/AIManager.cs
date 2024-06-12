@@ -17,7 +17,7 @@ sealed class AIManager : IDisposable
     public AIManager(Autorotation autorot)
     {
         _autorot = autorot;
-        _controller = new();
+        _controller = AIController.Instance();
         _config = Service.Config.Get<AIConfig>();
         _ui = new("AI", DrawOverlay, false, new(100, 100), ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoFocusOnAppearing) { RespectCloseHotkey = false };
         Service.ChatGui.ChatMessage += OnChatMessage;
@@ -28,6 +28,7 @@ sealed class AIManager : IDisposable
     {
         SwitchToIdle();
         _ui.Dispose();
+        _controller.Dispose();
         Service.ChatGui.ChatMessage -= OnChatMessage;
         Service.CommandManager.RemoveHandler("/vbmai");
     }
