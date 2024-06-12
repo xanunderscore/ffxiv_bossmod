@@ -124,7 +124,7 @@ public struct NavigationDecision
             {
                 Positional.Flank => MathF.Abs(targetRot.ToDirection().Dot((targetPos.Value - player.Position).Normalized())) < 0.7071067f,
                 Positional.Rear => targetRot.ToDirection().Dot((targetPos.Value - player.Position).Normalized()) < -0.7071068f,
-                Positional.Front => targetRot.ToDirection().Dot((targetPos.Value - player.Position).Normalized()) > 0.999f, // ~2.5 degrees - assuming max position error of 0.1, this requires us to stay at least at R=~2.25
+                Positional.Front => targetRot.ToDirection().Dot((targetPos.Value - player.Position).Normalized()) > 0.95f,
                 _ => true
             };
             if (!inPositional)
