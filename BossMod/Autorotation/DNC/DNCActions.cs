@@ -47,19 +47,19 @@ class Actions : CommonActions
         SupportedSpell(AID.EnAvant).TransformAngle = config.CameraDash ? () => new Angle(Camera.Instance!.CameraAzimuth) + 180.Degrees() : null;
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         if (_strategy.AutoPartner
             && _state.Unlocked(AID.ClosedPosition)

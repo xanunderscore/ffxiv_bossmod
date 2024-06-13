@@ -127,19 +127,19 @@ class Actions : CommonActions
             );
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         ActionID res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
@@ -147,8 +147,9 @@ class Actions : CommonActions
         if (!res && _state.CanWeave(deadline)) // second/only ogcd slot
             res = Rotation.GetNextBestOGCD(_state, _strategy, deadline);
 
+        // leylines must be targeted at the player's current position
         if (res.ID == (uint)AID.LeyLines)
-            return new NextAction(res, null, Player.PosRot.XYZ(), null, ActionSource.Automatic);
+            return new(res, null, Player.PosRot.XYZ(), null, ActionQueue.Priority.Low + 500);
 
         return MakeResult(res, Autorot.PrimaryTarget);
     }

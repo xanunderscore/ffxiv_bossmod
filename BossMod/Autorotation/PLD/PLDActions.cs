@@ -83,20 +83,20 @@ class Actions : TankActions
         }
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
-            return new();
+            return default;
         if (AutoAction == AutoActionAIFight && !Autorot.PrimaryTarget.Position.InCircle(Player.Position, 3 + Autorot.PrimaryTarget.HitboxRadius + Player.HitboxRadius) && _state.Unlocked(AID.ShieldLob) && _state.DivineMightLeft < _state.GCD && _state.ConfiteorCombo == AID.None)
             return MakeResult(AID.ShieldLob, Autorot.PrimaryTarget); // TODO: reconsider...
         var aid = Rotation.GetNextBestGCD(_state, _strategy);
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         ActionID res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
@@ -118,7 +118,7 @@ class Actions : TankActions
 
         // TODO: worldstate doesn't track this type of buff-conditional combo at the moment
         // Confiteor is usable when the Confiteor status is active, but no such corresponding status exists for the
-        // Blade of X combo actions, it's somewhere inside actionmanager
+        // "Blade of <X>" combo actions, it's somewhere inside actionmanager
         var confiteorID = ActionManagerEx.Instance!.GetAdjustedActionID((uint)AID.Confiteor);
 
         _state.OathGauge = gauge.OathGauge;

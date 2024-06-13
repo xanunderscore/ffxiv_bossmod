@@ -7,10 +7,10 @@ public static class Rotation
 {
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
-    private static readonly float SSSApplicationDelay = 0.62f;
+    private const float SSSApplicationDelay = 0.62f;
 
     // make configurable? idk? only rotation devs would care about this
-    private static readonly bool Debug = false;
+    public static readonly bool Debug;
 
     // full state needed for determining next action
     public class State(WorldState ws) : CommonRotation.PlayerState(ws)
@@ -355,17 +355,14 @@ public static class Rotation
             )
                 return AID.FormShift;
 
-            if (strategy.CombatTimer > -10)
-            {
-                // form shift on countdown. TODO: ignore Never here? don't think there's ever any reason not to use it on countdown
-                if (
-                    strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
-                    && strategy.CombatTimer < -9
-                    && state.FormShiftLeft < 15
-                    && state.Unlocked(AID.FormShift)
-                )
-                    return AID.FormShift;
-            }
+            // form shift on countdown. TODO: ignore Never here? don't think there's ever any reason not to use it on countdown
+            if (
+                strategy.FormShiftUse == Strategy.FormShiftStrategy.Automatic
+                && strategy.CombatTimer is > -10 and < -9
+                && state.FormShiftLeft < 15
+                && state.Unlocked(AID.FormShift)
+            )
+                return AID.FormShift;
 
             return AID.None;
         }
@@ -745,15 +742,10 @@ public static class Rotation
         if (!HaveTarget(state, strategy) || strategy.ActualFightEndIn < 15)
             return false;
 
-        return !strategy.UseAOE
-            && state.CD(CDGroup.RiddleOfFire) > 0
-            && (
-                // opener timing mostly important as long as rof is used first, we just want to align with party buffs -
-                // the default opener is bhood after first bootshine
-                state.LeadenFistLeft == 0
-                // later uses can be asap
-                || strategy.CombatTimer > 30
-            );
+        // opener timing mostly important as long as rof is used first, we just want to align with party buffs -
+        // the default opener is bhood after first bootshine
+        // later uses can be asap
+        return !strategy.UseAOE && state.CD(CDGroup.RiddleOfFire) > 0 && (state.LeadenFistLeft == 0 || strategy.CombatTimer > 30);
     }
 
     private static bool ShouldUsePB(State state, Strategy strategy, float deadline)
