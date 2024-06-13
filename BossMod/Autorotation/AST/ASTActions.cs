@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.AST;
@@ -57,7 +54,7 @@ class Actions : HealerActions
         return new(bestTarget, bestTarget.StayAtLongRange ? 25 : 15);
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (_config.Data.AutoEsuna && Rotation.CanCast(_state, _strategy, 1))
         {
@@ -79,10 +76,10 @@ class Actions : HealerActions
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         if (
             _autoRaiseTarget != null

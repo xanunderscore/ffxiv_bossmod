@@ -1,4 +1,3 @@
-using System;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.MCH;
@@ -26,10 +25,10 @@ class Actions : CommonActions
 
     public override CommonRotation.Strategy GetStrategy() => _strategy;
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         ActionID res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
@@ -39,10 +38,10 @@ class Actions : CommonActions
         return MakeResult(res, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (Autorot.PrimaryTarget == null || AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         return MakeResult(ActionID.MakeSpell(Rotation.GetNextBestGCD(_state, _strategy)), Autorot.PrimaryTarget);
     }

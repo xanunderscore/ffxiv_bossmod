@@ -77,7 +77,7 @@ class Actions : HealerActions
 
     protected override void QueueAIActions() { }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         var shieldGcd = GetShieldGCD();
         if (shieldGcd != default)
@@ -102,16 +102,16 @@ class Actions : HealerActions
         return MakeResult(Rotation.GetNextBestGCD(_state, _strategy), Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         // just use zoe asap, it has a very long buff window
         if (_strategy.GCDShieldUse == Rotation.Strategy.GCDShieldStrategy.ProgZoe && _state.CanWeave(CDGroup.Zoe, 0.6f, deadline))
             return MakeResult(AID.Zoe, Player);
 
-        NextAction res = new();
+        ActionQueue.Entry res = new();
         if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
             res = GetNextBestOGCD(deadline - _state.OGCDSlotLength);
         if (!res.Action && _state.CanWeave(deadline)) // second/only ogcd slot
@@ -120,7 +120,7 @@ class Actions : HealerActions
         return res;
     }
 
-    private NextAction GetShieldGCD()
+    private ActionQueue.Entry GetShieldGCD()
     {
         if (_strategy.GCDShieldUse == Rotation.Strategy.GCDShieldStrategy.Manual)
             return default;
@@ -142,7 +142,7 @@ class Actions : HealerActions
         return default;
     }
 
-    private NextAction GetNextBestOGCD(float deadline)
+    private ActionQueue.Entry GetNextBestOGCD(float deadline)
     {
         if (
             _kardiaTarget != null

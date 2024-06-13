@@ -1,5 +1,3 @@
-using System;
-
 namespace BossMod.BLU;
 
 class Actions : CommonActions
@@ -63,10 +61,10 @@ class Actions : CommonActions
         return t;
     }
 
-    protected override NextAction CalculateAutomaticGCD()
+    protected override ActionQueue.Entry CalculateAutomaticGCD()
     {
         if (AutoAction < AutoActionAIFight || !_state.TargetingEnemy)
-            return new();
+            return default;
 
         if (Player.HPMP.CurHP * 2 < Player.HPMP.MaxHP && _state.OnSlot(AID.Rehydration))
             return MakeResult(AID.Rehydration, Player);
@@ -75,10 +73,10 @@ class Actions : CommonActions
         return MakeResult(aid, Autorot.PrimaryTarget);
     }
 
-    protected override NextAction CalculateAutomaticOGCD(float deadline)
+    protected override ActionQueue.Entry CalculateAutomaticOGCD(float deadline)
     {
         if (AutoAction < AutoActionAIFight)
-            return new();
+            return default;
 
         deadline += 0.4f;
 
