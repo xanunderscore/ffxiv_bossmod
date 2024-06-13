@@ -1,6 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Fate;
+﻿using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace BossMod;
 
@@ -58,6 +56,7 @@ public sealed class AutoHints : IDisposable
             }
         }
 
+        // TODO: this should be a config option
         var epicEcho = _ws.Party[0]!.FindStatus(2734) is not null;
 
         foreach (var enemy in hints.PotentialTargets)
@@ -67,14 +66,28 @@ public sealed class AutoHints : IDisposable
             if (obj is null)
                 continue;
 
+            // TODO: this check might be expensive...reevaluate?
             if (epicEcho && enemy.Priority < 0 && ActionManager.GetActionInRangeOrLoS(24, Utils.GameObjectInternal(Service.ObjectTable[_ws.Party[0]!.SpawnIndex]), obj) == 0)
-            {
                 enemy.Priority = 0;
-            }
 
             // enemy is either HP locked to 1 (in phase transition and invincible) or expected to die (pending spell/action damage)
-            if (pendingHP + enemy.Actor.HPMP.CurHP <= 1)
-                enemy.Priority = -1;
+            // TODO: introduce two separate "don't attack" priority levels, one for "pointless" and one for "forbidden";
+            // "pointless" shouldn't be targeted, but can be hit, and "forbidden" should not be hit
+            // in its current state, this hint causes dying mobs in dungeon packs to count as forbidden targets, making
+            // autorotation use single-target skills
+            // if (pendingHP + enemy.Actor.HPMP.CurHP <= 1)
+            //    enemy.Priority = -1;
+
+            // leve/quest targets
+            // TODO: this should probably be gated behind a config option
+            if (enemy.Priority < 0 && obj->NamePlateIconId is 71244 or 71204 or 71144 or 71224 or 71344)
+                enemy.Priority = 0;
+
+            // overworld target in combat, but targeting an unrelated player, should be skipped
+            // TODO: make this work properly. right now, it prevents AI mode from targeting mobs in solo duties if they are
+            // targeting NPC allies, who don't show up in the party list
+            // if (enemy.Actor.InCombat && enemy.Actor.TargetID != 0 && !_ws.Party.ActorIDs.Contains(enemy.Actor.TargetID))
+            //     enemy.Priority = -1;
 
             // enemy is part of fate we aren't in
             if (currentFateId == 0 && obj->FateId != 0)
@@ -82,6 +95,9 @@ public sealed class AutoHints : IDisposable
 
             if (currentFateId > 0 && obj->FateId == currentFateId)
                 enemy.Priority = withinFateLevel ? 0 : -1;
+
+            // allow tank (or phys ranged) AI to interrupt enemies even when no module is active
+            enemy.ShouldBeInterrupted = true;
         }
     }
 
