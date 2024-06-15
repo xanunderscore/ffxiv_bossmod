@@ -36,6 +36,21 @@ class Actions : TankActions
 
     public override CommonRotation.Strategy GetStrategy() => _strategy;
 
+    public override Targeting SelectBetterTarget(AIHints.Enemy initial)
+    {
+        if (_state.Unlocked(AID.AbyssalDrain) && _state.CD(CDGroup.AbyssalDrain) <= 0.6f)
+        {
+            (var newTarget, var newPrio) =
+                FindBetterTargetBy(initial, 20, act => NumDrainTargets(act.Actor));
+            if (newPrio > 2)
+                return new(newTarget, 20);
+        }
+
+        return new(initial);
+    }
+
+
+
     protected override void UpdateInternalState(int autoAction)
     {
         base.UpdateInternalState(autoAction);
@@ -58,21 +73,18 @@ class Actions : TankActions
         _strategy.NumAOETargets =
             autoAction == AutoActionST ? 0 : Autorot.Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
         _strategy.NumSHBTargets =
-            Autorot.PrimaryTarget == null
-                ? 0
-                : Autorot.Hints.NumPriorityTargetsInAOERect(
-                    Player.Position,
-                    (Autorot.PrimaryTarget.Position - Player.Position).Normalized(),
-                    10,
-                    2
-                );
+            Autorot.PrimaryTarget == null ? 0 : NumCleaveTargets(Autorot.PrimaryTarget);
         _strategy.NumFloodTargets =
             (autoAction == AutoActionST && _state.Unlocked(AID.EdgeOfDarkness)) ? 0 : _strategy.NumSHBTargets;
         _strategy.NumDrainTargets =
             autoAction == AutoActionST || Autorot.PrimaryTarget == null
                 ? 0
-                : Autorot.Hints.NumPriorityTargetsInAOECircle(Autorot.PrimaryTarget.Position, 5);
+                : NumDrainTargets(Autorot.PrimaryTarget);
     }
+
+    private int NumDrainTargets(Actor primary) => Autorot.Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
+
+    private int NumCleaveTargets(Actor primary) => Autorot.Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 10, 2);
 
     private void UpdatePlayerState()
     {
