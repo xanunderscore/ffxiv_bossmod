@@ -43,7 +43,7 @@ class Actions : TankActions
             (var newTarget, var newPrio) =
                 FindBetterTargetBy(initial, 20, act => NumDrainTargets(act.Actor));
             if (newPrio > 2)
-                return new(newTarget, 20);
+                return new(newTarget, 3);
         }
 
         return new(initial);
