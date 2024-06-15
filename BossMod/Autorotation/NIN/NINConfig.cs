@@ -12,6 +12,6 @@ class NINConfig : ConfigNode
     [PropertyDisplay("Automatically cancel Hide")]
     public bool AutoUnhide = true;
 
-    [PropertyDisplay("Press Hakke Mujinsatsu to cast Doton")]
-    public bool OneButtonDoton = true;
+    [PropertyDisplay("Allow automatic Forked Raiju (gapcloser) use")]
+    public bool AllowDashRaiju = false;
 }

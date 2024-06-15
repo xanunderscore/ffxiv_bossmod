@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 
 namespace BossMod.NIN;
@@ -41,10 +40,10 @@ public static class Rotation
         public AID BestChi => TCJAdjust[1];
         public AID BestJin => TCJAdjust[2];
 
-        public AID CurrentNinjutsu => Combos.GetCurrentNinjutsu(Mudra.Combo, KassatsuLeft > 0);
+        public AID CurrentNinjutsu => Combos.GetCurrentNinjutsu(Mudra.Combo, KassatsuLeft > 0 && Unlocked(TraitID.EnhancedKassatsu));
 
-        public AID TCJEnder =>
-            TCJAdjust[0] == AID.None
+        public AID TCJEnder
+            => TCJAdjust[0] == AID.None
                 ? TCJAdjust[1] == AID.None
                     ? TCJAdjust[2]
                     : TCJAdjust[1]
@@ -73,8 +72,8 @@ public static class Rotation
             }
         }
 
-        public uint CurrentComboLength =>
-            Mudra.Combo switch
+        public uint CurrentComboLength
+            => Mudra.Combo switch
             {
                 <= 0 => 0,
                 < 4 => 1,
@@ -376,15 +375,18 @@ public static class Rotation
 
         if (state.IsTrickActive || strategy.UseAOERotation)
         {
-            // these two have a different cdgroup for some reason
-            if (state.Unlocked(AID.DreamWithinADream))
+            if (state.TargetingEnemy)
             {
-                if (state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
-                    return ActionID.MakeSpell(AID.DreamWithinADream);
-            }
-            else if (state.Unlocked(AID.Assassinate) && state.CanWeave(CDGroup.Assassinate, 0.6f, deadline))
-            {
-                return ActionID.MakeSpell(AID.Assassinate);
+                // these two have a different cdgroup for some reason
+                if (state.Unlocked(AID.DreamWithinADream))
+                {
+                    if (state.CanWeave(CDGroup.DreamWithinADream, 0.6f, deadline))
+                        return ActionID.MakeSpell(AID.DreamWithinADream);
+                }
+                else if (state.Unlocked(AID.Assassinate) && state.CanWeave(CDGroup.Assassinate, 0.6f, deadline))
+                {
+                    return ActionID.MakeSpell(AID.Assassinate);
+                }
             }
 
             if (
@@ -406,23 +408,26 @@ public static class Rotation
         if (ShouldUseBunshin(state, strategy) && state.CanWeave(CDGroup.Bunshin, 0.6f, deadline))
             return ActionID.MakeSpell(AID.Bunshin);
 
-        if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
+        if (state.TargetingEnemy)
         {
-            if (!state.Unlocked(AID.Bhavacakra) || strategy.NumFrogTargets >= (state.MeisuiLeft > deadline ? 4 : 3))
-                return ActionID.MakeSpell(AID.HellfrogMedium);
+            if (ShouldUseBhava(state, strategy) && state.CanWeave(CDGroup.HellfrogMedium, 0.6f, deadline))
+            {
+                if (!state.Unlocked(AID.Bhavacakra) || strategy.NumFrogTargets >= (state.MeisuiLeft > deadline ? 4 : 3))
+                    return ActionID.MakeSpell(AID.HellfrogMedium);
 
-            return ActionID.MakeSpell(AID.Bhavacakra);
+                return ActionID.MakeSpell(AID.Bhavacakra);
+            }
+
+            if (ShouldUseMug(state, strategy) && state.CanWeave(CDGroup.Mug, 0.6f, deadline))
+                return ActionID.MakeSpell(AID.Mug);
+
+            if (
+                ShouldUseTrick(state, strategy)
+                && state.CanWeave(CDGroup.TrickAttack, 0.6f, deadline)
+                && state.GCD < 0.800
+            )
+                return ActionID.MakeSpell(AID.TrickAttack);
         }
-
-        if (ShouldUseMug(state, strategy) && state.CanWeave(CDGroup.Mug, 0.6f, deadline))
-            return ActionID.MakeSpell(AID.Mug);
-
-        if (
-            ShouldUseTrick(state, strategy)
-            && state.CanWeave(CDGroup.TrickAttack, 0.6f, deadline)
-            && state.GCD < 0.800
-        )
-            return ActionID.MakeSpell(AID.TrickAttack);
 
         return new();
     }
@@ -639,8 +644,8 @@ public static class Rotation
         _ => false,
     };
 
-    private static bool HaveTarget(State state, Strategy strategy) =>
-        state.TargetingEnemy || strategy.NumPointBlankAOETargets > 0;
+    private static bool HaveTarget(State state, Strategy strategy)
+        => state.TargetingEnemy || strategy.NumPointBlankAOETargets > 0;
 
     private static AID NextTCJAction(State state, Strategy strategy)
     {

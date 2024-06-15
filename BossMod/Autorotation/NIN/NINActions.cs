@@ -164,16 +164,21 @@ class Actions : CommonActions
     {
         float neededRange;
 
+        var ninjutsuPlanned = Rotation.ShouldUseDamageNinjutsu(_state, _strategy) && _state.CD(CDGroup.Ten) <= 20 && _state.Unlocked(AID.Ten);
+
         if (_state.HutonLeft == 0 && _state.Unlocked(AID.Huraijin))
             neededRange = 3;
-        else if (Rotation.ShouldUseDamageNinjutsu(_state, _strategy) && _state.CD(CDGroup.Ten) <= 20)
-            neededRange = 20;
         else
-            neededRange = 3;
+            neededRange = ninjutsuPlanned ? 20 : 3;
 
-        (var newBest, var tars) = FindBetterTargetBy(initial, 20, e => NumKatonTargets(e.Actor));
+        if (ninjutsuPlanned)
+        {
+            (var newBest, var tars) = FindBetterTargetBy(initial, 20, e => NumKatonTargets(e.Actor));
 
-        return new(newBest, neededRange);
+            return new(newBest, neededRange);
+        }
+        else
+            return new(initial, neededRange);
     }
 
     private int NumKatonTargets(Actor actor) => Autorot.Hints.NumPriorityTargetsInAOECircle(actor.Position, 6);
@@ -214,5 +219,6 @@ class Actions : CommonActions
 
         _strategy.AutoHide = config.AutoHide;
         _strategy.AutoUnhide = config.AutoUnhide;
+        _strategy.AllowDashRaiju = config.AllowDashRaiju;
     }
 }
