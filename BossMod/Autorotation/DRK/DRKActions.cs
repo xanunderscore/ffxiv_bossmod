@@ -38,14 +38,6 @@ class Actions : TankActions
 
     public override Targeting SelectBetterTarget(AIHints.Enemy initial)
     {
-        if (_state.Unlocked(AID.AbyssalDrain) && _state.CD(CDGroup.AbyssalDrain) <= 0.6f)
-        {
-            (var newTarget, var newPrio) =
-                FindBetterTargetBy(initial, 20, act => NumDrainTargets(act.Actor));
-            if (newPrio > 2)
-                return new(newTarget, 3);
-        }
-
         return new(initial);
     }
 
