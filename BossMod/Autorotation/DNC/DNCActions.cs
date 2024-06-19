@@ -222,16 +222,17 @@ class Actions : CommonActions
         return Autorot.WorldState.Party.WithoutSlot().Exclude(Player).MaxBy(p => p.Class switch
         {
             Class.SAM => 100,
-            Class.NIN => 99,
-            Class.MNK => 88,
+            Class.NIN or Class.ROG => 99,
+            Class.MNK or Class.PGL => 88,
             Class.RPR => 87,
-            Class.DRG => 86,
-            Class.BLM => 79,
+            Class.DRG or Class.LNC => 86,
+            Class.BLM or Class.THM => 79,
             Class.SMN => 78,
             Class.RDM => 77,
             Class.MCH => 69,
-            Class.BRD => 68,
+            Class.BRD or Class.ARC => 68,
             Class.DNC => 67,
+            Class.ACN => 50,
             _ => 1
         });
     }
