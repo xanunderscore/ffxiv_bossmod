@@ -63,20 +63,14 @@ class Actions : CommonActions
                 interruptibleEnemy != null
             );
         }
-        if (_state.Unlocked(AID.Peloton))
-            SimulateManualActionForAI(
-                ActionID.MakeSpell(AID.Peloton),
-                Player,
-                !Player.InCombat && _state.PelotonLeft < 3 && _strategy.ForceMovementIn == 0
-            );
         if (_state.Unlocked(AID.SecondWind))
-        {
             SimulateManualActionForAI(
                 ActionID.MakeSpell(AID.SecondWind),
                 Player,
                 Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.5f
             );
-        }
+        if (_state.Unlocked(AID.Peloton))
+            SimulateManualActionForAI(ActionID.MakeSpell(AID.Peloton), Player, !Player.InCombat && _state.PelotonLeft < 3 && _strategy.ForceMovementIn == 0);
     }
 
     protected override void Dispose(bool disposing)
