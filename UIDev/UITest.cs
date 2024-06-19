@@ -21,7 +21,7 @@ class UITest
         using var scene = new SimpleImGuiScene(RendererFactory.RendererBackend.DirectX11, new WindowCreateInfo
         {
             Title = "UI Test",
-            XPos = -10,
+            XPos = 1400,
             //YPos = 20,
             //Width = 1200,
             //Height = 800,
@@ -166,7 +166,7 @@ class UITest
                 }
             }
         }
-
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack");
+        // return "D:\\installed\\SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack";
+        return "E:\\SteamLibrary\\steamapps\\common\\FINAL FANTASY XIV Online\\game\\sqpack";
     }
 }

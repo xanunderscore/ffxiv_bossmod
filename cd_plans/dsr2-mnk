@@ -1,0 +1,730 @@
+{
+  "Name": "APD",
+  "Timings": {
+    "PhaseDurations": [
+      196.99997,
+      128.4,
+      92.3,
+      71,
+      190.49997,
+      201.7,
+      279.89996
+    ]
+  },
+  "Actions": [
+    {
+      "ID": "Feint",
+      "StateID": "0x04000040",
+      "TimeSinceActivation": 3.9,
+      "WindowLength": 2.8,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x02010058",
+      "TimeSinceActivation": 3.2,
+      "WindowLength": 6.3,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x01030000",
+      "TimeSinceActivation": 4.9,
+      "WindowLength": 2.8,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x05040000",
+      "TimeSinceActivation": 2.1,
+      "WindowLength": 2,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x07030001",
+      "TimeSinceActivation": 6.6,
+      "WindowLength": 2.1,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x07080001",
+      "TimeSinceActivation": 4.9,
+      "WindowLength": 1.5,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Feint",
+      "StateID": "0x06060001",
+      "TimeSinceActivation": 1.7,
+      "WindowLength": 4.2,
+      "LowPriority": false,
+      "Target": {
+        "Type": "PrimaryEnemy"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x01040021",
+      "TimeSinceActivation": 3.3,
+      "WindowLength": 2.2,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x06080000",
+      "TimeSinceActivation": 3.9,
+      "WindowLength": 5.7,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x05040000",
+      "TimeSinceActivation": 0.9,
+      "WindowLength": 4.7,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x04000010",
+      "TimeSinceActivation": 7.6,
+      "WindowLength": 4.8,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x02010058",
+      "TimeSinceActivation": 3,
+      "WindowLength": 4.2,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "RiddleOfEarth",
+      "StateID": "0x07050001",
+      "TimeSinceActivation": 4.1,
+      "WindowLength": 2.4,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x02000001",
+      "TimeSinceActivation": 0.1,
+      "WindowLength": 6.1,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x01010090",
+      "TimeSinceActivation": 0.5,
+      "WindowLength": 2.8,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x03000001",
+      "TimeSinceActivation": 0,
+      "WindowLength": 7.6,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x04000030",
+      "TimeSinceActivation": 1.4,
+      "WindowLength": 2.7,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x06030001",
+      "TimeSinceActivation": 4.4,
+      "WindowLength": 2.9,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x06090000",
+      "TimeSinceActivation": 1.8,
+      "WindowLength": 2.7,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x07010001",
+      "TimeSinceActivation": 0.5,
+      "WindowLength": 3.7,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    },
+    {
+      "ID": "Mantra",
+      "StateID": "0x07050001",
+      "TimeSinceActivation": 1.6,
+      "WindowLength": 3,
+      "LowPriority": false,
+      "Target": {
+        "Type": "Self"
+      },
+      "Comment": ""
+    }
+  ],
+  "Strategies": {
+    "Dash": [
+      {
+        "Value": "GapClose",
+        "StateID": "0x03000001",
+        "TimeSinceActivation": 16.2,
+        "WindowLength": 2.7,
+        "Comment": ""
+      }
+    ],
+    "TrueN": [
+      {
+        "Value": "Delay",
+        "StateID": "0x01050000",
+        "TimeSinceActivation": 11.4,
+        "WindowLength": 34.5,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x02000001",
+        "TimeSinceActivation": 1.2,
+        "WindowLength": 19.1,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x01010120",
+        "TimeSinceActivation": 1,
+        "WindowLength": 35.6,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x04000030",
+        "TimeSinceActivation": 4.6,
+        "WindowLength": 11.4,
+        "Comment": ""
+      }
+    ],
+    "DF": [],
+    "Demo": [
+      {
+        "Value": "Delay",
+        "StateID": "0x01040200",
+        "TimeSinceActivation": 4,
+        "WindowLength": 7.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x05030300",
+        "TimeSinceActivation": 1.7,
+        "WindowLength": 15.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x04000040",
+        "TimeSinceActivation": 3.9,
+        "WindowLength": 7.7,
+        "Comment": ""
+      }
+    ],
+    "Nadi": [
+      {
+        "Value": "Lunar",
+        "StateID": "0x02000001",
+        "TimeSinceActivation": 8.6,
+        "WindowLength": 55.2,
+        "Comment": ""
+      },
+      {
+        "Value": "Lunar",
+        "StateID": "0x03000001",
+        "TimeSinceActivation": 17.2,
+        "WindowLength": 28.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Lunar",
+        "StateID": "0x05000001",
+        "TimeSinceActivation": 14.5,
+        "WindowLength": 32.7,
+        "Comment": ""
+      },
+      {
+        "Value": "LunarDowntime",
+        "StateID": "0x05030170",
+        "TimeSinceActivation": 0.1,
+        "WindowLength": 16.4,
+        "Comment": ""
+      },
+      {
+        "Value": "SolarDowntime",
+        "StateID": "0x07000030",
+        "TimeSinceActivation": 15.6,
+        "WindowLength": 7.6,
+        "Comment": ""
+      }
+    ],
+    "RoF": [
+      {
+        "Value": "Delay",
+        "StateID": "0x03020000",
+        "TimeSinceActivation": 2.6,
+        "WindowLength": 19.3,
+        "Comment": ""
+      },
+      {
+        "Value": "DelayBeast1",
+        "StateID": "0x01010120",
+        "TimeSinceActivation": 1.2,
+        "WindowLength": 18.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x01040200",
+        "TimeSinceActivation": 4.4,
+        "WindowLength": 3,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x05000001",
+        "TimeSinceActivation": 13.2,
+        "WindowLength": 3.2,
+        "Comment": ""
+      },
+      {
+        "Value": "DelayBeast2",
+        "StateID": "0x04000001",
+        "TimeSinceActivation": 9.9,
+        "WindowLength": 15.5,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x05030300",
+        "TimeSinceActivation": 1.1,
+        "WindowLength": 1.1,
+        "Comment": ""
+      },
+      {
+        "Value": "DelayBeast1",
+        "StateID": "0x06000002",
+        "TimeSinceActivation": 9.9,
+        "WindowLength": 10.3,
+        "Comment": ""
+      }
+    ],
+    "RoW": [
+      {
+        "Value": "Delay",
+        "StateID": "0x01040000",
+        "TimeSinceActivation": 2.3,
+        "WindowLength": 31.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x03020000",
+        "TimeSinceActivation": 2.4,
+        "WindowLength": 19.5,
+        "Comment": ""
+      }
+    ],
+    "BH": [
+      {
+        "Value": "Delay",
+        "StateID": "0x01050000",
+        "TimeSinceActivation": 0.1,
+        "WindowLength": 5,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x03020000",
+        "TimeSinceActivation": 2.3,
+        "WindowLength": 19.6,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x07000040",
+        "TimeSinceActivation": 9.1,
+        "WindowLength": 57.8,
+        "Comment": ""
+      }
+    ],
+    "TFC": [
+      {
+        "Value": "Delay",
+        "StateID": "0x04000040",
+        "TimeSinceActivation": 1.2,
+        "WindowLength": 10.7,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x01040200",
+        "TimeSinceActivation": 4.4,
+        "WindowLength": 3.4,
+        "Comment": ""
+      }
+    ],
+    "PB": [
+      {
+        "Value": "Force",
+        "StateID": "0x01000000",
+        "TimeSinceActivation": 0.5,
+        "WindowLength": 3.2,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x04000001",
+        "TimeSinceActivation": 8.9,
+        "WindowLength": 14.3,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x03010020",
+        "TimeSinceActivation": 5.8,
+        "WindowLength": 46.3,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x05011001",
+        "TimeSinceActivation": 0.6,
+        "WindowLength": 1,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x05030160",
+        "TimeSinceActivation": 0.9,
+        "WindowLength": 20,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x05030310",
+        "TimeSinceActivation": 3.5,
+        "WindowLength": 45.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x07000030",
+        "TimeSinceActivation": 15.2,
+        "WindowLength": 9.7,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x06010000",
+        "TimeSinceActivation": 2.3,
+        "WindowLength": 1.9,
+        "Comment": ""
+      }
+    ],
+    "PB1": [
+      {
+        "Value": "Raptor",
+        "StateID": "0x04000001",
+        "TimeSinceActivation": 9.3,
+        "WindowLength": 19.1,
+        "Comment": ""
+      }
+    ],
+    "PB2": [
+      {
+        "Value": "Opo",
+        "StateID": "0x04000001",
+        "TimeSinceActivation": 9.4,
+        "WindowLength": 18.9,
+        "Comment": ""
+      }
+    ],
+    "PB3": [],
+    "FS": [
+      {
+        "Value": "Delay",
+        "StateID": "0x04000001",
+        "TimeSinceActivation": 0,
+        "WindowLength": 16.1,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x05000001",
+        "TimeSinceActivation": 0,
+        "WindowLength": 8.4,
+        "Comment": ""
+      }
+    ],
+    "FSForm": [
+      {
+        "Value": "Raptor",
+        "StateID": "0x01040001",
+        "TimeSinceActivation": 0.5,
+        "WindowLength": 5.6,
+        "Comment": ""
+      },
+      {
+        "Value": "Raptor",
+        "StateID": "0x01040200",
+        "TimeSinceActivation": 3.1,
+        "WindowLength": 3.8,
+        "Comment": ""
+      },
+      {
+        "Value": "Coeurl",
+        "StateID": "0x03000010",
+        "TimeSinceActivation": 0,
+        "WindowLength": 5.1,
+        "Comment": ""
+      },
+      {
+        "Value": "Raptor",
+        "StateID": "0x05030230",
+        "TimeSinceActivation": 1.1,
+        "WindowLength": 13.3,
+        "Comment": ""
+      }
+    ],
+    "Blitz": [
+      {
+        "Value": "DelayUntilMultiTarget",
+        "StateID": "0x05030230",
+        "TimeSinceActivation": 1.4,
+        "WindowLength": 9.2,
+        "Comment": ""
+      },
+      {
+        "Value": "DelayUntilMultiTarget",
+        "StateID": "0x06050001",
+        "TimeSinceActivation": 1,
+        "WindowLength": 30.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Delay",
+        "StateID": "0x07000040",
+        "TimeSinceActivation": 9,
+        "WindowLength": 8.2,
+        "Comment": ""
+      }
+    ],
+    "DK": [
+      {
+        "Value": "Filler",
+        "StateID": "0x04010000",
+        "TimeSinceActivation": 2.5,
+        "WindowLength": 10.7,
+        "Comment": ""
+      }
+    ],
+    "SSS": [
+      {
+        "Value": "Force",
+        "StateID": "0x01040010",
+        "TimeSinceActivation": 0.6,
+        "WindowLength": 2.7,
+        "Comment": ""
+      }
+    ],
+    "Potion": [
+      {
+        "Value": "Force",
+        "StateID": "0x01000000",
+        "TimeSinceActivation": -1.6,
+        "WindowLength": 1.9,
+        "Comment": ""
+      },
+      {
+        "Value": "Force",
+        "StateID": "0x02010020",
+        "TimeSinceActivation": 3.6,
+        "WindowLength": 75.7,
+        "Comment": ""
+      }
+    ]
+  },
+  "Targets": [
+    {
+      "OID": "0x313C",
+      "StateID": "0x01000000",
+      "TimeSinceActivation": -5.1,
+      "WindowLength": 5.4,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x01010110",
+      "TimeSinceActivation": 2.2,
+      "WindowLength": 6.6,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x01040200",
+      "TimeSinceActivation": 2.1,
+      "WindowLength": 5.8,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x02000001",
+      "TimeSinceActivation": 7,
+      "WindowLength": 5.6,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x04000001",
+      "TimeSinceActivation": 17,
+      "WindowLength": 5.9,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x05000001",
+      "TimeSinceActivation": 12.7,
+      "WindowLength": 6.7,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x04000060",
+      "TimeSinceActivation": 0.2,
+      "WindowLength": 7.7,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x05010300",
+      "TimeSinceActivation": 0.4,
+      "WindowLength": 8,
+      "Comment": ""
+    },
+    {
+      "OID": "0x3141",
+      "StateID": "0x03000001",
+      "TimeSinceActivation": 16.9,
+      "WindowLength": 2.3,
+      "Comment": ""
+    },
+    {
+      "OID": "0x3144",
+      "StateID": "0x06000002",
+      "TimeSinceActivation": 10.2,
+      "WindowLength": 1.1,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x06050010",
+      "TimeSinceActivation": 0.5,
+      "WindowLength": 4,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x06040000",
+      "TimeSinceActivation": 3.8,
+      "WindowLength": 2.6,
+      "Comment": ""
+    },
+    {
+      "OID": "0x0",
+      "StateID": "0x07000040",
+      "TimeSinceActivation": 7.7,
+      "WindowLength": 2.9,
+      "Comment": ""
+    }
+  ],
+  "Class": "MNK",
+  "Encounter": "BossMod.Endwalker.Ultimate.DSW2.DSW2"
+}

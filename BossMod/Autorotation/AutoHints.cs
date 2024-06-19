@@ -97,7 +97,8 @@ public sealed class AutoHints : IDisposable
                 enemy.Priority = withinFateLevel ? 0 : -1;
 
             // allow tank (or phys ranged) AI to interrupt enemies even when no module is active
-            enemy.ShouldBeInterrupted = true;
+            // interruptible spells with duration <= 1.5s are generally basic attacks that aren't worth interrupting
+            enemy.ShouldBeInterrupted = enemy.Actor.CastInfo?.TotalTime > 1.5f;
         }
     }
 

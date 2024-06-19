@@ -1,5 +1,4 @@
-﻿using System;
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.MNK;
 
@@ -42,13 +41,14 @@ class Actions : CommonActions
 
     public override Targeting SelectBetterTarget(AIHints.Enemy initial)
     {
-        // TODO: multidotting support...
-        var pos = (_state.Form == Rotation.Form.Coeurl ? Rotation.GetCoeurlFormAction(_state, _strategy) : AID.None) switch
+        var pos = _strategy.NextPositionalImminent ? _strategy.NextPositional : Positional.Any;
+
+        if (_state.BestBlitz is AID.TornadoKick or AID.PhantomRush)
         {
-            AID.SnapPunch => Positional.Flank,
-            AID.Demolish => Positional.Rear,
-            _ => Positional.Any
-        };
+            var newBest = FindBetterTargetBy(initial, 3, enemy => Autorot.Hints.NumPriorityTargetsInAOECircle(enemy.Actor.Position, 5));
+            return new(newBest.Target, 3, pos);
+        }
+
         return new(initial, 3, pos);
     }
 
@@ -83,7 +83,7 @@ class Actions : CommonActions
         if (_state.Unlocked(AID.Bloodbath))
             SimulateManualActionForAI(ActionID.MakeSpell(AID.Bloodbath), Player, Player.InCombat && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8f);
         if (_state.Unlocked(AID.Meditation))
-            SimulateManualActionForAI(ActionID.MakeSpell(AID.Meditation), Player, !Player.InCombat && _state.Chakra < 5);
+            SimulateManualActionForAI(ActionID.MakeSpell(AID.Meditation), Player, !Player.InCombat && _state.Chakra < 5 && _state.RangeToTarget > 10);
         // TODO: this ends up being super annoying in some cases, maybe reconsider conditions
         // if (_state.Unlocked(AID.FormShift))
         //     SimulateManualActionForAI(ActionID.MakeSpell(AID.FormShift), Player, !Player.InCombat && _state.FormShiftLeft == 0 && _state.PerfectBalanceLeft == 0);

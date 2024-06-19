@@ -68,7 +68,7 @@ public class D161Psycheflayer(WorldState ws, Actor primary) : BossModule(ws, pri
             {
                 OID.MarbleMarionette => 4,
                 OID.StoneMarionette => 3,
-                OID.BossP1 => 2,
+                OID.BossP1 => e.Actor.HPMP.CurHP == 1 ? -1 : 2,
                 OID.BossP2 => 1,
                 _ => 0
             };
