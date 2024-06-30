@@ -1,6 +1,4 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game;
-
-namespace BossMod;
+﻿namespace BossMod;
 
 // utility that determines ai hints automatically based on actor casts
 // this is used e.g. in outdoor or on trash, where we have no active bossmodules
@@ -66,10 +64,6 @@ public sealed class AutoHints : IDisposable
             if (obj is null)
                 continue;
 
-            // TODO: this check might be expensive...reevaluate?
-            if (epicEcho && enemy.Priority < 0 && ActionManager.GetActionInRangeOrLoS(24, Utils.GameObjectInternal(Service.ObjectTable[_ws.Party[0]!.SpawnIndex]), obj) == 0)
-                enemy.Priority = 0;
-
             // enemy is either HP locked to 1 (in phase transition and invincible) or expected to die (pending spell/action damage)
             // TODO: introduce two separate "don't attack" priority levels, one for "pointless" and one for "forbidden";
             // "pointless" shouldn't be targeted, but can be hit, and "forbidden" should not be hit
@@ -82,6 +76,12 @@ public sealed class AutoHints : IDisposable
             // TODO: this should probably be gated behind a config option
             if (enemy.Priority < 0 && obj->NamePlateIconId is 71244 or 71204 or 71144 or 71224 or 71344)
                 enemy.Priority = 0;
+
+            // hack: passive enemies to attack
+            // 2571: white magestone (amdapor)
+            // 3009: grotto piranu (sastasha hard)
+            if (enemy.Priority < 0 && obj->GetNameId() is 2571 or 3009)
+                enemy.Priority = 5;
 
             // overworld target in combat, but targeting an unrelated player, should be skipped
             // TODO: make this work properly. right now, it prevents AI mode from targeting mobs in solo duties if they are
@@ -99,6 +99,10 @@ public sealed class AutoHints : IDisposable
             // allow tank (or phys ranged) AI to interrupt enemies even when no module is active
             // interruptible spells with duration <= 1.5s are generally basic attacks that aren't worth interrupting
             enemy.ShouldBeInterrupted = enemy.Actor.CastInfo?.TotalTime > 1.5f;
+
+            // TODO: this check might be expensive...reevaluate?
+            // if (enemy.Priority >= 0 && ActionManager.GetActionInRangeOrLoS(24, Utils.GameObjectInternal(Service.ObjectTable[_ws.Party[0]!.SpawnIndex]), obj) == 0)
+            //    enemy.Priority = -1;
         }
     }
 
