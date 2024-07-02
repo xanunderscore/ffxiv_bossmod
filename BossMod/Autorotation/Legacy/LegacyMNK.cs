@@ -406,8 +406,8 @@ public sealed class LegacyMNK : LegacyModule
         var formShiftUse = strategy.Option(Track.FormShift).As<FormShiftStrategy>();
         if (_state.CountdownRemaining > 0)
         {
-            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation))
-                return MNK.AID.Meditation;
+            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.SteeledMeditation))
+                return MNK.AID.SteeledMeditation;
 
             if (formShiftUse == FormShiftStrategy.Automatic && _state.FormShiftLeft < 3 && _state.CanFormShift)
                 return MNK.AID.FormShift;
@@ -424,8 +424,8 @@ public sealed class LegacyMNK : LegacyModule
 
         if (!HaveTarget())
         {
-            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation) && strategy.Option(Track.Meditation).As<OffensiveStrategy>() != OffensiveStrategy.Delay)
-                return MNK.AID.Meditation;
+            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.SteeledMeditation) && strategy.Option(Track.Meditation).As<OffensiveStrategy>() != OffensiveStrategy.Delay)
+                return MNK.AID.SteeledMeditation;
 
             if (formShiftUse == FormShiftStrategy.Automatic && _state.CanFormShift && _state.FormShiftLeft < 3)
                 return MNK.AID.FormShift;

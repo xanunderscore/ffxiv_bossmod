@@ -43,10 +43,13 @@ public sealed class AIHintsBuilder : IDisposable
         hints.Normalize();
     }
 
-    private void CalculateAutoHints(AIHints hints, Actor player)
+    private unsafe void CalculateAutoHints(AIHints hints, Actor player)
     {
-        if (_ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
+        var currentFateId = _ws.Client.ActiveFate.ID;
+        var withinFateLevel = false;
+        if (currentFateId != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(currentFateId)?.ClassJobLevelMax)
         {
+            withinFateLevel = true;
             hints.Center = new(_ws.Client.ActiveFate.Center.XZ());
             hints.Bounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius));
         }
@@ -68,6 +71,17 @@ public sealed class AIHintsBuilder : IDisposable
             {
                 hints.AddForbiddenZone(aoe.Shape, target, rot, aoe.Caster.CastInfo.NPCFinishAt);
             }
+        }
+
+        foreach (var enemy in hints.PotentialTargets)
+        {
+            if (currentFateId == 0 && enemy.Actor.FateID != 0)
+                enemy.Priority = -1;
+
+            if (currentFateId > 0 && enemy.Actor.FateID == currentFateId)
+                enemy.Priority = withinFateLevel ? 0 : -1;
+
+            enemy.ShouldBeInterrupted = true;
         }
     }
 

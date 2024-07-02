@@ -194,6 +194,8 @@ public unsafe sealed class ActionManagerEx : IDisposable
                 action = new(ActionType.Spell, ActionManager.GetSpellIdForAction(CSActionType.GeneralAction, action.ID));
             }
         }
+        if (action.Type == ActionType.Spell)
+            action = new(ActionType.Spell, GetAdjustedActionID(action.ID));
         return action;
     }
 
