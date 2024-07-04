@@ -1,4 +1,6 @@
-﻿namespace BossMod.Autorotation.xan.AI;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
+
+namespace BossMod.Autorotation.xan.AI;
 
 public abstract class TankAI(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
@@ -19,7 +21,7 @@ public abstract class TankAI(RotationModuleManager manager, Actor player) : Rota
     internal void AutoRanged<AID>(AID rangedAid, Actor? primaryTarget) where AID : Enum
     {
         var rangedAction = ActionID.MakeSpell(rangedAid);
-        if (primaryTarget != null && ActionUnlocked(rangedAction))
+        if (ActionUnlocked(rangedAction) && Player.DistanceTo(primaryTarget) > 5)
             Hints.ActionsToExecute.Push(rangedAction, primaryTarget, ActionQueue.Priority.Low);
     }
 
@@ -30,12 +32,21 @@ public abstract class TankAI(RotationModuleManager manager, Actor player) : Rota
 
         if (ActionUnlocked(interject) && interCd == 0)
         {
-            var interruptibleEnemy = Hints.PotentialTargets.Find(e => (e.Actor.CastInfo?.Interruptible ?? false) && e.Actor.Position.InCircle(Player.Position, 3 + e.Actor.HitboxRadius + Player.HitboxRadius));
+            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && e.Actor.Position.InCircle(Player.Position, 3 + e.Actor.HitboxRadius + Player.HitboxRadius));
             if (interruptibleEnemy != null)
                 Hints.ActionsToExecute.Push(interject, interruptibleEnemy.Actor, ActionQueue.Priority.Minimal);
         }
 
         // todo rampart
+    }
+
+    private static bool ShouldInterrupt(Actor act)
+    {
+        var ci = act.CastInfo;
+        if (ci == null)
+            return false;
+
+        return ci.Interruptible && ci.TotalTime > 1.5;
     }
 }
 
@@ -48,6 +59,9 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : TankAI(ma
         AutoCommon();
         AutoStance(BossMod.PLD.AID.IronWill, BossMod.PLD.SID.IronWill);
         AutoRanged(BossMod.PLD.AID.ShieldLob, primaryTarget);
+
+        if (ActionUnlocked(ActionID.MakeSpell(BossMod.PLD.AID.Sheltron)) && Player.InCombat && Service.JobGauges.Get<PLDGauge>().OathGauge >= 95)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.PLD.AID.Sheltron), Player, ActionQueue.Priority.Minimal);
     }
 }
 

@@ -238,8 +238,8 @@ public sealed class LegacyMNK : LegacyModule
         _state.BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
 
         (_state.Form, _state.FormLeft) = DetermineForm();
-        _state.DisciplinedFistLeft = _state.StatusDetails(Player, MNK.SID.DisciplinedFist, Player.InstanceID).Left;
-        _state.LeadenFistLeft = _state.StatusDetails(Player, MNK.SID.LeadenFist, Player.InstanceID).Left;
+        // _state.DisciplinedFistLeft = _state.StatusDetails(Player, MNK.SID.DisciplinedFist, Player.InstanceID).Left;
+        // _state.LeadenFistLeft = _state.StatusDetails(Player, MNK.SID.LeadenFist, Player.InstanceID).Left;
         _state.PerfectBalanceLeft = _state.StatusDetails(Player, MNK.SID.PerfectBalance, Player.InstanceID).Left;
         _state.FormShiftLeft = _state.StatusDetails(Player, MNK.SID.FormlessFist, Player.InstanceID).Left;
         _state.FireLeft = _state.StatusDetails(Player, MNK.SID.RiddleOfFire, Player.InstanceID).Left;
@@ -254,7 +254,7 @@ public sealed class LegacyMNK : LegacyModule
         _state.HsacLeft = _state.StatusDetails(Player, MNK.SID.BannerHonoredSacrifice, Player.InstanceID).Left;
 
         // TODO: multidot support
-        _state.TargetDemolishLeft = _state.StatusDetails(primaryTarget, MNK.SID.Demolish, Player.InstanceID).Left;
+        // _state.TargetDemolishLeft = _state.StatusDetails(primaryTarget, MNK.SID.Demolish, Player.InstanceID).Left;
 
         // TODO: see how BRD/DRG do aoes
         var aoeStrategy = strategy.Option(Track.AOE).As<AOEStrategy>();
@@ -406,8 +406,8 @@ public sealed class LegacyMNK : LegacyModule
         var formShiftUse = strategy.Option(Track.FormShift).As<FormShiftStrategy>();
         if (_state.CountdownRemaining > 0)
         {
-            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation))
-                return MNK.AID.Meditation;
+            //if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation))
+            //    return MNK.AID.Meditation;
 
             if (formShiftUse == FormShiftStrategy.Automatic && _state.FormShiftLeft < 3 && _state.CanFormShift)
                 return MNK.AID.FormShift;
@@ -424,8 +424,8 @@ public sealed class LegacyMNK : LegacyModule
 
         if (!HaveTarget())
         {
-            if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation) && strategy.Option(Track.Meditation).As<OffensiveStrategy>() != OffensiveStrategy.Delay)
-                return MNK.AID.Meditation;
+            //if (_state.Chakra < 5 && _state.Unlocked(MNK.AID.Meditation) && strategy.Option(Track.Meditation).As<OffensiveStrategy>() != OffensiveStrategy.Delay)
+            //    return MNK.AID.Meditation;
 
             if (formShiftUse == FormShiftStrategy.Automatic && _state.CanFormShift && _state.FormShiftLeft < 3)
                 return MNK.AID.FormShift;

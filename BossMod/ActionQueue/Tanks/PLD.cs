@@ -92,6 +92,7 @@ public enum SID : uint
     DivineMight = 2673, // applied by Royal Authority to self
     SupplicationReady = 3827, // applied by Atonement to self
     SepulchreReady = 3828, // applied by Supplication to self
+    BladeOfHonorReady = 3831, // applied by Requiescat to self
 }
 
 public sealed class Definitions : IDisposable
@@ -135,6 +136,9 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.BladeOfFaith);
         d.RegisterSpell(AID.BladeOfTruth);
         d.RegisterSpell(AID.BladeOfValor);
+        d.RegisterSpell(AID.Imperator);
+        d.RegisterSpell(AID.Guardian);
+        d.RegisterSpell(AID.BladeOfHonor);
 
         Customize(d);
     }

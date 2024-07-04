@@ -3,9 +3,9 @@ using BossMod.PLD;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PLD : LegacyModule
+public sealed class PLD : xanmodule
 {
-    public enum Track { AOE }
+    public enum Track { AOE, Targeting }
     public enum AOEStrategy { AOE, SingleTarget }
 
     public static RotationModuleDefinition Definition()
@@ -16,6 +16,8 @@ public sealed class PLD : LegacyModule
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
 
+        def.DefineTargeting(Track.Targeting);
+
         return def;
     }
 
@@ -25,7 +27,10 @@ public sealed class PLD : LegacyModule
     public float AtonementReady; // max 30
     public float SupplicationReady; // max 30
     public float SepulchreReady; // max 30
+    public float BladeOfHonorReady; // max 30
     public (float Left, int Stacks) Requiescat; // max 30/4 stacks
+    public float CCTimer;
+    public ushort CCStep;
 
     public int OathGauge; // 0-100
 
@@ -33,9 +38,9 @@ public sealed class PLD : LegacyModule
 
     public int NumAOETargets;
     public int NumScornTargets; // Circle of Scorn is part of single target rotation
-    public int NumConfiteorTargets;
-    public int NumExpiacionTargets;
-    public int NumRequiescatTargets;
+
+    private Actor? BestMeleeTarget;
+    private Actor? BestRangedTarget;
 
     public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
@@ -49,120 +54,117 @@ public sealed class PLD : LegacyModule
         _state = new(this);
     }
 
-    private AID GetNextBestGCD(StrategyValues strategy)
+    protected override CommonState GetState() => _state;
+
+    private void QueueNextBestGCD()
     {
         if (_state.CountdownRemaining > 0)
         {
             if (_state.CountdownRemaining < 2 && Unlocked(AID.HolySpirit))
-                return AID.HolySpirit;
+                PushGCD(AID.HolySpirit, BestRangedTarget);
 
-            return AID.None;
+            return;
         }
 
-        if (
-            GoringBladeReady > _state.GCD
-            // skip this conditional to allow confiteor/holy spirit if target is out of range
-            && _state.RangeToTarget <= 3
-        )
-            return AID.GoringBlade;
-
         if (ConfiteorCombo != AID.None && _state.CurMP >= 1000)
-            return ConfiteorCombo;
+            PushGCD(ConfiteorCombo, BestRangedTarget);
 
-        if (_state.RangeToTarget > 3 && DivineMightLeft > _state.GCD && NumAOETargets < 3)
-            return AID.HolySpirit;
-
-        if (SepulchreReady > _state.GCD)
-            return AID.Sepulchre;
-
-        if (SupplicationReady > _state.GCD)
-            return AID.Supplication;
+        // use goring blade even in AOE
+        if (GoringBladeReady > _state.GCD)
+            PushGCD(AID.GoringBlade, BestMeleeTarget, 50);
 
         if (NumAOETargets >= 3 && Unlocked(AID.TotalEclipse))
         {
-            if (Requiescat.Left > _state.GCD && Unlocked(AID.HolyCircle) && _state.CurMP >= 1000)
-                return AID.HolyCircle;
-
-            if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000 && FightOrFlightLeft > _state.GCD)
-                return AID.HolyCircle;
+            if (Unlocked(AID.HolyCircle) &&
+                (Requiescat.Left > _state.GCD || DivineMightLeft > _state.GCD && FightOrFlightLeft > _state.GCD) &&
+                    _state.CurMP >= 1000)
+                PushGCD(AID.HolyCircle, Player);
 
             if (Unlocked(AID.Prominence) && _state.ComboLastAction == (uint)AID.TotalEclipse)
             {
                 if (DivineMightLeft > _state.GCD && Unlocked(AID.HolyCircle) && _state.CurMP >= 1000)
-                    return AID.HolyCircle;
+                    PushGCD(AID.HolyCircle, Player);
 
-                return AID.Prominence;
+                PushGCD(AID.Prominence, Player);
             }
 
-            return AID.TotalEclipse;
+            PushGCD(AID.TotalEclipse, Player);
         }
-        else if (_state.TargetingEnemy)
+        else
         {
-            if (
-                DivineMightLeft > _state.GCD
-                && DivineMightLeft < _state.GCD + _state.AttackGCDTime
-                && _state.CurMP >= 1000
-            )
-                return AID.HolySpirit;
+            // fallback - cast holy spirit if we don't have a melee
+            if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
+                PushGCD(AID.HolySpirit, BestRangedTarget, -50);
 
-            // confiteor handled above
-            if (Requiescat.Left > _state.GCD && _state.CurMP >= 1000)
-                return AID.HolySpirit;
+            if (Requiescat.Left > _state.GCD || DivineMightLeft > _state.GCD && FightOrFlightLeft > _state.GCD)
+                PushGCD(AID.HolySpirit, BestRangedTarget);
 
-            if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000 && FightOrFlightLeft > _state.GCD)
-                return AID.HolySpirit;
-
-            // use early in FoF window
             if (AtonementReady > _state.GCD && FightOrFlightLeft > _state.GCD)
-                return AID.Atonement;
+                PushGCD(AID.Atonement, BestMeleeTarget);
+
+            if (SepulchreReady > _state.GCD)
+                PushGCD(AID.Sepulchre, BestMeleeTarget);
+
+            if (SupplicationReady > _state.GCD)
+                PushGCD(AID.Supplication, BestMeleeTarget);
 
             if (Unlocked(AID.RageOfHalone) && _state.ComboLastAction == (uint)AID.RiotBlade)
             {
                 if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
-                    return AID.HolySpirit;
+                    PushGCD(AID.HolySpirit, BestRangedTarget);
 
                 if (AtonementReady > _state.GCD)
-                    return AID.Atonement;
+                    PushGCD(AID.Atonement, BestMeleeTarget);
 
-                return AID.RoyalAuthority;
+                PushGCD(AID.RageOfHalone, BestMeleeTarget);
             }
 
             if (Unlocked(AID.RiotBlade) && _state.ComboLastAction == (uint)AID.FastBlade)
-                return AID.RiotBlade;
+                PushGCD(AID.RiotBlade, BestMeleeTarget);
 
-            return AID.FastBlade;
+            PushGCD(AID.FastBlade, BestMeleeTarget);
         }
-
-        return AID.None;
     }
 
-    private ActionID GetNextBestOGCD(float deadline)
+    private void QueueNextBestOGCD(float deadline, Actor? userTarget)
     {
         if ((AtonementReady > 0 || Requiescat.Left > 0 || DivineMightLeft > 0) && _state.CanWeave(AID.FightOrFlight, 0.6f, deadline))
-            return ActionID.MakeSpell(AID.FightOrFlight);
+            PushOGCD(AID.FightOrFlight, Player);
 
-        if (FightOrFlightLeft > 0 && Unlocked(AID.Requiescat) && _state.CanWeave(AID.Requiescat, 0.6f, deadline) && _state.RangeToTarget <= 3 && NumRequiescatTargets > 0)
-            return ActionID.MakeSpell(AID.Requiescat);
+        if (FightOrFlightLeft > 0 && BladeOfHonorReady > deadline && _state.CanWeave(AID.BladeOfHonor, 0.6f, deadline))
+            PushOGCD(AID.BladeOfHonor, BestRangedTarget);
+
+        if (FightOrFlightLeft > 0 && Unlocked(AID.Requiescat) && _state.CanWeave(AID.Requiescat, 0.6f, deadline))
+        {
+            if (Unlocked(AID.Imperator))
+                PushOGCD(AID.Imperator, BestRangedTarget);
+            else
+                PushOGCD(AID.Requiescat, BestMeleeTarget);
+        }
 
         if (FightOrFlightLeft > 0 || _state.CD(AID.FightOrFlight) > 15)
         {
-            if (Unlocked(AID.SpiritsWithin) && _state.CanWeave(AID.SpiritsWithin, 0.6f, deadline) && _state.RangeToTarget <= 3)
-                return ActionID.MakeSpell(AID.SpiritsWithin);
+            if (Unlocked(AID.SpiritsWithin) && _state.CanWeave(AID.SpiritsWithin, 0.6f, deadline))
+                PushOGCD(AID.SpiritsWithin, BestMeleeTarget);
 
             if (Unlocked(AID.CircleOfScorn) && _state.CanWeave(AID.CircleOfScorn, 0.6f, deadline) && NumScornTargets > 0)
-                return ActionID.MakeSpell(AID.CircleOfScorn);
+                PushOGCD(AID.CircleOfScorn, Player);
         }
 
-        if (Unlocked(AID.Intervene) && FightOrFlightLeft > 0 && _state.CanWeave(_state.CD(AID.Intervene) - 30, 0.6f, deadline))
-            return ActionID.MakeSpell(AID.Intervene);
-
-        if (Unlocked(AID.Sheltron) && !Unlocked(AID.HolySheltron) && OathGauge >= 95 && Player.InCombat)
-            return ActionID.MakeSpell(AID.Sheltron);
-
-        return default;
+        if (FightOrFlightLeft > 0 && Unlocked(AID.Intervene) && _state.CanWeave(_state.CD(AID.Intervene) - 30, 0.6f, deadline))
+            PushOGCD(AID.Intervene, userTarget);
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    private AID ConfiteorStep => CCStep switch
+    {
+        0 => _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None,
+        1 => AID.BladeOfFaith,
+        2 => AID.BladeOfTruth,
+        3 => AID.BladeOfValor,
+        _ => AID.None
+    };
+
+    public override unsafe void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
         _state.UpdateCommon(primaryTarget);
 
@@ -171,56 +173,38 @@ public sealed class PLD : LegacyModule
 
         var gauge = Service.JobGauges.Get<PLDGauge>();
         OathGauge = gauge.OathGauge;
+
+        // FIXME when cs is updated
+        // var CCTimer = *(ushort*)(gauge.Address + 0x0A) / 1000f;
+        var CCStep = *(ushort*)(gauge.Address + 0x0C);
+
         FightOrFlightLeft = _state.StatusDetails(Player, SID.FightOrFlight, Player.InstanceID).Left;
         GoringBladeReady = _state.StatusDetails(Player, SID.GoringBladeReady, Player.InstanceID).Left;
         DivineMightLeft = _state.StatusDetails(Player, SID.DivineMight, Player.InstanceID).Left;
         AtonementReady = _state.StatusDetails(Player, SID.AtonementReady, Player.InstanceID).Left;
         SupplicationReady = _state.StatusDetails(Player, SID.SupplicationReady, Player.InstanceID).Left;
         SepulchreReady = _state.StatusDetails(Player, SID.SepulchreReady, Player.InstanceID).Left;
+        BladeOfHonorReady = _state.StatusDetails(Player, SID.BladeOfHonorReady, Player.InstanceID).Left;
         Requiescat = _state.StatusDetails(Player, SID.Requiescat, Player.InstanceID);
+        ConfiteorCombo = CCStep switch
+        {
+            0 => _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None,
+            1 => AID.BladeOfFaith,
+            2 => AID.BladeOfTruth,
+            3 => AID.BladeOfValor,
+            _ => AID.None
+        };
 
-        var confiteorId = Manager.ActionManager.GetAdjustedActionID((uint)AID.Confiteor);
-
-        if (confiteorId == (uint)AID.Confiteor)
-            ConfiteorCombo = _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None;
-        else
-            ConfiteorCombo = (AID)confiteorId;
+        var targeting = strategy.Option(Track.Targeting);
+        BestMeleeTarget = SelectMeleeTarget(targeting, primaryTarget);
+        BestRangedTarget = SelectRangedTarget(targeting, primaryTarget, 25, NumSplashTargets).Best;
 
         var aoeType = strategy.Option(Track.AOE).As<AOEStrategy>();
-
-        NumScornTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
+        NumScornTargets = NumMeleeAOETargets();
         NumAOETargets = aoeType == AOEStrategy.SingleTarget ? 0 : NumScornTargets;
 
-        (var bestConfiteorTarget, NumConfiteorTargets) = MaybeFindBetterTarget(aoeType, primaryTarget, 25, act => Hints.NumPriorityTargetsInAOECircle(act.Position, 5));
+        QueueNextBestGCD();
 
-        (var bestExpTarget, NumExpiacionTargets) = Unlocked(AID.Expiacion)
-              ? MaybeFindBetterTarget(aoeType, primaryTarget, 3, act => Hints.NumPriorityTargetsInAOECircle(act.Position, 5))
-              : (primaryTarget, primaryTarget == null ? 0 : 1);
-
-        if (Unlocked(AID.Imperator))
-            NumRequiescatTargets = NumExpiacionTargets;
-        else
-            NumRequiescatTargets = primaryTarget == null ? 0 : 1;
-
-        var gcd = GetNextBestGCD(strategy);
-        if (gcd != AID.None)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(gcd), gcd is AID.Confiteor or AID.BladeOfFaith or AID.BladeOfTruth or AID.BladeOfValor ? bestConfiteorTarget : primaryTarget, ActionQueue.Priority.High + 500);
-
-        ActionID ogcd = default;
-        var deadline = _state.GCD > 0 && gcd != default ? _state.GCD : float.MaxValue;
-        if (_state.CanWeave(deadline - _state.OGCDSlotLength)) // first ogcd slot
-            ogcd = GetNextBestOGCD(deadline - _state.OGCDSlotLength);
-        if (!ogcd && _state.CanWeave(deadline)) // second/only ogcd slot
-            ogcd = GetNextBestOGCD(deadline);
-
-        if (ogcd)
-            Hints.ActionsToExecute.Push(ogcd, ogcd.ID is (uint)AID.Expiacion or (uint)AID.Imperator ? bestExpTarget : primaryTarget, ActionQueue.Priority.Low + 500);
+        QueueOGCD((deadline, _finalDeadline) => QueueNextBestOGCD(deadline, primaryTarget));
     }
-
-    private (Actor?, int) MaybeFindBetterTarget(AOEStrategy strat, Actor? primaryTarget, float range, Func<Actor, int> numTargets) => strat switch
-    {
-        AOEStrategy.AOE => FindBetterTargetBy(primaryTarget, range, numTargets),
-        AOEStrategy.SingleTarget => (primaryTarget, primaryTarget == null ? 0 : numTargets(primaryTarget)),
-        _ => (null, 0)
-    };
 }
