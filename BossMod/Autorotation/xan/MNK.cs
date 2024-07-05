@@ -14,7 +14,7 @@ public sealed class MNK : xanmodule
     {
         var def = new RotationModuleDefinition("MNK", "Monk", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.MNK, Class.PGL), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE", uiPriority: 100)
+        def.Define(Track.AOE).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
 
@@ -136,8 +136,6 @@ public sealed class MNK : xanmodule
             if (WindsReplyLeft > _state.GCD)
                 PushGCD(AID.WindsReply, BestLineTarget);
         }
-
-        Service.Log($"{NumAOETargets}");
 
         // TODO fix when they fix the potency in 7.0.1
         if (NumAOETargets > 3 && Unlocked(AID.ArmOfTheDestroyer))
@@ -326,7 +324,6 @@ public sealed class MNK : xanmodule
 
         Chakra = gauge.Chakra;
         BeastChakra = gauge.BeastChakra;
-        Service.Log($"{BeastChakra[0]}, {BeastChakra[1]}, {BeastChakra[2]}");
         BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
         Nadi = *(NadiFlags*)(gauge.Address + 0x0D);
 

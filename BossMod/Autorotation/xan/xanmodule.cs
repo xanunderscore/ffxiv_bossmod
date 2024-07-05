@@ -29,13 +29,15 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
             ogcdFun(deadline, deadline);
     }
 
-    protected Actor? SelectMeleeTarget(OptionRef track, Actor? primaryTarget)
+    protected Actor? SelectMeleeTarget(OptionRef track, Actor? primaryTarget) => SelectSingleTarget(track, primaryTarget, 3);
+
+    protected Actor? SelectSingleTarget(OptionRef track, Actor? primaryTarget, float range)
     {
         var tars = track.As<Targeting>();
         if (tars == Targeting.Manual)
             return primaryTarget;
 
-        return Player.DistanceTo(primaryTarget) <= 3 ? primaryTarget : Hints.PriorityTargets.FirstOrDefault(x => x.Actor.DistanceTo(Player) <= 3)?.Actor;
+        return Player.DistanceTo(primaryTarget) <= range ? primaryTarget : Hints.PriorityTargets.FirstOrDefault(x => x.Actor.DistanceTo(Player) <= range)?.Actor;
     }
 
     protected (Actor? Best, int Targets) SelectRangedTarget(OptionRef track, Actor? primaryTarget, float range, Func<Actor, int> priorityFunc) => track.As<Targeting>() switch
@@ -46,7 +48,6 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
     };
 
     protected int NumSplashTargets(Actor primary) => Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
-
     protected int NumMeleeAOETargets() => NumSplashTargets(Player);
 }
 

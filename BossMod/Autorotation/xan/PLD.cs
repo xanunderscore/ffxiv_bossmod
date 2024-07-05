@@ -12,7 +12,7 @@ public sealed class PLD : xanmodule
     {
         var def = new RotationModuleDefinition("PLD", "Paladin", "xan", RotationModuleQuality.WIP, BitMask.Build((int)Class.PLD | (int)Class.GLA), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE", uiPriority: 100)
+        def.Define(Track.AOE).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
 
@@ -94,10 +94,10 @@ public sealed class PLD : xanmodule
         {
             // fallback - cast holy spirit if we don't have a melee
             if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
-                PushGCD(AID.HolySpirit, BestRangedTarget, -50);
+                PushGCD(AID.HolySpirit, BestMeleeTarget, -50);
 
             if (Requiescat.Left > _state.GCD || DivineMightLeft > _state.GCD && FightOrFlightLeft > _state.GCD)
-                PushGCD(AID.HolySpirit, BestRangedTarget);
+                PushGCD(AID.HolySpirit, BestMeleeTarget ?? BestRangedTarget);
 
             if (AtonementReady > _state.GCD && FightOrFlightLeft > _state.GCD)
                 PushGCD(AID.Atonement, BestMeleeTarget);
@@ -111,7 +111,7 @@ public sealed class PLD : xanmodule
             if (Unlocked(AID.RageOfHalone) && _state.ComboLastAction == (uint)AID.RiotBlade)
             {
                 if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
-                    PushGCD(AID.HolySpirit, BestRangedTarget);
+                    PushGCD(AID.HolySpirit, BestMeleeTarget ?? BestRangedTarget);
 
                 if (AtonementReady > _state.GCD)
                     PushGCD(AID.Atonement, BestMeleeTarget);
