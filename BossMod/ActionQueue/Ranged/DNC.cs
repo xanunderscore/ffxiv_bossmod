@@ -48,6 +48,9 @@ public enum AID : uint
     Tillana = 25790, // L82, instant, GCD, range 0, AOE 15 circle, targets=self
     FanDanceIV = 25791, // L86, instant, 1.0s CD (group 4), range 15, AOE 15+R ?-degree cone, targets=hostile
     StarfallDance = 25792, // L90, instant, GCD, range 25, AOE 25+R width 4 rect, targets=hostile
+    LastDance = 36983,
+    FinishingMove = 36984,
+    DanceOfTheDawn = 36985,
 
     // Shared
     BigShot = ClassShared.AID.BigShot, // LB1, 2.0s cast, range 30, AOE 30+R width 4 rect, targets=hostile, castAnimLock=3.100
@@ -74,6 +77,12 @@ public enum TraitID : uint
     EnhancedFlourish = 455, // L86
     EnhancedShieldSamba = 456, // L88
     EnhancedDevilment = 457, // L90
+    EnhancedStandardFinish = 609, // L92
+    EnhancedSecondWind = 642, // L94
+    DynamicDancer = 662, // L94
+    EnhancedFlourishII = 610, // L96
+    EnhancedShieldSambaII = 611, // L98
+    EnhancedTechnicalFinishII = 612, // L100
 }
 
 // TODO: regenerate
@@ -104,6 +113,8 @@ public enum SID : uint
     Peloton = 1199, // applied by Peloton to self
     DancePartner = 1824, // applied by Closed Position to target
     ClosedPosition = 1823, // applied by Closed Position to self
+    LastDanceReady = 3867,
+    FinishingMoveReady = 3868
 }
 
 public sealed class Definitions : IDisposable
@@ -153,6 +164,9 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Tillana, true);
         d.RegisterSpell(AID.FanDanceIV, true);
         d.RegisterSpell(AID.StarfallDance, true);
+        d.RegisterSpell(AID.LastDance, true);
+        d.RegisterSpell(AID.FinishingMove, true);
+        d.RegisterSpell(AID.DanceOfTheDawn, true);
 
         Customize(d);
     }

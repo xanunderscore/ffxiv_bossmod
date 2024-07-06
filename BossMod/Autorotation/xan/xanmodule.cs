@@ -12,10 +12,25 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
     public enum Targeting { Auto, Manual, AutoPrimary }
 
     protected void PushGCD<AID>(AID aid, Actor? target, int additionalPrio = 0) where AID : Enum
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, ActionQueue.Priority.High + 500 + additionalPrio);
+        => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio);
 
     protected void PushOGCD<AID>(AID aid, Actor? target, int additionalPrio = 0) where AID : Enum
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, ActionQueue.Priority.Low + 500 + additionalPrio);
+        => PushAction(aid, target, ActionQueue.Priority.Low + 500 + additionalPrio);
+
+    protected void PushAction<AID>(AID aid, Actor? target, float priority) where AID : Enum
+    {
+        var def = ActionDefinitions.Instance.Spell(aid);
+        if (def == null)
+            return;
+
+        if (def.Range != 0 && target == null)
+        {
+            // Service.Log($"Queued targeted action ({aid}) with no target");
+            return;
+        }
+
+        Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority);
+    }
 
     protected abstract CommonState GetState();
 
@@ -29,18 +44,37 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
             ogcdFun(deadline, deadline);
     }
 
-    protected Actor? SelectMeleeTarget(OptionRef track, Actor? primaryTarget) => SelectSingleTarget(track, primaryTarget, 3);
-
-    protected Actor? SelectSingleTarget(OptionRef track, Actor? primaryTarget, float range)
+    /// <summary>
+    /// If the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table.<br/>
+    ///
+    /// It is guaranteed that <paramref name="primaryTarget"/> will be set to either <c>null</c> or an attackable enemy (not, for example, an ally or event object).<br/>
+    ///
+    /// If the provided Targeting strategy is Manual, this function is otherwise a <strong>no-op</strong>.
+    /// </summary>
+    /// <param name="track">Reference to the Targeting track of the active strategy</param>
+    /// <param name="primaryTarget">Player's current target - may be null</param>
+    /// <param name="range">Maximum distance from the player to search for a candidate target</param>
+    protected void SelectPrimaryTarget(OptionRef track, ref Actor? primaryTarget, float range)
     {
+        if (!IsEnemy(primaryTarget))
+            primaryTarget = null;
+
         var tars = track.As<Targeting>();
         if (tars == Targeting.Manual)
-            return primaryTarget;
+        {
+            return;
+        }
 
-        return Player.DistanceTo(primaryTarget) <= range ? primaryTarget : Hints.PriorityTargets.FirstOrDefault(x => x.Actor.DistanceTo(Player) <= range)?.Actor;
+        if (Player.DistanceTo(primaryTarget) > range)
+        {
+            primaryTarget = Hints.PriorityTargets.Where(x => x.Actor.DistanceTo(Player) <= range).MaxBy(x => x.Actor.HPMP.CurHP)?.Actor;
+            // Hints.ForcedTarget = primaryTarget;
+        }
     }
 
-    protected (Actor? Best, int Targets) SelectRangedTarget(OptionRef track, Actor? primaryTarget, float range, Func<Actor, int> priorityFunc) => track.As<Targeting>() switch
+    private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
+
+    protected (Actor? Best, int Targets) SelectTarget(OptionRef track, Actor? primaryTarget, float range, Func<Actor, int> priorityFunc) => track.As<Targeting>() switch
     {
         Targeting.Auto => FindBetterTargetBy(primaryTarget, range, priorityFunc),
         Targeting.AutoPrimary => throw new NotImplementedException(),

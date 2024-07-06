@@ -52,8 +52,9 @@ public sealed class DNC : xanmodule
     public float ThreefoldLeft; // 30s max
     public float FourfoldLeft; // 30s max
     public float PelotonLeft;
+    public float LastDanceLeft; // 30s max
+    public float FinishingMoveLeft; // 30s max
 
-    private Actor? BestSingleTarget;
     private Actor? BestFan4Target;
     private Actor? BestRangedAOETarget;
     private Actor? BestStarfallTarget;
@@ -81,12 +82,10 @@ public sealed class DNC : xanmodule
 
     private const float FinishDanceWindow = 0.5f;
 
-    private bool HaveTarget => NumAOETargets > 1 || BestSingleTarget != null;
+    private bool HaveTarget => NumAOETargets > 1 || _state.TargetingEnemy;
 
-    private void QueueNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        primaryTarget ??= BestSingleTarget;
-
         if (IsDancing)
         {
             if (NextStep != 0)
@@ -137,6 +136,12 @@ public sealed class DNC : xanmodule
         if (canStarfall)
             PushGCD(AID.StarfallDance, BestStarfallTarget);
 
+        if (FinishingMoveLeft > _state.GCD && NumDanceTargets > 0 && _state.CD(AID.StandardStep) < _state.GCD)
+            PushGCD(AID.FinishingMove, Player);
+
+        if (LastDanceLeft > _state.GCD)
+            PushGCD(AID.LastDance, BestRangedAOETarget);
+
         if (haveCombo2 && _state.ComboTimeLeft < _state.AttackGCDTime * 2)
         {
             if (canFlow)
@@ -146,6 +151,7 @@ public sealed class DNC : xanmodule
                 PushGCD(combo2, primaryTarget);
         }
 
+        // TODO: this priority is now incorrect
         if (FlourishingFinishLeft > _state.GCD && _state.CD(AID.Devilment) > 0 && NumDanceTargets > 0)
             PushGCD(AID.Tillana, Player);
 
@@ -173,7 +179,7 @@ public sealed class DNC : xanmodule
         PushGCD(AID.Cascade, primaryTarget);
     }
 
-    private void QueueNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
         if (_state.CountdownRemaining > 0)
         {
@@ -199,13 +205,13 @@ public sealed class DNC : xanmodule
         var f1ToUse = NumAOETargets > 1 && Unlocked(AID.FanDanceII) ? AID.FanDanceII : AID.FanDance;
 
         if (Feathers == 4 && canF1)
-            PushOGCD(f1ToUse, primaryTarget ?? BestSingleTarget);
+            PushOGCD(f1ToUse, primaryTarget);
 
         if (_state.CD(AID.Devilment) > 0 && FourfoldLeft > _state.AnimationLock && NumFan4Targets > 0)
             PushOGCD(AID.FanDanceIV, BestFan4Target);
 
         if (canF1)
-            PushOGCD(f1ToUse, primaryTarget ?? BestSingleTarget);
+            PushOGCD(f1ToUse, primaryTarget);
     }
 
     private bool ShouldStdStep(StrategyValues strategy)
@@ -219,10 +225,14 @@ public sealed class DNC : xanmodule
 
     private bool ShouldTechStep(StrategyValues strategy)
     {
-        if (!Unlocked(AID.TechnicalStep) || _state.CD(AID.TechnicalStep) > _state.GCD)
+        if (!Unlocked(AID.TechnicalStep) || _state.CD(AID.TechnicalStep) > _state.GCD || strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
             return false;
 
-        return NumDanceTargets > 0 && StandardFinishLeft > _state.GCD + 5.5;
+        const float TechStepDuration = 5.5f;
+        const float TechFinishDuration = 20f;
+
+        // standard finish must last for the whole burst window now, since tillana doesn't refresh it
+        return NumDanceTargets > 0 && StandardFinishLeft > _state.GCD + TechStepDuration + TechFinishDuration;
     }
 
     private bool CanFlow(out AID action)
@@ -274,7 +284,7 @@ public sealed class DNC : xanmodule
         if (Feathers == 0)
             return false;
 
-        if (Feathers == 4)
+        if (Feathers == 4 || !Unlocked(AID.TechnicalStep))
             return true;
 
         return TechFinishLeft > _state.AnimationLock;
@@ -282,7 +292,10 @@ public sealed class DNC : xanmodule
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
+        var targeting = strategy.Option(Track.Targeting);
+        SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget);
+
         _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
 
         var gauge = Service.JobGauges.Get<DNCGauge>();
@@ -306,11 +319,12 @@ public sealed class DNC : xanmodule
         FlourishingStarfallLeft = StatusLeft(SID.FlourishingStarfall);
         ThreefoldLeft = StatusLeft(SID.ThreefoldFanDance);
         FourfoldLeft = StatusLeft(SID.FourfoldFanDance);
+        LastDanceLeft = StatusLeft(SID.LastDanceReady);
+        FinishingMoveLeft = StatusLeft(SID.FinishingMoveReady);
 
-        BestSingleTarget = SelectSingleTarget(strategy.Option(Track.Targeting), primaryTarget, 25);
-        (BestFan4Target, NumFan4Targets) = SelectRangedTarget(strategy.Option(Track.Targeting), primaryTarget, 15, CalcNumFan4Targets);
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectRangedTarget(strategy.Option(Track.Targeting), primaryTarget, 25, NumSplashTargets);
-        (BestStarfallTarget, NumStarfallTargets) = SelectRangedTarget(strategy.Option(Track.Targeting), primaryTarget, 25, CalcNumStarfallTargets);
+        (BestFan4Target, NumFan4Targets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 15, CalcNumFan4Targets);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, NumSplashTargets);
+        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, CalcNumStarfallTargets);
 
         NumDanceTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 15);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
@@ -323,11 +337,12 @@ public sealed class DNC : xanmodule
             && strategy.Option(Track.Partner).As<PartnerStrategy>() == PartnerStrategy.Automatic
             && StatusLeft(SID.ClosedPosition) == 0
             && _state.CD(AID.ClosedPosition) == 0
+            && !IsDancing
             && FindDancePartner() is Actor partner)
-            PushOGCD(AID.ClosedPosition, partner);
+            PushGCD(AID.ClosedPosition, partner);
 
-        QueueNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => QueueNextBestOGCD(strategy, primaryTarget, deadline));
+        CalcNextBestGCD(strategy, primaryTarget);
+        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private int CalcNumFan4Targets(Actor primary) => Hints.NumPriorityTargetsInAOECone(Player.Position, 15, (primary.Position - Player.Position).Normalized(), 60.Degrees());

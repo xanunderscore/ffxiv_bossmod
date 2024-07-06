@@ -143,6 +143,7 @@ public abstract class CommonState(RotationModule module)
         2599 => true, // RPR arcane circle
         2703 => true, // SMN searing light
         2964 => true, // BRD radiant finale
+        3685 => true, // PCT starry muse
         _ => false
     };
 }

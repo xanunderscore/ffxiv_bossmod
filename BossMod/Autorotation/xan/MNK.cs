@@ -54,7 +54,6 @@ public sealed class MNK : xanmodule
     public int NumAOETargets;
     public int NumLineTargets;
 
-    private Actor? BestMeleeTarget;
     private Actor? BestBlitzTarget;
     private Actor? BestRangedTarget; // fire's reply
     private Actor? BestLineTarget; // enlightenment, wind's reply
@@ -103,7 +102,7 @@ public sealed class MNK : xanmodule
 
     private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, CurrentForm == Form.Coeurl);
 
-    private void QueueNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.SteeledMeditation), Player, ActionQueue.Priority.Minimal + 1);
@@ -118,8 +117,6 @@ public sealed class MNK : xanmodule
 
             return;
         }
-
-        primaryTarget ??= BestMeleeTarget;
 
         if (NumBlitzTargets > 0)
             PushGCD(AID.MasterfulBlitz, BestBlitzTarget);
@@ -217,7 +214,7 @@ public sealed class MNK : xanmodule
             PushOGCD(AID.PerfectBalance, Player);
     }
 
-    private void QueueNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline, float finalDeadline)
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline, float finalDeadline)
     {
         var buff = strategy.Option(Track.Buffs).As<OffensiveStrategy>();
         if (Player.InCombat)
@@ -241,13 +238,15 @@ public sealed class MNK : xanmodule
                 if (Unlocked(AID.HowlingFist) && NumLineTargets >= 3)
                     PushOGCD(AID.HowlingFist, BestLineTarget);
 
-                PushOGCD(AID.SteelPeak, BestMeleeTarget);
+                PushOGCD(AID.SteelPeak, primaryTarget);
             }
         }
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
+        var targeting = strategy.Option(Track.Targeting);
+        SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget);
 
         UpdateGauge();
@@ -262,12 +261,11 @@ public sealed class MNK : xanmodule
         BrotherhoodLeft = _state.StatusDetails(Player, SID.Brotherhood, Player.InstanceID).Left;
         (var currentBlitz, var currentBlitzIsTargeted) = GetCurrentBlitz();
 
-        var targeting = strategy.Option(Track.Targeting);
         if (BlitzLeft > _state.GCD)
         {
             if (currentBlitzIsTargeted)
             {
-                (BestBlitzTarget, NumBlitzTargets) = SelectRangedTarget(targeting, primaryTarget, 3, NumSplashTargets);
+                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(targeting, primaryTarget, 3, NumSplashTargets);
             }
             else
             {
@@ -283,19 +281,18 @@ public sealed class MNK : xanmodule
 
         (CurrentForm, FormLeft) = DetermineForm();
 
-        BestMeleeTarget = SelectMeleeTarget(targeting, primaryTarget);
-        BestRangedTarget = SelectRangedTarget(targeting, primaryTarget, 20, NumSplashTargets).Best;
-        (BestLineTarget, NumLineTargets) = SelectRangedTarget(targeting, primaryTarget, 10, NumEnlightenmentTargets);
+        BestRangedTarget = SelectTarget(targeting, primaryTarget, 20, NumSplashTargets).Best;
+        (BestLineTarget, NumLineTargets) = SelectTarget(targeting, primaryTarget, 10, NumEnlightenmentTargets);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
         {
             AOEStrategy.AOE => NumMeleeAOETargets(),
             _ => 0
         };
 
-        _state.UpdatePositionals(BestMeleeTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
+        _state.UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
 
-        QueueNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, finalDeadline) => QueueNextBestOGCD(strategy, primaryTarget, deadline, finalDeadline));
+        CalcNextBestGCD(strategy, primaryTarget);
+        QueueOGCD((deadline, finalDeadline) => CalcNextBestOGCD(strategy, primaryTarget, deadline, finalDeadline));
     }
 
     private int NumEnlightenmentTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 10, 2);
@@ -321,6 +318,7 @@ public sealed class MNK : xanmodule
     private unsafe void UpdateGauge()
     {
         var gauge = Service.JobGauges.Get<MNKGauge>();
+        Service.Log($"{gauge.Address:X8}");
 
         Chakra = gauge.Chakra;
         BeastChakra = gauge.BeastChakra;
