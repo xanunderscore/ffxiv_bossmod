@@ -99,6 +99,21 @@ sealed class AIManager : IDisposable
                 }
             }
         }
+
+        if (ImGui.Button("Enable"))
+        {
+            SwitchToFollow(PartyState.PlayerSlot);
+            _aiPreset = _autorot.Database.Presets.Presets.FirstOrDefault(x => x.Name == "AI");
+            if (_beh != null)
+                _beh.AIPreset = _aiPreset;
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Disable"))
+        {
+            SwitchToIdle();
+        }
     }
 
     private void SwitchToIdle()
