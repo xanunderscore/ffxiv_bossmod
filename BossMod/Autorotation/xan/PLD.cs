@@ -1,22 +1,18 @@
-﻿using BossMod.Autorotation.Legacy;
-using BossMod.PLD;
+﻿using BossMod.PLD;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PLD : xanmodule
+public sealed class PLD(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
 {
-    public enum Track { AOE, Targeting }
-    public enum AOEStrategy { AOE, SingleTarget }
+    public enum Track { AOE, Targeting, Buffs }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("PLD", "Paladin", "xan", RotationModuleQuality.WIP, BitMask.Build((int)Class.PLD | (int)Class.GLA), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE")
-            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
-
+        def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
+        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.FightOrFlight);
 
         return def;
     }
@@ -43,17 +39,6 @@ public sealed class PLD : xanmodule
 
     public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
-
-    public class State(RotationModule module) : CommonState(module) { }
-
-    private readonly State _state;
-
-    public PLD(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
-
-    protected override CommonState GetState() => _state;
 
     private void CalcNextBestGCD(Actor? primaryTarget)
     {

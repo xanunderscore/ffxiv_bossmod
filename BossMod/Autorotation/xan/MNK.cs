@@ -1,29 +1,19 @@
-﻿using BossMod.Autorotation.Legacy;
-using BossMod.MNK;
+﻿using BossMod.MNK;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.Autorotation.xan;
-public sealed class MNK : xanmodule
+public sealed class MNK(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
-    public enum AOEStrategy { AOE, SingleTarget }
-    public enum OffensiveStrategy { Automatic, Delay, Force }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("MNK", "Monk", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.MNK, Class.PGL), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE")
-            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
-
+        def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
-
-        def.Define(Track.Buffs).As<OffensiveStrategy>("Buffs")
-            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use buffs when optimal")
-            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use buffs")
-            .AddOption(OffensiveStrategy.Force, "Force", "Use buffs ASAP");
+        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.RiddleOfFire, AID.RiddleOfWind, AID.Brotherhood);
 
         return def;
     }
@@ -86,19 +76,6 @@ public sealed class MNK : xanmodule
 
     public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
-
-    internal class State(RotationModule module) : CommonState(module)
-    {
-    }
-
-    private readonly State _state;
-
-    public MNK(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
-
-    protected override CommonState GetState() => _state;
 
     private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, CurrentForm == Form.Coeurl);
 
@@ -226,11 +203,14 @@ public sealed class MNK : xanmodule
                 if (Unlocked(AID.Brotherhood) && _state.CanWeave(AID.Brotherhood, 0.6f, deadline))
                     PushOGCD(AID.Brotherhood, Player);
 
-                if (_state.GCD < 0.8f && _state.CanWeave(AID.RiddleOfFire, 0.6f, deadline) && (!Unlocked(AID.Brotherhood) || _state.CD(AID.Brotherhood) > 0))
+                if (_state.GCD < 0.8f && ShouldUseRoF(strategy, deadline))
                     PushOGCD(AID.RiddleOfFire, Player);
 
                 if (_state.CD(AID.RiddleOfFire) > 0 && _state.CanWeave(AID.RiddleOfWind, 0.6f, deadline))
                     PushOGCD(AID.RiddleOfWind, Player);
+
+                if (ShouldUseTrueNorth(strategy, deadline, finalDeadline))
+                    PushOGCD(AID.TrueNorth, Player);
             }
 
             if (Chakra >= 5 && _state.CanWeave(AID.SteelPeak, 0.6f, deadline))
@@ -241,6 +221,28 @@ public sealed class MNK : xanmodule
                 PushOGCD(AID.SteelPeak, primaryTarget);
             }
         }
+    }
+
+    private bool ShouldUseRoF(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.RiddleOfFire) || !_state.CanWeave(AID.RiddleOfFire, 0.6f, deadline))
+            return false;
+
+        return !Unlocked(AID.Brotherhood) || _state.CD(AID.Brotherhood) > 0;
+    }
+
+    private bool ShouldUseTrueNorth(StrategyValues strategy, float deadline, float finalDeadline)
+    {
+        if (!Unlocked(AID.TrueNorth) || !_state.CanWeave(_state.CD(AID.TrueNorth), 0.6f, deadline))
+            return false;
+
+        var wrong = _state.NextPositionalImminent && !_state.NextPositionalCorrect;
+
+        // always late weave unless it would delay riddle of fire
+        if (ShouldUseRoF(strategy, finalDeadline))
+            return wrong;
+        else
+            return wrong && _state.GCD < 0.8f;
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)

@@ -7,9 +7,20 @@ namespace BossMod.Autorotation.xan;
 #pragma warning disable CS8981
 #pragma warning disable IDE1006
 
-public abstract class xanmodule(RotationModuleManager manager, Actor player) : LegacyModule(manager, player)
+public abstract class xanmodule : LegacyModule
 {
     public enum Targeting { Auto, Manual, AutoPrimary }
+    public enum OffensiveStrategy { Automatic, Delay, Force }
+    public enum AOEStrategy { AOE, SingleTarget }
+
+    public class State(RotationModule module) : CommonState(module) { }
+
+    protected State _state;
+
+    protected xanmodule(RotationModuleManager manager, Actor player) : base(manager, player)
+    {
+        _state = new(this);
+    }
 
     protected void PushGCD<AID>(AID aid, Actor? target, int additionalPrio = 0) where AID : Enum
         => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio);
@@ -32,15 +43,12 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority);
     }
 
-    protected abstract CommonState GetState();
-
     protected void QueueOGCD(Action<float, float> ogcdFun)
     {
-        var st = GetState();
-        var deadline = st.GCD > 0 ? st.GCD : float.MaxValue;
-        if (st.CanWeave(deadline - st.OGCDSlotLength))
-            ogcdFun(deadline - st.OGCDSlotLength, deadline);
-        if (st.CanWeave(deadline))
+        var deadline = _state.GCD > 0 ? _state.GCD : float.MaxValue;
+        if (_state.CanWeave(deadline - _state.OGCDSlotLength))
+            ogcdFun(deadline - _state.OGCDSlotLength, deadline);
+        if (_state.CanWeave(deadline))
             ogcdFun(deadline, deadline);
     }
 
@@ -83,16 +91,33 @@ public abstract class xanmodule(RotationModuleManager manager, Actor player) : L
 
     protected int NumSplashTargets(Actor primary) => Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
     protected int NumMeleeAOETargets() => NumSplashTargets(Player);
+
+    protected int Num25yRectTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
 }
 
 static class xanextensions
 {
-    public static void DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
+    public static RotationModuleDefinition.ConfigRef<xanmodule.Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
          where Index : Enum
     {
-        def.Define(trackname).As<xanmodule.Targeting>("Targeting", uiPriority: 80)
+        return def.Define(trackname).As<xanmodule.Targeting>("Targeting")
             .AddOption(xanmodule.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
             .AddOption(xanmodule.Targeting.Manual, "Manual", "Use player's current target for all actions")
             .AddOption(xanmodule.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
+    }
+
+    public static RotationModuleDefinition.ConfigRef<xanmodule.AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
+    {
+        return def.Define(trackname).As<xanmodule.AOEStrategy>("AOE")
+            .AddOption(xanmodule.AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
+            .AddOption(xanmodule.AOEStrategy.SingleTarget, "ST", "Use single-target actions");
+    }
+
+    public static RotationModuleDefinition.ConfigRef<xanmodule.OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
+    {
+        return def.Define(track).As<xanmodule.OffensiveStrategy>(name)
+            .AddOption(xanmodule.OffensiveStrategy.Automatic, "Auto", "Use when optimal")
+            .AddOption(xanmodule.OffensiveStrategy.Delay, "Delay", "Don't use")
+            .AddOption(xanmodule.OffensiveStrategy.Force, "Force", "Use ASAP");
     }
 }

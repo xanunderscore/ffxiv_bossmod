@@ -1,34 +1,27 @@
-﻿using BossMod.Autorotation.Legacy;
-using BossMod.PCT;
+﻿using BossMod.PCT;
 using System.Runtime.InteropServices;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PCT : xanmodule
+public sealed class PCT(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs, Motif }
-    public enum AOEStrategy { AOE, SingleTarget }
+    public enum Track { AOE, Targeting, Buffs, Motif, Holy, Hammer }
     public enum MotifStrategy { Instant, Downtime, Combat }
-    public enum OffensiveStrategy { Automatic, Delay, Force }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("PCT", "Pictomancer", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PCT), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE")
-            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
-
+        def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
-
-        def.Define(Track.Buffs).As<OffensiveStrategy>("Buffs")
-            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use buffs when optimal")
-            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use buffs")
-            .AddOption(OffensiveStrategy.Force, "Force", "Use buffs ASAP");
+        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.StarryMuse);
 
         def.Define(Track.Motif).As<MotifStrategy>("Motifs")
             .AddOption(MotifStrategy.Instant, "Instant", "Only cast motifs when they are instant (out of combat)")
             .AddOption(MotifStrategy.Downtime, "Downtime", "Cast motifs in combat if there are no targets nearby")
             .AddOption(MotifStrategy.Combat, "Combat", "Cast motifs in combat, outside of burst window");
+
+        def.DefineSimple(Track.Holy, "Holy").AddAssociatedActions(AID.HolyInWhite);
+        def.DefineSimple(Track.Hammer, "Hammer").AddAssociatedActions(AID.HammerStamp);
 
         return def;
     }
@@ -55,18 +48,8 @@ public sealed class PCT : xanmodule
     private Actor? BestAOETarget;
     private Actor? BestMogTarget;
 
-    internal class State(RotationModule module) : CommonState(module)
-    {
-    }
-
-    private readonly State _state;
-
-    public PCT(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
-
-    protected override CommonState GetState() => _state;
+    // FIXME
+    private bool ForcedMovement;
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -79,19 +62,10 @@ public sealed class PCT : xanmodule
             _ => false
         };
 
-        if (_state.RaidBuffsLeft > _state.GCD || !Unlocked(AID.LandscapeMotif))
-        {
-            if (HammerTime.Stacks > 0)
-                PushGCD(AID.HammerStamp, BestAOETarget);
-
-            if (Paint > 0)
-                PushGCD(AID.HolyInWhite, BestAOETarget);
-        }
-
-        if (HammerTime.Stacks > 0 && HammerTime.Left < _state.GCD + _state.SpellGCDTime * HammerTime.Stacks)
+        if (ShouldHammer(strategy))
             PushGCD(AID.HammerStamp, BestAOETarget);
 
-        if (Hues == AetherHues.Two && Paint == 5)
+        if (ShouldHoly(strategy))
             PushGCD(AID.HolyInWhite, BestAOETarget);
 
         if (motifOk)
@@ -122,6 +96,16 @@ public sealed class PCT : xanmodule
         }
     }
 
+    private bool ShouldHoly(StrategyValues strategy) => Paint > 0 &&
+        (Hues == AetherHues.Two && Paint == 5
+            || ForcedMovement);
+
+    private bool ShouldHammer(StrategyValues strategy) => HammerTime.Stacks > 0 &&
+         (_state.RaidBuffsLeft > _state.GCD
+             || !Unlocked(AID.LandscapeMotif)
+             || ForcedMovement
+             || HammerTime.Left < _state.GCD + _state.SpellGCDTime * HammerTime.Stacks);
+
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
         if (!Player.InCombat)
@@ -130,7 +114,7 @@ public sealed class PCT : xanmodule
         if (Landscape && _state.CanWeave(AID.ScenicMuse, 0.6f, deadline))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
 
-        if (_state.CanWeave(AID.SubtractivePalette, 0.6f, deadline) && Subtractive == 0 && (Palette > 75 || SpectrumLeft > 0))
+        if (ShouldSubtract(strategy, deadline))
             PushOGCD(AID.SubtractivePalette, Player);
 
         if (Weapon && _state.CanWeave(_state.CD(AID.SteelMuse) - 60, 0.6f, deadline))
@@ -141,6 +125,20 @@ public sealed class PCT : xanmodule
 
         if (Moogle && _state.CanWeave(AID.MogOfTheAges, 0.6f, deadline))
             PushOGCD(AID.MogOfTheAges, BestMogTarget);
+
+        if (Player.HPMP.CurMP <= 7000 && Unlocked(AID.LucidDreaming) && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
+            PushOGCD(AID.LucidDreaming, Player);
+    }
+
+    private bool ShouldSubtract(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.SubtractivePalette) || !_state.CanWeave(AID.SubtractivePalette, 0.6f, deadline))
+            return false;
+
+        if (Palette < 50 && SpectrumLeft == 0)
+            return false;
+
+        return Palette > 75 || _state.RaidBuffsLeft > 0;
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
@@ -151,6 +149,8 @@ public sealed class PCT : xanmodule
 
         UpdateGauge();
 
+        ForcedMovement = Manager.ActionManager.InputOverride.IsMoveRequested();
+
         Subtractive = _state.StatusDetails(Player, SID.SubtractivePalette, Player.InstanceID).Stacks;
         StarryMuseLeft = _state.StatusDetails(Player, SID.StarryMuse, Player.InstanceID).Left;
         HammerTime = _state.StatusDetails(Player, SID.HammerTime, Player.InstanceID);
@@ -159,12 +159,7 @@ public sealed class PCT : xanmodule
         var ah1 = _state.StatusDetails(Player, SID.Aetherhues, Player.InstanceID).Left;
         var ah2 = _state.StatusDetails(Player, SID.AetherhuesII, Player.InstanceID).Left;
 
-        if (ah1 > _state.GCD)
-            Hues = AetherHues.One;
-        else if (ah2 > _state.GCD)
-            Hues = AetherHues.Two;
-        else
-            Hues = AetherHues.None;
+        Hues = ah1 > _state.GCD ? AetherHues.One : ah2 > _state.GCD ? AetherHues.Two : AetherHues.None;
 
         (BestAOETarget, NumAOETargets) = SelectTarget(track, primaryTarget, 25, NumSplashTargets);
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.SingleTarget)
@@ -188,8 +183,6 @@ public sealed class PCT : xanmodule
         Landscape = gauge->LandscapeMotifDrawn;
         Moogle = gauge->MooglePortraitReady;
         Madeen = gauge->MadeenPortraitReady;
-
-        Service.Log($"{Palette}, {Paint}, {Creature}, {Weapon}, {Landscape}, {Moogle}, {Madeen}, {_state.CD(AID.LivingMuse):f2}, {_state.CD(AID.SteelMuse):f2}");
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x10)]

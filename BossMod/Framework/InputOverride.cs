@@ -30,6 +30,11 @@ public sealed partial class InputOverride : IDisposable
     private delegate ref int GetRefValueDelegate(int vkCode);
     private readonly GetRefValueDelegate _getKeyRef;
 
+    private const VirtualKey UP = VirtualKey.OEM_COMMA; // VirtualKey.W;
+    private const VirtualKey DOWN = VirtualKey.O; // VirtualKey.S;
+    private const VirtualKey LEFT = VirtualKey.A;
+    private const VirtualKey RIGHT = VirtualKey.E; //  VirtualKey.D;
+
     public unsafe InputOverride()
     {
         _kbprocHook = Service.Hook.HookFromSignature<KbprocDelegate>("48 89 5C 24 08 55 56 57 41 56 41 57 48 8D 6C 24 B0 48 81 EC 50 01 00 00 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 40 4D 8B F9 49 8B D8 81 FA 00 01 00 00", KbprocDetour); // note: look for callers of GetKeyboardState
@@ -50,8 +55,8 @@ public sealed partial class InputOverride : IDisposable
     }
 
     // TODO: reconsider...
-    public bool IsMoving() => Service.KeyState[VirtualKey.W] || Service.KeyState[VirtualKey.S] || Service.KeyState[VirtualKey.A] || Service.KeyState[VirtualKey.D] || GamepadOverridesEnabled && (GamepadOverrides[3] != 0 || GamepadOverrides[4] != 0);
-    public bool IsMoveRequested() => IsWindowActive() && (ReallyPressed(VirtualKey.W) || ReallyPressed(VirtualKey.S) || ReallyPressed(VirtualKey.A) || ReallyPressed(VirtualKey.D));
+    public bool IsMoving() => Service.KeyState[UP] || Service.KeyState[DOWN] || Service.KeyState[LEFT] || Service.KeyState[RIGHT] || GamepadOverridesEnabled && (GamepadOverrides[3] != 0 || GamepadOverrides[4] != 0);
+    public bool IsMoveRequested() => IsWindowActive() && (ReallyPressed(UP) || ReallyPressed(DOWN) || ReallyPressed(LEFT) || ReallyPressed(RIGHT));
 
     public bool IsBlocked() => _movementBlocked;
 
@@ -60,10 +65,10 @@ public sealed partial class InputOverride : IDisposable
         if (_movementBlocked)
             return;
         _movementBlocked = true;
-        Block(VirtualKey.W);
-        Block(VirtualKey.S);
-        Block(VirtualKey.A);
-        Block(VirtualKey.D);
+        Block(UP);
+        Block(DOWN);
+        Block(LEFT);
+        Block(RIGHT);
         Service.Log("[InputOverride] Movement block started");
     }
 
@@ -72,10 +77,10 @@ public sealed partial class InputOverride : IDisposable
         if (!_movementBlocked)
             return;
         _movementBlocked = false;
-        Unblock(VirtualKey.W);
-        Unblock(VirtualKey.S);
-        Unblock(VirtualKey.A);
-        Unblock(VirtualKey.D);
+        Unblock(UP);
+        Unblock(DOWN);
+        Unblock(LEFT);
+        Unblock(RIGHT);
         Service.Log("[InputOverride] Movement block ended");
     }
 
@@ -116,7 +121,7 @@ public sealed partial class InputOverride : IDisposable
             _hwnd = hWnd;
             Service.Log($"[InputOverride] Changing active hwnd to {hWnd:X}");
         }
-        if (_movementBlocked && uMsg == WM_KEYDOWN && (VirtualKey)wParam is VirtualKey.W or VirtualKey.S or VirtualKey.A or VirtualKey.D)
+        if (_movementBlocked && uMsg == WM_KEYDOWN && (VirtualKey)wParam is UP or DOWN or LEFT or RIGHT)
             return;
         _kbprocHook.Original(hWnd, uMsg, wParam, lParam, uIdSubclass, dwRefData);
     }

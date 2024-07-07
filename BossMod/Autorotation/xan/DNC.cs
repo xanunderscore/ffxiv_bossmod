@@ -1,29 +1,19 @@
-﻿using BossMod.Autorotation.Legacy;
-using BossMod.DNC;
+﻿using BossMod.DNC;
 using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.Autorotation.xan;
-public sealed class DNC : xanmodule
+public sealed class DNC(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs, Partner }
-    public enum AOEStrategy { AOE, SingleTarget }
-    public enum OffensiveStrategy { Automatic, Delay, Force }
     public enum PartnerStrategy { Automatic, Manual }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("DNC", "Dancer", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.DNC), 100);
 
-        def.Define(Track.AOE).As<AOEStrategy>("AOE")
-            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
-
+        def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
-
-        def.Define(Track.Buffs).As<OffensiveStrategy>("Buffs")
-            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use buffs when optimal")
-            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use buffs")
-            .AddOption(OffensiveStrategy.Force, "Force", "Use buffs ASAP");
+        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.TechnicalStep);
 
         def.Define(Track.Partner).As<PartnerStrategy>("Partner")
             .AddOption(PartnerStrategy.Automatic, "Auto", "Choose dance partner automatically (based on job aDPS)")
@@ -68,17 +58,6 @@ public sealed class DNC : xanmodule
 
     public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
-
-    internal class State(RotationModule module) : CommonState(module) { }
-
-    private readonly State _state;
-
-    public DNC(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
-
-    protected override CommonState GetState() => _state;
 
     private const float FinishDanceWindow = 0.5f;
 
@@ -324,7 +303,7 @@ public sealed class DNC : xanmodule
 
         (BestFan4Target, NumFan4Targets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 15, CalcNumFan4Targets);
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, NumSplashTargets);
-        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, CalcNumStarfallTargets);
+        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, Num25yRectTargets);
 
         NumDanceTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 15);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
@@ -346,7 +325,6 @@ public sealed class DNC : xanmodule
     }
 
     private int CalcNumFan4Targets(Actor primary) => Hints.NumPriorityTargetsInAOECone(Player.Position, 15, (primary.Position - Player.Position).Normalized(), 60.Degrees());
-    private int CalcNumStarfallTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
 
     private float StatusLeft(SID status) => _state.StatusDetails(Player, status, Player.InstanceID).Left;
 
@@ -364,5 +342,5 @@ public sealed class DNC : xanmodule
             Class.BRD => 68,
             Class.DNC => 67,
             _ => 1
-        });
+        }) ?? World.Actors.FirstOrDefault(x => x.Type == ActorType.Chocobo && x.OwnerID == Player.InstanceID);
 }
