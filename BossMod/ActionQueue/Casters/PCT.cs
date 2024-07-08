@@ -94,6 +94,7 @@ public enum SID : uint
     TemperaCoat = 3686, // applied by Tempera Coat to self
     LucidDreaming = 1204, // applied by Lucid Dreaming to self
     Surecast = 160, // applied by Surecast to self
+    Swiftcast = 167, // applied by Swiftcast to self
     HammerTime = 3680, // applied by Striking Muse to self
     SubtractivePalette = 3674, // applied by Subtractive Palette to self
     StarryMuse = 3685, // applied by Starry Muse to self

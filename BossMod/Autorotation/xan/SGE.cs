@@ -1,8 +1,9 @@
 ﻿using BossMod.SGE;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
+public sealed class SGE(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Kardia, Druo }
     public enum KardiaStrategy { Auto, Manual }
@@ -35,20 +36,19 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
     public bool ForcedMovement;
 
     public int NumAOETargets;
+    public int NumRangedAOETargets;
     public int NumPhlegmaTargets;
-    public int NumToxikonTargets;
     public int NumPneumaTargets;
 
     public int NumNearbyDotTargets;
 
     private Actor? BestPhlegmaTarget; // 6y/5y
-    private Actor? BestToxikonTarget; // 25y/5y
+    private Actor? BestRangedAOETarget; // 25y/5y toxikon, psyche
     private Actor? BestPneumaTarget; // 25y/4y rect
 
     private Actor? BestDotTarget;
 
-    public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
-    public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
+    protected override float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : base.GetCastTime(aid);
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -79,7 +79,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
             }
         }
 
-        if (Unlocked(AID.Pneuma) && _state.CD(AID.Pneuma) < _state.GCD && NumPneumaTargets > 1 && CanCast)
+        if (Unlocked(AID.Pneuma) && _state.CD(AID.Pneuma) < _state.GCD && NumPneumaTargets > 1)
             PushGCD(AID.Pneuma, BestPneumaTarget);
 
         if (Unlocked(AID.Phlegma)
@@ -87,17 +87,22 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
                 || _state.CD(AID.Phlegma) < _state.GCD))
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
 
-        if (Unlocked(AID.Dyskrasia) && NumAOETargets > 1)
-            PushGCD(AID.Dyskrasia, Player);
+        if (NumAOETargets > 1)
+        {
+            if (Sting > 0 && NumPhlegmaTargets > 1)
+                PushGCD(AID.Toxikon, BestPhlegmaTarget);
 
-        if (CanCast)
-            PushGCD(AID.Dosis, primaryTarget);
+            if (Unlocked(AID.Dyskrasia))
+                PushGCD(AID.Dyskrasia, Player);
+        }
+
+        PushGCD(AID.Dosis, primaryTarget);
 
         if (Unlocked(AID.Phlegma) && _state.CD(AID.Phlegma) - 40 < _state.GCD && NumPhlegmaTargets > 0)
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
 
-        if (Unlocked(AID.Toxikon) && NumToxikonTargets > 0 && Sting > 0)
-            PushGCD(AID.Toxikon, BestToxikonTarget);
+        if (Unlocked(AID.Toxikon) && NumRangedAOETargets > 0 && Sting > 0)
+            PushGCD(AID.Toxikon, BestRangedAOETarget);
 
         if (NumAOETargets > 0 && Unlocked(AID.Dyskrasia))
             PushGCD(AID.Dyskrasia, Player);
@@ -105,6 +110,9 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
+        if (!Player.InCombat)
+            return;
+
         if (Unlocked(AID.Rhizomata) && Gall < 2 && NextGall > 10 && _state.CanWeave(AID.Rhizomata, 0.6f, deadline))
             PushOGCD(AID.Rhizomata, Player);
 
@@ -116,6 +124,9 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
 
         if (Player.HPMP.CurMP <= 7000 && Unlocked(AID.LucidDreaming) && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
             PushOGCD(AID.LucidDreaming, Player);
+
+        if (Unlocked(AID.Psyche) && _state.CanWeave(AID.Psyche, 0.6f, deadline) && NumRangedAOETargets > 0)
+            PushOGCD(AID.Psyche, BestRangedAOETarget);
     }
 
     static readonly SID[] DotStatus = [SID.EukrasianDosis, SID.EukrasianDosisII, SID.EukrasianDosisIII, SID.EukrasianDyskrasia];
@@ -128,8 +139,6 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
 
         return false;
     }
-
-    private bool CanCast => SwiftcastLeft > _state.GCD || !ForcedMovement;
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -151,7 +160,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
         ForcedMovement = Manager.ActionManager.InputOverride.IsMoveRequested();
 
         (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, NumSplashTargets);
-        (BestToxikonTarget, NumToxikonTargets) = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets);
         (BestPneumaTarget, NumPneumaTargets) = SelectTarget(targeting, primaryTarget, 25, Num25yRectTargets);
 
         var aoeStrat = strategy.Option(Track.AOE).As<AOEStrategy>();
@@ -174,7 +183,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xanmodule
         }
         else
         {
-            var allPossibleDotTargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceTo(Player) <= 25);
+            var allPossibleDotTargets = Hints.PriorityTargets;
             if (allPossibleDotTargets.Count() > 2)
                 BestDotTarget = null;
             else

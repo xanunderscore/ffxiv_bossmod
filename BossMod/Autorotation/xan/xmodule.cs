@@ -7,29 +7,35 @@ namespace BossMod.Autorotation.xan;
 #pragma warning disable CS8981
 #pragma warning disable IDE1006
 
-public abstract class xanmodule : LegacyModule
+public static class xcommon
 {
     public enum Targeting { Auto, Manual, AutoPrimary }
     public enum OffensiveStrategy { Automatic, Delay, Force }
     public enum AOEStrategy { AOE, SingleTarget }
+}
 
+public abstract class xmodule<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
+{
     public class State(RotationModule module) : CommonState(module) { }
 
     protected State _state;
 
-    protected xanmodule(RotationModuleManager manager, Actor player) : base(manager, player)
+    protected xmodule(RotationModuleManager manager, Actor player) : base(manager, player)
     {
         _state = new(this);
     }
 
-    protected void PushGCD<AID>(AID aid, Actor? target, int additionalPrio = 0) where AID : Enum
+    protected void PushGCD(AID aid, Actor? target, int additionalPrio = 0)
         => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio);
 
-    protected void PushOGCD<AID>(AID aid, Actor? target, int additionalPrio = 0) where AID : Enum
+    protected void PushOGCD(AID aid, Actor? target, int additionalPrio = 0)
         => PushAction(aid, target, ActionQueue.Priority.Low + 500 + additionalPrio);
 
-    protected void PushAction<AID>(AID aid, Actor? target, float priority) where AID : Enum
+    protected void PushAction(AID aid, Actor? target, float priority)
     {
+        if (!CanCast(aid))
+            return;
+
         var def = ActionDefinitions.Instance.Spell(aid);
         if (def == null)
             return;
@@ -67,8 +73,8 @@ public abstract class xanmodule : LegacyModule
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        var tars = track.As<Targeting>();
-        if (tars == Targeting.Manual)
+        var tars = track.As<xcommon.Targeting>();
+        if (tars == xcommon.Targeting.Manual)
         {
             return;
         }
@@ -80,13 +86,22 @@ public abstract class xanmodule : LegacyModule
         }
     }
 
+    protected virtual float GetCastTime(AID aid) => ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
+
+    protected bool CanCast(AID aid) => GetCastTime(aid) <= ForceMovementIn;
+
+    protected float ForceMovementIn => Manager.ActionManager.InputOverride.IsMoveRequested() ? 0 : Hints.ForceMovementIn;
+
+    protected bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
+    protected bool Unlocked(TraitID tid) => TraitUnlocked((uint)(object)tid);
+
     private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
 
-    protected (Actor? Best, int Targets) SelectTarget(OptionRef track, Actor? primaryTarget, float range, Func<Actor, int> priorityFunc) => track.As<Targeting>() switch
+    protected (Actor? Best, P Targets) SelectTarget<P>(OptionRef track, Actor? primaryTarget, float range, Func<Actor, P> priorityFunc) where P : struct, IComparable => track.As<xcommon.Targeting>() switch
     {
-        Targeting.Auto => FindBetterTargetBy(primaryTarget, range, priorityFunc),
-        Targeting.AutoPrimary => throw new NotImplementedException(),
-        _ => (primaryTarget, primaryTarget == null ? 0 : priorityFunc(primaryTarget))
+        xcommon.Targeting.Auto => FindBetterTargetBy(primaryTarget, range, priorityFunc),
+        xcommon.Targeting.AutoPrimary => throw new NotImplementedException(),
+        _ => (primaryTarget, primaryTarget == null ? default : priorityFunc(primaryTarget))
     };
 
     protected int NumSplashTargets(Actor primary) => Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
@@ -95,29 +110,29 @@ public abstract class xanmodule : LegacyModule
     protected int Num25yRectTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
 }
 
-static class xanextensions
+static class xtensions
 {
-    public static RotationModuleDefinition.ConfigRef<xanmodule.Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
+    public static RotationModuleDefinition.ConfigRef<xcommon.Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
          where Index : Enum
     {
-        return def.Define(trackname).As<xanmodule.Targeting>("Targeting")
-            .AddOption(xanmodule.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
-            .AddOption(xanmodule.Targeting.Manual, "Manual", "Use player's current target for all actions")
-            .AddOption(xanmodule.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
+        return def.Define(trackname).As<xcommon.Targeting>("Targeting")
+            .AddOption(xcommon.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
+            .AddOption(xcommon.Targeting.Manual, "Manual", "Use player's current target for all actions")
+            .AddOption(xcommon.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
     }
 
-    public static RotationModuleDefinition.ConfigRef<xanmodule.AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<xcommon.AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
     {
-        return def.Define(trackname).As<xanmodule.AOEStrategy>("AOE")
-            .AddOption(xanmodule.AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(xanmodule.AOEStrategy.SingleTarget, "ST", "Use single-target actions");
+        return def.Define(trackname).As<xcommon.AOEStrategy>("AOE")
+            .AddOption(xcommon.AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
+            .AddOption(xcommon.AOEStrategy.SingleTarget, "ST", "Use single-target actions");
     }
 
-    public static RotationModuleDefinition.ConfigRef<xanmodule.OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<xcommon.OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
     {
-        return def.Define(track).As<xanmodule.OffensiveStrategy>(name)
-            .AddOption(xanmodule.OffensiveStrategy.Automatic, "Auto", "Use when optimal")
-            .AddOption(xanmodule.OffensiveStrategy.Delay, "Delay", "Don't use")
-            .AddOption(xanmodule.OffensiveStrategy.Force, "Force", "Use ASAP");
+        return def.Define(track).As<xcommon.OffensiveStrategy>(name)
+            .AddOption(xcommon.OffensiveStrategy.Automatic, "Auto", "Use when optimal")
+            .AddOption(xcommon.OffensiveStrategy.Delay, "Delay", "Don't use")
+            .AddOption(xcommon.OffensiveStrategy.Force, "Force", "Use ASAP");
     }
 }

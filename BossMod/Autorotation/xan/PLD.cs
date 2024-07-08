@@ -1,8 +1,9 @@
 ﻿using BossMod.PLD;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PLD(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
+public sealed class PLD(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
 
@@ -37,8 +38,11 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xanmodule
 
     private Actor? BestRangedTarget;
 
-    public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
-    public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
+    protected override float GetCastTime(AID aid) => aid switch
+    {
+        AID.HolyCircle or AID.HolySpirit => DivineMightLeft > _state.GCD || Requiescat.Stacks > 0 ? 0 : _state.SpellGCDTime * 0.6f,
+        _ => 0
+    };
 
     private void CalcNextBestGCD(Actor? primaryTarget)
     {

@@ -1,9 +1,10 @@
 ﻿using BossMod.MNK;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class MNK(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
+public sealed class MNK(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
 
@@ -52,6 +53,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xanmodule
     public bool HasSolar => Nadi.HasFlag(NadiFlags.SOLAR);
     public bool HasBothNadi => HasLunar && HasSolar;
 
+    protected override float GetCastTime(AID aid) => 0;
+
     private (AID action, bool isTargeted) GetCurrentBlitz()
     {
         if (BeastCount != 3)
@@ -73,9 +76,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xanmodule
     public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1] && !HasBothNadi;
 
     public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
-
-    public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
-    public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
 
     private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, CurrentForm == Form.Coeurl);
 
@@ -194,7 +194,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xanmodule
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline, float finalDeadline)
     {
         var buff = strategy.Option(Track.Buffs).As<OffensiveStrategy>();
-        if (Player.InCombat)
+        if (Player.InCombat && _state.GCD > 0)
         {
             if (buff != OffensiveStrategy.Delay)
             {

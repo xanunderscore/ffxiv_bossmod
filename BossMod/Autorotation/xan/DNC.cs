@@ -1,8 +1,9 @@
 ﻿using BossMod.DNC;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class DNC(RotationModuleManager manager, Actor player) : xanmodule(manager, player)
+public sealed class DNC(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs, Partner }
     public enum PartnerStrategy { Automatic, Manual }
@@ -56,10 +57,9 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xanmodule
     public int NumRangedAOETargets;
     public int NumStarfallTargets;
 
-    public bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
-    public bool Unlocked(TraitID tid) => TraitUnlocked((uint)tid);
-
     private const float FinishDanceWindow = 0.5f;
+
+    protected override float GetCastTime(AID aid) => 0;
 
     private bool HaveTarget => NumAOETargets > 1 || _state.TargetingEnemy;
 
