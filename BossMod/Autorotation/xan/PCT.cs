@@ -1,9 +1,8 @@
 ﻿using BossMod.PCT;
 using System.Runtime.InteropServices;
-using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PCT(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
+public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs, Motif, Holy, Hammer }
     public enum MotifStrategy { Instant, Downtime, Combat }
@@ -104,13 +103,13 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xmodule<A
     };
 
     private bool ShouldHoly(StrategyValues strategy) => Paint > 0 &&
-        (Hues == AetherHues.Two && Paint == 5
-            || ForceMovementIn == 0);
+        (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime));
 
     private bool ShouldHammer(StrategyValues strategy) => HammerTime.Stacks > 0 &&
          (_state.RaidBuffsLeft > _state.GCD
              || ForceMovementIn == 0
-             || HammerTime.Left < _state.GCD + _state.SpellGCDTime * HammerTime.Stacks);
+             // set to 3s instead of GCD timer in case we end up wanting to hardcast all 3 motifs
+             || HammerTime.Left < _state.GCD + 4 * HammerTime.Stacks);
 
     private bool PomOnly => _creatureFlags.HasFlag(CreatureFlags.Pom) && !_creatureFlags.HasFlag(CreatureFlags.Wings);
 
@@ -122,20 +121,16 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xmodule<A
         if (!Player.InCombat)
             return;
 
-        if (strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay)
-        {
-            if (Landscape && _state.CanWeave(AID.ScenicMuse, 0.6f, deadline))
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
-        }
+        if (ShouldLandscape(strategy, deadline))
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
 
         if (Weapon && _state.CanWeave(_state.CD(AID.SteelMuse) - 60, 0.6f, deadline))
             PushOGCD(AID.SteelMuse, Player);
 
-        if (ShouldSubtract(strategy, deadline))
-            PushOGCD(AID.SubtractivePalette, Player);
+        Subtract(strategy, deadline);
 
         if (Creature
-            && BestAOETarget != null // FIXME autotarget again
+            && BestAOETarget != null // this triggers native autotarget if BestAOETarget is null, because Living Muse is self-targeted but all of its transformations are not
             && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
             PushOGCD(AID.LivingMuse, BestAOETarget);
 
@@ -146,12 +141,24 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xmodule<A
             PushOGCD(AID.LucidDreaming, Player);
     }
 
-    private bool ShouldSubtract(StrategyValues strategy, float deadline)
+    private bool ShouldLandscape(StrategyValues strategy, float deadline)
     {
-        if (!Unlocked(AID.SubtractivePalette) || !_state.CanWeave(AID.SubtractivePalette, 0.6f, deadline) || Subtractive > 0 || (Palette < 50 && SpectrumLeft == 0))
+        if (strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
             return false;
 
-        return Palette > 75 || _state.RaidBuffsLeft > 0;
+        return Landscape && _state.CanWeave(AID.ScenicMuse, 0.6f, deadline);
+    }
+
+    private void Subtract(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.SubtractivePalette)
+            || !_state.CanWeave(AID.SubtractivePalette, 0.6f, deadline)
+            || Subtractive > 0
+            || Palette < 50 && SpectrumLeft == 0)
+            return;
+
+        if (Palette > 75 || _state.RaidBuffsLeft > 0)
+            PushOGCD(AID.SubtractivePalette, Player);
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
@@ -171,17 +178,14 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xmodule<A
         var ah1 = _state.StatusDetails(Player, SID.Aetherhues, Player.InstanceID).Left;
         var ah2 = _state.StatusDetails(Player, SID.AetherhuesII, Player.InstanceID).Left;
 
-        Hues = ah1 > _state.GCD ? AetherHues.One : ah2 > _state.GCD ? AetherHues.Two : AetherHues.None;
+        Hues = ah1 > 0 ? AetherHues.One : ah2 > 0 ? AetherHues.Two : AetherHues.None;
 
-        (BestAOETarget, (NumAOETargets, _)) = SelectTarget(track, primaryTarget, 25, actor => (NumSplashTargets(actor), actor.HPMP.CurHP));
-        if (primaryTarget == null && BestAOETarget != null)
-            throw new Exception("uh oh!");
+        (BestAOETarget, (NumAOETargets, _)) = SelectTarget(track, primaryTarget, 25, SplashTargetsPlusHP);
 
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.SingleTarget)
-            // BestAOETarget still used for hammer, pom, etc
             NumAOETargets = 0;
 
-        BestMogTarget = SelectTarget(track, primaryTarget, 25, act => Hints.NumPriorityTargetsInAOERect(Player.Position, (act.Position - Player.Position).Normalized(), 25, 4)).Best;
+        BestMogTarget = SelectTarget(track, primaryTarget, 25, Num25yRectTargets).Best;
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));

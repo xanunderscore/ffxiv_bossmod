@@ -140,6 +140,10 @@ public sealed class Definitions : IDisposable
     {
         d.Spell(AID.Harpe)!.Condition = (ws, player, _, _) => !_config.ForbidEarlyHarpe || player.InCombat || ws.Client.CountdownRemaining is null or <= 1.7f;
 
+        d.Spell(AID.HellsEgress)!.TransformAngle = d.Spell(AID.HellsIngress)!.TransformAngle = (_, _, _, _) => _config.AlignDashToCamera
+            ? Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees()
+            : null;
+
         // upgrades (TODO: don't think we actually care...)
         //d.Spell(AID.BloodStalk)!.TransformAction = d.Spell(AID.UnveiledGallows)!.TransformAction = d.Spell(AID.UnveiledGibbet)!.TransformAction = () => ActionID.MakeSpell(_state.Beststalk);
         //d.Spell(AID.Gibbet)!.TransformAction = d.Spell(AID.VoidReaping)!.TransformAction = () => ActionID.MakeSpell(_state.BestGibbet);

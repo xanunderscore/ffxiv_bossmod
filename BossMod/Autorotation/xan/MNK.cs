@@ -1,10 +1,9 @@
 ﻿using BossMod.MNK;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
-using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class MNK(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
+public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
 

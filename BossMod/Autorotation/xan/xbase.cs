@@ -7,20 +7,17 @@ namespace BossMod.Autorotation.xan;
 #pragma warning disable CS8981
 #pragma warning disable IDE1006
 
-public static class xcommon
-{
-    public enum Targeting { Auto, Manual, AutoPrimary }
-    public enum OffensiveStrategy { Automatic, Delay, Force }
-    public enum AOEStrategy { AOE, SingleTarget }
-}
+public enum Targeting { Auto, Manual, AutoPrimary }
+public enum OffensiveStrategy { Automatic, Delay, Force }
+public enum AOEStrategy { AOE, SingleTarget }
 
-public abstract class xmodule<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
+public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
 {
     public class State(RotationModule module) : CommonState(module) { }
 
     protected State _state;
 
-    protected xmodule(RotationModuleManager manager, Actor player) : base(manager, player)
+    protected xbase(RotationModuleManager manager, Actor player) : base(manager, player)
     {
         _state = new(this);
     }
@@ -73,8 +70,8 @@ public abstract class xmodule<AID, TraitID> : LegacyModule where AID : Enum wher
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        var tars = track.As<xcommon.Targeting>();
-        if (tars == xcommon.Targeting.Manual)
+        var tars = track.As<Targeting>();
+        if (tars == Targeting.Manual)
         {
             return;
         }
@@ -97,14 +94,20 @@ public abstract class xmodule<AID, TraitID> : LegacyModule where AID : Enum wher
 
     private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
 
-    protected (Actor? Best, P Targets) SelectTarget<P>(OptionRef track, Actor? primaryTarget, float range, Func<Actor, P> priorityFunc) where P : struct, IComparable => track.As<xcommon.Targeting>() switch
+    protected (Actor? Best, P Targets) SelectTarget<P>(OptionRef track, Actor? primaryTarget, float range, Func<Actor, P> priorityFunc) where P : struct, IComparable => track.As<Targeting>() switch
     {
-        xcommon.Targeting.Auto => FindBetterTargetBy(primaryTarget, range, priorityFunc),
-        xcommon.Targeting.AutoPrimary => throw new NotImplementedException(),
+        Targeting.Auto => FindBetterTargetBy(primaryTarget, range, priorityFunc),
+        Targeting.AutoPrimary => throw new NotImplementedException(),
         _ => (primaryTarget, primaryTarget == null ? default : priorityFunc(primaryTarget))
     };
 
     protected int NumSplashTargets(Actor primary) => Hints.NumPriorityTargetsInAOECircle(primary.Position, 5);
+    protected (int Targets, uint HP) SplashTargetsPlusHP(Actor primary)
+    {
+        var targets = NumSplashTargets(primary);
+        return (targets, targets > 1 ? primary.HPMP.CurHP : 0);
+    }
+
     protected int NumMeleeAOETargets() => NumSplashTargets(Player);
 
     protected int Num25yRectTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
@@ -112,27 +115,27 @@ public abstract class xmodule<AID, TraitID> : LegacyModule where AID : Enum wher
 
 static class xtensions
 {
-    public static RotationModuleDefinition.ConfigRef<xcommon.Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
+    public static RotationModuleDefinition.ConfigRef<Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
          where Index : Enum
     {
-        return def.Define(trackname).As<xcommon.Targeting>("Targeting")
-            .AddOption(xcommon.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
-            .AddOption(xcommon.Targeting.Manual, "Manual", "Use player's current target for all actions")
-            .AddOption(xcommon.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
+        return def.Define(trackname).As<Targeting>("Targeting")
+            .AddOption(Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
+            .AddOption(Targeting.Manual, "Manual", "Use player's current target for all actions")
+            .AddOption(Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
     }
 
-    public static RotationModuleDefinition.ConfigRef<xcommon.AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
     {
-        return def.Define(trackname).As<xcommon.AOEStrategy>("AOE")
-            .AddOption(xcommon.AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(xcommon.AOEStrategy.SingleTarget, "ST", "Use single-target actions");
+        return def.Define(trackname).As<AOEStrategy>("AOE")
+            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
+            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
     }
 
-    public static RotationModuleDefinition.ConfigRef<xcommon.OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
     {
-        return def.Define(track).As<xcommon.OffensiveStrategy>(name)
-            .AddOption(xcommon.OffensiveStrategy.Automatic, "Auto", "Use when optimal")
-            .AddOption(xcommon.OffensiveStrategy.Delay, "Delay", "Don't use")
-            .AddOption(xcommon.OffensiveStrategy.Force, "Force", "Use ASAP");
+        return def.Define(track).As<OffensiveStrategy>(name)
+            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use when optimal")
+            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use")
+            .AddOption(OffensiveStrategy.Force, "Force", "Use ASAP");
     }
 }

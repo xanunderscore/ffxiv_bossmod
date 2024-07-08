@@ -1,9 +1,8 @@
 ﻿using BossMod.PLD;
 using Dalamud.Game.ClientState.JobGauge.Types;
-using static BossMod.Autorotation.xan.xcommon;
 
 namespace BossMod.Autorotation.xan;
-public sealed class PLD(RotationModuleManager manager, Actor player) : xmodule<AID, TraitID>(manager, player)
+public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
 

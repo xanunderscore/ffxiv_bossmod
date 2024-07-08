@@ -119,6 +119,7 @@ public enum SID : uint
 
 public sealed class Definitions : IDisposable
 {
+    private readonly DNCConfig _config = Service.Config.Get<DNCConfig>();
     public Definitions(ActionDefinitions d)
     {
         d.RegisterSpell(AID.CrimsonLotus, true, castAnimLock: 3.70f); // animLock=???, castAnimLock=3.700
@@ -175,6 +176,9 @@ public sealed class Definitions : IDisposable
 
     private void Customize(ActionDefinitions d)
     {
+        d.Spell(AID.EnAvant)!.TransformAngle = (_, _, _, _) => _config.AlignDashToCamera
+            ? Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees()
+            : null;
         // upgrades/button replacement (TODO: don't think we actually care...)
         //d.Spell(AID.StandardStep)!.TransformAction = () => ActionID.MakeSpell(_state.BestStandardStep);
         //d.Spell(AID.TechnicalStep)!.TransformAction = () => ActionID.MakeSpell(_state.BestTechStep);
