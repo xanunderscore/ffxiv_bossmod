@@ -89,16 +89,19 @@ public enum SID : uint
     None = 0,
     Aetherhues = 3675, // applied by Fire in Red, Fire II in Red, Blizzard II in Cyan, Blizzard in Cyan to self
     AetherhuesII = 3676, // applied by Aero in Green, Aero II in Green, Stone in Yellow, Stone II in Yellow to self
-    Addle = 1203, // applied by Addle to target
-    Sleep = 3, // applied by Sleep to target
-    TemperaCoat = 3686, // applied by Tempera Coat to self
-    LucidDreaming = 1204, // applied by Lucid Dreaming to self
-    Surecast = 160, // applied by Surecast to self
     Swiftcast = 167, // applied by Swiftcast to self
     HammerTime = 3680, // applied by Striking Muse to self
     SubtractivePalette = 3674, // applied by Subtractive Palette to self
     StarryMuse = 3685, // applied by Starry Muse to self
     SubtractiveSpectrum = 3690, // applied by Starry Muse to self
+    Addle = 1203, // applied by Addle to target
+    Sleep = 3, // applied by Sleep to target
+    TemperaCoat = 3686, // applied by Tempera Coat to self
+    LucidDreaming = 1204, // applied by Lucid Dreaming to self
+    Surecast = 160, // applied by Surecast to self
+    Smudge = 3684, // applied by Smudge to self
+    MonochromeTones = 3691, // applied by Subtractive Palette to self
+    Hyperphantasia = 3688, // applied by Starry Muse to self
 }
 
 public sealed class Definitions : IDisposable

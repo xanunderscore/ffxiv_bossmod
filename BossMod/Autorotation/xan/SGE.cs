@@ -30,9 +30,6 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
     public int Sting;
     public bool Eukrasia;
     public float ZoeLeft;
-    public float SwiftcastLeft;
-
-    public bool ForcedMovement;
 
     public int NumAOETargets;
     public int NumRangedAOETargets;
@@ -139,13 +136,11 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         return false;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting);
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget);
-
-        _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
 
         var gauge = Service.JobGauges.Get<SGEGauge>();
 
@@ -153,10 +148,6 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         Sting = gauge.Addersting;
         NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
         Eukrasia = gauge.Eukrasia;
-
-        SwiftcastLeft = _state.StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
-
-        ForcedMovement = Manager.ActionManager.InputOverride.IsMoveRequested();
 
         (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, NumSplashTargets);
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets);

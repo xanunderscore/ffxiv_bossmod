@@ -35,7 +35,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
     public float FormShiftLeft; // 30 max
     public float BrotherhoodLeft; // 20 max
     public float FireLeft; // 20 max
-    public float TrueNorthLeft; // 10 max
     public float EarthsReplyLeft; // 30 max, probably doesnt belong in autorotation
     public float FiresReplyLeft; // 20 max
     public float WindsReplyLeft; // 15 max
@@ -244,7 +243,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
             return wrong && _state.GCD < 0.8f;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting);
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
@@ -252,14 +251,13 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
         UpdateGauge();
 
-        PerfectBalanceLeft = _state.StatusDetails(Player, SID.PerfectBalance, Player.InstanceID).Left;
-        FormShiftLeft = _state.StatusDetails(Player, SID.FormlessFist, Player.InstanceID).Left;
-        FireLeft = _state.StatusDetails(Player, SID.RiddleOfFire, Player.InstanceID).Left;
-        TrueNorthLeft = _state.StatusDetails(Player, SID.TrueNorth, Player.InstanceID).Left;
-        WindsReplyLeft = _state.StatusDetails(Player, SID.WindsRumination, Player.InstanceID).Left;
-        FiresReplyLeft = _state.StatusDetails(Player, SID.FiresRumination, Player.InstanceID).Left;
-        EarthsReplyLeft = _state.StatusDetails(Player, SID.EarthsRumination, Player.InstanceID).Left;
-        BrotherhoodLeft = _state.StatusDetails(Player, SID.Brotherhood, Player.InstanceID).Left;
+        PerfectBalanceLeft = StatusLeft(SID.PerfectBalance);
+        FormShiftLeft = StatusLeft(SID.FormlessFist);
+        FireLeft = StatusLeft(SID.RiddleOfFire);
+        WindsReplyLeft = StatusLeft(SID.WindsRumination);
+        FiresReplyLeft = StatusLeft(SID.FiresRumination);
+        EarthsReplyLeft = StatusLeft(SID.EarthsRumination);
+        BrotherhoodLeft = StatusLeft(SID.Brotherhood);
         (var currentBlitz, var currentBlitzIsTargeted) = GetCurrentBlitz();
 
         if (BlitzLeft > _state.GCD)

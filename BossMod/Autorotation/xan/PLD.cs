@@ -151,15 +151,12 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
         _ => AID.None
     };
 
-    public override unsafe void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting);
         SelectPrimaryTarget(targeting, ref primaryTarget, 3);
 
         _state.UpdateCommon(primaryTarget);
-
-        if (_state.AnimationLockDelay < 0.1f)
-            _state.AnimationLockDelay = 0.1f;
 
         var gauge = Service.JobGauges.Get<PLDGauge>();
         OathGauge = gauge.OathGauge;

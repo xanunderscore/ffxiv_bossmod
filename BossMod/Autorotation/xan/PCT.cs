@@ -1,5 +1,6 @@
 ﻿using BossMod.PCT;
-using System.Runtime.InteropServices;
+using Dalamud.Game.ClientState.JobGauge.Enums;
+using Dalamud.Game.ClientState.JobGauge.Types;
 
 namespace BossMod.Autorotation.xan;
 public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -33,15 +34,22 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
     public bool Landscape;
     public bool Moogle;
     public bool Madeen;
-    private CreatureFlags _creatureFlags;
-    private CanvasFlags _canvasFlags;
+    public bool Monochrome;
+    public CreatureFlags CreatureFlags;
+    public CanvasFlags CanvasFlags;
 
-    public int Subtractive;
+    public enum AetherHues : uint
+    {
+        None = 0,
+        One = 1,
+        Two = 2
+    }
+
     public AetherHues Hues;
+    public int Subtractive;
     public float StarryMuseLeft; // 20s max
     public (float Left, int Stacks) HammerTime;
     public float SpectrumLeft; // 30s max
-    public float SwiftcastLeft; // 10s max
 
     public int NumAOETargets;
 
@@ -102,30 +110,44 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         _ => base.GetCastTime(aid)
     };
 
-    private bool ShouldHoly(StrategyValues strategy) => Paint > 0 &&
-        (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime));
+    private bool ShouldHoly(StrategyValues strategy)
+    {
+        if (Paint == 0)
+            return false;
+
+        // use for movement, or to weave raid buff at fight start
+        if (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime))
+            return true;
+
+        // use comet to prevent overcap or before raid buffs expire
+        // (we don't use regular holy to prevent overcap, it's a single target dps loss)
+        if (Monochrome && (Paint == 5 || _state.RaidBuffsLeft > 0 && _state.RaidBuffsLeft < _state.GCD))
+            return true;
+
+        return false;
+    }
 
     private bool ShouldHammer(StrategyValues strategy) => HammerTime.Stacks > 0 &&
          (_state.RaidBuffsLeft > _state.GCD
              || ForceMovementIn == 0
-             // set to 3s instead of GCD timer in case we end up wanting to hardcast all 3 motifs
+             // set to 4s instead of GCD timer in case we end up wanting to hardcast all 3 motifs
              || HammerTime.Left < _state.GCD + 4 * HammerTime.Stacks);
 
-    private bool PomOnly => _creatureFlags.HasFlag(CreatureFlags.Pom) && !_creatureFlags.HasFlag(CreatureFlags.Wings);
+    private bool PomOnly => CreatureFlags.HasFlag(CreatureFlags.Pom) && !CreatureFlags.HasFlag(CreatureFlags.Wings);
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (_canvasFlags.HasFlag(CanvasFlags.Pom) && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
-            PushOGCD(AID.PomMuse, BestAOETarget);
-
         if (!Player.InCombat)
             return;
 
-        if (ShouldLandscape(strategy, deadline))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
-
         if (Weapon && _state.CanWeave(_state.CD(AID.SteelMuse) - 60, 0.6f, deadline))
             PushOGCD(AID.SteelMuse, Player);
+
+        if (CanvasFlags.HasFlag(CanvasFlags.Pom) && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
+            PushOGCD(AID.PomMuse, BestAOETarget);
+
+        if (ShouldLandscape(strategy, deadline))
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
 
         Subtract(strategy, deadline);
 
@@ -161,22 +183,31 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.SubtractivePalette, Player);
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var track = strategy.Option(Track.Targeting);
         SelectPrimaryTarget(track, ref primaryTarget, 25);
         _state.UpdateCommon(primaryTarget);
 
-        UpdateGauge();
+        var gauge = Service.JobGauges.Get<PCTGauge>();
+        Palette = gauge.PalleteGauge;
+        Paint = gauge.Paint;
+        Creature = gauge.CreatureMotifDrawn;
+        Weapon = gauge.WeaponMotifDrawn;
+        Landscape = gauge.LandscapeMotifDrawn;
+        Moogle = gauge.MooglePortraitReady;
+        Madeen = gauge.MadeenPortraitReady;
+        CreatureFlags = gauge.CreatureFlags;
+        CanvasFlags = gauge.CanvasFlags;
 
-        Subtractive = _state.StatusDetails(Player, SID.SubtractivePalette, Player.InstanceID).Stacks;
-        StarryMuseLeft = _state.StatusDetails(Player, SID.StarryMuse, Player.InstanceID).Left;
-        HammerTime = _state.StatusDetails(Player, SID.HammerTime, Player.InstanceID);
-        SpectrumLeft = _state.StatusDetails(Player, SID.SubtractiveSpectrum, Player.InstanceID).Left;
-        SwiftcastLeft = _state.StatusDetails(Player, SID.Swiftcast, Player.InstanceID).Left;
+        Subtractive = StatusStacks(SID.SubtractivePalette);
+        StarryMuseLeft = StatusLeft(SID.StarryMuse);
+        HammerTime = Status(SID.HammerTime);
+        SpectrumLeft = StatusLeft(SID.SubtractiveSpectrum);
+        Monochrome = Player.FindStatus(SID.MonochromeTones) != null;
 
-        var ah1 = _state.StatusDetails(Player, SID.Aetherhues, Player.InstanceID).Left;
-        var ah2 = _state.StatusDetails(Player, SID.AetherhuesII, Player.InstanceID).Left;
+        var ah1 = StatusLeft(SID.Aetherhues);
+        var ah2 = StatusLeft(SID.AetherhuesII);
 
         Hues = ah1 > 0 ? AetherHues.One : ah2 > 0 ? AetherHues.Two : AetherHues.None;
 
@@ -189,64 +220,5 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
-    }
-
-    private unsafe void UpdateGauge()
-    {
-        var gauge = (PictomancerGauge*)Service.JobGauges.Address;
-
-        Palette = gauge->PaletteGauge;
-        Paint = gauge->Paint;
-        Creature = gauge->CreatureMotifDrawn;
-        Weapon = gauge->WeaponMotifDrawn;
-        Landscape = gauge->LandscapeMotifDrawn;
-        Moogle = gauge->MooglePortraitReady;
-        Madeen = gauge->MadeenPortraitReady;
-        _creatureFlags = gauge->CreatureFlags;
-        _canvasFlags = gauge->CanvasFlags;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x10)]
-    public struct PictomancerGauge
-    {
-        [FieldOffset(0x08)] public byte PaletteGauge;
-        [FieldOffset(0x0A)] public byte Paint;
-        [FieldOffset(0x0B)] public CanvasFlags CanvasFlags;
-        [FieldOffset(0x0C)] public CreatureFlags CreatureFlags;
-
-        public bool CreatureMotifDrawn => CanvasFlags.HasFlag(CanvasFlags.Pom) || CanvasFlags.HasFlag(CanvasFlags.Wing) || CanvasFlags.HasFlag(CanvasFlags.Claw) || CanvasFlags.HasFlag(CanvasFlags.Maw);
-        public bool WeaponMotifDrawn => CanvasFlags.HasFlag(CanvasFlags.Weapon);
-        public bool LandscapeMotifDrawn => CanvasFlags.HasFlag(CanvasFlags.Landscape);
-        public bool MooglePortraitReady => CreatureFlags.HasFlag(CreatureFlags.MooglePortait);
-        public bool MadeenPortraitReady => CreatureFlags.HasFlag(CreatureFlags.MadeenPortrait);
-    }
-
-    [Flags]
-    public enum CanvasFlags : byte
-    {
-        Pom = 1,
-        Wing = 2,
-        Claw = 4,
-        Maw = 8,
-        Weapon = 16,
-        Landscape = 32,
-    }
-
-    [Flags]
-    public enum CreatureFlags : byte
-    {
-        Pom = 1,
-        Wings = 2,
-        Claw = 4,
-
-        MooglePortait = 16,
-        MadeenPortrait = 32,
-    }
-
-    public enum AetherHues : uint
-    {
-        None = 0,
-        One = 1,
-        Two = 2
     }
 }
