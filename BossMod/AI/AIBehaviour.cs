@@ -66,7 +66,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     }
 
     // returns null if we're to be idle, otherwise target to attack
-    private unsafe Targeting SelectPrimaryTarget(Actor player, Actor master)
+    private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
         if (!autorot.Hints.PriorityTargets.Any() || (!master.InCombat && WorldState.Client.ActiveFate.ID == 0) || AIPreset == null)
             return new(); // there are no valid targets to attack, or we're not fighting - remain idle
