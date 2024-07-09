@@ -64,6 +64,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot) : UIWindow("
         {
             DrawCastingEnemiesList();
         }
+        if (ImGui.CollapsingHeader("Job gauge"))
+        {
+            DrawGauge();
+        }
         if (ImGui.CollapsingHeader("Party (dalamud)"))
         {
             _debugParty.DrawPartyDalamud();
@@ -203,6 +207,18 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot) : UIWindow("
             ImGui.TextUnformatted(elem.CastInfo.Rotation.ToString());
         }
         ImGui.EndTable();
+    }
+
+    private unsafe void DrawGauge()
+    {
+        var gauge = Service.JobGauges.Address;
+        for (var i = 0; i < 0x10; i++)
+        {
+            if (i % 4 > 0)
+                ImGui.SameLine();
+
+            ImGui.Text($"0x{*(byte*)(gauge + i):X2}");
+        }
     }
 
     private unsafe void DrawTargets()

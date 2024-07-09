@@ -82,10 +82,26 @@ public enum TraitID : uint
     EnhancedFeint = 641, // L98
     SerpentsLegacy = 534, // L100
 }
-
 public enum SID : uint
 {
     None = 0,
+    HuntersInstinct = 3668, // applied by Hunter's Sting, Hunter's Bite, Hunter's Coil, Hunter's Den to self
+    NoxiousGnash = 3667, // applied by Dread Fangs to target
+    Swiftscaled = 3669, // applied by Swiftskin's Sting, Swiftskin's Bite, Swiftskin's Coil, Swiftskin's Den to self
+    HindstungVenom = 3647, // applied by Flanksting Strike to self
+    HindsbaneVenom = 3648, // applied by Flanksbane Fang to self
+    FlanksbaneVenom = 3646, // applied by Hindsting Strike to self
+    FlankstungVenom = 3645, // applied by Hindsbane Fang to self
+    GrimskinsVenom = 3650, // applied by Jagged Maw to self
+    GrimhuntersVenom = 3649, // applied by Bloodied Maw to self
+    HuntersVenom = 3657, // applied by Hunter's Coil, Twinblood Bite to self
+    SwiftskinsVenom = 3658, // applied by Swiftskin's Coil, Twinfang Bite to self
+    FellhuntersVenom = 3659, // applied by Hunter's Den, Twinblood Thresh to self
+    FellskinsVenom = 3660, // applied by Swiftskin's Den, Twinfang Thresh to self
+    DeathRattleReady = 3655, // applied by Flanksting Strike, Flanksbane Fang, Hindsting Strike, Hindsbane Fang to self
+    LastLashReady = 3656, // applied by Jagged Maw, Bloodied Maw to self
+    TwinbloodfangST = 3773, // applied by Hunter's Coil, Swiftskin's Coil to self
+    TwinbloodfangAOE = 3774, // applied by Swiftskin's Den, Hunter's Den to self
 }
 
 public sealed class Definitions : IDisposable

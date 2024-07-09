@@ -116,7 +116,8 @@ public sealed class ActionDefinitions : IDisposable
             new SMN.Definitions(this),
             new RDM.Definitions(this),
             new BLU.Definitions(this),
-            new PCT.Definitions(this)
+            new PCT.Definitions(this),
+            new VPR.Definitions(this),
         ];
 
         // items (TODO: more generic approach is needed...)
