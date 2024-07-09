@@ -41,9 +41,9 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
     public float FlourishingStarfallLeft; // 20s max
     public float ThreefoldLeft; // 30s max
     public float FourfoldLeft; // 30s max
-    public float PelotonLeft;
     public float LastDanceLeft; // 30s max
     public float FinishingMoveLeft; // 30s max
+    public float DanceOfTheDawnLeft; // 30s max
 
     private Actor? BestFan4Target;
     private Actor? BestRangedAOETarget;
@@ -106,6 +106,9 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (canSymmetry && SymmetryLeft <= _state.AttackGCDTime)
             PushGCD(symmetryCombo, primaryTarget);
+
+        if (DanceOfTheDawnLeft > _state.GCD && Esprit >= 50)
+            PushGCD(AID.DanceOfTheDawn, BestRangedAOETarget);
 
         if (ShouldSaberDance(strategy, 85))
             PushGCD(AID.SaberDance, BestRangedAOETarget);
@@ -268,13 +271,11 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
         return TechFinishLeft > _state.AnimationLock;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting);
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget);
-
-        _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
 
         var gauge = Service.JobGauges.Get<DNCGauge>();
 
@@ -299,10 +300,11 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
         FourfoldLeft = StatusLeft(SID.FourfoldFanDance);
         LastDanceLeft = StatusLeft(SID.LastDanceReady);
         FinishingMoveLeft = StatusLeft(SID.FinishingMoveReady);
+        DanceOfTheDawnLeft = StatusLeft(SID.DanceOfTheDawnReady);
 
-        (BestFan4Target, NumFan4Targets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 15, CalcNumFan4Targets);
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, NumSplashTargets);
-        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(strategy.Option(Track.Targeting), primaryTarget, 25, Num25yRectTargets);
+        (BestFan4Target, NumFan4Targets) = SelectTarget(targeting, primaryTarget, 15, CalcNumFan4Targets);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets);
+        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(targeting, primaryTarget, 25, Num25yRectTargets);
 
         NumDanceTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 15);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
@@ -324,8 +326,6 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
     }
 
     private int CalcNumFan4Targets(Actor primary) => Hints.NumPriorityTargetsInAOECone(Player.Position, 15, (primary.Position - Player.Position).Normalized(), 60.Degrees());
-
-    private float StatusLeft(SID status) => _state.StatusDetails(Player, status, Player.InstanceID).Left;
 
     private Actor? FindDancePartner() => World.Party.WithoutSlot().Exclude(Player).MaxBy(p => p.Class switch
         {

@@ -17,6 +17,10 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
 
     protected State _state;
 
+    protected float PelotonLeft { get; private set; }
+    protected float SwiftcastLeft { get; private set; }
+    protected float TrueNorthLeft { get; private set; }
+
     protected xbase(RotationModuleManager manager, Actor player) : base(manager, player)
     {
         _state = new(this);
@@ -111,6 +115,24 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     protected int NumMeleeAOETargets() => NumSplashTargets(Player);
 
     protected int Num25yRectTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
+
+    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    {
+        var pelo = Player.FindStatus(BRD.SID.Peloton);
+        PelotonLeft = pelo != null ? _state.StatusDuration(pelo.Value.ExpireAt) : 0;
+        SwiftcastLeft = StatusLeft(WHM.SID.Swiftcast);
+        TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
+
+        _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
+
+        Exec(strategy, primaryTarget);
+    }
+
+    public abstract void Exec(StrategyValues strategy, Actor? primaryTarget);
+
+    protected (float Left, int Stacks) Status<SID>(SID status) where SID : Enum => _state.StatusDetails(Player, status, Player.InstanceID);
+    protected float StatusLeft<SID>(SID status) where SID : Enum => Status(status).Left;
+    protected int StatusStacks<SID>(SID status) where SID : Enum => Status(status).Stacks;
 }
 
 static class xtensions

@@ -114,7 +114,8 @@ public enum SID : uint
     DancePartner = 1824, // applied by Closed Position to target
     ClosedPosition = 1823, // applied by Closed Position to self
     LastDanceReady = 3867,
-    FinishingMoveReady = 3868
+    FinishingMoveReady = 3868,
+    DanceOfTheDawnReady = 3869,
 }
 
 public sealed class Definitions : IDisposable
