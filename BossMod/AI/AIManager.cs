@@ -101,19 +101,27 @@ sealed class AIManager : IDisposable
         }
 
         if (ImGui.Button("Enable"))
-        {
-            SwitchToFollow(PartyState.PlayerSlot);
-            _aiPreset = _autorot.Database.Presets.Presets.FirstOrDefault(x => x.Name == "AI");
-            if (_beh != null)
-                _beh.AIPreset = _aiPreset;
-        }
+            AIEnable();
 
         ImGui.SameLine();
 
         if (ImGui.Button("Disable"))
-        {
-            SwitchToIdle();
-        }
+            AIDisable();
+    }
+
+    public void AIEnable(Preset? preset = null)
+    {
+        SwitchToFollow(PartyState.PlayerSlot);
+        _aiPreset = preset ?? _autorot.Database.Presets.Presets.FirstOrDefault(x => x.Name == "AI");
+        if (_beh != null)
+            _beh.AIPreset = _aiPreset;
+    }
+
+    public void AIDisable()
+    {
+        SwitchToIdle();
+        //if (_beh != null)
+        //    _beh.AIPreset = null;
     }
 
     private void SwitchToIdle()
@@ -175,16 +183,16 @@ sealed class AIManager : IDisposable
         switch (messageData[0])
         {
             case "on":
-                SwitchToFollow(PartyState.PlayerSlot);
+                AIEnable();
                 break;
             case "off":
-                SwitchToIdle();
+                AIDisable();
                 break;
             case "toggle":
                 if (_beh == null)
-                    SwitchToFollow(PartyState.PlayerSlot);
+                    AIEnable();
                 else
-                    SwitchToIdle();
+                    AIDisable();
                 break;
             default:
                 Service.Log($"[AI] Unknown command: {messageData[0]}");

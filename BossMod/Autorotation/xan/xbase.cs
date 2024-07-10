@@ -87,7 +87,7 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
         }
     }
 
-    protected virtual float GetCastTime(AID aid) => ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
+    protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
 
     protected bool CanCast(AID aid) => GetCastTime(aid) <= ForceMovementIn;
 

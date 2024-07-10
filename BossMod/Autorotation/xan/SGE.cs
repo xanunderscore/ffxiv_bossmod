@@ -44,7 +44,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
 
     private Actor? BestDotTarget;
 
-    protected override float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : base.GetCastTime(aid);
+    protected override float GetCastTime(AID aid) => Eukrasia ? 0 : base.GetCastTime(aid);
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -59,7 +59,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (Unlocked(AID.Eukrasia))
         {
-            if (NumNearbyDotTargets > 1 && Unlocked(AID.Dyskrasia))
+            if (NumNearbyDotTargets > 1 && Unlocked(AID.EukrasianDyskrasia))
             {
                 if (!Eukrasia)
                     PushGCD(AID.Eukrasia, Player);

@@ -50,31 +50,19 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
     public float StarryMuseLeft; // 20s max
     public (float Left, int Stacks) HammerTime;
     public float SpectrumLeft; // 30s max
+    public int Hyperphantasia;
+    public float RainbowBright;
 
     public int NumAOETargets;
 
     private Actor? BestAOETarget;
-    private Actor? BestMogTarget;
+    private Actor? BestLineTarget;
+
+    private bool WingPlanned => PomOnly && !Creature && _state.CD(AID.LivingMuse) - 80 < _state.GCD + 4;
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        var motifUse = strategy.Option(Track.Motif).As<MotifStrategy>();
-
-        var motifOk = !Player.InCombat || motifUse switch
-        {
-            MotifStrategy.Downtime => !Hints.PriorityTargets.Any(),
-            MotifStrategy.Combat => _state.RaidBuffsLeft == 0,
-            _ => false
-        };
-
-        if (ShouldHammer(strategy))
-            PushGCD(AID.HammerStamp, BestAOETarget);
-
-        if (ShouldHoly(strategy))
-            PushGCD(AID.HolyInWhite, BestAOETarget);
-
-        if (PomOnly && !Creature)
-            PushGCD(AID.CreatureMotif, Player);
+        var motifOk = IsMotifOk(strategy);
 
         if (motifOk)
         {
@@ -87,6 +75,27 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
             if (!Landscape && Unlocked(AID.LandscapeMotif) && StarryMuseLeft == 0)
                 PushGCD(AID.LandscapeMotif, Player);
         }
+
+        if (_state.CountdownRemaining > 0)
+        {
+            if (Unlocked(AID.RainbowDrip) && _state.CountdownRemaining <= GetCastTime(AID.RainbowDrip))
+                PushGCD(AID.RainbowDrip, primaryTarget);
+
+            return;
+        }
+
+        if (RainbowBright > _state.GCD)
+            PushGCD(AID.RainbowDrip, BestLineTarget);
+
+        // hardcasting wing motif is #1 prio in opener
+        if (WingPlanned)
+            PushGCD(AID.CreatureMotif, Player);
+
+        if (ShouldHammer(strategy))
+            PushGCD(AID.HammerStamp, BestAOETarget);
+
+        if (ShouldHoly(strategy))
+            PushGCD(Monochrome ? AID.CometInBlack : AID.HolyInWhite, BestAOETarget);
 
         if (NumAOETargets > 3 && Unlocked(AID.FireIIInRed))
         {
@@ -104,9 +113,26 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         }
     }
 
-    protected override float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : aid switch
+    private bool IsMotifOk(StrategyValues strategy)
     {
-        AID.LandscapeMotif or AID.WeaponMotif or AID.CreatureMotif => Player.InCombat ? 3 : 0,
+        if (!Player.InCombat)
+            return true;
+
+        // spend buffs instead of casting motifs
+        if (Hyperphantasia > 0 || SpectrumLeft > _state.GCD)
+            return false;
+
+        return strategy.Option(Track.Motif).As<MotifStrategy>() switch
+        {
+            MotifStrategy.Downtime => !Hints.PriorityTargets.Any(),
+            MotifStrategy.Combat => _state.RaidBuffsLeft == 0,
+            _ => false
+        };
+    }
+
+    protected override float GetCastTime(AID aid) => aid switch
+    {
+        AID.LandscapeMotif or AID.WeaponMotif or AID.CreatureMotif => SwiftcastLeft > _state.GCD || !Player.InCombat ? 0 : 3,
         _ => base.GetCastTime(aid)
     };
 
@@ -116,12 +142,12 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
             return false;
 
         // use for movement, or to weave raid buff at fight start
-        if (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime))
+        if (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime) || ShouldSubtract(strategy, _state.GCD + _state.SpellGCDTime))
             return true;
 
-        // use comet to prevent overcap or before raid buffs expire
+        // use comet to prevent overcap or during buffs
         // (we don't use regular holy to prevent overcap, it's a single target dps loss)
-        if (Monochrome && (Paint == 5 || _state.RaidBuffsLeft > 0 && _state.RaidBuffsLeft < _state.GCD))
+        if (Monochrome && (Paint == 5 || _state.RaidBuffsLeft > 0))
             return true;
 
         return false;
@@ -146,22 +172,39 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         if (CanvasFlags.HasFlag(CanvasFlags.Pom) && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
             PushOGCD(AID.PomMuse, BestAOETarget);
 
-        if (ShouldLandscape(strategy, deadline))
+        if (!WingPlanned && ShouldLandscape(strategy, deadline))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
 
-        Subtract(strategy, deadline);
+        if (ShouldSubtract(strategy, deadline))
+            PushOGCD(AID.SubtractivePalette, Player);
 
-        if (Creature
-            && BestAOETarget != null // this triggers native autotarget if BestAOETarget is null, because Living Muse is self-targeted but all of its transformations are not
-            && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
+        if (ShouldCreature(strategy, deadline))
             PushOGCD(AID.LivingMuse, BestAOETarget);
 
-        if (Moogle && _state.CanWeave(AID.MogOfTheAges, 0.6f, deadline))
-            PushOGCD(AID.MogOfTheAges, BestMogTarget);
+        if (ShouldMog(strategy, deadline))
+            PushOGCD(AID.MogOfTheAges, BestLineTarget);
 
         if (Player.HPMP.CurMP <= 7000 && Unlocked(AID.LucidDreaming) && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
             PushOGCD(AID.LucidDreaming, Player);
     }
+
+    private bool ShouldCreature(StrategyValues strategy, float deadline)
+    {
+        // triggers native autotarget if BestAOETarget is null because LivingMuse is self targeted and all the actual muse actions are not
+        if (!Creature || BestAOETarget == null)
+            return false;
+
+        // use if max charges
+        if (_state.CanWeave(AID.LivingMuse, 0.6f, deadline))
+            return true;
+
+        if (_state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
+            return _state.RaidBuffsLeft > 0;
+
+        return false;
+    }
+
+    private bool ShouldMog(StrategyValues strategy, float deadline) => Moogle && !ShouldLandscape(strategy, deadline) && _state.CanWeave(AID.MogOfTheAges, 0.6f, deadline);
 
     private bool ShouldLandscape(StrategyValues strategy, float deadline)
     {
@@ -171,16 +214,16 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         return Landscape && _state.CanWeave(AID.ScenicMuse, 0.6f, deadline);
     }
 
-    private void Subtract(StrategyValues strategy, float deadline)
+    private bool ShouldSubtract(StrategyValues strategy, float deadline)
     {
         if (!Unlocked(AID.SubtractivePalette)
             || !_state.CanWeave(AID.SubtractivePalette, 0.6f, deadline)
             || Subtractive > 0
+            || ShouldLandscape(strategy, deadline)
             || Palette < 50 && SpectrumLeft == 0)
-            return;
+            return false;
 
-        if (Palette > 75 || _state.RaidBuffsLeft > 0)
-            PushOGCD(AID.SubtractivePalette, Player);
+        return Palette > 75 || _state.RaidBuffsLeft > 0 || SpectrumLeft > 0;
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
@@ -205,6 +248,8 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         HammerTime = Status(SID.HammerTime);
         SpectrumLeft = StatusLeft(SID.SubtractiveSpectrum);
         Monochrome = Player.FindStatus(SID.MonochromeTones) != null;
+        Hyperphantasia = StatusStacks(SID.Hyperphantasia);
+        RainbowBright = StatusLeft(SID.RainbowBright);
 
         var ah1 = StatusLeft(SID.Aetherhues);
         var ah2 = StatusLeft(SID.AetherhuesII);
@@ -216,7 +261,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.SingleTarget)
             NumAOETargets = 0;
 
-        BestMogTarget = SelectTarget(track, primaryTarget, 25, Num25yRectTargets).Best;
+        BestLineTarget = SelectTarget(track, primaryTarget, 25, Num25yRectTargets).Best;
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));

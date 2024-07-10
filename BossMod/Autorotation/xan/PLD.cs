@@ -8,7 +8,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
 
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("PLD", "Paladin", "xan", RotationModuleQuality.WIP, BitMask.Build((int)Class.PLD | (int)Class.GLA), 100);
+        var def = new RotationModuleDefinition("PLD", "Paladin", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PLD, Class.GLA), 100);
 
         def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);

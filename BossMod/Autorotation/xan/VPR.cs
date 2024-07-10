@@ -23,6 +23,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     public int Coil;
 
     public float DeathRattleLeft;
+    public float LastLashLeft;
     public float TargetGnashLeft;
     public float SwiftscaledLeft;
     public float InstinctLeft;
@@ -34,6 +35,13 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     public float SwiftskinsVenomLeft;
     public float FellhuntersVenomLeft;
     public float FellskinsVenomLeft;
+    public float GrimhuntersVenomLeft;
+    public float GrimskinsVenomLeft;
+
+    public int NumAOETargets;
+    public int NumRangedAOETargets;
+
+    private Actor? BestRangedAOETarget;
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -65,14 +73,6 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.HuntersDen, Player);
         }
 
-        if (Unlocked(AID.Dreadwinder) && _state.CD(AID.Dreadwinder) <= _state.GCD)
-        {
-            if (Coil == 2)
-                PushGCD(AID.UncoiledFury, primaryTarget);
-
-            PushGCD(AID.Dreadwinder, primaryTarget);
-        }
-
         // 123 combos
         // 1. 34606 steel fangs (left)
         //    34607 dread fangs (right)
@@ -88,43 +88,95 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         //    34613 hind fang (right) (combos from swift)
         //   each action buffs the next one in a loop
 
-        if (_state.ComboLastAction is (uint)AID.HuntersSting)
+        if (NumAOETargets > 2)
         {
-            if (FlankstungVenomLeft > _state.GCD)
-                PushGCD(AID.FlankstingStrike, primaryTarget);
+            if (Unlocked(AID.PitOfDread) && _state.CD(AID.PitOfDread) <= _state.GCD && NumAOETargets > 0)
+            {
+                if (Coil == 2)
+                    PushGCD(AID.UncoiledFury, BestRangedAOETarget);
 
-            PushGCD(AID.FlanksbaneFang, primaryTarget);
+                PushGCD(AID.PitOfDread, Player);
+            }
+
+            if (_state.ComboLastAction is (uint)AID.HuntersBite or (uint)AID.SwiftskinsBite)
+            {
+                if (GrimskinsVenomLeft > _state.GCD)
+                    PushGCD(AID.BloodiedMaw, Player);
+
+                PushGCD(AID.JaggedMaw, Player);
+            }
+
+            if (_state.ComboLastAction is (uint)AID.SteelMaw or (uint)AID.DreadMaw)
+            {
+                if (SwiftscaledLeft < InstinctLeft)
+                    PushGCD(AID.SwiftskinsBite, Player);
+
+                PushGCD(AID.HuntersBite, Player);
+            }
+
+            if (TargetGnashLeft < _state.AttackGCDTime * 3 && Unlocked(AID.DreadFangs))
+                PushGCD(AID.DreadMaw, primaryTarget);
+
+            PushGCD(AID.SteelMaw, Player);
         }
-        else if (_state.ComboLastAction is (uint)AID.SwiftskinsSting)
+        else
         {
-            if (HindstungVenomLeft > _state.GCD)
-                PushGCD(AID.HindstingStrike, primaryTarget);
+            if (Unlocked(AID.Dreadwinder) && _state.CD(AID.Dreadwinder) <= _state.GCD)
+            {
+                if (Coil == 2)
+                    PushGCD(AID.UncoiledFury, BestRangedAOETarget);
 
-            PushGCD(AID.HindsbaneFang, primaryTarget);
+                PushGCD(AID.Dreadwinder, primaryTarget);
+            }
+
+            if (_state.ComboLastAction is (uint)AID.HuntersSting)
+            {
+                if (FlankstungVenomLeft > _state.GCD)
+                    PushGCD(AID.FlankstingStrike, primaryTarget);
+
+                PushGCD(AID.FlanksbaneFang, primaryTarget);
+            }
+
+            if (_state.ComboLastAction is (uint)AID.SwiftskinsSting)
+            {
+                if (HindstungVenomLeft > _state.GCD)
+                    PushGCD(AID.HindstingStrike, primaryTarget);
+
+                PushGCD(AID.HindsbaneFang, primaryTarget);
+            }
+
+            if (_state.ComboLastAction is (uint)AID.SteelFangs or (uint)AID.DreadFangs)
+            {
+                if (SwiftscaledLeft < InstinctLeft)
+                    PushGCD(AID.SwiftskinsSting, primaryTarget);
+
+                PushGCD(AID.HuntersSting, primaryTarget);
+            }
+
+            if (TargetGnashLeft < _state.AttackGCDTime * 3 && Unlocked(AID.DreadFangs))
+                PushGCD(AID.DreadFangs, primaryTarget);
+
+            PushGCD(AID.SteelFangs, primaryTarget);
         }
-
-        if (_state.ComboLastAction is (uint)AID.SteelFangs or (uint)AID.DreadFangs)
-        {
-            if (SwiftscaledLeft < InstinctLeft)
-                PushGCD(AID.SwiftskinsSting, primaryTarget);
-
-            PushGCD(AID.HuntersSting, primaryTarget);
-        }
-
-        if (TargetGnashLeft < _state.AttackGCDTime * 3 && Unlocked(AID.DreadFangs))
-            PushGCD(AID.DreadFangs, primaryTarget);
-
-        PushGCD(AID.SteelFangs, primaryTarget);
 
         // fallback for out of range
         if (Coil > 0)
-            PushGCD(AID.UncoiledFury, primaryTarget);
+            PushGCD(AID.UncoiledFury, BestRangedAOETarget);
     }
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
+        if (LastLashLeft > deadline && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
+            PushOGCD(AID.LastLash, Player);
+
         if (DeathRattleLeft > deadline && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
             PushOGCD(AID.DeathRattle, primaryTarget);
+
+        if (FellhuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangThresh, 0.6f, deadline))
+            PushOGCD(AID.TwinfangThresh, Player);
+
+        if (FellskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodThresh, 0.6f, deadline))
+            PushOGCD(AID.TwinbloodThresh, Player);
 
         if (HuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangBite, 0.6f, deadline))
             PushOGCD(AID.TwinfangBite, primaryTarget);
@@ -163,6 +215,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         Coil = gauge.RattlingCoilStacks;
 
         DeathRattleLeft = StatusLeft(SID.DeathRattleReady);
+        LastLashLeft = StatusLeft(SID.LastLashReady);
         FlanksbaneVenomLeft = StatusLeft(SID.FlanksbaneVenom);
         FlankstungVenomLeft = StatusLeft(SID.FlankstungVenom);
         HindsbaneVenomLeft = StatusLeft(SID.HindsbaneVenom);
@@ -173,11 +226,17 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         SwiftskinsVenomLeft = StatusLeft(SID.SwiftskinsVenom);
         FellhuntersVenomLeft = StatusLeft(SID.FellhuntersVenom);
         FellskinsVenomLeft = StatusLeft(SID.FellskinsVenom);
+        GrimhuntersVenomLeft = StatusLeft(SID.GrimhuntersVenom);
+        GrimskinsVenomLeft = StatusLeft(SID.GrimskinsVenom);
 
         TargetGnashLeft = _state.StatusDetails(primaryTarget, SID.NoxiousGnash, Player.InstanceID).Left;
 
-        // hunters venom -> twinfang
-        // swiftskins venom -> twinblood
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, NumSplashTargets);
+        NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
+        {
+            AOEStrategy.AOE => NumMeleeAOETargets(),
+            _ => 0
+        };
 
         _state.UpdatePositionals(primaryTarget, GetPositional(), false);
 

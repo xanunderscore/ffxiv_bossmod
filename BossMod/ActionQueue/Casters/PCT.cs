@@ -102,6 +102,7 @@ public enum SID : uint
     Smudge = 3684, // applied by Smudge to self
     MonochromeTones = 3691, // applied by Subtractive Palette to self
     Hyperphantasia = 3688, // applied by Starry Muse to self
+    RainbowBright = 3679,
 }
 
 public sealed class Definitions : IDisposable
