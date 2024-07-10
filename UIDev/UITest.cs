@@ -172,6 +172,8 @@ class UITest
             }
         }
 
+        return "E:\\SteamLibrary\\steamapps\\common\\FINAL FANTASY XIV Online\\game\\sqpack";
+
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "SquareEnix\\FINAL FANTASY XIV - A Realm Reborn\\game\\sqpack");
     }
 }
