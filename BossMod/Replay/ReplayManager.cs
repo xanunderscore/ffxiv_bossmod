@@ -347,7 +347,7 @@ public sealed class ReplayManager : IDisposable
         {
             using var json = Serialization.ReadJson(saved.FullName);
             var serOptions = Serialization.BuildSerializationOptions();
-            var list = json.Deserialize<List<ReplayMemory>>(serOptions) ?? throw new Exception("no parse");
+            var list = json.Deserialize<List<ReplayMemory>>(serOptions)!;
 
             foreach (var memory in list)
                 _replayEntries.Add(new(memory.Path, memory.IsOpen, cfg.RememberReplayTimes ? memory.PlaybackPosition : default));
