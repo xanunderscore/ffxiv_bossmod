@@ -1,8 +1,4 @@
-﻿
-
-
-
-namespace BossMod.Endwalker.Dungeon.D05Aitiascope.D052Rhitahtyn;
+﻿namespace BossMod.Endwalker.Dungeon.D05Aitiascope.D052Rhitahtyn;
 
 public enum OID : uint
 {
@@ -54,10 +50,9 @@ class ImpactWalls(BossModule module) : Components.GenericAOEs(module)
     private readonly List<AOEInstance> _safeWalls = [];
     private readonly List<AOEInstance> _unsafeWalls = [];
 
-    private bool _haveSafeZone = false;
+    private bool _haveSafeZone;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _haveSafeZone ? _safeWalls : _unsafeWalls;
-
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
@@ -68,9 +63,9 @@ class ImpactWalls(BossModule module) : Components.GenericAOEs(module)
             _unsafeWalls.Add(new AOEInstance(new AOEShapeRect(13, 20), caster.Position, angle, default, ArenaColor.Danger));
 
             _safeWalls.Add(new AOEInstance(new AOEShapeRect(9.5f, 20), caster.Position, angle, default, ArenaColor.Danger));
-            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6.45f), caster.Position + (caster.Rotation.ToDirection() * 8), angle, default, ArenaColor.Danger));
-            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6), caster.Position + (caster.Rotation.ToDirection() * 8) + new WDir(0, -15.5f), angle, default, ArenaColor.Danger));
-            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6), caster.Position + (caster.Rotation.ToDirection() * 8) + new WDir(0, 15.5f), angle, default, ArenaColor.Danger));
+            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6.45f), caster.Position + caster.Rotation.ToDirection() * 8, angle, default, ArenaColor.Danger));
+            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6), caster.Position + caster.Rotation.ToDirection() * 8 + new WDir(0, -15.5f), angle, default, ArenaColor.Danger));
+            _safeWalls.Add(new AOEInstance(new AOEShapeRect(5, 6), caster.Position + caster.Rotation.ToDirection() * 8 + new WDir(0, 15.5f), angle, default, ArenaColor.Danger));
         }
 
         if (spell.Action.ID == (uint)AID.ShieldSkewer)
@@ -97,14 +92,14 @@ class ShieldSkewer(BossModule module) : Components.SelfTargetedAOEs(module, Acti
 
 class ImpactSafezone(BossModule module) : Components.GenericAOEs(module)
 {
-    private bool _isActive = false;
+    private bool _isActive;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (!_isActive)
             yield break;
 
-        foreach (var icicle in module.Enemies(OID.Helper2))
+        foreach (var icicle in Module.Enemies(OID.Helper2))
         {
             if (icicle.FindStatus(SID.Unknown2) != null)
                 yield return new AOEInstance(new AOEShapeRect(1.5f, 1.75f, 1.5f), DoAdjust(icicle.Position));
@@ -138,7 +133,7 @@ class ShellTelegraph(BossModule module) : Components.GenericAOEs(module)
 {
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        foreach (var x in module.Enemies(OID.Actor346d))
+        foreach (var x in Module.Enemies(OID.Actor346d))
             yield return new AOEInstance(new AOEShapeCircle(5), x.Position);
     }
 }
