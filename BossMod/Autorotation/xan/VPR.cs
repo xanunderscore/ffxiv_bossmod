@@ -44,6 +44,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
     private Actor? BestRangedAOETarget;
 
+    private int CoilMax => Unlocked(TraitID.EnhancedVipersRattle) ? 3 : 2;
+    private float GnashRefreshTimer => _state.AttackGCDTime * 3;
+
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (DreadCombo == DreadCombo.HuntersCoil)
@@ -74,7 +77,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.HuntersDen, Player);
         }
 
-        if (Coil == 2)
+        if (Coil == CoilMax)
             PushGCD(AID.UncoiledFury, BestRangedAOETarget);
 
         // 123 combos
@@ -149,7 +152,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.HuntersSting, primaryTarget);
             }
 
-            if (TargetGnashLeft < _state.AttackGCDTime * 3 && Unlocked(AID.DreadFangs))
+            if (TargetGnashLeft < GnashRefreshTimer && Unlocked(AID.DreadFangs))
                 PushGCD(AID.DreadFangs, primaryTarget);
 
             PushGCD(AID.SteelFangs, primaryTarget);
@@ -180,7 +183,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         if (SwiftskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodBite, 0.6f, deadline))
             PushOGCD(AID.TwinbloodBite, primaryTarget);
 
-        if (Unlocked(AID.SerpentsIre) && Coil < 2 && _state.CanWeave(AID.SerpentsIre, 0.6f, deadline))
+        if (Unlocked(AID.SerpentsIre) && Coil < CoilMax && _state.CanWeave(AID.SerpentsIre, 0.6f, deadline))
             PushOGCD(AID.SerpentsIre, Player);
     }
 
@@ -229,7 +232,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         GrimskinsVenomLeft = StatusLeft(SID.GrimskinsVenom);
 
         TargetGnashLeft = GnashLeft(primaryTarget);
-        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) == 0);
+        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, NumSplashTargets);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
