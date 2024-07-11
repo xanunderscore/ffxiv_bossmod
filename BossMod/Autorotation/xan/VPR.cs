@@ -38,6 +38,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     public float GrimhuntersVenomLeft;
     public float GrimskinsVenomLeft;
 
+    public int NumNearbyGnashlessEnemies;
     public int NumAOETargets;
     public int NumRangedAOETargets;
 
@@ -73,6 +74,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.HuntersDen, Player);
         }
 
+        if (Coil == 2)
+            PushGCD(AID.UncoiledFury, BestRangedAOETarget);
+
         // 123 combos
         // 1. 34606 steel fangs (left)
         //    34607 dread fangs (right)
@@ -90,13 +94,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (NumAOETargets > 2)
         {
-            if (Unlocked(AID.PitOfDread) && _state.CD(AID.PitOfDread) <= _state.GCD && NumAOETargets > 0)
-            {
-                if (Coil == 2)
-                    PushGCD(AID.UncoiledFury, BestRangedAOETarget);
-
+            if (Unlocked(AID.PitOfDread) && _state.CD(AID.PitOfDread) - 40 <= _state.GCD)
                 PushGCD(AID.PitOfDread, Player);
-            }
 
             if (_state.ComboLastAction is (uint)AID.HuntersBite or (uint)AID.SwiftskinsBite)
             {
@@ -114,18 +113,15 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.HuntersBite, Player);
             }
 
-            if (TargetGnashLeft < _state.AttackGCDTime * 3 && Unlocked(AID.DreadFangs))
+            if (NumNearbyGnashlessEnemies > 2 && Unlocked(AID.DreadFangs))
                 PushGCD(AID.DreadMaw, primaryTarget);
 
             PushGCD(AID.SteelMaw, Player);
         }
         else
         {
-            if (Unlocked(AID.Dreadwinder) && _state.CD(AID.Dreadwinder) <= _state.GCD)
+            if (Unlocked(AID.Dreadwinder) && _state.CD(AID.Dreadwinder) - 40 <= _state.GCD)
             {
-                if (Coil == 2)
-                    PushGCD(AID.UncoiledFury, BestRangedAOETarget);
-
                 PushGCD(AID.Dreadwinder, primaryTarget);
             }
 
@@ -183,6 +179,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (SwiftskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodBite, 0.6f, deadline))
             PushOGCD(AID.TwinbloodBite, primaryTarget);
+
+        if (Unlocked(AID.SerpentsIre) && Coil < 2 && _state.CanWeave(AID.SerpentsIre, 0.6f, deadline))
+            PushOGCD(AID.SerpentsIre, Player);
     }
 
     private (Positional, bool) GetPositional()
@@ -229,7 +228,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         GrimhuntersVenomLeft = StatusLeft(SID.GrimhuntersVenom);
         GrimskinsVenomLeft = StatusLeft(SID.GrimskinsVenom);
 
-        TargetGnashLeft = _state.StatusDetails(primaryTarget, SID.NoxiousGnash, Player.InstanceID).Left;
+        TargetGnashLeft = GnashLeft(primaryTarget);
+        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) == 0);
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, NumSplashTargets);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
@@ -243,4 +243,6 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
+
+    private float GnashLeft(Actor? a) => _state.StatusDetails(a, SID.NoxiousGnash, Player.InstanceID).Left;
 }
