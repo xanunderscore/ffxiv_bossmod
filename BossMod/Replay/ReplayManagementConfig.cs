@@ -24,4 +24,10 @@ public class ReplayManagementConfig : ConfigNode
 
     [PropertyDisplay("Format for recorded logs")]
     public ReplayLogFormat WorldLogFormat = ReplayLogFormat.BinaryCompressed;
+
+    [PropertyDisplay("Open previously open replays on plugin reload")]
+    public bool RememberReplays;
+
+    [PropertyDisplay("Remember playback position for previously opened replays")]
+    public bool RememberReplayTimes;
 }

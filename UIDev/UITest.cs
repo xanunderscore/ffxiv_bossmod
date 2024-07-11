@@ -68,7 +68,8 @@ class UITest
         var pluginConfigs = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs");
         var configPath = Path.Join(pluginConfigs, "BossMod.json");
         var rotationRoot = Path.Join(pluginConfigs, "BossMod", "autorot");
-        var mainWindow = new UITestWindow(scene, configPath, rotationRoot)
+        var prevReplays = Path.Join(pluginConfigs, "BossMod", "replay_state.json");
+        var mainWindow = new UITestWindow(scene, configPath, rotationRoot, prevReplays)
         {
             IsOpen = true
         };
