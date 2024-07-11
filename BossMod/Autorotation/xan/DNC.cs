@@ -9,7 +9,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
 
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("DNC", "Dancer", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.DNC), 100);
+        var def = new RotationModuleDefinition("DNC", "Dancer", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.DNC), 100);
 
         def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
