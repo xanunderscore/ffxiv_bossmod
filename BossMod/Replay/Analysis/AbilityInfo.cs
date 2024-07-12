@@ -501,7 +501,7 @@ class AbilityInfo : CommonEnumInfo
 
     private void AddActionData(Replay replay, Replay.Action action)
     {
-        if (action.Source.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo)
+        if (action.Source.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.DutySupport)
             return;
 
         var data = _data.GetOrAdd(action.ID);
@@ -522,7 +522,7 @@ class AbilityInfo : CommonEnumInfo
 
     private void AddCastData(Replay replay, Replay.Participant caster, Replay.Cast cast)
     {
-        if (caster.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo)
+        if (caster.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.DutySupport)
             return;
 
         var data = _data.GetOrAdd(cast.ID);
@@ -539,7 +539,7 @@ class AbilityInfo : CommonEnumInfo
     }
 
     private static IEnumerable<Replay.Participant> AlivePlayersAt(Replay r, DateTime t)
-        => r.Participants.Where(p => p.Type is ActorType.Player or ActorType.Chocobo && p.ExistsInWorldAt(t) && !p.DeadAt(t));
+        => r.Participants.Where(p => p.Type is ActorType.Player or ActorType.Chocobo or ActorType.DutySupport && p.ExistsInWorldAt(t) && !p.DeadAt(t));
 
     private IEnumerable<string> ActionTargetStrings(ActionData data)
     {

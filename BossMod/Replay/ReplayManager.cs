@@ -326,10 +326,6 @@ public sealed class ReplayManager : IDisposable
         if (!cfg.RememberReplays)
             return;
 
-        // FIX
-        if (_replayEntries.Count == 0)
-            return;
-
         using var stream = new FileStream(savedReplaysFile, FileMode.Create, FileAccess.Write, FileShare.Read);
         using var jwriter = Serialization.WriteJson(stream);
         JsonSerializer.Serialize(jwriter, _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)), Serialization.BuildSerializationOptions());
