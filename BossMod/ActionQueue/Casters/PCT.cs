@@ -117,13 +117,13 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.WaterInBlue); // animLock=???
         d.RegisterSpell(AID.Smudge, instantAnimLock: 0.80f); // animLock=0.800
         d.RegisterSpell(AID.FireIIInRed); // animLock=???
-        d.RegisterSpell(AID.WingedMuse, maxCharges: 2);
-        d.RegisterSpell(AID.LivingMuse, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.WingedMuse, maxCharges: 3);
+        d.RegisterSpell(AID.LivingMuse, maxCharges: 3); // animLock=???
         d.RegisterSpell(AID.CreatureMotif); // animLock=???
         d.RegisterSpell(AID.WingMotif); // animLock=???
         d.RegisterSpell(AID.MogOfTheAges);
         d.RegisterSpell(AID.PomMotif); // animLock=???
-        d.RegisterSpell(AID.PomMuse, maxCharges: 2);
+        d.RegisterSpell(AID.PomMuse, maxCharges: 3);
         d.RegisterSpell(AID.AeroIIInGreen); // animLock=???
         d.RegisterSpell(AID.WaterIIInBlue); // animLock=???
         d.RegisterSpell(AID.WeaponMotif); // animLock=???
@@ -149,8 +149,8 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.CometInBlack); // animLock=???
         d.RegisterSpell(AID.RainbowDrip); // animLock=???
         d.RegisterSpell(AID.RetributionOfTheMadeen); // animLock=???
-        d.RegisterSpell(AID.FangedMuse, maxCharges: 2); // animLock=???
-        d.RegisterSpell(AID.ClawedMuse, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.FangedMuse, maxCharges: 3); // animLock=???
+        d.RegisterSpell(AID.ClawedMuse, maxCharges: 3); // animLock=???
         d.RegisterSpell(AID.MawMotif); // animLock=???
         d.RegisterSpell(AID.ClawMotif); // animLock=???
         d.RegisterSpell(AID.StarPrism); // animLock=???
