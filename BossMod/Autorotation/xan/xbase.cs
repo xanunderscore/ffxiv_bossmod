@@ -98,22 +98,25 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
 
     private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
 
-    protected (Actor? Best, int Priority) SelectTarget(
+    protected delegate bool PositionCheck(Actor playerTarget, Actor targetToTest);
+    protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
+
+    protected (Actor? Best, int Targets) SelectTarget(
         OptionRef track,
         Actor? primaryTarget,
         float range,
-        Func<Actor, Actor, bool> isInAOE
+        PositionCheck isInAOE
     ) => SelectTarget(track, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
 
     protected (Actor? Best, P Priority) SelectTarget<P>(
         OptionRef track,
         Actor? primaryTarget,
         float range,
-        Func<Actor, Actor, bool> isInAOE,
-        Func<int, Actor, P> prioFunc
+        PositionCheck isInAOE,
+        PriorityFunc<P> prioritize
     ) where P : struct, IComparable
     {
-        P targetPrio(Actor a) => prioFunc(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(a, enemy.Actor)), a);
+        P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
 
         return track.As<Targeting>() switch
         {
@@ -128,11 +131,10 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
         };
     }
 
-    protected bool IsSplashTarget(Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
-
     protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
 
-    protected bool Is25yRectTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
+    protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
+    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
 
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
