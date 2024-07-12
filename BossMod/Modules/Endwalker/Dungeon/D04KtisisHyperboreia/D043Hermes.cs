@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.Dungeon.D04KtisisHyperboreia.D042Hermes;
+namespace BossMod.Endwalker.Dungeon.D04KtisisHyperboreia.D043Hermes;
 
 public enum OID : uint
 {
@@ -94,41 +94,6 @@ class Trismegistos(BossModule module) : Components.RaidwideCast(module, ActionID
 class TrueTornado(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID._Weaponskill_TrueTornado));
 class TrueTornado2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TrueTornado4), 4);
 class CosmicKiss(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_CosmicKiss), new AOEShapeCircle(10));
-class Meteor(BossModule module) : BossComponent(module)
-{
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(Module.Enemies(OID._Gen_Meteor), ArenaColor.Object, true);
-    }
-}
-
-class WindBlocks(BossModule module) : BossComponent(module)
-{
-    private byte Index = 0;
-    private uint State = 0;
-
-    public override void OnEventEnvControl(byte index, uint state)
-    {
-        Index = index;
-        State = state;
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints)
-    {
-        if (Index > 0)
-            hints.Add($"Index: {Index:D2}", false);
-        if (State > 0)
-            hints.Add($"State: {State:X8}", false);
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var wind in Module.Enemies(OID._Gen_Karukeion))
-        {
-            Arena.Actor(wind, wind.CastInfo == null ? ArenaColor.PlayerGeneric : ArenaColor.Object, true);
-        }
-    }
-}
 
 class TrueAeroIV(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TrueAeroIV), new AOEShapeRect(50, 5));
 class TrueAeroIV2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TrueAeroIV1), new AOEShapeRect(50, 5), maxCasts: 4);
@@ -138,21 +103,43 @@ class WindSafe(BossModule module) : Components.GenericAOEs(module)
     private IEnumerable<Actor> Meteors => Module.Enemies(OID._Gen_Meteor);
     private readonly List<(Actor source, AOEInstance aoe)> SafeZones = [];
 
-    // TODO this is wrong
+    // TODO this is probably wrong
     private readonly float SafeZoneWidth = 5;
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => SafeZones.Select(x => x.aoe);
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => SafeZones.Take(4).Select(x => x.aoe);
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var shapes = SafeZones.Take(4).Select(s => s.aoe.Shape.Distance(s.aoe.Origin, s.aoe.Rotation)).ToList();
+        if (shapes.Count == 0)
+            return;
+
+        hints.AddForbiddenZone(p => -shapes.Min(e => e(p)), SafeZones[0].aoe.Activation);
+    }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID._Weaponskill_TrueAeroIV1)
         {
             NumCasts++;
-            var meteorBlocking = Meteors.FirstOrDefault(x => x.Position.InRect(caster.Position, spell.Rotation, 50, 0, 5) && (NumCasts <= 4 || x.ModelState.AnimState2 != 1));
+            var meteorBlocking = Meteors.FirstOrDefault(x => x.Position.InRect(caster.Position, spell.Rotation, 50, 0, 5) && (NumCasts <= 4 || !WillBreak(x)));
             if (meteorBlocking != null)
                 SafeZones.Add((caster, new AOEInstance(new AOEShapeRect(50, SafeZoneWidth), meteorBlocking.Position, spell.Rotation, spell.NPCFinishAt, ArenaColor.SafeFromAOE, false)));
         }
     }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        foreach (var meteor in Module.Enemies(OID._Gen_Meteor))
+        {
+            if (WillBreak(meteor))
+                Arena.ActorOutsideBounds(meteor.Position, meteor.Rotation, ArenaColor.Object);
+            else
+                Arena.Actor(meteor.Position, meteor.Rotation, ArenaColor.Object);
+        }
+    }
+
+    private bool WillBreak(Actor meteor) => meteor.ModelState.AnimState2 == 1;
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
@@ -188,17 +175,15 @@ class TrueAero2(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 class TrueBravery(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID._Weaponskill_TrueBravery));
 class TrueAeroII(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_TrueAeroII1), 6);
 
-class HermesStates : StateMachineBuilder
+class D043HermesStates : StateMachineBuilder
 {
-    public HermesStates(BossModule module) : base(module)
+    public D043HermesStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<Trismegistos>()
             .ActivateOnEnter<TrueTornado>()
             .ActivateOnEnter<TrueTornado2>()
             .ActivateOnEnter<CosmicKiss>()
-            .ActivateOnEnter<Meteor>()
-            .ActivateOnEnter<WindBlocks>()
             .ActivateOnEnter<TrueAeroIV>()
             .ActivateOnEnter<TrueAeroIV3>()
             .ActivateOnEnter<WindSafe>()
@@ -211,4 +196,4 @@ class HermesStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "xan", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10399)]
-public class Hermes(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -50), new ArenaBoundsCircle(20));
+public class D043Hermes(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -50), new ArenaBoundsCircle(20));

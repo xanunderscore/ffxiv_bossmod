@@ -191,6 +191,7 @@ public sealed class ReplayManager : IDisposable
                 e.Dispose();
                 foreach (var a in _analysisEntries.Where(a => !a.Disposed && a.Replays.Contains(e)))
                     a.Dispose();
+                SaveReplayState();
             }
 
             ImGui.TableNextColumn();
@@ -234,6 +235,7 @@ public sealed class ReplayManager : IDisposable
                 e.Dispose();
             foreach (var e in _analysisEntries)
                 e.Dispose();
+            SaveReplayState();
         }
     }
 
