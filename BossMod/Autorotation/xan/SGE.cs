@@ -149,9 +149,9 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
         Eukrasia = gauge.Eukrasia;
 
-        (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, NumSplashTargets);
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets);
-        (BestPneumaTarget, NumPneumaTargets) = SelectTarget(targeting, primaryTarget, 25, Num25yRectTargets);
+        (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, IsSplashTarget);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
+        (BestPneumaTarget, NumPneumaTargets) = SelectTarget(targeting, primaryTarget, 25, Is25yRectTarget);
 
         var aoeStrat = strategy.Option(Track.AOE).As<AOEStrategy>();
         if (aoeStrat == AOEStrategy.AOE)

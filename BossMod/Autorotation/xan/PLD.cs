@@ -182,7 +182,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
             _ => AID.None
         };
 
-        BestRangedTarget = SelectTarget(targeting, primaryTarget, 25, NumSplashTargets).Best;
+        BestRangedTarget = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget).Best;
 
         var aoeType = strategy.Option(Track.AOE).As<AOEStrategy>();
         NumScornTargets = NumMeleeAOETargets();

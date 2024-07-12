@@ -264,7 +264,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         {
             if (currentBlitzIsTargeted)
             {
-                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(targeting, primaryTarget, 3, NumSplashTargets);
+                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(targeting, primaryTarget, 3, IsSplashTarget);
             }
             else
             {
@@ -280,8 +280,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
         (CurrentForm, FormLeft) = DetermineForm();
 
-        BestRangedTarget = SelectTarget(targeting, primaryTarget, 20, NumSplashTargets).Best;
-        (BestLineTarget, NumLineTargets) = SelectTarget(targeting, primaryTarget, 10, NumEnlightenmentTargets);
+        BestRangedTarget = SelectTarget(targeting, primaryTarget, 20, IsSplashTarget).Best;
+        (BestLineTarget, NumLineTargets) = SelectTarget(targeting, primaryTarget, 10, IsEnlightenmentTarget);
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
         {
             AOEStrategy.AOE => NumMeleeAOETargets(),
@@ -294,7 +294,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         QueueOGCD((deadline, finalDeadline) => CalcNextBestOGCD(strategy, primaryTarget, deadline, finalDeadline));
     }
 
-    private int NumEnlightenmentTargets(Actor primary) => Hints.NumPriorityTargetsInAOERect(Player.Position, (primary.Position - Player.Position).Normalized(), 10, 2);
+    private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, (primary.Position - Player.Position).Normalized(), 10, 2);
 
     private (Form, float) DetermineForm()
     {

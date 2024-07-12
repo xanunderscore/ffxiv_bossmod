@@ -111,6 +111,10 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
 
             PushGCD(AID.FireInRed, primaryTarget);
         }
+
+        // TODO is this worth it
+        if (Unlocked(AID.Swiftcast) && _state.CD(AID.Swiftcast) == 0)
+            PushGCD(AID.Swiftcast, Player, -500);
     }
 
     private bool IsMotifOk(StrategyValues strategy)
@@ -166,7 +170,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         if (!Player.InCombat)
             return;
 
-        if (Weapon && _state.CanWeave(_state.CD(AID.SteelMuse) - 60, 0.6f, deadline))
+        if (ShouldWeapon(strategy, deadline))
             PushOGCD(AID.SteelMuse, Player);
 
         if (CanvasFlags.HasFlag(CanvasFlags.Pom) && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
@@ -188,23 +192,42 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.LucidDreaming, Player);
     }
 
+    private bool ShouldWeapon(StrategyValues strategy, float deadline)
+    {
+        if (!Weapon || !_state.CanWeave(_state.CD(AID.SteelMuse) - 60, 0.6f, deadline))
+            return false;
+
+        // ensure muse alignment
+        return !Unlocked(AID.StarryMuse) || _state.CD(AID.StarryMuse) is < 10 or > 60;
+    }
+
     private bool ShouldCreature(StrategyValues strategy, float deadline)
     {
         // triggers native autotarget if BestAOETarget is null because LivingMuse is self targeted and all the actual muse actions are not
         if (!Creature || BestAOETarget == null)
             return false;
 
+        var singleChargeTime = Unlocked(TraitID.EnhancedPictomancyIV) ? 0 : 40;
+
         // use if max charges
-        if (_state.CanWeave(AID.LivingMuse, 0.6f, deadline))
+        if (_state.CanWeave(_state.CD(AID.LivingMuse) - singleChargeTime, 0.6f, deadline))
             return true;
 
+        // TODO these conditions are wrong, figure out the actual CD usage at level 100 when you get 3 charges
         if (_state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
             return _state.RaidBuffsLeft > 0;
 
         return false;
     }
 
-    private bool ShouldMog(StrategyValues strategy, float deadline) => Moogle && !ShouldLandscape(strategy, deadline) && _state.CanWeave(AID.MogOfTheAges, 0.6f, deadline);
+    private bool ShouldMog(StrategyValues strategy, float deadline)
+    {
+        if (!Moogle || !_state.CanWeave(AID.MogOfTheAges, 0.6f, deadline))
+            return false;
+
+        // ensure muse alignment - moogle takes two 40s charges to rebuild
+        return !Unlocked(AID.StarryMuse) || _state.RaidBuffsLeft > 0 || _state.CD(AID.StarryMuse) > 80;
+    }
 
     private bool ShouldLandscape(StrategyValues strategy, float deadline)
     {
@@ -256,12 +279,14 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
 
         Hues = ah1 > 0 ? AetherHues.One : ah2 > 0 ? AetherHues.Two : AetherHues.None;
 
-        (BestAOETarget, (NumAOETargets, _)) = SelectTarget(track, primaryTarget, 25, SplashTargetsPlusHP);
+        (BestAOETarget, (NumAOETargets, _)) = SelectTarget(track, primaryTarget, 25, IsSplashTarget,
+            (numTargets, target) => (numTargets, target.HPMP.CurHP)
+        );
 
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.SingleTarget)
             NumAOETargets = 0;
 
-        BestLineTarget = SelectTarget(track, primaryTarget, 25, Num25yRectTargets).Best;
+        BestLineTarget = SelectTarget(track, primaryTarget, 25, Is25yRectTarget).Best;
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));

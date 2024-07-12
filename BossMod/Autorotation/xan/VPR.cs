@@ -50,10 +50,17 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     private Actor? BestGenerationTarget;
 
     private int CoilMax => Unlocked(TraitID.EnhancedVipersRattle) ? 3 : 2;
-    private float GnashRefreshTimer => _state.AttackGCDTime * 3;
+    private float GnashRefreshTimer => 8 + _state.GCD;
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
+        if (Unlocked(AID.Reawaken) && (ReawakenReady > _state.GCD || Offering >= 50) && NumAOETargets > 0 && ReawakenLeft == 0)
+        {
+            var needRefresh = NumAOETargets > 2 ? NumNearbyGnashlessEnemies <= 2 : TargetGnashLeft < GnashRefreshTimer;
+            if (!needRefresh)
+                PushGCD(AID.Reawaken, Player);
+        }
+
         if (DreadCombo == DreadCombo.HuntersCoil)
             PushGCD(AID.SwiftskinsCoil, primaryTarget);
 
@@ -94,9 +101,6 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 4 => AID.FirstGeneration,
                 _ => throw new NotImplementedException("unreachable")
             }, BestGenerationTarget);
-
-        if (Unlocked(AID.Reawaken) && (ReawakenReady > _state.GCD || Offering >= 50) && NumAOETargets > 0)
-            PushGCD(AID.Reawaken, Player);
 
         // 123 combos
         // 1. 34606 steel fangs (left)
@@ -207,6 +211,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
     private (Positional, bool) GetPositional()
     {
+        if (!Unlocked(AID.FlankstingStrike))
+            return (Positional.Any, false);
+
         if (DreadCombo == DreadCombo.Dreadwinder)
             return (SwiftscaledLeft < InstinctLeft ? Positional.Rear : Positional.Flank, true);
 
@@ -256,11 +263,11 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         TargetGnashLeft = GnashLeft(primaryTarget);
         NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
 
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, NumSplashTargets);
-        BestGenerationTarget = SelectTarget(track, primaryTarget, 3, NumSplashTargets).Best;
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, IsSplashTarget);
+        BestGenerationTarget = SelectTarget(track, primaryTarget, 3, IsSplashTarget).Best;
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
         {
-            AOEStrategy.AOE => NumMeleeAOETargets(),
+            AOEStrategy.AOE => Unlocked(AID.SteelMaw) ? NumMeleeAOETargets() : 0,
             _ => 0
         };
 
