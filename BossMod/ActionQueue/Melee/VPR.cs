@@ -96,6 +96,8 @@ public enum SID : uint
     GrimhuntersVenom = 3649, // applied by Bloodied Maw to self
     HuntersVenom = 3657, // applied by Hunter's Coil, Twinblood Bite to self
     SwiftskinsVenom = 3658, // applied by Swiftskin's Coil, Twinfang Bite to self
+    Reawakened = 3670, // applied by Reawaken to self
+    ReawakenReady = 3671, // applied by Serpent's Ire to self
     FellhuntersVenom = 3659, // applied by Hunter's Den, Twinblood Thresh to self
     FellskinsVenom = 3660, // applied by Swiftskin's Den, Twinfang Thresh to self
     DeathRattleReady = 3655, // applied by Flanksting Strike, Flanksbane Fang, Hindsting Strike, Hindsbane Fang to self
@@ -142,10 +144,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.TwinbloodThresh); // animLock=???
         d.RegisterSpell(AID.UncoiledFury); // animLock=???
         d.RegisterSpell(AID.SerpentsIre); // animLock=???
+        d.RegisterSpell(AID.FirstGeneration); // animLock=???
+        d.RegisterSpell(AID.SecondGeneration); // animLock=???
         d.RegisterSpell(AID.ThirdGeneration); // animLock=???
         d.RegisterSpell(AID.FourthGeneration); // animLock=???
-        d.RegisterSpell(AID.SecondGeneration); // animLock=???
-        d.RegisterSpell(AID.FirstGeneration); // animLock=???
         d.RegisterSpell(AID.Reawaken); // animLock=???
         d.RegisterSpell(AID.UncoiledTwinfang); // animLock=???
         d.RegisterSpell(AID.UncoiledTwinblood); // animLock=???

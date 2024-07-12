@@ -20,7 +20,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     }
 
     public DreadCombo DreadCombo;
-    public int Coil;
+    public int Coil; // max 3
+    public int Offering; // max 100
+    public int Anguine; // 0-4
 
     public float DeathRattleLeft;
     public float LastLashLeft;
@@ -37,12 +39,15 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
     public float FellskinsVenomLeft;
     public float GrimhuntersVenomLeft;
     public float GrimskinsVenomLeft;
+    public float ReawakenReady;
+    public float ReawakenLeft;
 
     public int NumNearbyGnashlessEnemies;
     public int NumAOETargets;
     public int NumRangedAOETargets;
 
     private Actor? BestRangedAOETarget;
+    private Actor? BestGenerationTarget;
 
     private int CoilMax => Unlocked(TraitID.EnhancedVipersRattle) ? 3 : 2;
     private float GnashRefreshTimer => _state.AttackGCDTime * 3;
@@ -79,6 +84,19 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (Coil == CoilMax)
             PushGCD(AID.UncoiledFury, BestRangedAOETarget);
+
+        if (Anguine > 0)
+            PushGCD(Anguine switch
+            {
+                1 => AID.FourthGeneration,
+                2 => AID.ThirdGeneration,
+                3 => AID.SecondGeneration,
+                4 => AID.FirstGeneration,
+                _ => throw new NotImplementedException("unreachable")
+            }, BestGenerationTarget);
+
+        if (Unlocked(AID.Reawaken) && (ReawakenReady > _state.GCD || Offering >= 50) && NumAOETargets > 0)
+            PushGCD(AID.Reawaken, Player);
 
         // 123 combos
         // 1. 34606 steel fangs (left)
@@ -215,6 +233,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         var gauge = Service.JobGauges.Get<VPRGauge>();
         DreadCombo = gauge.DreadCombo;
         Coil = gauge.RattlingCoilStacks;
+        Offering = gauge.SerpentOffering;
+        Anguine = gauge.AnguineTribute;
 
         DeathRattleLeft = StatusLeft(SID.DeathRattleReady);
         LastLashLeft = StatusLeft(SID.LastLashReady);
@@ -230,11 +250,14 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         FellskinsVenomLeft = StatusLeft(SID.FellskinsVenom);
         GrimhuntersVenomLeft = StatusLeft(SID.GrimhuntersVenom);
         GrimskinsVenomLeft = StatusLeft(SID.GrimskinsVenom);
+        ReawakenReady = StatusLeft(SID.ReawakenReady);
+        ReawakenLeft = StatusLeft(SID.Reawakened);
 
         TargetGnashLeft = GnashLeft(primaryTarget);
         NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, NumSplashTargets);
+        BestGenerationTarget = SelectTarget(track, primaryTarget, 3, NumSplashTargets).Best;
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
         {
             AOEStrategy.AOE => NumMeleeAOETargets(),
