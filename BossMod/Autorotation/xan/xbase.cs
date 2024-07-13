@@ -1,5 +1,4 @@
 ﻿using BossMod.Autorotation.Legacy;
-using static BossMod.Autorotation.StrategyValues;
 
 namespace BossMod.Autorotation.xan;
 
@@ -69,16 +68,13 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     /// <param name="track">Reference to the Targeting track of the active strategy</param>
     /// <param name="primaryTarget">Player's current target - may be null</param>
     /// <param name="range">Maximum distance from the player to search for a candidate target</param>
-    protected void SelectPrimaryTarget(OptionRef track, ref Actor? primaryTarget, float range)
+    protected void SelectPrimaryTarget(Targeting track, ref Actor? primaryTarget, float range)
     {
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        var tars = track.As<Targeting>();
-        if (tars == Targeting.Manual)
-        {
+        if (track != Targeting.Auto)
             return;
-        }
 
         if (Player.DistanceTo(primaryTarget) > range)
         {
@@ -102,14 +98,14 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
 
     protected (Actor? Best, int Targets) SelectTarget(
-        OptionRef track,
+        Targeting track,
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE
     ) => SelectTarget(track, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
 
     protected (Actor? Best, P Priority) SelectTarget<P>(
-        OptionRef track,
+        Targeting track,
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE,
@@ -118,7 +114,7 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     {
         P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
 
-        return track.As<Targeting>() switch
+        return track switch
         {
             Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
             Targeting.AutoPrimary => primaryTarget == null ? (null, default) : FindBetterTargetBy(
@@ -134,7 +130,7 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
 
     protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
-    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, (primary.Position - Player.Position).Normalized(), 25, 4);
+    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 4);
 
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {

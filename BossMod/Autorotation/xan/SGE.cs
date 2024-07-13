@@ -138,7 +138,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
-        var targeting = strategy.Option(Track.Targeting);
+        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget);
 
@@ -167,17 +167,17 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
             NumNearbyDotTargets = 0;
         }
 
-        if (targeting.As<Targeting>() == Targeting.Manual)
-        {
-            BestDotTarget = primaryTarget == null || HaveDot(primaryTarget) ? null : primaryTarget;
-        }
-        else
+        if (targeting == Targeting.Auto)
         {
             var allPossibleDotTargets = Hints.PriorityTargets;
             if (allPossibleDotTargets.Count() > 2)
                 BestDotTarget = null;
             else
                 BestDotTarget = allPossibleDotTargets.FirstOrDefault(x => !HaveDot(x.Actor))?.Actor;
+        }
+        else
+        {
+            BestDotTarget = primaryTarget == null || HaveDot(primaryTarget) ? null : primaryTarget;
         }
 
         CalcNextBestGCD(strategy, primaryTarget);

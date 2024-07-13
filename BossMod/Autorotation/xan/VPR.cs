@@ -233,7 +233,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
-        var track = strategy.Option(Track.Targeting);
+        var track = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(track, ref primaryTarget, 3);
         _state.UpdateCommon(primaryTarget);
 

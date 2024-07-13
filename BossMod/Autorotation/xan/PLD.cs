@@ -153,7 +153,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
 
     public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
-        var targeting = strategy.Option(Track.Targeting);
+        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(targeting, ref primaryTarget, 3);
 
         _state.UpdateCommon(primaryTarget);

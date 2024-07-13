@@ -245,7 +245,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
-        var targeting = strategy.Option(Track.Targeting);
+        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget);
 
@@ -294,7 +294,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         QueueOGCD((deadline, finalDeadline) => CalcNextBestOGCD(strategy, primaryTarget, deadline, finalDeadline));
     }
 
-    private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, (primary.Position - Player.Position).Normalized(), 10, 2);
+    private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2);
 
     private (Form, float) DetermineForm()
     {
