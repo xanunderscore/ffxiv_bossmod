@@ -123,5 +123,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
 
     public float DistanceTo(Actor? other) => other == null ? float.MaxValue : (other.Position - Position).Length() - other.HitboxRadius - HitboxRadius;
 
+    public WDir DirectionTo(Actor other) => (other.Position - Position).Normalized();
+
     public override string ToString() => $"{OID:X} '{Name}' <{InstanceID:X}>";
 }
