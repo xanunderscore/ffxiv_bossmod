@@ -73,6 +73,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (ReassembleLeft > _state.GCD && NumAOETargets > 3)
             PushGCD(AID.Scattergun, BestAOETarget);
 
+        if (!Unlocked(AID.AirAnchor) && Unlocked(AID.HotShot) && _state.CD(AID.HotShot) <= _state.GCD)
+            PushGCD(AID.HotShot, primaryTarget);
+
         if (NumAOETargets > 2 && Unlocked(AID.SpreadShot))
         {
             if (!Overheated && NumFlamethrowerTargets > 2 && Unlocked(AID.Flamethrower))
@@ -131,6 +134,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (Unlocked(AID.Hypercharge) && (Heat >= 50 || HyperchargedLeft > 0) && !Overheated && _state.CanWeave(AID.Hypercharge, 0.6f, deadline))
             PushOGCD(AID.Hypercharge, Player);
+
+        if (!Unlocked(AID.Hypercharge) && Unlocked(AID.GaussRound) && _state.CanWeave(_state.CD(AID.GaussRound) - 60, 0.6f, deadline))
+            PushOGCD(AID.GaussRound, primaryTarget);
     }
 
     private bool ShouldReassemble(StrategyValues strategy)
