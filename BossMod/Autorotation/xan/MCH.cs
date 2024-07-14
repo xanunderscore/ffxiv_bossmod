@@ -54,7 +54,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (Overheated)
         {
-            if (NumAOETargets > 2 && Unlocked(AID.AutoCrossbow))
+            if (NumAOETargets > 3 && Unlocked(AID.AutoCrossbow))
                 PushGCD(AID.AutoCrossbow, BestAOETarget);
 
             if (Unlocked(AID.HeatBlast))
@@ -65,7 +65,12 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.AirAnchor, primaryTarget);
 
         if (Unlocked(AID.Drill) && _state.CD(AID.Drill) - 20 <= _state.GCD)
+        {
+            if (Unlocked(AID.Bioblaster) && NumAOETargets > 2)
+                PushGCD(AID.Bioblaster, BestAOETarget);
+
             PushGCD(AID.Drill, primaryTarget);
+        }
 
         if (Unlocked(AID.ChainSaw) && _state.CD(AID.ChainSaw) <= _state.GCD)
             PushGCD(AID.ChainSaw, BestChainsawTarget);
@@ -78,7 +83,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (NumAOETargets > 2 && Unlocked(AID.SpreadShot))
         {
-            if (!Overheated && NumFlamethrowerTargets > 2 && Unlocked(AID.Flamethrower))
+            if (!Overheated && NumFlamethrowerTargets > 2 && Unlocked(AID.Flamethrower) && _state.CD(AID.Flamethrower) < _state.GCD)
             {
                 PushGCD(AID.Flamethrower, Player);
                 return;
@@ -113,8 +118,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             if (_state.CD(AID.Drill) > 0 && Unlocked(AID.BarrelStabilizer) && _state.CanWeave(AID.BarrelStabilizer, 0.6f, deadline))
                 PushOGCD(AID.BarrelStabilizer, Player);
 
-            // FIXME need to check that we can overheat first
-            if (Unlocked(AID.Wildfire) && _state.CD(AID.RookAutoturret) > 0 && _state.CanWeave(AID.Wildfire, 0.6f, deadline))
+            if (Unlocked(AID.Wildfire) && _state.CanWeave(AID.Wildfire, 0.6f, deadline))
                 PushOGCD(AID.Wildfire, primaryTarget);
         }
 
@@ -126,22 +130,24 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (Unlocked(AID.Ricochet) && _state.CanWeave(AID.Ricochet, 0.6f, deadline))
             PushOGCD(AID.Ricochet, BestRangedAOETarget);
 
-        if (ShouldReassemble(strategy) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
+        if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
             PushOGCD(AID.Reassemble, Player);
 
         if (Unlocked(AID.RookAutoturret) && Battery >= 50 && !HasMinion && _state.CanWeave(AID.RookAutoturret, 0.6f, deadline))
             PushOGCD(AID.RookAutoturret, Player);
 
-        if (Unlocked(AID.Hypercharge) && (Heat >= 50 || HyperchargedLeft > 0) && !Overheated && _state.CanWeave(AID.Hypercharge, 0.6f, deadline))
+        /* A full segment of Hypercharge is exactly three GCDs worth of time, or 7.5 seconds. Because of this, you should never enter Hypercharge if Chainsaw, Drill or Air Anchor has less than eight seconds on their cooldown timers. Doing so will cause the Chainsaw, Drill or Air Anchor cooldowns to drift, which leads to a loss of DPS and will more than likely cause issues down the line in your rotation when you reach your rotational reset at Wildfire.
+         */
+        if (Unlocked(AID.Hypercharge) && (Heat >= 50 || HyperchargedLeft > 0) && !Overheated && ReassembleLeft == 0 && _state.CanWeave(AID.Hypercharge, 0.6f, deadline))
             PushOGCD(AID.Hypercharge, Player);
 
         if (!Unlocked(AID.Hypercharge) && Unlocked(AID.GaussRound) && _state.CanWeave(_state.CD(AID.GaussRound) - 60, 0.6f, deadline))
             PushOGCD(AID.GaussRound, primaryTarget);
     }
 
-    private bool ShouldReassemble(StrategyValues strategy)
+    private bool ShouldReassemble(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (ReassembleLeft > 0 || !Unlocked(AID.Reassemble) || Overheated)
+        if (ReassembleLeft > 0 || !Unlocked(AID.Reassemble) || Overheated || primaryTarget == null)
             return false;
 
         if (NumAOETargets > 3 && Unlocked(AID.SpreadShot))
@@ -151,7 +157,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         {
             < 26 => _state.CD(AID.HotShot) <= _state.GCD,
             < 58 => (AID)_state.ComboLastAction == AID.SlugShot,
-            < 76 => _state.CD(AID.Drill) <= _state.GCD,
+            < 76 => _state.CD(AID.Drill) - 20 <= _state.GCD,
             < 90 => _state.CD(AID.AirAnchor) <= _state.GCD,
             _ => _state.CD(AID.AirAnchor) <= _state.GCD || _state.CD(AID.ChainSaw) <= _state.GCD,
         };
