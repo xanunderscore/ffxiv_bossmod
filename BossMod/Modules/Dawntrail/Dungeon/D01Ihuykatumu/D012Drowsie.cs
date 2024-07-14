@@ -14,7 +14,10 @@ public enum AID : uint
     Sneeze = 36475, // Boss->self, 5.0s cast, range 60 150-degree cone
     FlagrantSpread = 36522, // _Gen_Mimiclot5/_Gen_Mimiclot7->none, 5.0s cast, range 6 circle
     FlagrantSpread2 = 36485, // _Gen_Mimiclot8->self, 5.0s cast, range 6 circle
+    Arise = 36478, // 419C->self, 3.0s cast, range 8 circle
+
 }
+
 
 class Wallop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Wallop), new AOEShapeRect(40, 5));
 class BigWallop(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BigWallop), new AOEShapeRect(40, 8));
@@ -29,6 +32,7 @@ class Clots(BossModule module) : BossComponent(module)
 }
 class Spread1(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.FlagrantSpread), 6);
 class Spread2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlagrantSpread2), new AOEShapeCircle(6));
+class Arise(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Arise), new AOEShapeCircle(8));
 
 class D012DrowsieStates : StateMachineBuilder
 {
@@ -41,7 +45,8 @@ class D012DrowsieStates : StateMachineBuilder
             .ActivateOnEnter<Sneeze>()
             .ActivateOnEnter<Clots>()
             .ActivateOnEnter<Spread1>()
-            .ActivateOnEnter<Spread2>();
+            .ActivateOnEnter<Spread2>()
+            .ActivateOnEnter<Arise>();
     }
 }
 
