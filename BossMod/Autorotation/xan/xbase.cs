@@ -70,7 +70,9 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     /// <param name="range">Maximum distance from the player to search for a candidate target</param>
     protected void SelectPrimaryTarget(Targeting track, ref Actor? primaryTarget, float range)
     {
-        if (!IsEnemy(primaryTarget))
+        var instanceId = primaryTarget == null ? 0 : primaryTarget.InstanceID;
+
+        if (!IsEnemy(primaryTarget) || Hints.ForbiddenTargets.Any(x => x.Actor.InstanceID == instanceId))
             primaryTarget = null;
 
         if (track != Targeting.Auto)
