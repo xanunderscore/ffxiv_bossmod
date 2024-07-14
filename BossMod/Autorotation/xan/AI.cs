@@ -8,13 +8,54 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
     internal float Cooldown<AID>(AID aid) where AID : Enum => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
     internal bool ShouldInterrupt(Actor act) => act.CastInfo != null && act.CastInfo.Interruptible && act.CastInfo.TotalTime > 1.5;
+    internal bool ShouldStun(Actor act) => act.CastInfo != null && !act.CastInfo.Interruptible && act.CastInfo.TotalTime > 1.5;
+}
+
+enum GenericAID : uint
+{
+    Unmend = 3624,
+    Grit = 3629,
+    RoyalGuard = 16142,
+    LightningShot = 16143
+}
+
+enum GenericSID : uint
+{
+    Grit = 743,
+    RoyalGuard = 1833,
+    Peloton = 1199
+}
+
+public enum AbilityUse
+{
+    Enabled,
+    Disabled
+}
+
+internal static class AIExt
+{
+    public static RotationModuleDefinition.ConfigRef<AbilityUse> AbilityTrack<Track>(this RotationModuleDefinition def, Track track, string name) where Track : Enum
+    {
+        return def.Define(track).As<AbilityUse>(name).AddOption(AbilityUse.Enabled, "Enabled").AddOption(AbilityUse.Disabled, "Disabled");
+    }
+
+    public static bool Enabled<Track>(this StrategyValues strategy, Track track) where Track : Enum
+        => strategy.Option(track).As<AbilityUse>() == AbilityUse.Enabled;
 }
 
 public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
+    public enum Track { Stance, Ranged, Interject, Stun }
     public static RotationModuleDefinition Definition()
     {
-        return new("Tank AI", "Utilities for tank AI - stance, provoke, interrupt, ranged attack", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PLD, Class.GLA, Class.WAR, Class.MRD, Class.DRK, Class.GNB), 100);
+        var def = new RotationModuleDefinition("Tank AI", "Utilities for tank AI - stance, provoke, interrupt, ranged attack", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PLD, Class.GLA, Class.WAR, Class.MRD, Class.DRK, Class.GNB), 100);
+
+        def.AbilityTrack(Track.Stance, "Stance");
+        def.AbilityTrack(Track.Ranged, "Ranged GCD");
+        def.AbilityTrack(Track.Interject, "Interject").AddAssociatedActions(ClassShared.AID.Interject);
+        def.AbilityTrack(Track.Stun, "Low Blow").AddAssociatedActions(ClassShared.AID.LowBlow);
+
+        return def;
     }
 
     private ActionID RangedAction => Player.Class switch
@@ -38,20 +79,28 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
         // ranged
-        if (ActionUnlocked(RangedAction) && Player.DistanceTo(primaryTarget) > 5)
+        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceTo(primaryTarget) > 5)
             Hints.ActionsToExecute.Push(RangedAction, primaryTarget, ActionQueue.Priority.Low);
 
         // stance
         var (stanceAction, stanceStatus) = Stance;
-        if (ActionUnlocked(stanceAction) && !Player.Statuses.Any(x => x.ID == stanceStatus))
+        if (strategy.Enabled(Track.Stance) && ActionUnlocked(stanceAction) && !Player.Statuses.Any(x => x.ID == stanceStatus))
             Hints.ActionsToExecute.Push(stanceAction, Player, ActionQueue.Priority.Minimal);
 
         // interrupt
-        if (Unlocked(ClassShared.AID.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
+        if (strategy.Enabled(Track.Interject) && Unlocked(ClassShared.AID.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
         {
             var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
             if (interruptibleEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Interject), interruptibleEnemy.Actor, ActionQueue.Priority.Minimal);
+        }
+
+        // low blow
+        if (strategy.Enabled(Track.Stun) && Unlocked(ClassShared.AID.LowBlow) && Cooldown(ClassShared.AID.LowBlow) == 0)
+        {
+            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
+            if (stunnableEnemy != null)
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.LowBlow), stunnableEnemy.Actor, ActionQueue.Priority.Minimal);
         }
 
         if (Player.Class is Class.PLD or Class.GLA)
@@ -67,32 +116,29 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     }
 }
 
-enum GenericAID : uint
-{
-    Unmend = 3624,
-    Grit = 3629,
-    RoyalGuard = 16142,
-    LightningShot = 16143
-}
-
-enum GenericSID : uint
-{
-    Grit = 743,
-    RoyalGuard = 1833,
-    Peloton = 1199
-}
-
 public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
+    private DateTime _lastInCombat = DateTime.MinValue;
+
+    public enum Track { Peloton, Interrupt, SecondWind }
     public static RotationModuleDefinition Definition()
     {
-        return new("Phys Ranged AI", "Utilities for physical ranged dps - peloton, interrupt, defensive abilities", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.ARC, Class.BRD, Class.MCH, Class.DNC), 100);
+        var def = new RotationModuleDefinition("Phys Ranged AI", "Utilities for physical ranged dps - peloton, interrupt, defensive abilities", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.ARC, Class.BRD, Class.MCH, Class.DNC), 100);
+
+        def.AbilityTrack(Track.Peloton, "Peloton").AddAssociatedActions(ClassShared.AID.Peloton);
+        def.AbilityTrack(Track.Interrupt, "Head Graze").AddAssociatedActions(ClassShared.AID.HeadGraze);
+        def.AbilityTrack(Track.SecondWind, "Second Wind").AddAssociatedActions(ClassShared.AID.SecondWind);
+
+        return def;
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
+        if (Player.InCombat)
+            _lastInCombat = World.CurrentTime;
+
         // interrupt
-        if (Unlocked(ClassShared.AID.HeadGraze) && Cooldown(ClassShared.AID.HeadGraze) == 0)
+        if (strategy.Enabled(Track.Interrupt) && Unlocked(ClassShared.AID.HeadGraze) && Cooldown(ClassShared.AID.HeadGraze) == 0)
         {
             var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceTo(e.Actor) <= 25);
             if (interruptibleEnemy != null)
@@ -100,11 +146,65 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         }
 
         // peloton
-        if (Unlocked(ClassShared.AID.Peloton) && World.Party.WithoutSlot().Any(x => Player.DistanceTo(x) <= 30 && !x.InCombat && x.FindStatus((uint)GenericSID.Peloton) == null))
+        if (strategy.Enabled(Track.Peloton)
+            && Unlocked(ClassShared.AID.Peloton)
+            && Cooldown(ClassShared.AID.Peloton) == 0
+            && (World.CurrentTime - _lastInCombat).TotalSeconds > 3
+            && World.Party.Members.Take(8).Any(x => x != null && !x.IsDead && x.IsTargetable && !x.InCombat && Player.DistanceTo(x) < 30 && PelotonWillExpire(x))
+            )
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
         // second wind
-        if (Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
+        if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
+    }
+
+    private bool PelotonWillExpire(Actor actor)
+    {
+        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)GenericSID.Peloton);
+        if (pending != null)
+            // just applied, should have >30s remaining duration, assume that's fine
+            return false;
+
+        var status = actor.FindStatus((uint)GenericSID.Peloton);
+        if (status == null)
+            return true;
+
+        var duration = Math.Max((float)(status.Value.ExpireAt - World.CurrentTime).TotalSeconds, 0.0f);
+        return duration < 5;
+    }
+}
+
+public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
+{
+    public enum Track { SecondWind, Bloodbath, Stun }
+    public static RotationModuleDefinition Definition()
+    {
+        var def = new RotationModuleDefinition("Melee DPS AI", "Utilities for melee - bloodbath, second wind, stun", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PGL, Class.MNK, Class.LNC, Class.DRG, Class.ROG, Class.NIN, Class.SAM, Class.RPR, Class.VPR), 100);
+
+        def.AbilityTrack(Track.SecondWind, "Second Wind");
+        def.AbilityTrack(Track.Bloodbath, "Bloodbath");
+        def.AbilityTrack(Track.Stun, "Stun");
+
+        return def;
+    }
+
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    {
+        // second wind
+        if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
+
+        // bloodbath
+        if (strategy.Enabled(Track.Bloodbath) && Unlocked(ClassShared.AID.Bloodbath) && Cooldown(ClassShared.AID.Bloodbath) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP * 0.75)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bloodbath), Player, ActionQueue.Priority.Medium);
+
+        // low blow
+        if (strategy.Enabled(Track.Stun) && Unlocked(ClassShared.AID.LegSweep) && Cooldown(ClassShared.AID.LegSweep) == 0)
+        {
+            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
+            if (stunnableEnemy != null)
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.LegSweep), stunnableEnemy.Actor, ActionQueue.Priority.Minimal);
+        }
     }
 }

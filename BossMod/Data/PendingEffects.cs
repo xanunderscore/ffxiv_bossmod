@@ -142,6 +142,18 @@ public sealed class PendingEffects
         return null;
     }
 
+    public byte? PendingStatus(ulong target, uint statusID)
+    {
+        foreach (var eff in PendingEffectsAtTarget(_entries, target))
+        {
+            if (eff.Type is ActionEffectType.ApplyStatusEffectTarget or ActionEffectType.ApplyStatusEffectSource && eff.Value == statusID)
+            {
+                return eff.Param2;
+            }
+        }
+        return null;
+    }
+
     private static IEnumerable<ActionEffect> PendingEffectsAtTarget(IEnumerable<Entry> entries, ulong target)
     {
         foreach (var e in entries)

@@ -56,9 +56,14 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         _maxCastTime = moveWithMaster || ctrl.ForceFacing ? 0 : _naviDecision.LeewaySeconds;
 
         // note: that there is a 1-frame delay if target and/or strategy changes - we don't really care?..
-        if (!forbidActions)
+        if (forbidActions)
         {
-            autorot.Preset = target.Target != null ? AIPreset : null;
+            autorot.Preset = null;
+            autorot.Hints.ForceMovementIn = float.MaxValue;
+        }
+        else
+        {
+            autorot.Preset = AIPreset;
             autorot.Hints.ForceMovementIn = _maxCastTime;
         }
 
