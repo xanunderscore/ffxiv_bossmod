@@ -118,7 +118,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
 
 public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
-    private DateTime _lastInCombat = DateTime.MinValue;
+    private DateTime _pelotonLockout = DateTime.MinValue;
 
     public enum Track { Peloton, Interrupt, SecondWind }
     public static RotationModuleDefinition Definition()
@@ -135,7 +135,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
         if (Player.InCombat)
-            _lastInCombat = World.CurrentTime;
+            _pelotonLockout = World.CurrentTime;
 
         // interrupt
         if (strategy.Enabled(Track.Interrupt) && Unlocked(ClassShared.AID.HeadGraze) && Cooldown(ClassShared.AID.HeadGraze) == 0)
@@ -149,15 +149,20 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         if (strategy.Enabled(Track.Peloton)
             && Unlocked(ClassShared.AID.Peloton)
             && Cooldown(ClassShared.AID.Peloton) == 0
-            && (World.CurrentTime - _lastInCombat).TotalSeconds > 3
-            && World.Party.WithoutSlot().Any(x => x != null && !x.IsDead && x.IsTargetable && !x.InCombat && Player.DistanceToHitbox(x) < 30 && PelotonWillExpire(x))
-            )
+            && (World.CurrentTime - _pelotonLockout).TotalSeconds > 3
+            && !Player.InCombat
+            // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;
+            // peloton animationlock will be annoying and unhelpful here
+            && !IsNPC(primaryTarget)
+            && PelotonWillExpire(Player))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
         // second wind
         if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
     }
+
+    private bool IsNPC(Actor? primaryTarget) => primaryTarget != null && primaryTarget.Type is ActorType.EventNpc;
 
     private bool PelotonWillExpire(Actor actor)
     {

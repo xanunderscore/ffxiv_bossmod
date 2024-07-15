@@ -111,10 +111,6 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
 
             PushGCD(AID.FireInRed, primaryTarget);
         }
-
-        // TODO is this worth it
-        if (Unlocked(AID.Swiftcast) && _state.CD(AID.Swiftcast) == 0)
-            PushGCD(AID.Swiftcast, Player, -500);
     }
 
     private bool IsMotifOk(StrategyValues strategy)
@@ -137,6 +133,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
     protected override float GetCastTime(AID aid) => aid switch
     {
         AID.LandscapeMotif or AID.WeaponMotif or AID.CreatureMotif => SwiftcastLeft > _state.GCD || !Player.InCombat ? 0 : 3,
+        AID.RainbowDrip => RainbowBright > _state.GCD ? 0 : base.GetCastTime(aid),
         _ => base.GetCastTime(aid)
     };
 
