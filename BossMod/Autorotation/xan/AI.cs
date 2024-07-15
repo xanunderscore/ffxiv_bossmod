@@ -79,7 +79,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
         // ranged
-        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceTo(primaryTarget) > 5)
+        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) > 5)
             Hints.ActionsToExecute.Push(RangedAction, primaryTarget, ActionQueue.Priority.Low);
 
         // stance
@@ -90,7 +90,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         // interrupt
         if (strategy.Enabled(Track.Interject) && Unlocked(ClassShared.AID.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
         {
-            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
+            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (interruptibleEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Interject), interruptibleEnemy.Actor, ActionQueue.Priority.Minimal);
         }
@@ -98,7 +98,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         // low blow
         if (strategy.Enabled(Track.Stun) && Unlocked(ClassShared.AID.LowBlow) && Cooldown(ClassShared.AID.LowBlow) == 0)
         {
-            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
+            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (stunnableEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.LowBlow), stunnableEnemy.Actor, ActionQueue.Priority.Minimal);
         }
@@ -140,7 +140,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         // interrupt
         if (strategy.Enabled(Track.Interrupt) && Unlocked(ClassShared.AID.HeadGraze) && Cooldown(ClassShared.AID.HeadGraze) == 0)
         {
-            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceTo(e.Actor) <= 25);
+            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 25);
             if (interruptibleEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.HeadGraze), interruptibleEnemy.Actor, ActionQueue.Priority.Minimal);
         }
@@ -150,7 +150,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             && Unlocked(ClassShared.AID.Peloton)
             && Cooldown(ClassShared.AID.Peloton) == 0
             && (World.CurrentTime - _lastInCombat).TotalSeconds > 3
-            && World.Party.Members.Take(8).Any(x => x != null && !x.IsDead && x.IsTargetable && !x.InCombat && Player.DistanceTo(x) < 30 && PelotonWillExpire(x))
+            && World.Party.WithoutSlot().Any(x => x != null && !x.IsDead && x.IsTargetable && !x.InCombat && Player.DistanceToHitbox(x) < 30 && PelotonWillExpire(x))
             )
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
@@ -202,7 +202,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
         // low blow
         if (strategy.Enabled(Track.Stun) && Unlocked(ClassShared.AID.LegSweep) && Cooldown(ClassShared.AID.LegSweep) == 0)
         {
-            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceTo(e.Actor) <= 3);
+            var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (stunnableEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.LegSweep), stunnableEnemy.Actor, ActionQueue.Priority.Minimal);
         }

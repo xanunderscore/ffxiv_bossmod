@@ -39,6 +39,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
     private Actor? BestRangedAOETarget;
     private Actor? BestChainsawTarget;
 
+    private bool IsPausedForFlamethrower => Service.Config.Get<MCHConfig>().PauseForFlamethrower && Flamethrower;
+
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (IsPausedForFlamethrower)
@@ -108,7 +110,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (_state.CountdownRemaining is > 0 and < 5 && ReassembleLeft == 0 && _state.CD(AID.Reassemble) < 55)
             PushOGCD(AID.Reassemble, Player);
 
-        if (IsPausedForFlamethrower || !Player.InCombat)
+        if (IsPausedForFlamethrower || !Player.InCombat || primaryTarget == null)
             return;
 
         var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
@@ -124,7 +126,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         // prevent overcap
         if (Unlocked(AID.GaussRound) && _state.CanWeave(AID.GaussRound, 0.6f, deadline))
-            PushOGCD(AID.GaussRound, primaryTarget);
+            PushOGCD(AID.GaussRound, Unlocked(AID.DoubleCheck) ? BestRangedAOETarget : primaryTarget);
 
         // prevent overcap
         if (Unlocked(AID.Ricochet) && _state.CanWeave(AID.Ricochet, 0.6f, deadline))
@@ -133,7 +135,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
             PushOGCD(AID.Reassemble, Player);
 
-        if (Unlocked(AID.RookAutoturret) && Battery >= 50 && !HasMinion && _state.CanWeave(AID.RookAutoturret, 0.6f, deadline))
+        if (ShouldMinion(strategy, primaryTarget) && _state.CanWeave(AID.RookAutoturret, 0.6f, deadline))
             PushOGCD(AID.RookAutoturret, Player);
 
         /* A full segment of Hypercharge is exactly three GCDs worth of time, or 7.5 seconds. Because of this, you should never enter Hypercharge if Chainsaw, Drill or Air Anchor has less than eight seconds on their cooldown timers. Doing so will cause the Chainsaw, Drill or Air Anchor cooldowns to drift, which leads to a loss of DPS and will more than likely cause issues down the line in your rotation when you reach your rotational reset at Wildfire.
@@ -163,7 +165,13 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         };
     }
 
-    private bool IsPausedForFlamethrower => Service.Config.Get<MCHConfig>().PauseForFlamethrower && Flamethrower;
+    private bool ShouldMinion(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (!Unlocked(AID.RookAutoturret) || primaryTarget == null || HasMinion || Battery < 50)
+            return false;
+
+        return _state.RaidBuffsIn > 50 || _state.RaidBuffsLeft > 10;
+    }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {

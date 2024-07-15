@@ -156,7 +156,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         var aoeStrat = strategy.Option(Track.AOE).As<AOEStrategy>();
         if (aoeStrat == AOEStrategy.AOE)
         {
-            var meleeAOETargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceTo(Player) <= 5);
+            var meleeAOETargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 5);
             NumAOETargets = meleeAOETargets.Count();
             NumNearbyDotTargets = meleeAOETargets.Count(x => !HaveDot(x.Actor));
         }

@@ -1,5 +1,4 @@
 ﻿using BossMod.Autorotation.Legacy;
-using static BossMod.Autorotation.StrategyValues;
 
 namespace BossMod.Autorotation.xan;
 
@@ -60,25 +59,22 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     }
 
     /// <summary>
-    /// If the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table.<br/>
+    /// Tries to select a suitable primary target.<br/>
     ///
-    /// It is guaranteed that <paramref name="primaryTarget"/> will be set to either <c>null</c> or an attackable enemy (not, for example, an ally or event object).<br/>
+    /// If the provided <paramref name="primaryTarget"/> is null, an NPC, or non-enemy object; it will be reset to <c>null</c>.<br/>
     ///
-    /// If the provided Targeting strategy is Manual, this function is otherwise a <strong>no-op</strong>.
+    /// Additionally, if <paramref name="range"/> is set to <c>Targeting.Auto</c>, and the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table.
     /// </summary>
-    /// <param name="track">Reference to the Targeting track of the active strategy</param>
+    /// <param name="strategy">Targeting strategy</param>
     /// <param name="primaryTarget">Player's current target - may be null</param>
     /// <param name="range">Maximum distance from the player to search for a candidate target</param>
-    protected void SelectPrimaryTarget(Targeting track, ref Actor? primaryTarget, float range)
+    protected void SelectPrimaryTarget(Targeting strategy, ref Actor? primaryTarget, float range)
     {
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        var tars = track.As<Targeting>();
-        if (tars == Targeting.Manual)
-        {
+        if (strategy != Targeting.Auto)
             return;
-        }
 
         if (Player.DistanceToHitbox(primaryTarget) > range)
         {
@@ -87,6 +83,13 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
         }
     }
 
+    /// <summary>
+    /// Get <em>effective</em> cast time for the provided action.<br/>
+    /// The default implementation returns the action's base cast time multiplied by the player's spell-speed factor, which accounts for haste buffs (like Leylines) and slow debuffs. It also accounts for Swiftcast.<br/>
+    /// Subclasses should handle job-specific cast speed adjustments, such as RDM's Dualcast or PCT's motifs.
+    /// </summary>
+    /// <param name="aid"></param>
+    /// <returns></returns>
     protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
 
     protected bool CanCast(AID aid) => GetCastTime(aid) <= ForceMovementIn;
@@ -130,8 +133,6 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
             _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
         };
     }
-
-    protected bool IsSplashTarget(Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
 
     protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
 

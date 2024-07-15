@@ -261,7 +261,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         ReawakenLeft = StatusLeft(SID.Reawakened);
 
         TargetGnashLeft = GnashLeft(primaryTarget);
-        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceTo(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
+        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, IsSplashTarget);
         BestGenerationTarget = SelectTarget(track, primaryTarget, 3, IsSplashTarget).Best;
