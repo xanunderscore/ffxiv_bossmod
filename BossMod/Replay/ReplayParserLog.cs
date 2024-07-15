@@ -329,7 +329,9 @@ public sealed class ReplayParserLog : IDisposable
             [new("CLRJ"u8)] = ParseClientActionReject,
             [new("CDN+"u8)] = () => ParseClientCountdown(true),
             [new("CDN-"u8)] = () => ParseClientCountdown(false),
-            [new("CLCD"u8)] = ParseCooldown,
+            [new("CLAL"u8)] = ParseClientAnimationLock,
+            [new("CLCB"u8)] = ParseClientCombo,
+            [new("CLCD"u8)] = ParseClientCooldown,
             [new("CLDA"u8)] = ParseClientDutyActions,
             [new("CLBH"u8)] = ParseClientBozjaHolster,
             [new("CLAF"u8)] = ParseClientActiveFate,
@@ -571,8 +573,8 @@ public sealed class ReplayParserLog : IDisposable
     private ActorState.OpEventObjectAnimation ParseActorEventObjectAnimation() => new(_input.ReadActorID(), _input.ReadUShort(true), _input.ReadUShort(true));
     private ActorState.OpPlayActionTimelineEvent ParseActorPlayActionTimelineEvent() => new(_input.ReadActorID(), _input.ReadUShort(true));
     private ActorState.OpEventNpcYell ParseActorEventNpcYell() => new(_input.ReadActorID(), _input.ReadUShort(false));
-    private PartyState.OpModify ParsePartyModify() => new(_input.ReadInt(), _input.ReadULong(true), _input.ReadULong(true));
-    private PartyState.OpModify ParsePartyLeave() => new(_input.ReadInt(), 0, 0);
+    private PartyState.OpModify ParsePartyModify() => new(_input.ReadInt(), new(_input.ReadULong(true), _input.ReadULong(true), _version >= 15 && _input.ReadBool(), _version < 15 ? "" : _input.ReadString()));
+    private PartyState.OpModify ParsePartyLeave() => new(_input.ReadInt(), new(0, 0, false, ""));
     private PartyState.OpLimitBreakChange ParsePartyLimitBreak() => new(_input.ReadInt(), _input.ReadInt());
 
     private ClientState.OpActionRequest ParseClientActionRequest()
@@ -603,8 +605,10 @@ public sealed class ReplayParserLog : IDisposable
     }
 
     private ClientState.OpCountdownChange ParseClientCountdown(bool start) => new(start ? _input.ReadFloat() : null);
+    private ClientState.OpAnimationLockChange ParseClientAnimationLock() => new(_input.ReadFloat());
+    private ClientState.OpComboChange ParseClientCombo() => new(new(_input.ReadUInt(false), _input.ReadFloat()));
 
-    private ClientState.OpCooldown ParseCooldown()
+    private ClientState.OpCooldown ParseClientCooldown()
     {
         var reset = _input.ReadBool();
         List<(int, Cooldown)> cooldowns = [];

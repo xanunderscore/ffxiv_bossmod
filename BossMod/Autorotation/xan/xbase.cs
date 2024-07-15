@@ -1,4 +1,5 @@
 ﻿using BossMod.Autorotation.Legacy;
+using static BossMod.Autorotation.StrategyValues;
 
 namespace BossMod.Autorotation.xan;
 
@@ -70,17 +71,18 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     /// <param name="range">Maximum distance from the player to search for a candidate target</param>
     protected void SelectPrimaryTarget(Targeting track, ref Actor? primaryTarget, float range)
     {
-        var instanceId = primaryTarget == null ? 0 : primaryTarget.InstanceID;
-
-        if (!IsEnemy(primaryTarget) || Hints.ForbiddenTargets.Any(x => x.Actor.InstanceID == instanceId))
+        if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        if (track != Targeting.Auto)
-            return;
-
-        if (Player.DistanceTo(primaryTarget) > range)
+        var tars = track.As<Targeting>();
+        if (tars == Targeting.Manual)
         {
-            primaryTarget = Hints.PriorityTargets.Where(x => x.Actor.DistanceTo(Player) <= range).MaxBy(x => x.Actor.HPMP.CurHP)?.Actor;
+            return;
+        }
+
+        if (Player.DistanceToHitbox(primaryTarget) > range)
+        {
+            primaryTarget = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= range).MaxBy(x => x.Actor.HPMP.CurHP)?.Actor;
             // Hints.ForcedTarget = primaryTarget;
         }
     }
@@ -128,6 +130,8 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
             _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
         };
     }
+
+    protected bool IsSplashTarget(Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
 
     protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
 

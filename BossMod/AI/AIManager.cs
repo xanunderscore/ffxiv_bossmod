@@ -3,6 +3,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using ImGuiNET;
 
 namespace BossMod.AI;
@@ -19,10 +20,10 @@ sealed class AIManager : IDisposable
 
     private WorldState WorldState => _autorot.Bossmods.WorldState;
 
-    public AIManager(RotationModuleManager autorot)
+    public AIManager(RotationModuleManager autorot, ActionManagerEx amex)
     {
         _autorot = autorot;
-        _controller = new(autorot.ActionManager);
+        _controller = new(amex);
         _config = Service.Config.Get<AIConfig>();
         _ui = new("AI", DrawOverlay, false, new(100, 100), ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoFocusOnAppearing) { RespectCloseHotkey = false };
         Service.ChatGui.ChatMessage += OnChatMessage;
@@ -39,7 +40,7 @@ sealed class AIManager : IDisposable
 
     public void Update()
     {
-        if (WorldState.Party.ActorIDs[_masterSlot] == 0)
+        if (!WorldState.Party.Members[_masterSlot].IsValid())
             SwitchToIdle();
 
         if (!_config.Enabled && _beh != null)
@@ -141,12 +142,21 @@ sealed class AIManager : IDisposable
         _beh = new AIBehaviour(_controller, _autorot, _aiPreset);
     }
 
-    private int FindPartyMemberSlotFromSender(SeString sender)
+    private unsafe int FindPartyMemberSlotFromSender(SeString sender)
     {
         if (sender.Payloads.FirstOrDefault() is not PlayerPayload source)
             return -1;
-        var pm = Service.PartyList.FirstOrDefault(pm => pm.Name.TextValue == source.PlayerName && pm.World.Id == source.World.RowId);
-        return pm != null ? WorldState.Party.ContentIDs.IndexOf((ulong)pm.ContentId) : -1;
+        var group = GroupManager.Instance()->GetGroup();
+        var slot = -1;
+        for (int i = 0; i < group->MemberCount; ++i)
+        {
+            if (group->PartyMembers[i].HomeWorld == source.World.RowId && group->PartyMembers[i].NameString == source.PlayerName)
+            {
+                slot = i;
+                break;
+            }
+        }
+        return slot >= 0 ? Array.FindIndex(WorldState.Party.Members, m => m.ContentId == group->PartyMembers[slot].ContentId) : -1;
     }
 
     private void OnChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)

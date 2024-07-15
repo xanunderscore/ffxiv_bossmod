@@ -6,12 +6,12 @@ using ImGuiNET;
 
 namespace BossMod;
 
-class MainDebugWindow(WorldState ws, RotationModuleManager autorot) : UIWindow("Boss mod debug UI", false, new(300, 200))
+class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManagerEx amex) : UIWindow("Boss mod debug UI", false, new(300, 200))
 {
     private readonly DebugObjects _debugObjects = new();
     private readonly DebugParty _debugParty = new();
     private readonly DebugGraphics _debugGraphics = new();
-    private readonly DebugAction _debugAction = new(ws, autorot.ActionManager);
+    private readonly DebugAction _debugAction = new(ws, amex);
     private readonly DebugHate _debugHate = new();
     //private readonly DebugInput _debugInput = new(autorot);
     private readonly DebugAutorotation _debugAutorot = new(autorot);
@@ -64,21 +64,13 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot) : UIWindow("
         {
             DrawCastingEnemiesList();
         }
-        if (ImGui.CollapsingHeader("Job gauge"))
+        if (ImGui.CollapsingHeader("Party"))
         {
-            DrawGauge();
-        }
-        if (ImGui.CollapsingHeader("Party (dalamud)"))
-        {
-            _debugParty.DrawPartyDalamud();
-        }
-        if (ImGui.CollapsingHeader("Party (custom)"))
-        {
-            _debugParty.DrawPartyCustom(false);
+            _debugParty.Draw(false);
         }
         if (ImGui.CollapsingHeader("Party (duty recorder)"))
         {
-            _debugParty.DrawPartyCustom(true);
+            _debugParty.Draw(true);
         }
         if (ImGui.CollapsingHeader("Autorotation"))
         {
@@ -223,7 +215,7 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot) : UIWindow("
 
     private unsafe void DrawTargets()
     {
-        var cursorPos = autorot.ActionManager.GetWorldPosUnderCursor();
+        var cursorPos = amex.GetWorldPosUnderCursor();
         ImGui.TextUnformatted($"World pos under cursor: {(cursorPos == null ? "n/a" : Utils.Vec3String(cursorPos.Value))}");
 
         var selfPos = Service.ClientState.LocalPlayer?.Position ?? new();
