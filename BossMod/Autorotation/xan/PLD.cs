@@ -67,7 +67,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
                     _state.CurMP >= 1000)
                 PushGCD(AID.HolyCircle, Player);
 
-            if (Unlocked(AID.Prominence) && _state.ComboLastAction == (uint)AID.TotalEclipse)
+            if (Unlocked(AID.Prominence) && ComboLastMove == AID.TotalEclipse)
             {
                 if (DivineMightLeft > _state.GCD && Unlocked(AID.HolyCircle) && _state.CurMP >= 1000)
                     PushGCD(AID.HolyCircle, Player);
@@ -95,7 +95,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
             if (SupplicationReady > _state.GCD)
                 PushGCD(AID.Supplication, primaryTarget);
 
-            if (Unlocked(AID.RageOfHalone) && _state.ComboLastAction == (uint)AID.RiotBlade)
+            if (Unlocked(AID.RageOfHalone) && ComboLastMove == AID.RiotBlade)
             {
                 if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
                     PushGCD(AID.HolySpirit, primaryTarget ?? BestRangedTarget);
@@ -106,7 +106,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.RageOfHalone, primaryTarget);
             }
 
-            if (Unlocked(AID.RiotBlade) && _state.ComboLastAction == (uint)AID.FastBlade)
+            if (Unlocked(AID.RiotBlade) && ComboLastMove == AID.FastBlade)
                 PushGCD(AID.RiotBlade, primaryTarget);
 
             PushGCD(AID.FastBlade, primaryTarget);

@@ -121,7 +121,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
             if (Unlocked(AID.PitOfDread) && _state.CD(AID.PitOfDread) - 40 <= _state.GCD)
                 PushGCD(AID.PitOfDread, Player);
 
-            if (_state.ComboLastAction is (uint)AID.HuntersBite or (uint)AID.SwiftskinsBite)
+            if (ComboLastMove is AID.HuntersBite or AID.SwiftskinsBite)
             {
                 if (GrimskinsVenomLeft > _state.GCD)
                     PushGCD(AID.BloodiedMaw, Player);
@@ -129,7 +129,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.JaggedMaw, Player);
             }
 
-            if (_state.ComboLastAction is (uint)AID.SteelMaw or (uint)AID.DreadMaw)
+            if (ComboLastMove is AID.SteelMaw or AID.DreadMaw)
             {
                 if (SwiftscaledLeft < InstinctLeft)
                     PushGCD(AID.SwiftskinsBite, Player);
@@ -149,7 +149,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.Dreadwinder, primaryTarget);
             }
 
-            if (_state.ComboLastAction is (uint)AID.HuntersSting)
+            if (ComboLastMove is AID.HuntersSting)
             {
                 if (FlankstungVenomLeft > _state.GCD)
                     PushGCD(AID.FlankstingStrike, primaryTarget);
@@ -157,7 +157,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.FlanksbaneFang, primaryTarget);
             }
 
-            if (_state.ComboLastAction is (uint)AID.SwiftskinsSting)
+            if (ComboLastMove is AID.SwiftskinsSting)
             {
                 if (HindstungVenomLeft > _state.GCD)
                     PushGCD(AID.HindstingStrike, primaryTarget);
@@ -165,7 +165,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.HindsbaneFang, primaryTarget);
             }
 
-            if (_state.ComboLastAction is (uint)AID.SteelFangs or (uint)AID.DreadFangs)
+            if (ComboLastMove is AID.SteelFangs or AID.DreadFangs)
             {
                 if (SwiftscaledLeft < InstinctLeft)
                     PushGCD(AID.SwiftskinsSting, primaryTarget);
@@ -222,7 +222,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         if (DreadCombo == DreadCombo.SwiftskinsCoil)
             return (Positional.Flank, true);
 
-        return (AID)_state.ComboLastAction switch
+        return ComboLastMove switch
         {
             AID.HuntersSting => (Positional.Flank, true),
             AID.SwiftskinsSting => (Positional.Rear, true),

@@ -96,7 +96,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
         var canFlow = CanFlow(out var flowCombo);
         var canSymmetry = CanSymmetry(out var symmetryCombo);
         var combo2 = NumAOETargets > 1 ? AID.Bladeshower : AID.Fountain;
-        var haveCombo2 = Unlocked(combo2) && _state.ComboLastAction == (NumAOETargets > 1 ? (uint)AID.Windmill : (uint)AID.Cascade);
+        var haveCombo2 = Unlocked(combo2) && ComboLastMove == (NumAOETargets > 1 ? AID.Windmill : AID.Cascade);
 
         if (canStarfall && FlourishingStarfallLeft <= _state.AttackGCDTime)
             PushGCD(AID.StarfallDance, BestStarfallTarget);

@@ -110,10 +110,10 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         }
         else
         {
-            if ((AID)_state.ComboLastAction == AID.SlugShot && Unlocked(AID.CleanShot))
+            if (ComboLastMove == AID.SlugShot && Unlocked(AID.CleanShot))
                 PushGCD(AID.CleanShot, primaryTarget);
 
-            if ((AID)_state.ComboLastAction == AID.SplitShot && Unlocked(AID.SlugShot))
+            if (ComboLastMove == AID.SplitShot && Unlocked(AID.SlugShot))
                 PushGCD(AID.SlugShot, primaryTarget);
 
             PushGCD(AID.SplitShot, primaryTarget);
@@ -207,7 +207,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             return false;
 
         if (!Unlocked(AID.Drill))
-            return (AID)_state.ComboLastAction == AID.SlugShot;
+            return ComboLastMove == AID.SlugShot;
 
         return NextToolCD(untilCap: false) <= _state.GCD;
     }

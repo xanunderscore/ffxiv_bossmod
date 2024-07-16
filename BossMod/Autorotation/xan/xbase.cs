@@ -21,6 +21,8 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     protected float TrueNorthLeft { get; private set; }
     protected float CombatTimer { get; private set; }
 
+    protected AID ComboLastMove => (AID)(object)_state.ComboLastAction;
+
     protected xbase(RotationModuleManager manager, Actor player) : base(manager, player)
     {
         _state = new(this);

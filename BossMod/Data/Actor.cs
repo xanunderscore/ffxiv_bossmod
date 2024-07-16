@@ -103,7 +103,8 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
     public Role Role => Class.GetRole();
     public WPos Position => new(PosRot.X, PosRot.Z);
     public Angle Rotation => PosRot.W.Radians();
-    public bool Omnidirectional => Utils.CharacterIsOmnidirectional(OID);
+    // status "Directional Disregard" - applied temporarily on some DT raid bosses
+    public bool Omnidirectional => Statuses.Any(s => s.ID == 3808) || Utils.CharacterIsOmnidirectional(OID);
     public bool IsDeadOrDestroyed => IsDead || IsDestroyed;
 
     public ActorStatus? FindStatus(uint sid)

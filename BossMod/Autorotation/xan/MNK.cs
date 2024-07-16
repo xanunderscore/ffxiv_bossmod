@@ -260,7 +260,16 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget);
 
-        UpdateGauge();
+        var gauge = GetGauge<MonkGauge>();
+
+        Chakra = gauge.Chakra;
+        BeastChakra = gauge.BeastChakra;
+        BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
+        Nadi = gauge.Nadi;
+
+        OpoStacks = gauge.OpoOpoStacks;
+        RaptorStacks = gauge.RaptorStacks;
+        CoeurlStacks = gauge.CoeurlStacks;
 
         PerfectBalanceLeft = StatusLeft(SID.PerfectBalance);
         FormShiftLeft = StatusLeft(SID.FormlessFist);
@@ -322,20 +331,5 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         if (s > 0)
             return (Form.Coeurl, s);
         return (Form.None, 0);
-    }
-
-    // FIXME when CS is updated
-    private unsafe void UpdateGauge()
-    {
-        var gauge = GetGauge<MonkGauge>();
-
-        Chakra = gauge.Chakra;
-        BeastChakra = gauge.BeastChakra;
-        BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
-        Nadi = gauge.Nadi;
-
-        OpoStacks = gauge.OpoOpoStacks;
-        RaptorStacks = gauge.RaptorStacks;
-        CoeurlStacks = gauge.CoeurlStacks;
     }
 }

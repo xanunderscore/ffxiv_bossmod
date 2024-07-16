@@ -169,12 +169,14 @@ public sealed class LegacySAM : LegacyModule
         _state.MeikyoLeft = _state.StatusDetails(Player, SAM.SID.MeikyoShisui, Player.InstanceID).Left;
         _state.OgiNamikiriLeft = _state.StatusDetails(Player, SAM.SID.OgiNamikiriReady, Player.InstanceID).Left;
 
+        /*
         _state.LostExcellenceLeft = MathF.Max(
             _state.StatusDetails(Player, SAM.SID.LostExcellence, Player.InstanceID).Left,
             _state.StatusDetails(Player, SAM.SID.Memorable, Player.InstanceID).Left
         );
         _state.FoPLeft = _state.StatusDetails(Player, SAM.SID.LostFontofPower, Player.InstanceID).Left;
         _state.HsacLeft = _state.StatusDetails(Player, SAM.SID.BannerHonoredSacrifice, Player.InstanceID).Left;
+        */
 
         // TODO: multidot support
         _state.TargetHiganbanaLeft = _state.ForbidDOTs ? float.MaxValue : _state.StatusDetails(primaryTarget, SAM.SID.Higanbana, Player.InstanceID).Left;
