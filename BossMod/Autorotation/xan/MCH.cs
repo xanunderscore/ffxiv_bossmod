@@ -28,6 +28,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
     public float WildfireLeft; // max 10s
     public float HyperchargedLeft; // max 30s
     public float ExcavatorLeft; // max 30s
+    public float FMFLeft; // max 30s
 
     public bool Flamethrower;
 
@@ -57,6 +58,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (Overheated)
         {
+            if (FMFLeft > _state.GCD)
+                PushGCD(AID.FullMetalField, BestRangedAOETarget);
+
             if (NumAOETargets > 3 && Unlocked(AID.AutoCrossbow))
                 PushGCD(AID.AutoCrossbow, BestAOETarget);
 
@@ -71,18 +75,22 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.Excavator, BestRangedAOETarget);
 
         if (Unlocked(AID.AirAnchor) && _state.CD(AID.AirAnchor) <= _state.GCD)
-            PushGCD(AID.AirAnchor, primaryTarget);
+            PushGCD(AID.AirAnchor, primaryTarget, 20);
 
         if (Unlocked(AID.ChainSaw) && _state.CD(AID.ChainSaw) <= _state.GCD)
-            PushGCD(AID.ChainSaw, BestChainsawTarget);
+            PushGCD(AID.ChainSaw, BestChainsawTarget, 10);
 
         if (Unlocked(AID.Drill) && _state.CD(AID.Drill) - 20 <= _state.GCD)
         {
             if (Unlocked(AID.Bioblaster) && NumAOETargets > 2)
                 PushGCD(AID.Bioblaster, BestAOETarget);
 
-            PushGCD(AID.Drill, primaryTarget, _state.CD(AID.Drill) <= _state.GCD ? 50 : 0);
+            PushGCD(AID.Drill, primaryTarget, _state.CD(AID.Drill) <= _state.GCD ? 20 : 0);
         }
+
+        // TODO work out priorities
+        if (FMFLeft > _state.GCD && ExcavatorLeft == 0)
+            PushGCD(AID.FullMetalField, BestRangedAOETarget);
 
         if (ReassembleLeft > _state.GCD && NumAOETargets > 3)
             PushGCD(AID.Scattergun, BestAOETarget);
@@ -283,6 +291,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         WildfireLeft = StatusLeft(SID.WildfirePlayer);
         HyperchargedLeft = StatusLeft(SID.Hypercharged);
         ExcavatorLeft = StatusLeft(SID.ExcavatorReady);
+        FMFLeft = StatusLeft(SID.FullMetalMachinist);
 
         Flamethrower = StatusLeft(SID.Flamethrower) > 0;
 

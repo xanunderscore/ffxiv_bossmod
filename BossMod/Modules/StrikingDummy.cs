@@ -2,12 +2,12 @@
 
 public enum OID : uint
 {
-    Boss = 0x385,
+    Boss = 0x2DE0,
 }
 
 class StrikingDummyStates : StateMachineBuilder
 {
-    public static float InitialDelay = 8f;
+    public static float InitialDelay = 6.5f;
     public static int NumLoops = 5;
 
     public StrikingDummyStates(BossModule module) : base(module)

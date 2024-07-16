@@ -90,6 +90,7 @@ public enum SID : uint
     Hypercharged = 3864, // applied by Barrel Stabilizer to self
     Flamethrower = 1205, // applied by Flamethrower to self
     ExcavatorReady = 3865, // applied by Chain Saw to self
+    FullMetalMachinist = 3866, // applied by Hypercharge to self
 }
 
 public sealed class Definitions : IDisposable
