@@ -344,14 +344,11 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
             Class.DNC => 67,
             _ => 1
         });
-        if (player != null)
-        {
-            // found good target but can't target them yet
-            if (World.Party.Members[World.Party.FindSlot(player.InstanceID)].InCutscene)
-                return null;
 
-            return player;
-        }
+        // check if valid target is in cutscene
+        if (player != null)
+            return World.Party.Members[World.Party.FindSlot(player.InstanceID)].InCutscene ? null : player;
+
         return World.Actors.FirstOrDefault(x => x.Type == ActorType.Chocobo && x.OwnerID == Player.InstanceID);
     }
 }
