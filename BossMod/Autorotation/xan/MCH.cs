@@ -26,7 +26,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
     public float ReassembleLeft; // max 5s
     public float WildfireLeft; // max 10s
-    public float HyperchargedLeft; // max 30
+    public float HyperchargedLeft; // max 30s
+    public float ExcavatorLeft; // max 30s
 
     public bool Flamethrower;
 
@@ -65,6 +66,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             // we don't use any other gcds during overheat
             return;
         }
+
+        if (ExcavatorLeft > _state.GCD)
+            PushGCD(AID.Excavator, BestRangedAOETarget);
 
         if (Unlocked(AID.AirAnchor) && _state.CD(AID.AirAnchor) <= _state.GCD)
             PushGCD(AID.AirAnchor, primaryTarget);
@@ -119,19 +123,11 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
             PushOGCD(AID.Reassemble, Player);
 
-        var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay &&
-            (_state.RaidBuffsIn < _state.GCD
-             || _state.RaidBuffsIn > 9000
-             || _state.RaidBuffsLeft > _state.GCD);
-
         if (ShouldWildfire(strategy, deadline))
             PushOGCD(AID.Wildfire, primaryTarget);
 
-        if (buffOk)
-        {
-            if (_state.CD(AID.Drill) > 0 && Unlocked(AID.BarrelStabilizer) && _state.CanWeave(AID.BarrelStabilizer, 0.6f, deadline))
-                PushOGCD(AID.BarrelStabilizer, Player);
-        }
+        if (ShouldStabilize(strategy, deadline))
+            PushOGCD(AID.BarrelStabilizer, Player);
 
         UseCharges(strategy, primaryTarget, deadline);
 
@@ -142,9 +138,10 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.Hypercharge, Player);
     }
 
-    private float NextToolCD
+    // TODO this argument name sucks ass
+    private float NextToolCD(bool untilCap)
         => MathF.Min(
-            Unlocked(AID.Drill) ? _state.CD(AID.Drill) - 20 : float.MaxValue,
+            Unlocked(AID.Drill) ? _state.CD(AID.Drill) - (untilCap && Unlocked(TraitID.EnhancedMultiweapon) ? 0 : 20) : float.MaxValue,
             MathF.Min(
                 Unlocked(AID.AirAnchor) ? _state.CD(AID.AirAnchor) : float.MaxValue,
                 Unlocked(AID.ChainSaw) ? _state.CD(AID.ChainSaw) : float.MaxValue
@@ -201,7 +198,10 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (_state.RaidBuffsIn < 10 && _state.RaidBuffsIn > _state.GCD)
             return false;
 
-        return NextToolCD <= _state.GCD;
+        if (!Unlocked(AID.Drill))
+            return (AID)_state.ComboLastAction == AID.SlugShot;
+
+        return NextToolCD(untilCap: false) <= _state.GCD;
     }
 
     private bool ShouldMinion(StrategyValues strategy, Actor? primaryTarget)
@@ -225,9 +225,13 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             || !_state.CanWeave(AID.Hypercharge, 0.6f, deadline))
             return false;
 
+        // hack for CD alignment in opener - wait for wildfire application
+        if (CombatTimer < 10 && _state.CD(AID.Wildfire) < 10)
+            return false;
+
         /* A full segment of Hypercharge is exactly three GCDs worth of time, or 7.5 seconds. Because of this, you should never enter Hypercharge if Chainsaw, Drill or Air Anchor has less than eight seconds on their cooldown timers. Doing so will cause the Chainsaw, Drill or Air Anchor cooldowns to drift, which leads to a loss of DPS and will more than likely cause issues down the line in your rotation when you reach your rotational reset at Wildfire.
          */
-        return NextToolCD > _state.GCD + 7.5f;
+        return NextToolCD(untilCap: true) > _state.GCD + 7.5f;
     }
 
     private bool ShouldWildfire(StrategyValues strategy, float deadline)
@@ -235,12 +239,19 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (!Unlocked(AID.Wildfire) || !_state.CanWeave(AID.Wildfire, 0.6f, deadline) || strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
             return false;
 
-        // always use if hypercharge is already active and wildfire isn't
-        if (HyperchargedLeft > 0)
-            return true;
+        // hack for opener - delay until all 4 tool charges are used
+        if (CombatTimer < 10)
+            return NextToolCD(untilCap: false) > _state.GCD;
 
-        // see above, but it's ok to wildfire a gcd early
-        return NextToolCD > _state.GCD + _state.AttackGCDTime + 7.5f;
+        return true;
+    }
+
+    private bool ShouldStabilize(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.BarrelStabilizer) || !_state.CanWeave(AID.BarrelStabilizer, 0.6f, deadline) || strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
+            return false;
+
+        return _state.CD(AID.Drill) > 0;
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
@@ -271,6 +282,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         ReassembleLeft = StatusLeft(SID.Reassembled);
         WildfireLeft = StatusLeft(SID.WildfirePlayer);
         HyperchargedLeft = StatusLeft(SID.Hypercharged);
+        ExcavatorLeft = StatusLeft(SID.ExcavatorReady);
 
         Flamethrower = StatusLeft(SID.Flamethrower) > 0;
 
@@ -284,7 +296,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         NumFlamethrowerTargets = Hints.NumPriorityTargetsInAOECone(Player.Position, 8, Player.Rotation.ToDirection(), 45.Degrees());
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private PositionCheck IsConeAOETarget => (playerTarget, targetToTest) => Hints.TargetInAOECone(targetToTest, Player.Position, 12, Player.DirectionTo(playerTarget), 60.Degrees());
