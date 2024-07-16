@@ -153,7 +153,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             && !Player.InCombat
             // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;
             // peloton animationlock will be annoying and unhelpful here
-            && !IsNPC(primaryTarget)
+            && primaryTarget == null
             && PelotonWillExpire(Player))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
@@ -161,8 +161,6 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
     }
-
-    private bool IsNPC(Actor? primaryTarget) => primaryTarget != null && primaryTarget.Type is ActorType.EventNpc;
 
     private bool PelotonWillExpire(Actor actor)
     {
