@@ -23,8 +23,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
     public int Chakra; // 0-5 (0-10 during Brotherhood)
     public BeastChakra[] BeastChakra = [];
     public int OpoStacks; // 0-1
-    public int RaptorStacks; // 0-2
-    public int CoeurlStacks; // 0-3
+    public int RaptorStacks; // 0-1
+    public int CoeurlStacks; // 0-2
     public NadiFlags Nadi;
 
     public Form CurrentForm;
@@ -110,7 +110,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         }
 
         // TODO fix when they fix the potency in 7.0.1
-        if (NumAOETargets > 3 && Unlocked(AID.ArmOfTheDestroyer))
+        if (NumAOETargets > 2 && Unlocked(AID.ArmOfTheDestroyer))
         {
             if (EffectiveForm == Form.Coeurl && Unlocked(AID.Rockbreaker))
                 PushGCD(AID.Rockbreaker, Player);
@@ -122,9 +122,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         }
         else
         {
-            if (CurrentForm == Form.Raptor && OpoStacks == 0 && PerfectBalanceLeft == 0 && Unlocked(AID.DragonKick))
-                PushGCD(AID.DragonKick, primaryTarget);
-
             switch (EffectiveForm)
             {
                 case Form.Coeurl:
