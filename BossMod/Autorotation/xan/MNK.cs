@@ -74,7 +74,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
     public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
 
-    private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, CurrentForm == Form.Coeurl);
+    private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, EffectiveForm == Form.Coeurl);
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -108,12 +108,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
                 PushGCD(AID.WindsReply, BestLineTarget);
         }
 
-        // TODO fix when they fix the potency in 7.0.1
         if (NumAOETargets > 2 && Unlocked(AID.ArmOfTheDestroyer))
         {
             if (EffectiveForm == Form.Coeurl && Unlocked(AID.Rockbreaker))
                 PushGCD(AID.Rockbreaker, Player);
 
+            // TODO this is actually still suboptimal on 3 targets
             if (EffectiveForm == Form.Raptor && Unlocked(AID.FourPointFury))
                 PushGCD(AID.FourPointFury, Player);
 
@@ -140,7 +140,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
             if (PerfectBalanceLeft == 0)
                 return CurrentForm;
 
-            var forcedSolar = ForcedSolar || HasLunar && !HasSolar && FireLeft == 0;
+            // hack: allow double lunar opener
+            var forcedSolar = ForcedSolar || HasLunar && !HasSolar && CombatTimer > 30;
 
             var canCoeurl = forcedSolar;
             var canRaptor = forcedSolar;
@@ -148,21 +149,17 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
             foreach (var chak in BeastChakra)
             {
-                // why the hell did they do this
-                canCoeurl &= chak != BeastChakraType.Raptor;
-                canRaptor &= chak != BeastChakraType.OpoOpo;
+                canCoeurl &= chak != BeastChakraType.Coeurl;
+                canRaptor &= chak != BeastChakraType.Raptor;
                 if (ForcedSolar)
-                    canOpo &= chak != BeastChakraType.Coeurl;
+                    canOpo &= chak != BeastChakraType.OpoOpo;
             }
-
-            if (FireLeft > _state.GCD || _state.CD(AID.RiddleOfFire) == 0)
-                return canOpo ? Form.OpoOpo : canCoeurl ? Form.Coeurl : Form.Raptor;
 
             return canRaptor ? Form.Raptor : canCoeurl ? Form.Coeurl : Form.OpoOpo;
         }
     }
 
-    private void QueuePB(StrategyValues strategy, float deadline, float finalDeadline)
+    private void QueuePB(StrategyValues strategy, float deadline)
     {
         if (CurrentForm != Form.Raptor
             || !Unlocked(AID.PerfectBalance)
@@ -172,16 +169,22 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
             )
             return;
 
+        // prevent odd window double blitz
+        if (HasBothNadi && FireLeft > 0)
+            return;
+
         // TODO forced solar in strategy
         // default: solar in odd windows only, opener/2m is always lunar
         var wantSolar = HasLunar && !HasSolar && FireLeft == 0;
 
-        if (wantSolar)
-        {
-            if (_state.CanWeave(AID.RiddleOfFire, 0.6f, finalDeadline + _state.AttackGCDTime * 2))
-                PushOGCD(AID.PerfectBalance, Player);
-        }
-        else if (_state.CanWeave(AID.RiddleOfFire, 0.6f, finalDeadline + _state.AttackGCDTime * 2) || FireLeft > _state.GCD + _state.AttackGCDTime * 2)
+        // earliest we can press PB before next RoF
+        var gcdsAhead = wantSolar ? 1 : 2;
+
+        if (_state.CanWeave(AID.RiddleOfFire, 0.6f, _state.GCD + _state.AttackGCDTime * gcdsAhead))
+            PushOGCD(AID.PerfectBalance, Player);
+
+        // can PB if we have 4 GCDs worth of buff remaining
+        if (FireLeft > _state.GCD + _state.AttackGCDTime * 3)
             PushOGCD(AID.PerfectBalance, Player);
     }
 
@@ -192,9 +195,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         {
             if (buff != OffensiveStrategy.Delay)
             {
-                QueuePB(strategy, deadline, _state.GCD);
+                QueuePB(strategy, deadline);
 
-                if (Unlocked(AID.Brotherhood) && _state.CanWeave(AID.Brotherhood, 0.6f, deadline))
+                if (ShouldUseBH(strategy, deadline))
                     PushOGCD(AID.Brotherhood, Player);
 
                 if (_state.GCD < 0.8f && ShouldUseRoF(strategy, deadline))
@@ -203,7 +206,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
                 if (_state.CD(AID.RiddleOfFire) > 0 && _state.CanWeave(AID.RiddleOfWind, 0.6f, deadline))
                     PushOGCD(AID.RiddleOfWind, Player);
 
-                if (ShouldUseTrueNorth(strategy, deadline, _state.GCD))
+                if (ShouldUseTrueNorth(strategy, deadline))
                     PushOGCD(AID.TrueNorth, Player);
             }
 
@@ -217,6 +220,18 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         }
     }
 
+    private bool ShouldUseBH(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.Brotherhood) || !_state.CanWeave(AID.Brotherhood, 0.6f, deadline))
+            return false;
+
+        // delay in opener for party cd alignment
+        if (CombatTimer < 10)
+            return BeastCount == 3;
+
+        return true;
+    }
+
     private bool ShouldUseRoF(StrategyValues strategy, float deadline)
     {
         if (!Unlocked(AID.RiddleOfFire) || !_state.CanWeave(AID.RiddleOfFire, 0.6f, deadline))
@@ -225,7 +240,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         return !Unlocked(AID.Brotherhood) || _state.CD(AID.Brotherhood) > 0;
     }
 
-    private bool ShouldUseTrueNorth(StrategyValues strategy, float deadline, float finalDeadline)
+    private bool ShouldUseTrueNorth(StrategyValues strategy, float deadline)
     {
         if (!Unlocked(AID.TrueNorth) || !_state.CanWeave(_state.CD(AID.TrueNorth), 0.6f, deadline))
             return false;
@@ -233,7 +248,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         var wrong = _state.NextPositionalImminent && !_state.NextPositionalCorrect;
 
         // always late weave unless it would delay riddle of fire
-        if (ShouldUseRoF(strategy, finalDeadline))
+        if (ShouldUseRoF(strategy, _state.GCD))
             return wrong;
         else
             return wrong && _state.GCD < 0.8f;
