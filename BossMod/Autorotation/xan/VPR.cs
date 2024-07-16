@@ -274,7 +274,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         _state.UpdatePositionals(primaryTarget, GetPositional(), false);
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private float GnashLeft(Actor? a) => _state.StatusDetails(a, SID.NoxiousGnash, Player.InstanceID).Left;

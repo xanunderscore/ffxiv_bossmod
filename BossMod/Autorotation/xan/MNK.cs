@@ -189,14 +189,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.PerfectBalance, Player);
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline, float finalDeadline)
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
         var buff = strategy.Option(Track.Buffs).As<OffensiveStrategy>();
         if (Player.InCombat && _state.GCD > 0)
         {
             if (buff != OffensiveStrategy.Delay)
             {
-                QueuePB(strategy, deadline, finalDeadline);
+                QueuePB(strategy, deadline, _state.GCD);
 
                 if (Unlocked(AID.Brotherhood) && _state.CanWeave(AID.Brotherhood, 0.6f, deadline))
                     PushOGCD(AID.Brotherhood, Player);
@@ -207,7 +207,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
                 if (_state.CD(AID.RiddleOfFire) > 0 && _state.CanWeave(AID.RiddleOfWind, 0.6f, deadline))
                     PushOGCD(AID.RiddleOfWind, Player);
 
-                if (ShouldUseTrueNorth(strategy, deadline, finalDeadline))
+                if (ShouldUseTrueNorth(strategy, deadline, _state.GCD))
                     PushOGCD(AID.TrueNorth, Player);
             }
 
@@ -291,7 +291,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         _state.UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, finalDeadline) => CalcNextBestOGCD(strategy, primaryTarget, deadline, finalDeadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2);

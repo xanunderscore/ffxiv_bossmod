@@ -322,12 +322,14 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
             PushGCD(AID.ClosedPosition, partner);
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private bool IsFan4Target(Actor primary, Actor other) => Hints.TargetInAOECone(other, Player.Position, 15, Player.DirectionTo(primary), 60.Degrees());
 
-    private Actor? FindDancePartner() => World.Party.WithoutSlot().Exclude(Player).MaxBy(p => p.Class switch
+    private Actor? FindDancePartner()
+    {
+        var player = World.Party.WithoutSlot().Exclude(Player).MaxBy(p => p.Class switch
         {
             Class.SAM => 100,
             Class.NIN or Class.VPR => 99,
@@ -341,5 +343,15 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID
             Class.BRD => 68,
             Class.DNC => 67,
             _ => 1
-        }) ?? World.Actors.FirstOrDefault(x => x.Type == ActorType.Chocobo && x.OwnerID == Player.InstanceID);
+        });
+        if (player != null)
+        {
+            // found good target but can't target them yet
+            if (World.Party.Members[World.Party.FindSlot(player.InstanceID)].InCutscene)
+                return null;
+
+            return player;
+        }
+        return World.Actors.FirstOrDefault(x => x.Type == ActorType.Chocobo && x.OwnerID == Player.InstanceID);
+    }
 }

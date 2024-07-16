@@ -181,7 +181,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         }
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
     private Actor? FindKardiaTarget()

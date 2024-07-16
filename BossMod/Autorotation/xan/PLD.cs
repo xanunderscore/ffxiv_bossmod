@@ -190,6 +190,6 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
 
         CalcNextBestGCD(primaryTarget);
 
-        QueueOGCD((deadline, _finalDeadline) => CalcNextBestOGCD(deadline, primaryTarget));
+        QueueOGCD(deadline => CalcNextBestOGCD(deadline, primaryTarget));
     }
 }

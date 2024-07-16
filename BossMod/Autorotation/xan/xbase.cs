@@ -19,6 +19,7 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
     protected float PelotonLeft { get; private set; }
     protected float SwiftcastLeft { get; private set; }
     protected float TrueNorthLeft { get; private set; }
+    protected float CombatTimer { get; private set; }
 
     protected xbase(RotationModuleManager manager, Actor player) : base(manager, player)
     {
@@ -49,13 +50,13 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority);
     }
 
-    protected void QueueOGCD(Action<float, float> ogcdFun)
+    protected void QueueOGCD(Action<float> ogcdFun)
     {
         var deadline = _state.GCD > 0 ? _state.GCD : float.MaxValue;
         if (_state.CanWeave(deadline - _state.OGCDSlotLength))
-            ogcdFun(deadline - _state.OGCDSlotLength, deadline);
+            ogcdFun(deadline - _state.OGCDSlotLength);
         if (_state.CanWeave(deadline))
-            ogcdFun(deadline, deadline);
+            ogcdFun(deadline);
     }
 
     /// <summary>
@@ -147,6 +148,8 @@ public abstract class xbase<AID, TraitID> : LegacyModule where AID : Enum where 
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
 
         _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
+
+        CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
 
         Exec(strategy, primaryTarget);
     }

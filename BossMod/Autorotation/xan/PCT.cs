@@ -286,6 +286,6 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         BestLineTarget = SelectTarget(track, primaryTarget, 25, Is25yRectTarget).Best;
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD((deadline, _) => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 }
