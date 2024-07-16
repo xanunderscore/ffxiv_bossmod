@@ -9,7 +9,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("MCH", "Machinist", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.MCH), 100);
+        var def = new RotationModuleDefinition("MCH", "Machinist", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.MCH), 100);
 
         def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
