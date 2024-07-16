@@ -1,6 +1,5 @@
 ﻿using BossMod.PCT;
-using Dalamud.Game.ClientState.JobGauge.Enums;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -252,7 +251,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         SelectPrimaryTarget(track, ref primaryTarget, 25);
         _state.UpdateCommon(primaryTarget);
 
-        var gauge = Service.JobGauges.Get<PCTGauge>();
+        var gauge = GetGauge<PictomancerGauge>();
         Palette = gauge.PalleteGauge;
         Paint = gauge.Paint;
         Creature = gauge.CreatureMotifDrawn;

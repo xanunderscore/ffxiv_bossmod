@@ -1,5 +1,5 @@
 ﻿using BossMod.SGE;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -142,12 +142,12 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget);
 
-        var gauge = Service.JobGauges.Get<SGEGauge>();
+        var gauge = GetGauge<SageGauge>();
 
         Gall = gauge.Addersgall;
         Sting = gauge.Addersting;
         NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
-        Eukrasia = gauge.Eukrasia;
+        Eukrasia = gauge.EukrasiaActive;
 
         (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, IsSplashTarget);
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
@@ -157,8 +157,14 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         if (aoeStrat == AOEStrategy.AOE)
         {
             var meleeAOETargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 5);
-            NumAOETargets = meleeAOETargets.Count();
-            NumNearbyDotTargets = meleeAOETargets.Count(x => !HaveDot(x.Actor));
+            NumAOETargets = 0;
+            NumNearbyDotTargets = 0;
+            foreach (var target in meleeAOETargets)
+            {
+                NumAOETargets++;
+                if (!HaveDot(target.Actor))
+                    NumNearbyDotTargets++;
+            }
         }
         else
         {
@@ -187,12 +193,23 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
     private Actor? FindKardiaTarget()
     {
         var party = World.Party.WithoutSlot();
-        if (party.Count(x => x.Type == ActorType.Player) == 1)
+        var total = 0;
+        var tanks = 0;
+        Actor? tank = null;
+        foreach (var actor in party)
+        {
+            total++;
+            if (actor.Class.GetRole() == Role.Tank)
+            {
+                tanks++;
+                tank ??= actor;
+            }
+        }
+        if (total == 1)
             return Player;
 
-        var tanks = party.Where(x => x.Class.GetRole() == Role.Tank);
-        if (tanks.Count() == 1)
-            return tanks.First();
+        if (tanks == 1)
+            return tank;
 
         return null;
     }

@@ -1,5 +1,5 @@
 ﻿using BossMod.PLD;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -142,15 +142,6 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.Intervene, primaryTarget);
     }
 
-    private AID ConfiteorStep => CCStep switch
-    {
-        0 => _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None,
-        1 => AID.BladeOfFaith,
-        2 => AID.BladeOfTruth,
-        3 => AID.BladeOfValor,
-        _ => AID.None
-    };
-
     public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
@@ -158,12 +149,8 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
 
         _state.UpdateCommon(primaryTarget);
 
-        var gauge = Service.JobGauges.Get<PLDGauge>();
+        var gauge = GetGauge<PaladinGauge>();
         OathGauge = gauge.OathGauge;
-
-        // FIXME when cs is updated
-        // var CCTimer = *(ushort*)(gauge.Address + 0x0A) / 1000f;
-        var CCStep = *(ushort*)(gauge.Address + 0x0C);
 
         FightOrFlightLeft = _state.StatusDetails(Player, SID.FightOrFlight, Player.InstanceID).Left;
         GoringBladeReady = _state.StatusDetails(Player, SID.GoringBladeReady, Player.InstanceID).Left;
@@ -173,7 +160,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
         SepulchreReady = _state.StatusDetails(Player, SID.SepulchreReady, Player.InstanceID).Left;
         BladeOfHonorReady = _state.StatusDetails(Player, SID.BladeOfHonorReady, Player.InstanceID).Left;
         Requiescat = _state.StatusDetails(Player, SID.Requiescat, Player.InstanceID);
-        ConfiteorCombo = CCStep switch
+        ConfiteorCombo = gauge.ConfiteorComboStep switch
         {
             0 => _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None,
             1 => AID.BladeOfFaith,

@@ -1,6 +1,5 @@
 ﻿using BossMod.MNK;
-using Dalamud.Game.ClientState.JobGauge.Enums;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -21,7 +20,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
     public enum Form { None, OpoOpo, Raptor, Coeurl }
 
     public int Chakra; // 0-5 (0-10 during Brotherhood)
-    public BeastChakra[] BeastChakra = [];
+    public BeastChakraType[] BeastChakra = [];
     public int OpoStacks; // 0-1
     public int RaptorStacks; // 0-1
     public int CoeurlStacks; // 0-2
@@ -47,8 +46,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
     private Actor? BestRangedTarget; // fire's reply
     private Actor? BestLineTarget; // enlightenment, wind's reply
 
-    public bool HasLunar => Nadi.HasFlag(NadiFlags.LUNAR);
-    public bool HasSolar => Nadi.HasFlag(NadiFlags.SOLAR);
+    public bool HasLunar => Nadi.HasFlag(NadiFlags.Lunar);
+    public bool HasSolar => Nadi.HasFlag(NadiFlags.Solar);
     public bool HasBothNadi => HasLunar && HasSolar;
 
     protected override float GetCastTime(AID aid) => 0;
@@ -69,7 +68,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         return (AID.CelestialRevolution, true);
     }
 
-    public int BeastCount => BeastChakra.Count(x => x != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.NONE);
+    public int BeastCount => BeastChakra.Count(x => x != BeastChakraType.None);
     public bool ForcedLunar => BeastCount > 1 && BeastChakra[0] == BeastChakra[1] && !HasBothNadi;
     public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1] && !HasBothNadi;
 
@@ -150,10 +149,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
             foreach (var chak in BeastChakra)
             {
                 // why the hell did they do this
-                canCoeurl &= chak != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.RAPTOR;
-                canRaptor &= chak != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.OPOOPO;
+                canCoeurl &= chak != BeastChakraType.Raptor;
+                canRaptor &= chak != BeastChakraType.OpoOpo;
                 if (ForcedSolar)
-                    canOpo &= chak != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.COEURL;
+                    canOpo &= chak != BeastChakraType.Coeurl;
             }
 
             if (FireLeft > _state.GCD || _state.CD(AID.RiddleOfFire) == 0)
@@ -168,7 +167,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
         if (CurrentForm != Form.Raptor
             || !Unlocked(AID.PerfectBalance)
             || !_state.CanWeave(_state.CD(AID.PerfectBalance) - 40, 0.6f, deadline)
-            || BeastChakra[0] != Dalamud.Game.ClientState.JobGauge.Enums.BeastChakra.NONE
+            || BeastChakra[0] != BeastChakraType.None
             || FiresReplyLeft > _state.GCD
             )
             return;
@@ -313,24 +312,15 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
     // FIXME when CS is updated
     private unsafe void UpdateGauge()
     {
-        var gauge = Service.JobGauges.Get<MNKGauge>();
-        Service.Log($"{gauge.Address:X8}");
+        var gauge = GetGauge<MonkGauge>();
 
         Chakra = gauge.Chakra;
         BeastChakra = gauge.BeastChakra;
         BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
-        Nadi = *(NadiFlags*)(gauge.Address + 0x0D);
+        Nadi = gauge.Nadi;
 
-        var formFlags = *(byte*)(gauge.Address + 0x0C);
-        OpoStacks = formFlags & 0x01;
-        RaptorStacks = (formFlags & 0xF) / 0x04;
-        CoeurlStacks = formFlags / 0x10;
-    }
-
-    [Flags]
-    public enum NadiFlags : byte
-    {
-        LUNAR = 1,
-        SOLAR = 2
+        OpoStacks = gauge.OpoOpoStacks;
+        RaptorStacks = gauge.RaptorStacks;
+        CoeurlStacks = gauge.CoeurlStacks;
     }
 }

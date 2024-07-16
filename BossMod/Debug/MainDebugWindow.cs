@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
+using System.Runtime.InteropServices;
 
 namespace BossMod;
 
@@ -71,6 +72,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         if (ImGui.CollapsingHeader("Party (duty recorder)"))
         {
             _debugParty.Draw(true);
+        }
+        if (ImGui.CollapsingHeader("Job gauge"))
+        {
+            DrawGauge();
         }
         if (ImGui.CollapsingHeader("Autorotation"))
         {
@@ -201,15 +206,23 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         ImGui.EndTable();
     }
 
+    [StructLayout(LayoutKind.Explicit, Size = 0x10)]
+    private unsafe struct GaugeDebug
+    {
+        [FieldOffset(0x08)] public fixed byte Value[8];
+    }
+
     private unsafe void DrawGauge()
     {
-        var gauge = Service.JobGauges.Address;
-        for (var i = 0; i < 0x10; i++)
+        GaugeDebug gauge = default;
+        ((ulong*)&gauge)[1] = ws.Client.GaugePayload;
+
+        for (var i = 0; i < 8; i++)
         {
             if (i % 4 > 0)
                 ImGui.SameLine();
 
-            ImGui.Text($"0x{*(byte*)(gauge + i):X2}");
+            ImGui.Text($"0x{gauge.Value[i]:X2}");
         }
     }
 

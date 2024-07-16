@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 
@@ -111,7 +111,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
 
     private void ExecutePLD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (ActionUnlocked(ActionID.MakeSpell(BossMod.PLD.AID.Sheltron)) && Player.InCombat && Service.JobGauges.Get<PLDGauge>().OathGauge >= 95)
+        if (ActionUnlocked(ActionID.MakeSpell(BossMod.PLD.AID.Sheltron)) && Player.InCombat && GetGauge<PaladinGauge>().OathGauge >= 95)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.PLD.AID.Sheltron), Player, ActionQueue.Priority.Minimal);
     }
 }

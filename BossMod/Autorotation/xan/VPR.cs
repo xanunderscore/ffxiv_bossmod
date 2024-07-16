@@ -1,6 +1,5 @@
 ﻿using BossMod.VPR;
-using Dalamud.Game.ClientState.JobGauge.Enums;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 
@@ -237,7 +236,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : xbase<AID
         SelectPrimaryTarget(track, ref primaryTarget, 3);
         _state.UpdateCommon(primaryTarget);
 
-        var gauge = Service.JobGauges.Get<VPRGauge>();
+        var gauge = GetGauge<ViperGauge>();
         DreadCombo = gauge.DreadCombo;
         Coil = gauge.RattlingCoilStacks;
         Offering = gauge.SerpentOffering;

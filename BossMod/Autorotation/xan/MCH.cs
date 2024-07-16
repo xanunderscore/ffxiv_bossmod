@@ -1,6 +1,6 @@
 ﻿using BossMod.ActionTweaks.ClassActions;
 using BossMod.MCH;
-using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
@@ -279,13 +279,13 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
         _state.UpdateCommon(primaryTarget);
 
-        var gauge = Service.JobGauges.Get<MCHGauge>();
+        var gauge = GetGauge<MachinistGauge>();
 
         Heat = gauge.Heat;
         Battery = gauge.Battery;
-        Overheated = gauge.IsOverheated;
+        Overheated = (gauge.TimerActive & 1) != 0;
         OverheatLeft = gauge.OverheatTimeRemaining / 1000f;
-        HasMinion = gauge.IsRobotActive;
+        HasMinion = (gauge.TimerActive & 2) != 0;
 
         ReassembleLeft = StatusLeft(SID.Reassembled);
         WildfireLeft = StatusLeft(SID.WildfirePlayer);
