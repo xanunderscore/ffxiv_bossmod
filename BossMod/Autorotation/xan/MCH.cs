@@ -131,7 +131,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
             PushOGCD(AID.Reassemble, Player);
 
-        if (ShouldWildfire(strategy, deadline))
+        if (ShouldWildfire(strategy, deadline) && _state.GCD < 0.8f)
             PushOGCD(AID.Wildfire, primaryTarget);
 
         if (ShouldStabilize(strategy, deadline))
@@ -248,10 +248,10 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
             return false;
 
         // hack for opener - delay until all 4 tool charges are used
-        if (CombatTimer < 10)
+        if (CombatTimer < 60)
             return NextToolCD(untilCap: false) > _state.GCD;
 
-        return true;
+        return FMFLeft == 0;
     }
 
     private bool ShouldStabilize(StrategyValues strategy, float deadline)
