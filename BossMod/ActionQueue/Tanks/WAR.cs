@@ -58,7 +58,7 @@ public enum TraitID : uint
     TankMastery = 318, // L1
     TheBeastWithin = 249, // L35, gauge generation
     InnerBeastMastery = 265, // L54, IB->FC upgrade
-    SteelCycloneMastery = 266, // L60,  steel cyclone -> decimate upgrade
+    SteelCycloneMastery = 266, // L60, steel cyclone -> decimate upgrade
     EnhancedInfuriate = 157, // L66, gauge spenders reduce cd by 5
     BerserkMastery = 218, // L70, berserk -> IR upgrade
     NascentChaos = 267, // L72, decimate -> chaotic cyclone after infuriate
@@ -70,12 +70,12 @@ public enum TraitID : uint
     EnhancedEquilibrium = 420, // L84, adds hot
     MeleeMastery1 = 505, // L84, potency increase
     EnhancedOnslaught = 421, // L88, 3rd onslaught charge
-    VengeanceMastery = 567, // L92
-    EnhancedRampart = 639, // L94
-    MeleeMastery2 = 654, // L94
-    EnhancedInnerRelease = 568, // L96
-    EnhancedReprisal = 640, // L98
-    EnhancedPrimalRend = 569, // L100
+    VengeanceMastery = 567, // L92, vengeance -> damnation
+    EnhancedRampart = 639, // L94, adds incoming heal buff
+    MeleeMastery2 = 654, // L94, potency increase
+    EnhancedInnerRelease = 568, // L96, primal wrath mechanic
+    EnhancedReprisal = 640, // L98, extend duration to 15s
+    EnhancedPrimalRend = 569, // L100, primal ruination mechanic
 }
 
 public enum SID : uint
@@ -163,9 +163,9 @@ public sealed class Definitions : IDisposable
 
     private void Customize(ActionDefinitions d)
     {
-        d.Spell(AID.Tomahawk)!.Condition = (ws, player, _, _) => !_config.ForbidEarlyTomahawk || player.InCombat || ws.Client.CountdownRemaining is null or <= 0.7f;
+        d.Spell(AID.Tomahawk)!.ForbidExecute = (ws, player, _, _) => _config.ForbidEarlyTomahawk && !player.InCombat && ws.Client.CountdownRemaining > 0.7f;
         d.Spell(AID.Holmgang)!.SmartTarget = (_, player, target, _) => _config.HolmgangSelf ? player : target;
-        d.Spell(AID.Equilibrium)!.Condition = (_, player, _, _) => player.HPMP.CurHP < player.HPMP.MaxHP; // don't use equilibrium at full hp
+        d.Spell(AID.Equilibrium)!.ForbidExecute = (_, player, _, _) => player.HPMP.CurHP >= player.HPMP.MaxHP; // don't use equilibrium at full hp
         d.Spell(AID.NascentFlash)!.SmartTarget = ActionDefinitions.SmartTargetCoTank;
 
         // upgrades (TODO: don't think we actually care...)

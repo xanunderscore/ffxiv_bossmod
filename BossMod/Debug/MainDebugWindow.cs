@@ -84,7 +84,7 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         {
             _debugGraphics.DrawWatchedMods();
         }
-        if (Camera.Instance != null && ImGui.CollapsingHeader("Matrices"))
+        if (ImGui.CollapsingHeader("Matrices"))
         {
             _debugGraphics.DrawMatrices();
         }

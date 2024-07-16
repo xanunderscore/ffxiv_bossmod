@@ -138,7 +138,7 @@ public sealed class Definitions : IDisposable
 
     private void Customize(ActionDefinitions d)
     {
-        d.Spell(AID.Harpe)!.Condition = (ws, player, _, _) => !_config.ForbidEarlyHarpe || player.InCombat || ws.Client.CountdownRemaining is null or <= 1.7f;
+        d.Spell(AID.Harpe)!.ForbidExecute = (ws, player, _, _) => _config.ForbidEarlyHarpe && !player.InCombat && ws.Client.CountdownRemaining > 1.7f;
 
         d.Spell(AID.HellsEgress)!.TransformAngle = d.Spell(AID.HellsIngress)!.TransformAngle = (_, _, _, _) => _config.AlignDashToCamera
             ? Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees()
