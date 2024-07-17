@@ -1,4 +1,5 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
+using Lumina.Excel.GeneratedSheets;
 
 namespace BossMod.Autorotation.xan;
 
@@ -7,8 +8,14 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
     internal bool Unlocked<AID>(AID aid) where AID : Enum => ActionUnlocked(ActionID.MakeSpell(aid));
     internal float Cooldown<AID>(AID aid) where AID : Enum => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
-    internal bool ShouldInterrupt(Actor act) => act.CastInfo != null && act.CastInfo.Interruptible && act.CastInfo.TotalTime > 1.5;
-    internal bool ShouldStun(Actor act) => act.CastInfo != null && !act.CastInfo.Interruptible && act.CastInfo.TotalTime > 1.5;
+    internal bool ShouldInterrupt(Actor act) => IsCastReactable(act) && act.CastInfo!.Interruptible;
+    internal bool ShouldStun(Actor act) => IsCastReactable(act) && !act.CastInfo!.Interruptible && !IsBossFromIcon(act.OID);
+
+    private static bool IsBossFromIcon(uint oid) => Service.LuminaRow<BNpcBase>(oid)?.Rank is 1 or 2 or 6;
+
+    internal bool IsCastReactable(Actor act) => act.CastInfo != null && act.CastInfo.TotalTime > 1.5 && (act.CastInfo.NPCFinishAt - Manager.WorldState.CurrentTime).TotalMilliseconds < 750;
+
+    internal bool IsAutoingMe(Actor act) => act.CastInfo == null && act.TargetID == Player.InstanceID && Player.DistanceToHitbox(act) <= 6;
 }
 
 enum GenericAID : uint
@@ -209,5 +216,17 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
             if (stunnableEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.LegSweep), stunnableEnemy.Actor, ActionQueue.Priority.Minimal);
         }
+
+        if (Player.Class == Class.SAM)
+            AISAM();
+    }
+
+    private void AISAM()
+    {
+        // if nearby enemies are auto-attacking us, use guard skill
+        if (Cooldown(BossMod.SAM.AID.ThirdEye) == 0
+            && Player.HPMP.CurHP < Player.HPMP.MaxHP * 0.8
+            && Hints.PriorityTargets.Any(x => IsAutoingMe(x.Actor)))
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.SAM.AID.ThirdEye), Player, ActionQueue.Priority.Low);
     }
 }

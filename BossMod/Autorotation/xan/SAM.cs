@@ -33,10 +33,14 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
     public float OgiLeft; // max 30s
     public float TsubameLeft; // max 30s
 
-    public int NumAOETargets;
+    public int NumAOECircleTargets; // 5y circle around self, but if fuko isn't unlocked, then...
+    public int NumAOETargets; // 8y/120deg cone if we don't have fuko
     public int NumTenkaTargets; // 8y circle instead of 5
     public int NumLineTargets; // shoha+guren
     public int NumOgiTargets; // 8y/120deg cone
+
+    public AID AOEStarter => Unlocked(AID.Fuko) ? AID.Fuko : AID.Fuga;
+    public AID STStarter => Unlocked(AID.Gyofu) ? AID.Gyofu : AID.Hakaze;
 
     private Actor? BestAOETarget; // null if fuko is unlocked since it's self-targeted
     private Actor? BestLineTarget;
@@ -60,7 +64,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
     private bool Flower => Sen.HasFlag(SenFlags.Ka);
 
     // ensure that buffs will cover iaijutsu
-    private bool HaveBuffs => FukaLeft > _state.GCD + 1.3f && FugetsuLeft > _state.GCD + 1.3f;
+    private bool HaveBuffs => FugetsuLeft > _state.GCD + 1.3f;
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -79,28 +83,51 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
         UseKaeshi(primaryTarget);
         UseIaijutsu(primaryTarget);
 
-        if (OgiLeft > _state.GCD && TargetDotLeft > 30)
+        if (OgiLeft > _state.GCD && TargetDotLeft > 30 && HaveBuffs)
             PushGCD(AID.OgiNamikiri, BestOgiTarget);
 
-        if (MeikyoLeft > _state.GCD)
+        if (NumAOETargets > 2 && Unlocked(AID.Fuga))
         {
-            if (!Moon)
-                PushGCD(AID.Gekko, primaryTarget);
-            if (!Flower)
-                PushGCD(AID.Kasha, primaryTarget);
-            if (!Ice)
-                PushGCD(AID.Yukikaze, primaryTarget);
+            if (MeikyoLeft > _state.GCD)
+            {
+                if (!Moon)
+                    PushGCD(AID.Mangetsu, Player);
+                if (!Flower)
+                    PushGCD(AID.Oka, Player);
+            }
+
+            if (ComboLastMove == AOEStarter)
+            {
+                if (Unlocked(AID.Oka) && FukaLeft <= FugetsuLeft)
+                    PushGCD(AID.Oka, Player);
+                if (Unlocked(AID.Mangetsu) && FugetsuLeft <= FukaLeft)
+                    PushGCD(AID.Mangetsu, Player);
+            }
+
+            PushGCD(AOEStarter, BestAOETarget);
         }
+        else
+        {
+            if (MeikyoLeft > _state.GCD)
+            {
+                if (!Moon)
+                    PushGCD(AID.Gekko, primaryTarget, FugetsuLeft == 0 ? 50 : 0);
+                if (!Flower)
+                    PushGCD(AID.Kasha, primaryTarget, FukaLeft == 0 ? 50 : 0);
+                if (!Ice)
+                    PushGCD(AID.Yukikaze, primaryTarget);
+            }
 
-        if (ComboLastMove == AID.Jinpu && Unlocked(AID.Gekko))
-            PushGCD(AID.Gekko, primaryTarget);
-        if (ComboLastMove == AID.Shifu && Unlocked(AID.Kasha))
-            PushGCD(AID.Kasha, primaryTarget);
+            if (ComboLastMove == AID.Jinpu && Unlocked(AID.Gekko))
+                PushGCD(AID.Gekko, primaryTarget);
+            if (ComboLastMove == AID.Shifu && Unlocked(AID.Kasha))
+                PushGCD(AID.Kasha, primaryTarget);
 
-        if (ComboLastMove == AID.Hakaze)
-            UseHakazeComboAction(strategy, primaryTarget);
+            if (ComboLastMove == STStarter)
+                UseHakazeComboAction(strategy, primaryTarget);
 
-        PushGCD(AID.Hakaze, primaryTarget);
+            PushGCD(AID.Hakaze, primaryTarget);
+        }
     }
 
     private void UseHakazeComboAction(StrategyValues strategy, Actor? primaryTarget)
@@ -167,6 +194,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
+        if (!Player.InCombat)
+            return;
+
         var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 
         if (buffOk)
@@ -182,6 +212,20 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
                 PushOGCD(AID.HissatsuGuren, BestLineTarget);
             }
         }
+
+        if (Meditation == 3 && _state.CanWeave(AID.Shoha, 0.6f, deadline))
+            PushOGCD(AID.Shoha, BestLineTarget);
+
+        if (Kenki >= 25 && _state.CD(AID.HissatsuGuren) > 10 && _state.CanWeave(AID.HissatsuShinten, 0.6f, deadline))
+        {
+            if (Unlocked(AID.HissatsuKyuten) && NumAOECircleTargets > 2)
+                PushOGCD(AID.HissatsuKyuten, Player);
+
+            PushOGCD(AID.HissatsuShinten, primaryTarget);
+        }
+
+        if (Unlocked(AID.MeikyoShisui) && _state.CanWeave(_state.CD(AID.MeikyoShisui) - 55, 0.6f, deadline) && Kaeshi == 0 && MeikyoLeft == 0 && (NumStickers == 3 || CombatTimer < 30 || NumTenkaTargets > 2))
+            PushOGCD(AID.MeikyoShisui, Player);
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
@@ -206,8 +250,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
         {
+            NumAOECircleTargets = NumMeleeAOETargets();
             if (Unlocked(AID.Fuko))
-                (BestAOETarget, NumAOETargets) = (null, NumMeleeAOETargets());
+                (BestAOETarget, NumAOETargets) = (null, NumAOECircleTargets);
             else
                 (BestAOETarget, NumAOETargets) = (BestOgiTarget, NumOgiTargets);
 
@@ -216,18 +261,24 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
         }
         else
         {
+            NumAOECircleTargets = 0;
             NumTenkaTargets = 0;
             (BestAOETarget, NumAOETargets) = (null, 0);
             (BestLineTarget, NumLineTargets) = (primaryTarget, Player.DistanceToHitbox(primaryTarget) <= 10 ? 1 : 0);
         }
 
-        TargetDotLeft = strategy.Option(Track.Higanbana).As<OffensiveStrategy>() switch
+        if (Hints.PriorityTargets.Count() >= 3)
+            TargetDotLeft = float.MaxValue;
+        else
         {
-            OffensiveStrategy.Automatic => HiganbanaLeft(primaryTarget),
-            OffensiveStrategy.Delay => float.MaxValue,
-            OffensiveStrategy.Force => 0,
-            _ => throw new NotImplementedException("sigh")
-        };
+            TargetDotLeft = strategy.Option(Track.Higanbana).As<OffensiveStrategy>() switch
+            {
+                OffensiveStrategy.Automatic => HiganbanaLeft(primaryTarget),
+                OffensiveStrategy.Delay => float.MaxValue,
+                OffensiveStrategy.Force => 0,
+                _ => throw new NotImplementedException("sigh")
+            };
+        }
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
