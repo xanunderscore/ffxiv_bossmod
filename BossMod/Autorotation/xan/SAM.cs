@@ -32,6 +32,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
     public float MeikyoLeft; // max 20s
     public float OgiLeft; // max 30s
     public float TsubameLeft; // max 30s
+    public float EnhancedEnpi; // max 15s
 
     public int NumAOECircleTargets; // 5y circle around self, but if fuko isn't unlocked, then...
     public int NumAOETargets; // 8y/120deg cone if we don't have fuko
@@ -45,6 +46,8 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
     private Actor? BestAOETarget; // null if fuko is unlocked since it's self-targeted
     private Actor? BestLineTarget;
     private Actor? BestOgiTarget;
+    private Actor? IaiTarget;
+    private Actor? EnpiTarget;
 
     private float TargetDotLeft;
 
@@ -128,6 +131,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
 
             PushGCD(AID.Hakaze, primaryTarget);
         }
+
+        if (Unlocked(AID.Enpi) && EnhancedEnpi > _state.GCD)
+            PushGCD(AID.Enpi, EnpiTarget);
     }
 
     private void UseHakazeComboAction(StrategyValues strategy, Actor? primaryTarget)
@@ -159,7 +165,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
         switch (Kaeshi)
         {
             case KaeshiAction.Setsugekka:
-                PushGCD(AID.KaeshiSetsugekka, primaryTarget);
+                PushGCD(AID.KaeshiSetsugekka, IaiTarget);
                 break;
             case KaeshiAction.Goken:
                 PushGCD(AID.KaeshiGoken, Player);
@@ -176,13 +182,13 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
             return;
 
         if (NumStickers == 1 && TargetDotLeft < 10)
-            PushGCD(AID.Higanbana, primaryTarget);
+            PushGCD(AID.Higanbana, IaiTarget);
 
         if (NumStickers == 2 && NumTenkaTargets > 2)
             PushGCD(AID.TenkaGoken, Player);
 
         if (NumStickers == 3)
-            PushGCD(AID.MidareSetsugekka, primaryTarget);
+            PushGCD(AID.MidareSetsugekka, IaiTarget);
     }
 
     private void EmergencyMeikyo(StrategyValues strategy)
@@ -194,7 +200,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (!Player.InCombat)
+        if (!Player.InCombat || !HaveBuffs)
             return;
 
         var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
@@ -231,7 +237,13 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
+
+        IaiTarget = primaryTarget;
+        EnpiTarget = primaryTarget;
+
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
+        SelectPrimaryTarget(targeting, ref IaiTarget, range: 6);
+        SelectPrimaryTarget(targeting, ref EnpiTarget, range: 20);
         _state.UpdateCommon(primaryTarget);
 
         var gauge = GetGauge<SamuraiGauge>();
@@ -245,6 +257,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
         MeikyoLeft = StatusLeft(SID.MeikyoShisui);
         OgiLeft = StatusLeft(SID.OgiNamikiriReady);
         TsubameLeft = StatusLeft(SID.TsubameGaeshiReady);
+        EnhancedEnpi = StatusLeft(SID.EnhancedEnpi);
 
         (BestOgiTarget, NumOgiTargets) = SelectTarget(targeting, primaryTarget, 8, InConeAOE);
 
