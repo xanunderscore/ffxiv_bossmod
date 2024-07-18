@@ -1,4 +1,5 @@
 ﻿using BossMod.VPR;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
@@ -22,9 +23,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
     public int Coil; // max 3
     public int Offering; // max 100
     public int Anguine; // 0-4
+    public AID CurSerpentsTail; // adjusted during reawaken and after basic combos
 
-    public float DeathRattleLeft;
-    public float LastLashLeft;
     public float TargetGnashLeft;
     public float SwiftscaledLeft;
     public float InstinctLeft;
@@ -53,7 +53,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Unlocked(AID.Reawaken) && (ReawakenReady > _state.GCD || Offering >= 50) && NumAOETargets > 0 && ReawakenLeft == 0)
+        if (Unlocked(AID.Reawaken) && (ReawakenReady > _state.GCD || Offering >= 50) && NumAOETargets > 0 && ReawakenLeft == 0 && InstinctLeft > 10 && SwiftscaledLeft > 10)
         {
             var needRefresh = NumAOETargets > 2 ? NumNearbyGnashlessEnemies <= 2 : TargetGnashLeft < GnashRefreshTimer;
             if (!needRefresh)
@@ -88,9 +88,6 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
             PushGCD(AID.HuntersDen, Player);
         }
 
-        if (Coil == CoilMax)
-            PushGCD(AID.UncoiledFury, BestRangedAOETarget);
-
         if (Anguine > 0)
             PushGCD(Anguine switch
             {
@@ -98,8 +95,11 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
                 2 => AID.ThirdGeneration,
                 3 => AID.SecondGeneration,
                 4 => AID.FirstGeneration,
-                _ => throw new NotImplementedException("unreachable")
+                _ => AID.None
             }, BestGenerationTarget);
+
+        if (Coil == CoilMax)
+            PushGCD(AID.UncoiledFury, BestRangedAOETarget);
 
         // 123 combos
         // 1. 34606 steel fangs (left)
@@ -186,11 +186,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (LastLashLeft > deadline && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
-            PushOGCD(AID.LastLash, Player);
-
-        if (DeathRattleLeft > deadline && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
-            PushOGCD(AID.DeathRattle, primaryTarget);
+        if (CurSerpentsTail != AID.SerpentsTail && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
+            PushOGCD(CurSerpentsTail, primaryTarget);
 
         if (FellhuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangThresh, 0.6f, deadline))
             PushOGCD(AID.TwinfangThresh, Player);
@@ -230,7 +227,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         };
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var track = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(track, ref primaryTarget, 3);
@@ -242,8 +239,17 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         Offering = gauge.SerpentOffering;
         Anguine = gauge.AnguineTribute;
 
-        DeathRattleLeft = StatusLeft(SID.DeathRattleReady);
-        LastLashLeft = StatusLeft(SID.LastLashReady);
+        CurSerpentsTail = (*((byte*)JobGaugeManager.Instance() + 24) >> 2) switch
+        {
+            1 => AID.DeathRattle,
+            2 => AID.LastLash,
+            3 => AID.FirstLegacy,
+            4 => AID.SecondLegacy,
+            5 => AID.ThirdLegacy,
+            6 => AID.FourthLegacy,
+            _ => AID.SerpentsTail
+        };
+
         FlanksbaneVenomLeft = StatusLeft(SID.FlanksbaneVenom);
         FlankstungVenomLeft = StatusLeft(SID.FlankstungVenom);
         HindsbaneVenomLeft = StatusLeft(SID.HindsbaneVenom);
@@ -267,7 +273,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
         {
             AOEStrategy.AOE => Unlocked(AID.SteelMaw) ? NumMeleeAOETargets() : 0,
-            _ => 0
+            _ => _state.RangeToTarget <= 5 ? 1 : 0
         };
 
         _state.UpdatePositionals(primaryTarget, GetPositional(), false);

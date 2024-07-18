@@ -100,8 +100,6 @@ public enum SID : uint
     ReawakenReady = 3671, // applied by Serpent's Ire to self
     FellhuntersVenom = 3659, // applied by Hunter's Den, Twinblood Thresh to self
     FellskinsVenom = 3660, // applied by Swiftskin's Den, Twinfang Thresh to self
-    DeathRattleReady = 3655, // applied by Flanksting Strike, Flanksbane Fang, Hindsting Strike, Hindsbane Fang to self
-    LastLashReady = 3656, // applied by Jagged Maw, Bloodied Maw to self
     TwinbloodfangST = 3773, // applied by Hunter's Coil, Swiftskin's Coil to self
     TwinbloodfangAOE = 3774, // applied by Swiftskin's Den, Hunter's Den to self
 }

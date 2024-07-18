@@ -1,9 +1,9 @@
 ﻿using BossMod.Autorotation;
 using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
-using System.Runtime.InteropServices;
 
 namespace BossMod;
 
@@ -206,23 +206,18 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         ImGui.EndTable();
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x10)]
-    private unsafe struct GaugeDebug
-    {
-        [FieldOffset(0x08)] public fixed byte Value[8];
-    }
-
     private unsafe void DrawGauge()
     {
-        GaugeDebug gauge = default;
-        ((ulong*)&gauge)[1] = ws.Client.GaugePayload;
+        var jg = (byte*)JobGaugeManager.Instance();
 
-        for (var i = 0; i < 8; i++)
+        ImGui.Text($"0x{*(jg + 24):X2}");
+
+        for (var i = 0; i < 0x60; i++)
         {
-            if (i % 4 > 0)
+            if (i % 8 > 0)
                 ImGui.SameLine();
 
-            ImGui.Text($"0x{gauge.Value[i]:X2}");
+            ImGui.Text($"0x{*(jg + i):X2}");
         }
     }
 
