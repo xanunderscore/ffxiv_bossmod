@@ -127,11 +127,11 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         if (IsPausedForFlamethrower || !Player.InCombat || primaryTarget == null)
             return;
 
-        if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
-            PushOGCD(AID.Reassemble, Player);
-
         if (ShouldWildfire(strategy, deadline) && _state.GCD < 0.8f)
             PushOGCD(AID.Wildfire, primaryTarget);
+
+        if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
+            PushOGCD(AID.Reassemble, Player);
 
         if (ShouldStabilize(strategy, deadline))
             PushOGCD(AID.BarrelStabilizer, Player);
@@ -213,7 +213,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
 
     private bool ShouldMinion(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Unlocked(AID.RookAutoturret) || primaryTarget == null || HasMinion || Battery < 50)
+        if (!Unlocked(AID.RookAutoturret) || primaryTarget == null || HasMinion || Battery < 50 || ShouldWildfire(strategy, _state.GCD))
             return false;
 
         // todo tweak anticipated window, queen doesnt start autoing for 5 seconds
