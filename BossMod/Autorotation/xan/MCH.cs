@@ -225,8 +225,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Unlocked(AID.Hypercharge) || HyperchargedLeft == 0 && Heat < 50 || Overheated || ReassembleLeft > _state.GCD || !_state.CanWeave(AID.Hypercharge, 0.6f, deadline))
             return false;
 
-        // hack for CD alignment in opener - wait for wildfire application
-        if (CombatTimer < 10 && _state.CD(AID.Wildfire) < 10)
+        if (_state.CD(AID.Wildfire) < 10 && !ShouldWildfire(strategy, _state.GCD))
             return false;
 
         /* A full segment of Hypercharge is exactly three GCDs worth of time, or 7.5 seconds. Because of this, you should never enter Hypercharge if Chainsaw, Drill or Air Anchor has less than eight seconds on their cooldown timers. Doing so will cause the Chainsaw, Drill or Air Anchor cooldowns to drift, which leads to a loss of DPS and will more than likely cause issues down the line in your rotation when you reach your rotational reset at Wildfire.
