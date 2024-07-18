@@ -118,7 +118,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
         if ((AtonementReady > 0 || Requiescat.Left > 0 || DivineMightLeft > 0) && _state.CanWeave(AID.FightOrFlight, 0.6f, deadline))
             PushOGCD(AID.FightOrFlight, Player);
 
-        if (FightOrFlightLeft > 0 && BladeOfHonorReady > deadline && _state.CanWeave(AID.BladeOfHonor, 0.6f, deadline))
+        if (BladeOfHonorReady > deadline && _state.CanWeave(AID.BladeOfHonor, 0.6f, deadline))
             PushOGCD(AID.BladeOfHonor, BestRangedTarget);
 
         if (FightOrFlightLeft > 0 && Unlocked(AID.Requiescat) && _state.CanWeave(AID.Requiescat, 0.6f, deadline))

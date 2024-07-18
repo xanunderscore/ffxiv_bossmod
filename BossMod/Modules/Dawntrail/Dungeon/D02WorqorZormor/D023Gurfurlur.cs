@@ -99,7 +99,7 @@ class AuraSpheres : Components.PersistentInvertibleVoidzone
 {
     private bool IsActive => Sources(Module).Any();
 
-    public AuraSpheres(BossModule module) : base(module, 2.5f, m => m.Enemies(OID.AuraSphere).Where(x => !x.IsDead))
+    public AuraSpheres(BossModule module) : base(module, 1f, m => m.Enemies(OID.AuraSphere).Where(x => !x.IsDead))
     {
         InvertResolveAt = DateTime.MaxValue;
     }
@@ -133,7 +133,14 @@ abstract class Windswrath(BossModule module, ActionID aid) : Components.Knockbac
 }
 class Windswrath1(BossModule module) : Windswrath(module, ActionID.MakeSpell(AID.Windswrath1));
 class Windswrath2(BossModule module) : Windswrath(module, ActionID.MakeSpell(AID.Windswrath2));
-class BitingWind(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID.BitingWind));
+class BitingWind(BossModule module) : Components.PersistentVoidzone(module, 5, m => m.Enemies(OID.BitingWind))
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var wind in Sources(Module))
+            hints.AddForbiddenZone(new AOEShapeRect(6, 5, 5), wind.Position, wind.Rotation);
+    }
+}
 
 class D023GurfurlurStates : StateMachineBuilder
 {

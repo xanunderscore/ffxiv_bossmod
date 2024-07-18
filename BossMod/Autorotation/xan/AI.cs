@@ -13,7 +13,16 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
 
     private static bool IsBossFromIcon(uint oid) => Service.LuminaRow<BNpcBase>(oid)?.Rank is 1 or 2 or 6;
 
-    internal bool IsCastReactable(Actor act) => act.CastInfo != null && act.CastInfo.TotalTime > 1.5 && (act.CastInfo.NPCFinishAt - Manager.WorldState.CurrentTime).TotalMilliseconds < 750;
+    internal bool IsCastReactable(Actor act)
+    {
+        var castInfo = act.CastInfo;
+        if (castInfo == null || castInfo.TotalTime <= 1.5 || castInfo.EventHappened)
+            return false;
+
+        var timeLeft = castInfo.NPCFinishAt - World.CurrentTime;
+        var elapsed = castInfo.TotalTime - timeLeft.TotalSeconds;
+        return elapsed > 1;
+    }
 
     internal bool IsAutoingMe(Actor act) => act.CastInfo == null && act.TargetID == Player.InstanceID && Player.DistanceToHitbox(act) <= 6;
 }
@@ -86,7 +95,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     public override void Execute(StrategyValues strategy, Actor? primaryTarget)
     {
         // ranged
-        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) > 5)
+        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
             Hints.ActionsToExecute.Push(RangedAction, primaryTarget, ActionQueue.Priority.Low);
 
         // stance
@@ -157,10 +166,12 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             && Unlocked(ClassShared.AID.Peloton)
             && Cooldown(ClassShared.AID.Peloton) == 0
             && (World.CurrentTime - _pelotonLockout).TotalSeconds > 3
+            && Manager.ActionManager.InputOverride.IsMoving()
             && !Player.InCombat
             // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;
             // peloton animationlock will be annoying and unhelpful here
-            && primaryTarget == null
+            // we use TargetManager because most friendly NPCs aren't Actors (or something)
+            && Service.TargetManager.Target == null
             && PelotonWillExpire(Player))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 

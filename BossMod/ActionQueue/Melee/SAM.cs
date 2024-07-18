@@ -93,6 +93,8 @@ public enum SID : uint
     Meditate = 1231, // applied by Meditate to self
     OgiNamikiriReady = 2959, // applied by Ikishoten to self
     Tengentsu = 3853, // applied by Tengentsu to self
+    ZanshinReady = 3855, // applied by Ikishoten to self
+    Tendo = 3856, // applied by Meikyo Shisui to self
 }
 
 public sealed class Definitions : IDisposable

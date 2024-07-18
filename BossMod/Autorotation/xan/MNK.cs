@@ -242,7 +242,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : xbase<AID
 
     private bool ShouldUseTrueNorth(StrategyValues strategy, float deadline)
     {
-        if (!Unlocked(AID.TrueNorth) || !_state.CanWeave(_state.CD(AID.TrueNorth), 0.6f, deadline))
+        if (!Unlocked(AID.TrueNorth) || !_state.CanWeave(_state.CD(AID.TrueNorth) - 45, 0.6f, deadline))
             return false;
 
         var wrong = _state.NextPositionalImminent && !_state.NextPositionalCorrect;

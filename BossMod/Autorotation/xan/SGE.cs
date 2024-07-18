@@ -51,7 +51,8 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
         if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
             && Unlocked(AID.Kardia)
             && Player.FindStatus((uint)SID.Kardia) == null
-            && FindKardiaTarget() is Actor kardiaTarget)
+            && FindKardiaTarget() is Actor kardiaTarget
+            && !World.Party.Members[World.Party.FindSlot(kardiaTarget.InstanceID)].InCutscene)
             PushGCD(AID.Kardia, kardiaTarget);
 
         if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia)
@@ -175,7 +176,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID
 
         if (targeting == Targeting.Auto)
         {
-            var allPossibleDotTargets = Hints.PriorityTargets;
+            var allPossibleDotTargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 25);
             if (allPossibleDotTargets.Count() > 2)
                 BestDotTarget = null;
             else

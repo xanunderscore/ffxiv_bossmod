@@ -63,7 +63,24 @@ public class GenericWildCharge(BossModule module, float halfWidth, ActionID aid 
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        // TODO: implement
+        switch (PlayerRoles[slot])
+        {
+            case PlayerRole.Avoid:
+                foreach (var aoe in EnumerateAOEs())
+                    hints.AddForbiddenZone(new AOEShapeRect(FixedLength, HalfWidth), aoe.origin, Angle.FromDirection(aoe.dir));
+                break;
+            case PlayerRole.Share:
+                var aoes = EnumerateAOEs().ToList();
+                // if multiple charge AOEs are active at once, this mechanic probably requires human intervention to solve - do nothing
+                if (aoes.Count != 1)
+                    break;
+                var s = new AOEShapeRect(FixedLength, HalfWidth).Distance(aoes[0].origin, Angle.FromDirection(aoes[0].dir));
+                hints.AddForbiddenZone(pos => -s(pos));
+                break;
+            // TODO maybe implement ShareNotFirst?
+            default:
+                break;
+        }
     }
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
