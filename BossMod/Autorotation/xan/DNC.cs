@@ -3,7 +3,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 
-public sealed class DNC(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
+public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs, Partner }
     public enum PartnerStrategy { Automatic, Manual }

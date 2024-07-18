@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class SGE(RotationModuleManager manager, Actor player) : xbase<AID, TraitID>(manager, player)
+public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Kardia, Druo }
     public enum KardiaStrategy { Auto, Manual }
