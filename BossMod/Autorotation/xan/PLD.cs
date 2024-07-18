@@ -142,12 +142,12 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.Intervene, primaryTarget);
     }
 
-    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget)
+    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(targeting, ref primaryTarget, 3);
 
-        _state.UpdateCommon(primaryTarget);
+        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<PaladinGauge>();
         OathGauge = gauge.OathGauge;

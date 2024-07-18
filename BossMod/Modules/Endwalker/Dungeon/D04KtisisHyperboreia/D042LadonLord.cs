@@ -50,9 +50,9 @@ class PyricBreath(BossModule module) : Components.GenericAOEs(module)
     {
         if ((AID)spell.Action.ID is AID.PyricBreathFront or AID.PyricBreathRight or AID.PyricBreathLeft)
         {
-            _aoes.Add(new(shape, caster.Position, spell.Rotation, spell.NPCFinishAt));
+            _aoes.Add(new(shape, caster.Position, spell.Rotation, Module.CastFinishAt(spell)));
             if (_buffs.Count == 2)
-                _aoes.Add(new(shape, caster.Position, spell.Rotation - BuffRelative(_buffs[0]) + BuffRelative(_buffs[1]), spell.NPCFinishAt.AddSeconds(2.1f)));
+                _aoes.Add(new(shape, caster.Position, spell.Rotation - BuffRelative(_buffs[0]) + BuffRelative(_buffs[1]), Module.CastFinishAt(spell, 2.1f)));
         }
     }
 

@@ -19,9 +19,7 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
         if (castInfo == null || castInfo.TotalTime <= 1.5 || castInfo.EventHappened)
             return false;
 
-        var timeLeft = castInfo.NPCFinishAt - World.CurrentTime;
-        var elapsed = castInfo.TotalTime - timeLeft.TotalSeconds;
-        return elapsed > 1;
+        return castInfo.NPCTotalTime - castInfo.NPCRemainingTime > 1;
     }
 
     internal bool IsAutoingMe(Actor act) => act.CastInfo == null && act.TargetID == Player.InstanceID && Player.DistanceToHitbox(act) <= 6;
@@ -92,7 +90,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         _ => default
     };
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
     {
         // ranged
         if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
@@ -148,7 +146,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
     {
         if (Player.InCombat)
             _pelotonLockout = World.CurrentTime;
@@ -210,7 +208,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
     {
         // second wind
         if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)

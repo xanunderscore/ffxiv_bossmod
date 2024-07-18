@@ -173,7 +173,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.PomMuse, BestAOETarget);
 
         if (!WingPlanned && ShouldLandscape(strategy, deadline))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, Player.PosRot.XYZ());
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, targetPos: Player.PosRot.XYZ());
 
         if (ShouldSubtract(strategy, deadline))
             PushOGCD(AID.SubtractivePalette, Player);
@@ -245,11 +245,11 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : xbase<AID
         return Palette > 75 || _state.RaidBuffsLeft > 0 || SpectrumLeft > 0;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var track = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(track, ref primaryTarget, 25);
-        _state.UpdateCommon(primaryTarget);
+        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<PictomancerGauge>();
         Palette = gauge.PalleteGauge;

@@ -72,8 +72,8 @@ class ThundagaForte(BossModule module) : Components.GenericAOEs(module, ActionID
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         return _castersThundagaForte2.Count > 0
-            ? _castersThundagaForte2.Select(c => new AOEInstance(_shapeThundagaForte2, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt))
-            : _castersThundagaForte3.Select(c => new AOEInstance(_shapeThundagaForte3, c.Position, c.CastInfo!.Rotation, c.CastInfo!.NPCFinishAt));
+            ? _castersThundagaForte2.Select(c => new AOEInstance(_shapeThundagaForte2, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)))
+            : _castersThundagaForte3.Select(c => new AOEInstance(_shapeThundagaForte3, c.Position, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo)));
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)

@@ -299,7 +299,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
             PushOGCD(AID.MeikyoShisui, Player);
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
 
@@ -309,7 +309,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : xbase<AID
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
         SelectPrimaryTarget(targeting, ref IaiTarget, range: 6);
         SelectPrimaryTarget(targeting, ref EnpiTarget, range: 20);
-        _state.UpdateCommon(primaryTarget);
+        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<SamuraiGauge>();
         Kaeshi = gauge.Kaeshi;

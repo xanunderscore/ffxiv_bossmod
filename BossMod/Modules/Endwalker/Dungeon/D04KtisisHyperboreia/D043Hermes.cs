@@ -124,7 +124,7 @@ class WindSafe(BossModule module) : Components.GenericAOEs(module)
             NumCasts++;
             var meteorBlocking = Meteors.FirstOrDefault(x => x.Position.InRect(caster.Position, spell.Rotation, 50, 0, 5) && (NumCasts <= 4 || !WillBreak(x)));
             if (meteorBlocking != null)
-                SafeZones.Add((caster, new AOEInstance(new AOEShapeRect(50, SafeZoneWidth), meteorBlocking.Position, spell.Rotation, spell.NPCFinishAt, ArenaColor.SafeFromAOE, false)));
+                SafeZones.Add((caster, new AOEInstance(new AOEShapeRect(50, SafeZoneWidth), meteorBlocking.Position, spell.Rotation, Module.CastFinishAt(spell), ArenaColor.SafeFromAOE, false)));
         }
     }
 
@@ -161,7 +161,7 @@ class TrueAero(BossModule module) : Components.GenericBaitAway(module, ActionID.
     {
         if (spell.Action == WatchedAction)
             foreach (var player in WorldState.Party.WithoutSlot())
-                CurrentBaits.Add(new(caster, player, new AOEShapeRect(40, 3), spell.NPCFinishAt));
+                CurrentBaits.Add(new(caster, player, new AOEShapeRect(40, 3), Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)

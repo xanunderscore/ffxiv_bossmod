@@ -1,5 +1,4 @@
-﻿using BossMod.ActionTweaks.ClassActions;
-using BossMod.MCH;
+﻿using BossMod.MCH;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
