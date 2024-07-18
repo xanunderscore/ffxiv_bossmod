@@ -1,4 +1,4 @@
-﻿namespace BossMod.ActionTweaks.ClassActions;
+﻿namespace BossMod;
 
 [ConfigDisplay(Parent = typeof(ActionTweaksConfig))]
 class MCHConfig : ConfigNode

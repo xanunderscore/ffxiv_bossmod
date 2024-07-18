@@ -29,7 +29,7 @@ public sealed class ClassGNBUtility(RotationModuleManager manager, Actor player)
         return res;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         ExecuteShared(strategy, IDLimitBreak3, IDStanceApply, IDStanceRemove, (uint)GNB.SID.RoyalGuard);
         ExecuteSimple(strategy.Option(Track.Camouflage), GNB.AID.Camouflage, Player);
@@ -46,6 +46,6 @@ public sealed class ClassGNBUtility(RotationModuleManager manager, Actor player)
             _ => default
         };
         if (aid != default)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), ResolveTargetOverride(hoc.Value) ?? CoTank() ?? Player, hoc.Priority());
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), ResolveTargetOverride(hoc.Value) ?? CoTank() ?? Player, hoc.Priority(), hoc.Value.ExpireIn);
     }
 }

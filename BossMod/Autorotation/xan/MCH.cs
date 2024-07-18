@@ -223,14 +223,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
 
     private bool ShouldHypercharge(StrategyValues strategy, float deadline)
     {
-        if (!Unlocked(AID.Hypercharge)
-            // no gauge
-            || HyperchargedLeft == 0 && Heat < 50
-            // already active, can't use again
-            || Overheated
-            // reassemble would be wasted on heat blast or crossbow
-            || ReassembleLeft > _state.GCD
-            || !_state.CanWeave(AID.Hypercharge, 0.6f, deadline))
+        if (!Unlocked(AID.Hypercharge) || HyperchargedLeft == 0 && Heat < 50 || Overheated || ReassembleLeft > _state.GCD || !_state.CanWeave(AID.Hypercharge, 0.6f, deadline))
             return false;
 
         // hack for CD alignment in opener - wait for wildfire application
@@ -262,7 +255,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         return _state.CD(AID.Drill) > 0;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
 
@@ -277,7 +270,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : xbase<AID
         else
             SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
 
-        _state.UpdateCommon(primaryTarget);
+        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<MachinistGauge>();
 
