@@ -210,6 +210,9 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
     {
+        if (Player.Statuses.Any(x => x.ID is (uint)BossMod.NIN.SID.TenChiJin or (uint)BossMod.NIN.SID.Mudra))
+            return;
+
         // second wind
         if (strategy.Enabled(Track.SecondWind) && Unlocked(ClassShared.AID.SecondWind) && Cooldown(ClassShared.AID.SecondWind) == 0 && Player.InCombat && Player.HPMP.CurHP <= Player.HPMP.MaxHP / 2)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);

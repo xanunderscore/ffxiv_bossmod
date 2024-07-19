@@ -57,10 +57,12 @@ sealed class AIController(ActionManagerEx amex)
             _amex.FaceDirection(NaviTargetRot.Value);
         }
 
+        var moveMightInterruptCast = _amex.MoveMightInterruptCast || player.FindStatus(NIN.SID.TenChiJin) != null;
+
         // TODO this checks whether movement keys are pressed, we need a better solution
         bool moveRequested = _amex.InputOverride.IsMoveRequested();
         bool castInProgress = player.CastInfo != null && !player.CastInfo.EventHappened;
-        bool forbidMovement = moveRequested || !AllowInterruptingCastByMovement && _amex.MoveMightInterruptCast;
+        bool forbidMovement = moveRequested || !AllowInterruptingCastByMovement && moveMightInterruptCast;
         if (NaviTargetPos != null && !forbidMovement && (NaviTargetPos.Value - player.Position).LengthSq() > 0.01f)
         {
             movement.DesiredPosition = NaviTargetPos;

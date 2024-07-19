@@ -1,7 +1,7 @@
 ﻿using BossMod.DNC;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan.Ranged;
+namespace BossMod.Autorotation.xan;
 
 public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {

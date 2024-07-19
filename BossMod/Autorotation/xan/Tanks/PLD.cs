@@ -1,7 +1,7 @@
 ﻿using BossMod.PLD;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan.Tanks;
+namespace BossMod.Autorotation.xan;
 public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }

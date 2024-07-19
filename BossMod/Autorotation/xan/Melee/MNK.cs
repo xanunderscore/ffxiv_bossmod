@@ -1,7 +1,7 @@
 ﻿using BossMod.MNK;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan.Melee;
+namespace BossMod.Autorotation.xan;
 public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }

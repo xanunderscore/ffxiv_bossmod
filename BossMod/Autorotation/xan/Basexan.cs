@@ -36,6 +36,9 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
     protected void PushAction(AID aid, Actor? target, float priority)
     {
+        if ((uint)(object)aid == 0)
+            return;
+
         if (!CanCast(aid))
             return;
 

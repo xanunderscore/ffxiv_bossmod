@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan.Melee;
+namespace BossMod.Autorotation.xan;
 
 public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
