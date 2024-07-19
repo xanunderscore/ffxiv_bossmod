@@ -100,10 +100,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (PhantomKamaitachi > _state.GCD)
+        if (PhantomKamaitachi > _state.GCD && Mudra.Left == 0)
             PushGCD(AID.PhantomKamaitachi, BestRangedAOETarget);
 
-        if (_state.CD(AID.TenChiJin) > 0 && Raiju.Stacks > 0)
+        if (_state.CD(AID.TenChiJin) > 0 && Raiju.Stacks > 0 && Mudra.Left == 0)
             PushGCD(AID.FleetingRaiju, primaryTarget);
 
         if (NumRangedAOETargets > 2 && Unlocked(AID.Katon))
@@ -156,10 +156,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Unlocked(mudra) || target == null)
             return;
 
-        if (!Combos.TryGetValue(mudra, out var m))
+        if (!Combos.TryGetValue(mudra, out var q))
             return;
 
-        var (len, last) = m;
+        var (len, last) = q;
 
         // TODO there's gotta be a cleaner way to do this, right?
         if (len == 1)
@@ -167,7 +167,18 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if (Mudras[0] == 0)
                 PushGCD(AID.Ten, Player);
             else if (finish)
-                PushGCD(mudra, target);
+                PushGCD(AID.Ninjutsu, target);
+        }
+
+        var tenOk = true;
+        var chiOk = true;
+        var jinOk = true;
+
+        foreach (var m in Mudras)
+        {
+            tenOk &= m != 1;
+            chiOk &= m != 2;
+            jinOk &= m != 3;
         }
 
         if (len == 2)
@@ -178,7 +189,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if (Mudras[1] == 0)
                 PushGCD(last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
             else if (finish)
-                PushGCD(mudra, target);
+                PushGCD(AID.Ninjutsu, target);
         }
 
         if (len == 3)
@@ -196,9 +207,9 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 }, Player);
 
             if (Mudras[2] == 0)
-                PushGCD(last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
+                PushGCD(tenOk ? AID.TenCombo : chiOk ? AID.ChiCombo : AID.JinCombo, Player);
             else if (finish)
-                PushGCD(mudra, target);
+                PushGCD(AID.Ninjutsu, target);
         }
     }
 
@@ -233,7 +244,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (Unlocked(AID.Bunshin) && Ninki >= 50 && _state.CanWeave(AID.Bunshin, 0.6f, deadline))
             PushOGCD(AID.Bunshin, Player);
 
-        if (_state.GCD < 1.1f && Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && _state.CD(AID.Mug) > 0)
+        if (_state.GCD < 1.1f && Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && (_state.CD(AID.Mug) > 0 || !buffsOk))
             PushOGCD(AID.TrickAttack, primaryTarget);
 
         if (_state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.DreamWithinADream, 0.6f, deadline))
