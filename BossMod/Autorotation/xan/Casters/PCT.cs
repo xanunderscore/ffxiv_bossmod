@@ -1,7 +1,7 @@
 ﻿using BossMod.PCT;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan;
+namespace BossMod.Autorotation.xan.Casters;
 public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs, Motif, Holy, Hammer }

@@ -1,7 +1,7 @@
 ﻿using BossMod.PLD;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan;
+namespace BossMod.Autorotation.xan.Tanks;
 public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
     public enum Track { AOE, Targeting, Buffs }
@@ -39,7 +39,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
 
     protected override float GetCastTime(AID aid) => aid switch
     {
-        AID.HolyCircle or AID.HolySpirit => DivineMightLeft > _state.GCD || Requiescat.Stacks > 0 ? 0 : _state.SpellGCDTime * 0.6f,
+        AID.HolyCircle or AID.HolySpirit => DivineMightLeft > _state.GCD || Requiescat.Stacks > 0 ? 0 : base.GetCastTime(aid),
         _ => 0
     };
 
