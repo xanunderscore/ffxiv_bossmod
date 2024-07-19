@@ -51,6 +51,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
     public float SpectrumLeft; // 30s max
     public int Hyperphantasia;
     public float RainbowBright;
+    public float Starstruck;
 
     public int NumAOETargets;
 
@@ -82,6 +83,12 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
             return;
         }
+
+        if (CombatTimer < 1 && Weapon)
+            PushGCD(AID.SteelMuse, Player);
+
+        if (Starstruck > _state.GCD)
+            PushGCD(AID.StarPrism, BestAOETarget);
 
         if (RainbowBright > _state.GCD)
             PushGCD(AID.RainbowDrip, BestLineTarget);
@@ -142,7 +149,10 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
             return false;
 
         // use for movement, or to weave raid buff at fight start
-        if (ForceMovementIn == 0 || ShouldLandscape(strategy, _state.GCD + _state.SpellGCDTime) || ShouldSubtract(strategy, _state.GCD + _state.SpellGCDTime))
+        if (ForceMovementIn == 0 || ShouldSubtract(strategy, _state.GCD + _state.SpellGCDTime))
+            return true;
+
+        if (CombatTimer < 10 && !CreatureFlags.HasFlag(CreatureFlags.Pom))
             return true;
 
         // use comet to prevent overcap or during buffs
@@ -163,7 +173,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (!Player.InCombat)
+        if (!Player.InCombat || primaryTarget == null)
             return;
 
         if (ShouldWeapon(strategy, deadline))
@@ -172,8 +182,8 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
         if (CanvasFlags.HasFlag(CanvasFlags.Pom) && _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline))
             PushOGCD(AID.PomMuse, BestAOETarget);
 
-        if (!WingPlanned && ShouldLandscape(strategy, deadline))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.Low + 500, targetPos: Player.PosRot.XYZ());
+        if (ShouldLandscape(strategy, deadline))
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.High + 600, targetPos: Player.PosRot.XYZ());
 
         if (ShouldSubtract(strategy, deadline))
             PushOGCD(AID.SubtractivePalette, Player);
@@ -183,6 +193,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (ShouldMog(strategy, deadline))
             PushOGCD(AID.MogOfTheAges, BestLineTarget);
+
+        if (Madeen && _state.CanWeave(AID.RetributionOfTheMadeen, 0.6f, deadline))
+            PushOGCD(AID.RetributionOfTheMadeen, BestLineTarget);
 
         if (Player.HPMP.CurMP <= 7000 && Unlocked(AID.LucidDreaming) && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
             PushOGCD(AID.LucidDreaming, Player);
@@ -203,6 +216,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Creature || BestAOETarget == null)
             return false;
 
+        return _state.CanWeave(_state.CD(AID.LivingMuse) - 80, 0.6f, deadline);
+
+        /*
         var singleChargeTime = Unlocked(TraitID.EnhancedPictomancyIV) ? 0 : 40;
 
         // use if max charges
@@ -214,6 +230,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
             return _state.RaidBuffsLeft > 0;
 
         return false;
+        */
     }
 
     private bool ShouldMog(StrategyValues strategy, float deadline)
@@ -230,6 +247,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
         if (strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
             return false;
 
+        if (CombatTimer < 10 && !CanvasFlags.HasFlag(CanvasFlags.Wing))
+            return false;
+
         return Landscape && _state.CanWeave(AID.ScenicMuse, 0.6f, deadline);
     }
 
@@ -244,6 +264,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
         return Palette > 75 || _state.RaidBuffsLeft > 0 || SpectrumLeft > 0;
     }
+
+    public override string DescribeState()
+        => $"Canvas={CanvasFlags},Creature={CreatureFlags},W={Weapon},L={Landscape},PT={Paint},PL={Palette}";
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
@@ -269,6 +292,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
         Monochrome = Player.FindStatus(SID.MonochromeTones) != null;
         Hyperphantasia = StatusStacks(SID.Hyperphantasia);
         RainbowBright = StatusLeft(SID.RainbowBright);
+        Starstruck = StatusLeft(SID.Starstruck);
 
         var ah1 = StatusLeft(SID.Aetherhues);
         var ah2 = StatusLeft(SID.AetherhuesII);
