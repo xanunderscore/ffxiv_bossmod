@@ -150,55 +150,58 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void UseMudra(AID mudra, Actor? target, bool finish = true)
     {
+        (var aid, var tar) = PickMudra(mudra, target, finish);
+        if (aid != AID.None)
+            PushGCD(aid, tar);
+    }
+
+    private (AID action, Actor? target) PickMudra(AID mudra, Actor? target, bool finish = true)
+    {
         if (Mudra.Param == 0 && _state.CD(AID.Ten) - 20 > _state.GCD)
-            return;
+            return (AID.None, null);
 
         if (!Unlocked(mudra) || target == null)
-            return;
+            return (AID.None, null);
 
         if (!Combos.TryGetValue(mudra, out var q))
-            return;
+            return (AID.None, null);
 
         var (len, last) = q;
 
-        // TODO there's gotta be a cleaner way to do this, right?
         if (len == 1)
         {
             if (Mudras[0] == 0)
-                PushGCD(AID.Ten, Player);
+                return (AID.Ten, Player);
             else if (finish)
-                PushGCD(AID.Ninjutsu, target);
-        }
-
-        var tenOk = true;
-        var chiOk = true;
-        var jinOk = true;
-
-        foreach (var m in Mudras)
-        {
-            tenOk &= m != 1;
-            chiOk &= m != 2;
-            jinOk &= m != 3;
+                return (AID.Ninjutsu, target);
         }
 
         if (len == 2)
         {
+            // early exit
+            if (Mudras[0] == last)
+                return (AID.Ninjutsu, target);
+
             if (Mudras[0] == 0)
-                PushGCD(last == 1 ? AID.Chi : AID.Ten, Player);
+                return (last == 1 ? AID.Chi : AID.Ten, Player);
 
             if (Mudras[1] == 0)
-                PushGCD(last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
+                return (last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
             else if (finish)
-                PushGCD(AID.Ninjutsu, target);
+                return (AID.Ninjutsu, target);
         }
 
         if (len == 3)
         {
+            // early exit
+            if (Mudras[0] == last || Mudras[1] == last)
+                return (AID.Ninjutsu, target);
+
             if (Mudras[0] == 0)
-                PushGCD(last == 1 ? AID.Chi : AID.Ten, Player);
+                return (last == 1 ? AID.Chi : AID.Ten, Player);
 
             if (Mudras[1] == 0)
-                PushGCD(Mudras[0] switch
+                return (Mudras[0] switch
                 {
                     1 => last == 3 ? AID.ChiCombo : AID.JinCombo,
                     2 => last == 3 ? AID.TenCombo : AID.JinCombo,
@@ -207,10 +210,12 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 }, Player);
 
             if (Mudras[2] == 0)
-                PushGCD(tenOk ? AID.TenCombo : chiOk ? AID.ChiCombo : AID.JinCombo, Player);
+                return (last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
             else if (finish)
-                PushGCD(AID.Ninjutsu, target);
+                return (AID.Ninjutsu, target);
         }
+
+        return (AID.None, null);
     }
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
