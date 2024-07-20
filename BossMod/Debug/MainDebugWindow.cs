@@ -105,6 +105,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         {
             _debugAction.DrawActionData();
         }
+        if (ImGui.CollapsingHeader("Cooldowns"))
+        {
+            DrawCooldowns();
+        }
         if (ImGui.CollapsingHeader("Hate"))
         {
             _debugHate.Draw();
@@ -219,6 +223,16 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
 
             ImGui.Text($"0x{*(jg + i):X2}");
         }
+    }
+
+    private unsafe void DrawCooldowns()
+    {
+        var showAll = false;
+        ImGui.Checkbox("Show all", ref showAll);
+
+        foreach (var (cd, i) in ws.Client.Cooldowns.Zip(Enumerable.Range(0, int.MaxValue)))
+            if (cd.Total > 0 || showAll || i == ActionDefinitions.GCDGroup)
+                ImGui.Text($"{i}: {cd}");
     }
 
     private unsafe void DrawTargets()
