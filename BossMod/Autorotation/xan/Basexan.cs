@@ -159,11 +159,9 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         SwiftcastLeft = StatusLeft(WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
 
-        _state.AnimationLockDelay = MathF.Max(0.1f, _state.AnimationLockDelay);
-
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
 
-        Exec(strategy, primaryTarget, estimatedAnimLockDelay);
+        Exec(strategy, primaryTarget, MathF.Max(estimatedAnimLockDelay, 0.1f));
     }
 
     public abstract void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay);
