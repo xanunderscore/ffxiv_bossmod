@@ -183,8 +183,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
             PushOGCD(AID.PomMuse, BestAOETarget);
 
         if (ShouldLandscape(strategy, deadline))
-            // TODO fix prio once the queue bug is fixed
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.High + 600, targetPos: Player.PosRot.XYZ());
+            PushOGCD(AID.ScenicMuse, Player);
 
         if (ShouldSubtract(strategy, deadline))
             PushOGCD(AID.SubtractivePalette, Player);

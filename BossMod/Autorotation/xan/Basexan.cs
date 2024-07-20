@@ -52,7 +52,11 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
             return;
         }
 
-        Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority);
+        Vector3 targetPos = default;
+        if (def.ID.ID is (uint)BossMod.BLM.AID.LeyLines or (uint)BossMod.BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse)
+            targetPos = Player.PosRot.XYZ();
+
+        Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos);
     }
 
     protected void QueueOGCD(Action<float> ogcdFun)
@@ -100,7 +104,10 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     /// <returns></returns>
     protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
 
-    protected bool CanCast(AID aid) => GetCastTime(aid) <= ForceMovementIn;
+    protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
+    protected float GetSlidecastEnd(AID aid) => _state.GCD + GetSlidecastTime(aid);
+
+    protected bool CanCast(AID aid) => GetSlidecastTime(aid) <= ForceMovementIn;
 
     protected float ForceMovementIn => Manager.ActionManager.InputOverride.IsMoveRequested() ? 0 : Hints.ForceMovementIn;
 

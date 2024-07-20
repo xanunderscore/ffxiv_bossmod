@@ -46,6 +46,9 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     // 25y for hellfrog - ninjutsu have a range of 20y
     private Actor? BestRangedAOETarget;
 
+    // these aren't the same cdgroup :(
+    public float AssassinateCD => _state.CD(Unlocked(AID.DreamWithinADream) ? AID.DreamWithinADream : AID.Assassinate);
+
     private int[] Mudras => [Mudra.Param & 3, (Mudra.Param >> 2) & 3, (Mudra.Param >> 4) & 3];
 
     private readonly Dictionary<AID, (int Len, int Last)> Combos = new()
@@ -116,7 +119,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 UseMudra(AID.Huton, BestRangedAOETarget);
 
             // this will automatically adjust to goka mekkyaku
-            if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 0)
+            if (_state.CD(AID.Kassatsu) > 0 && AssassinateCD > Kassatsu && _state.CD(AID.TrickAttack) > Kassatsu)
                 UseMudra(AID.Katon, BestRangedAOETarget);
 
             // fallthrough - condition changed while trying to execute an earlier case
@@ -128,7 +131,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
                 UseMudra(AID.Suiton, primaryTarget);
 
-            if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 15 && _state.CD(AID.TrickAttack) > Kassatsu)
+            if (_state.CD(AID.Kassatsu) > 0 && AssassinateCD > Kassatsu && _state.CD(AID.TrickAttack) > Kassatsu)
                 UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, primaryTarget);
 
             // see above
@@ -278,7 +281,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if ((!Unlocked(TraitID.Shukiho) || Ninki >= 10) && _state.CanWeave(AID.Mug, 0.6f, deadline))
                 PushOGCD(AID.Mug, primaryTarget);
 
-            if (Unlocked(AID.TenChiJin) && _state.CD(AID.Ten1) > 20 && Mudra.Left == 0 && Kassatsu == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline) && ForceMovementIn > _state.GCD + 2)
+            if (Unlocked(AID.TenChiJin) && _state.CD(AID.Ten1) - 20 > _state.GCD && Mudra.Left == 0 && Kassatsu == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline) && ForceMovementIn > _state.GCD + 2)
                 PushOGCD(AID.TenChiJin, Player);
 
             if (Unlocked(AID.Bunshin) && Ninki >= 50 && _state.CanWeave(AID.Bunshin, 0.6f, deadline))
@@ -288,8 +291,16 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (_state.GCD < 0.8f && Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && (_state.CD(AID.Mug) > 0 || !buffsOk))
             PushOGCD(AID.TrickAttack, primaryTarget);
 
-        if (Unlocked(AID.DreamWithinADream) && _state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.DreamWithinADream, 0.6f, deadline))
-            PushOGCD(AID.DreamWithinADream, primaryTarget);
+        if (Unlocked(AID.DreamWithinADream))
+        {
+            if (_state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.DreamWithinADream, 0.6f, deadline))
+                PushOGCD(AID.DreamWithinADream, primaryTarget);
+        }
+        else if (Unlocked(AID.Assassinate))
+        {
+            if (_state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.Assassinate, 0.6f, deadline))
+                PushOGCD(AID.Assassinate, primaryTarget);
+        }
 
         if (ShouldBhava(strategy, primaryTarget, deadline))
         {
