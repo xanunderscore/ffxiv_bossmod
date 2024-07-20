@@ -43,9 +43,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     public int NumAOETargets;
     public int NumRangedAOETargets;
 
-    // 20y - note that hyosho, hyoton, and fuma shuriken actually have a 25y range, but tracking two separate targets for ninjutsu seems excessive
-    private Actor? BestNinjutsuTarget;
-    // 20y - hellfrog has a 25y range but see above
+    // 25y for hellfrog - ninjutsu have a range of 20y
     private Actor? BestRangedAOETarget;
 
     private int[] Mudras => [Mudra.Param & 3, (Mudra.Param >> 2) & 3, (Mudra.Param >> 4) & 3];
@@ -95,7 +93,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                     1 or 3 => AID.TCJRaiton,
                     2 => AID.TCJKaton,
                     _ => AID.TCJSuiton
-                }, BestNinjutsuTarget);
+                }, primaryTarget);
             }
             return;
         }
@@ -105,8 +103,8 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (Raiju.Stacks > 0 && Mudra.Left == 0)
         {
-            if (strategy.Option(Track.ForkedRaiju).As<RaijuStrategy>() == RaijuStrategy.Automatic && Player.DistanceToHitbox(BestNinjutsuTarget) is > 3 and <= 20)
-                PushGCD(AID.ForkedRaiju, BestNinjutsuTarget);
+            if (strategy.Option(Track.ForkedRaiju).As<RaijuStrategy>() == RaijuStrategy.Automatic && Player.DistanceToHitbox(primaryTarget) is > 3 and <= 20)
+                PushGCD(AID.ForkedRaiju, primaryTarget);
 
             if (_state.CD(AID.TenChiJin) > 0)
                 PushGCD(AID.FleetingRaiju, primaryTarget);
@@ -117,17 +115,28 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
                 UseMudra(AID.Huton, BestRangedAOETarget);
 
+            // this will automatically adjust to goka mekkyaku
             if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 0)
                 UseMudra(AID.Katon, BestRangedAOETarget);
+
+            // fallthrough - condition changed while trying to execute an earlier case
+            if (Mudra.Left > 0)
+                PushGCD(AID.Katon, BestRangedAOETarget);
         }
-        else
+        else if (Unlocked(AID.Raiton))
         {
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
-                UseMudra(AID.Suiton, BestNinjutsuTarget);
+                UseMudra(AID.Suiton, primaryTarget);
 
             if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 15 && _state.CD(AID.TrickAttack) > Kassatsu)
-                UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, BestNinjutsuTarget);
+                UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, primaryTarget);
+
+            // see above
+            if (Mudra.Left > 0)
+                PushGCD(AID.Raiton, primaryTarget);
         }
+        else if (Unlocked(AID.FumaShuriken))
+            UseMudra(AID.FumaShuriken, primaryTarget);
 
         if (NumAOETargets > 2 && Unlocked(AID.DeathBlossom))
         {
@@ -171,16 +180,18 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     private (AID action, Actor? target) PickMudra(AID mudra, Actor? target, bool finish = true)
     {
-        if (Mudra.Param == 0 && _state.CD(AID.Ten1) - 20 > _state.GCD && Kassatsu == 0)
-            return (AID.None, null);
-
         if (!Unlocked(mudra) || target == null)
             return (AID.None, null);
 
-        if (!Combos.TryGetValue(mudra, out var q))
+        // no charges remaining and no kassatsu = we can't use it
+        if (Mudra.Param == 0 && _state.CD(AID.Ten1) - 20 > _state.GCD && Kassatsu == 0)
             return (AID.None, null);
 
-        var (len, last) = q;
+        // unrecognized action - this really shouldn't happen
+        if (!Combos.TryGetValue(mudra, out var combo))
+            return (AID.None, null);
+
+        var (len, last) = combo;
 
         var ten1 = Kassatsu > 0 ? AID.Ten2 : AID.Ten1;
         var chi1 = Kassatsu > 0 ? AID.Chi2 : AID.Chi1;
@@ -237,7 +248,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (!Player.InCombat)
+        if (!Player.InCombat || primaryTarget == null)
         {
             if (strategy.Option(Track.Hide).As<HideStrategy>() == HideStrategy.Automatic
                 && Mudra.Left == 0
@@ -248,9 +259,6 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
             return;
         }
-
-        if (BestNinjutsuTarget == null)
-            return;
 
         if (Unlocked(AID.Meisui) && _state.CanWeave(AID.Meisui, 0.6f, deadline) && _state.CD(AID.TrickAttack) > 0 && ShadowWalker > 0)
             PushOGCD(AID.Meisui, Player);
@@ -310,10 +318,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
 
-        BestNinjutsuTarget = primaryTarget;
-
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
-        SelectPrimaryTarget(targeting, ref BestNinjutsuTarget, range: 20);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<NinjaGauge>();

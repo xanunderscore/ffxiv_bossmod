@@ -115,7 +115,7 @@ class ReplayDetailsWindow : UIWindow
 
     private void DrawControlRow()
     {
-        ImGui.TextUnformatted($"{CurrentTime:O}");
+        ImGui.TextUnformatted($"{(CurrentTime - _first).TotalSeconds:F3} ({CurrentTime:O})");
         ImGui.SameLine();
         if (ImGui.Button("<<<"))
             Rewind(20);

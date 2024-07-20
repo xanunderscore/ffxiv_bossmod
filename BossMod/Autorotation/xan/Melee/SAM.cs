@@ -48,8 +48,6 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
     private Actor? BestAOETarget; // null if fuko is unlocked since it's self-targeted
     private Actor? BestLineTarget;
     private Actor? BestOgiTarget;
-    private Actor? IaiTarget;
-    private Actor? EnpiTarget;
 
     private float TargetDotLeft;
 
@@ -84,8 +82,8 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
         }
 
         EmergencyMeikyo(strategy);
-        UseKaeshi();
-        UseIaijutsu();
+        UseKaeshi(primaryTarget);
+        UseIaijutsu(primaryTarget);
 
         if (OgiLeft > _state.GCD && TargetDotLeft > 10 && HaveFugetsu)
             PushGCD(AID.OgiNamikiri, BestOgiTarget);
@@ -119,7 +117,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
         }
 
         if (Unlocked(AID.Enpi) && EnhancedEnpi > _state.GCD)
-            PushGCD(AID.Enpi, EnpiTarget);
+            PushGCD(AID.Enpi, primaryTarget);
     }
 
     private AID GetHakazeComboAction(StrategyValues strategy)
@@ -183,7 +181,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
         }
     }
 
-    private void UseKaeshi()
+    private void UseKaeshi(Actor? primaryTarget)
     {
         switch (Kaeshi)
         {
@@ -191,7 +189,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
                 PushGCD(AID.KaeshiGoken, Player);
                 break;
             case KaeshiAction.Setsugekka:
-                PushGCD(AID.KaeshiSetsugekka, IaiTarget);
+                PushGCD(AID.KaeshiSetsugekka, primaryTarget);
                 break;
             case KaeshiAction.Namikiri:
                 PushGCD(AID.KaeshiNamikiri, BestOgiTarget);
@@ -200,24 +198,24 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
                 PushGCD(AID.TendoKaeshiGoken, Player);
                 break;
             case (KaeshiAction)6:
-                PushGCD(AID.TendoKaeshiSetsugekka, IaiTarget);
+                PushGCD(AID.TendoKaeshiSetsugekka, primaryTarget);
                 break;
         }
     }
 
-    private void UseIaijutsu()
+    private void UseIaijutsu(Actor? primaryTarget)
     {
         if (!HaveFugetsu)
             return;
 
         if (NumStickers == 1 && TargetDotLeft < 10 && FukaLeft > 0)
-            PushGCD(AID.Higanbana, IaiTarget);
+            PushGCD(AID.Higanbana, primaryTarget);
 
         if (NumStickers == 2 && NumTenkaTargets > 2)
             PushGCD(Tendo > _state.GCD ? AID.TendoGoken : AID.TenkaGoken, Player);
 
         if (NumStickers == 3)
-            PushGCD(Tendo > _state.GCD ? AID.TendoSetsugekka : AID.MidareSetsugekka, IaiTarget);
+            PushGCD(Tendo > _state.GCD ? AID.TendoSetsugekka : AID.MidareSetsugekka, primaryTarget);
     }
 
     private void EmergencyMeikyo(StrategyValues strategy)
@@ -262,7 +260,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (EnpiTarget == null || !HaveFugetsu)
+        if (primaryTarget == null || !HaveFugetsu)
             return;
 
         var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
@@ -303,12 +301,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var targeting = strategy.Option(Track.Targeting).As<Targeting>();
 
-        IaiTarget = primaryTarget;
-        EnpiTarget = primaryTarget;
-
         SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
-        SelectPrimaryTarget(targeting, ref IaiTarget, range: 6);
-        SelectPrimaryTarget(targeting, ref EnpiTarget, range: 20);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<SamuraiGauge>();

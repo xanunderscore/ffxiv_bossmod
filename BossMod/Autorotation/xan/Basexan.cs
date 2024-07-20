@@ -69,7 +69,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     ///
     /// If the provided <paramref name="primaryTarget"/> is null, an NPC, or non-enemy object; it will be reset to <c>null</c>.<br/>
     ///
-    /// Additionally, if <paramref name="range"/> is set to <c>Targeting.Auto</c>, and the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table.
+    /// Additionally, if <paramref name="range"/> is set to <c>Targeting.Auto</c>, and the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table. If no closer target is found, <paramref name="primaryTarget"/> will remain unchanged.
     /// </summary>
     /// <param name="strategy">Targeting strategy</param>
     /// <param name="primaryTarget">Player's current target - may be null</param>
@@ -84,7 +84,9 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
         if (Player.DistanceToHitbox(primaryTarget) > range)
         {
-            primaryTarget = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= range).MaxBy(x => x.Actor.HPMP.CurHP)?.Actor;
+            var newTarget = Hints.PriorityTargets.FirstOrDefault(x => Player.DistanceToHitbox(x.Actor) <= range)?.Actor;
+            if (newTarget != null)
+                primaryTarget = newTarget;
             // Hints.ForcedTarget = primaryTarget;
         }
     }

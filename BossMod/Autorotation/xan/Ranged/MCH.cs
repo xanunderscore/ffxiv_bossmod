@@ -127,7 +127,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         if (IsPausedForFlamethrower || !Player.InCombat || primaryTarget == null)
             return;
 
-        if (ShouldWildfire(strategy, deadline) && _state.GCD < 1.1f)
+        if (ShouldWildfire(strategy, deadline) && _state.GCD < 1.3f)
             PushOGCD(AID.Wildfire, primaryTarget);
 
         if (ShouldReassemble(strategy, primaryTarget) && _state.CanWeave(_state.CD(AID.Reassemble) - 55, 0.6f, deadline))
