@@ -4,7 +4,14 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
+    public enum Track { AOE, Targeting, Buffs, Queen }
+    public enum QueenStrategy
+    {
+        MinGauge,
+        FullGauge,
+        RaidBuffsOnly,
+        Never
+    }
 
     public static RotationModuleDefinition Definition()
     {
@@ -13,6 +20,13 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         def.DefineAOE(Track.AOE);
         def.DefineTargeting(Track.Targeting);
         def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.BarrelStabilizer, AID.Wildfire);
+
+        def.Define(Track.Queen).As<QueenStrategy>("Queen", "Automaton Queen")
+            .AddOption(QueenStrategy.MinGauge, "Min", "Summon at 50+ gauge")
+            .AddOption(QueenStrategy.FullGauge, "Full", "Summon at 100 gauge")
+            .AddOption(QueenStrategy.RaidBuffsOnly, "Buffed", "Delay summon until raid buffs, regardless of gauge")
+            .AddOption(QueenStrategy.Never, "Never", "Do not automatically summon Queen at all")
+            .AddAssociatedActions(AID.AutomatonQueen, AID.RookAutoturret);
 
         return def;
     }
@@ -216,8 +230,14 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Unlocked(AID.RookAutoturret) || primaryTarget == null || HasMinion || Battery < 50 || ShouldWildfire(strategy, _state.GCD))
             return false;
 
-        // todo tweak anticipated window, queen doesnt start autoing for 5 seconds
-        return _state.RaidBuffsIn > 50 || _state.RaidBuffsIn < _state.GCD || _state.RaidBuffsLeft > 10;
+        return strategy.Option(Track.Queen).As<QueenStrategy>() switch
+        {
+            QueenStrategy.MinGauge => true,
+            QueenStrategy.FullGauge => Battery == 100,
+            // allow early summon, queen doesn't start autoing for 5 seconds
+            QueenStrategy.RaidBuffsOnly => _state.RaidBuffsLeft > 10 || _state.RaidBuffsIn < 5,
+            _ => false,
+        };
     }
 
     private bool ShouldHypercharge(StrategyValues strategy, float deadline)
