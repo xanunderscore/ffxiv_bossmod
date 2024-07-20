@@ -90,7 +90,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         _ => default
     };
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay, float forceMovementIn)
     {
         // ranged
         if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
@@ -146,7 +146,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay, float forceMovementIn)
     {
         if (Player.InCombat)
             _pelotonLockout = World.CurrentTime;
@@ -164,7 +164,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             && Unlocked(ClassShared.AID.Peloton)
             && Cooldown(ClassShared.AID.Peloton) == 0
             && (World.CurrentTime - _pelotonLockout).TotalSeconds > 3
-            && Manager.ActionManager.InputOverride.IsMoving()
+            && forceMovementIn == 0
             && !Player.InCombat
             // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;
             // peloton animationlock will be annoying and unhelpful here
@@ -208,7 +208,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
         return def;
     }
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimationLockDelay, float forceMovementIn)
     {
         if (Player.Statuses.Any(x => x.ID is (uint)BossMod.NIN.SID.TenChiJin or (uint)BossMod.NIN.SID.Mudra))
             return;

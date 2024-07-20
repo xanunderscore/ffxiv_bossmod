@@ -150,14 +150,11 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Holos);
         d.RegisterSpell(AID.Panhaima);
         d.RegisterSpell(AID.EukrasianDyskrasia); // animLock=???
-        d.RegisterSpell(AID.PhlegmaIII, maxCharges: 2);
+        d.RegisterSpell(AID.PhlegmaIII);
         d.RegisterSpell(AID.DyskrasiaII);
         d.RegisterSpell(AID.EukrasianDosisIII);
         d.RegisterSpell(AID.DosisIII);
         d.RegisterSpell(AID.ToxikonII);
-        d.RegisterSpell(AID.DosisIII);
-        d.RegisterSpell(AID.EukrasianDosisIII);
-        d.RegisterSpell(AID.PhlegmaIII);
         d.RegisterSpell(AID.Krasis);
         d.RegisterSpell(AID.Pneuma);
         d.RegisterSpell(AID.Psyche); // animLock=???

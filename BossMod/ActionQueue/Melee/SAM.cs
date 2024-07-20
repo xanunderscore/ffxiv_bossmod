@@ -127,9 +127,9 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Ikishoten);
         d.RegisterSpell(AID.HissatsuGuren);
         d.RegisterSpell(AID.HissatsuSenei);
-        d.RegisterSpell(AID.TsubameGaeshi, maxCharges: 2);
-        d.RegisterSpell(AID.KaeshiSetsugekka, maxCharges: 2);
-        d.RegisterSpell(AID.KaeshiGoken, maxCharges: 2);
+        d.RegisterSpell(AID.TsubameGaeshi);
+        d.RegisterSpell(AID.KaeshiSetsugekka);
+        d.RegisterSpell(AID.KaeshiGoken);
         d.RegisterSpell(AID.Shoha);
         d.RegisterSpell(AID.Tengentsu);
         d.RegisterSpell(AID.Fuko);

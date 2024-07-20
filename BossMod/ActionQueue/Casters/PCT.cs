@@ -114,13 +114,13 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.WaterInBlue);
         d.RegisterSpell(AID.Smudge, instantAnimLock: 0.80f); // animLock=0.800
         d.RegisterSpell(AID.FireIIInRed);
-        d.RegisterSpell(AID.WingedMuse, maxCharges: 3);
-        d.RegisterSpell(AID.LivingMuse, maxCharges: 3);
+        d.RegisterSpell(AID.WingedMuse);
+        d.RegisterSpell(AID.LivingMuse);
         d.RegisterSpell(AID.CreatureMotif);
         d.RegisterSpell(AID.WingMotif);
         d.RegisterSpell(AID.MogOfTheAges);
         d.RegisterSpell(AID.PomMotif);
-        d.RegisterSpell(AID.PomMuse, maxCharges: 3);
+        d.RegisterSpell(AID.PomMuse);
         d.RegisterSpell(AID.AeroIIInGreen);
         d.RegisterSpell(AID.WaterIIInBlue);
         d.RegisterSpell(AID.WeaponMotif);
@@ -146,8 +146,8 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.CometInBlack);
         d.RegisterSpell(AID.RainbowDrip);
         d.RegisterSpell(AID.RetributionOfTheMadeen);
-        d.RegisterSpell(AID.FangedMuse, maxCharges: 3);
-        d.RegisterSpell(AID.ClawedMuse, maxCharges: 3);
+        d.RegisterSpell(AID.FangedMuse);
+        d.RegisterSpell(AID.ClawedMuse);
         d.RegisterSpell(AID.MawMotif);
         d.RegisterSpell(AID.ClawMotif);
         d.RegisterSpell(AID.StarPrism);

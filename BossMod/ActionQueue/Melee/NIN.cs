@@ -139,19 +139,19 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.FumaJin);
         d.RegisterSpell(AID.FumaChi);
         d.RegisterSpell(AID.FumaTen);
-        d.RegisterSpell(AID.Ten1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Ten1, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.RabbitMedium);
         d.RegisterSpell(AID.Ten2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.TCJRaiton);
         d.RegisterSpell(AID.Chi2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.Raiton);
         d.RegisterSpell(AID.TCJKaton);
-        d.RegisterSpell(AID.Chi1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350s?
+        d.RegisterSpell(AID.Chi1, instantAnimLock: 0.35f); // animLock=0.350s?
         d.RegisterSpell(AID.Katon);
         d.RegisterSpell(AID.DeathBlossom);
         d.RegisterSpell(AID.Assassinate);
         d.RegisterSpell(AID.Shukuchi, instantAnimLock: 0.80f); // animLock=0.800
-        d.RegisterSpell(AID.Jin1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Jin1, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.TCJSuiton);
         d.RegisterSpell(AID.TCJDoton);
         d.RegisterSpell(AID.TCJHuton);

@@ -100,7 +100,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.DarkMind);
         d.RegisterSpell(AID.LivingDead);
         d.RegisterSpell(AID.SaltedEarth);
-        d.RegisterSpell(AID.Shadowstride, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.Shadowstride); // animLock=???
         d.RegisterSpell(AID.AbyssalDrain);
         d.RegisterSpell(AID.CarveAndSpit);
         d.RegisterSpell(AID.Bloodspiller);
@@ -114,7 +114,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Oblation);
         d.RegisterSpell(AID.SaltAndDarkness);
         d.RegisterSpell(AID.SaltAndDarknessEnd);
-        d.RegisterSpell(AID.Shadowbringer, maxCharges: 2);
+        d.RegisterSpell(AID.Shadowbringer);
         d.RegisterSpell(AID.ShadowedVigil); // animLock=???
         d.RegisterSpell(AID.ScarletDelirium); // animLock=???
         d.RegisterSpell(AID.Comeuppance); // animLock=???

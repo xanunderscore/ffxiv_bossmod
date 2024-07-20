@@ -120,7 +120,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.HindstingStrike); // animLock=???
         d.RegisterSpell(AID.HindsbaneFang); // animLock=???
         d.RegisterSpell(AID.DreadMaw); // animLock=???
-        d.RegisterSpell(AID.Slither, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.Slither); // animLock=???
         d.RegisterSpell(AID.HuntersBite); // animLock=???
         d.RegisterSpell(AID.SwiftskinsBite); // animLock=???
         d.RegisterSpell(AID.JaggedMaw); // animLock=???
@@ -128,10 +128,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.DeathRattle); // animLock=???
         d.RegisterSpell(AID.SerpentsTail); // animLock=???
         d.RegisterSpell(AID.LastLash); // animLock=???
-        d.RegisterSpell(AID.Dreadwinder, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.Dreadwinder); // animLock=???
         d.RegisterSpell(AID.HuntersCoil); // animLock=???
         d.RegisterSpell(AID.SwiftskinsCoil); // animLock=???
-        d.RegisterSpell(AID.PitOfDread, maxCharges: 2); // animLock=???
+        d.RegisterSpell(AID.PitOfDread); // animLock=???
         d.RegisterSpell(AID.SwiftskinsDen); // animLock=???
         d.RegisterSpell(AID.HuntersDen); // animLock=???
         d.RegisterSpell(AID.TwinfangBite); // animLock=???
