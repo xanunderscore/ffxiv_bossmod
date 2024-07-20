@@ -1,6 +1,6 @@
 ﻿using BossMod.VPR;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
+using System.Runtime.InteropServices;
 
 namespace BossMod.Autorotation.xan;
 
@@ -19,11 +19,20 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         return def;
     }
 
+    public enum TwinType
+    {
+        None,
+        SingleTarget,
+        AOE
+    }
+
     public DreadCombo DreadCombo;
     public int Coil; // max 3
     public int Offering; // max 100
     public int Anguine; // 0-4
     public AID CurSerpentsTail; // adjusted during reawaken and after basic combos
+    public int TwinStacks; // max 2, granted by using "coil" or "den" gcds
+    public TwinType TwinCombo;
 
     public float TargetGnashLeft;
     public float SwiftscaledLeft;
@@ -186,20 +195,26 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
+        if (!Player.InCombat || primaryTarget == null)
+            return;
+
         if (CurSerpentsTail != AID.SerpentsTail && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
             PushOGCD(CurSerpentsTail, primaryTarget);
 
-        if (FellhuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangThresh, 0.6f, deadline))
-            PushOGCD(AID.TwinfangThresh, Player);
+        if (TwinStacks > 0)
+        {
+            if (FellhuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangThresh, 0.6f, deadline))
+                PushOGCD(AID.TwinfangThresh, Player);
 
-        if (FellskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodThresh, 0.6f, deadline))
-            PushOGCD(AID.TwinbloodThresh, Player);
+            if (FellskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodThresh, 0.6f, deadline))
+                PushOGCD(AID.TwinbloodThresh, Player);
 
-        if (HuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangBite, 0.6f, deadline))
-            PushOGCD(AID.TwinfangBite, primaryTarget);
+            if (HuntersVenomLeft > deadline && _state.CanWeave(AID.TwinfangBite, 0.6f, deadline))
+                PushOGCD(AID.TwinfangBite, primaryTarget);
 
-        if (SwiftskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodBite, 0.6f, deadline))
-            PushOGCD(AID.TwinbloodBite, primaryTarget);
+            if (SwiftskinsVenomLeft > deadline && _state.CanWeave(AID.TwinbloodBite, 0.6f, deadline))
+                PushOGCD(AID.TwinbloodBite, primaryTarget);
+        }
 
         if (Unlocked(AID.SerpentsIre) && Coil < CoilMax && _state.CanWeave(AID.SerpentsIre, 0.6f, deadline))
             PushOGCD(AID.SerpentsIre, Player);
@@ -227,19 +242,29 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         };
     }
 
+    [StructLayout(LayoutKind.Explicit, Size = 0x11)]
+    private struct ViperGaugeEx
+    {
+        [FieldOffset(0x08)] public byte RattlingCoilStacks;
+        [FieldOffset(0x0A)] public byte SerpentOffering;
+        [FieldOffset(0x09)] public byte AnguineTribute;
+        [FieldOffset(0x0B)] public DreadCombo DreadCombo; //Shows the previously used action of the secondary combo(s) whilst it's active
+        [FieldOffset(0x10)] public byte ComboEx; // extra combo stuff
+    }
+
     public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var track = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(track, ref primaryTarget, 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
-        var gauge = GetGauge<ViperGauge>();
+        var gauge = GetGauge<ViperGaugeEx>();
         DreadCombo = gauge.DreadCombo;
         Coil = gauge.RattlingCoilStacks;
         Offering = gauge.SerpentOffering;
         Anguine = gauge.AnguineTribute;
 
-        CurSerpentsTail = (*((byte*)JobGaugeManager.Instance() + 24) >> 2) switch
+        CurSerpentsTail = (gauge.ComboEx >> 2) switch
         {
             1 => AID.DeathRattle,
             2 => AID.LastLash,
@@ -247,8 +272,17 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
             4 => AID.SecondLegacy,
             5 => AID.ThirdLegacy,
             6 => AID.FourthLegacy,
-            _ => AID.SerpentsTail
+            _ => AID.SerpentsTail,
         };
+        // this doesn't really matter because the GCDs grant unique statuses, but might as well track regardless
+        TwinCombo = (gauge.ComboEx >> 2) switch
+        {
+            7 => TwinType.SingleTarget,
+            8 => TwinType.AOE,
+            _ => TwinType.None
+        };
+
+        TwinStacks = gauge.ComboEx & 3;
 
         FlanksbaneVenomLeft = StatusLeft(SID.FlanksbaneVenom);
         FlankstungVenomLeft = StatusLeft(SID.FlankstungVenom);
