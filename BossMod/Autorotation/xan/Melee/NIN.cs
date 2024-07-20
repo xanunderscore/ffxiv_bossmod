@@ -68,7 +68,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (_state.CountdownRemaining > 0)
         {
             if (_state.CountdownRemaining < 6)
-                UseMudra(AID.Suiton, primaryTarget, _state.CountdownRemaining < 1);
+                UseMudra(AID.Suiton, primaryTarget, endCondition: _state.CountdownRemaining < 1);
 
             return;
         }
@@ -171,20 +171,25 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         return GetCurrentPositional(primaryTarget) == Positional.Rear ? AID.AeolianEdge : AID.ArmorCrush;
     }
 
-    private void UseMudra(AID mudra, Actor? target, bool finish = true)
+    private void UseMudra(AID mudra, Actor? target, bool startCondition = true, bool endCondition = true)
     {
-        (var aid, var tar) = PickMudra(mudra, target, finish);
+        (var aid, var tar) = PickMudra(mudra, target, startCondition, endCondition);
         if (aid != AID.None)
             PushGCD(aid, tar);
     }
 
-    private (AID action, Actor? target) PickMudra(AID mudra, Actor? target, bool finish = true)
+    private (AID action, Actor? target) PickMudra(AID mudra, Actor? target, bool startCondition, bool endCondition)
     {
         if (!Unlocked(mudra) || target == null)
             return (AID.None, null);
 
         // no charges remaining and no kassatsu = we can't use it
         if (Mudra.Param == 0 && _state.CD(AID.Ten1) - 20 > _state.GCD && Kassatsu == 0)
+            return (AID.None, null);
+
+        // do nothing if start condition failed - since this could be something like checking ninjutsu CD, we skip it otherwise
+        // (since ninjutsu goes on CD as soon as you press the first one)
+        if (Mudra.Param == 0 && !startCondition)
             return (AID.None, null);
 
         // unrecognized action - this really shouldn't happen
@@ -200,7 +205,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         {
             if (Mudras[0] == 0)
                 return (ten1, Player);
-            else if (finish)
+            else if (endCondition)
                 return (AID.Ninjutsu, target);
         }
 
@@ -215,7 +220,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (Mudras[1] == 0)
                 return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
-            else if (finish)
+            else if (endCondition)
                 return (AID.Ninjutsu, target);
         }
 
@@ -239,7 +244,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (Mudras[2] == 0)
                 return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
-            else if (finish)
+            else if (endCondition)
                 return (AID.Ninjutsu, target);
         }
 
