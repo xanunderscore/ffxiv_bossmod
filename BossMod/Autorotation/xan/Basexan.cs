@@ -109,7 +109,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
     protected bool CanCast(AID aid) => GetSlidecastTime(aid) <= ForceMovementIn;
 
-    protected float ForceMovementIn => Manager.ActionManager.InputOverride.IsMoveRequested() ? 0 : Hints.ForceMovementIn;
+    protected float ForceMovementIn;
 
     protected bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     protected bool Unlocked(TraitID tid) => TraitUnlocked((uint)(object)tid);
@@ -161,12 +161,14 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
     protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 4);
 
-    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
         var pelo = Player.FindStatus(BRD.SID.Peloton);
         PelotonLeft = pelo != null ? _state.StatusDuration(pelo.Value.ExpireAt) : 0;
         SwiftcastLeft = StatusLeft(WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
+
+        ForceMovementIn = forceMovementIn;
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
 

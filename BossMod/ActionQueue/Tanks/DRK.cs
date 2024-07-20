@@ -111,7 +111,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.FloodOfShadow);
         d.RegisterSpell(AID.DarkMissionary);
         d.RegisterSpell(AID.LivingShadow);
-        d.RegisterSpell(AID.Oblation, maxCharges: 2);
+        d.RegisterSpell(AID.Oblation);
         d.RegisterSpell(AID.SaltAndDarkness);
         d.RegisterSpell(AID.SaltAndDarknessEnd);
         d.RegisterSpell(AID.Shadowbringer, maxCharges: 2);
