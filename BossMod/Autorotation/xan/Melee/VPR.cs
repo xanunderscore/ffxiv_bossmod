@@ -248,11 +248,11 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         [FieldOffset(0x08)] public byte RattlingCoilStacks;
         [FieldOffset(0x0A)] public byte SerpentOffering;
         [FieldOffset(0x09)] public byte AnguineTribute;
-        [FieldOffset(0x0B)] public DreadCombo DreadCombo; //Shows the previously used action of the secondary combo(s) whilst it's active
+        [FieldOffset(0x0B)] public DreadCombo DreadCombo;
         [FieldOffset(0x10)] public byte ComboEx; // extra combo stuff
     }
 
-    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         var track = strategy.Option(Track.Targeting).As<Targeting>();
         SelectPrimaryTarget(track, ref primaryTarget, 3);
@@ -281,7 +281,6 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
             8 => TwinType.AOE,
             _ => TwinType.None
         };
-
         TwinStacks = gauge.ComboEx & 3;
 
         FlanksbaneVenomLeft = StatusLeft(SID.FlanksbaneVenom);
