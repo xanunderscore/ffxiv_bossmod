@@ -107,6 +107,13 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
     private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
 
+    protected Positional GetCurrentPositional(Actor target) => (Player.Position - target.Position).Normalized().Dot(target.Rotation.ToDirection()) switch
+    {
+        < -0.707167f => Positional.Rear,
+        < 0.707167f => Positional.Flank,
+        _ => Positional.Front
+    };
+
     protected delegate bool PositionCheck(Actor playerTarget, Actor targetToTest);
     protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
 

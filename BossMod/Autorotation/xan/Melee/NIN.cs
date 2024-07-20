@@ -81,7 +81,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             {
                 PushGCD(TenChiJin.Param switch
                 {
-                    0 => AID.FumaShurikenJin,
+                    0 => AID.FumaJin,
                     1 => AID.TCJHyoton,
                     2 or 3 => AID.TCJKaton,
                     _ => AID.TCJDoton
@@ -91,7 +91,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             {
                 PushGCD(TenChiJin.Param switch
                 {
-                    0 => AID.FumaShurikenTen,
+                    0 => AID.FumaTen,
                     1 or 3 => AID.TCJRaiton,
                     2 => AID.TCJKaton,
                     _ => AID.TCJSuiton
@@ -103,18 +103,21 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (PhantomKamaitachi > _state.GCD && Mudra.Left == 0)
             PushGCD(AID.PhantomKamaitachi, BestRangedAOETarget);
 
-        if (_state.CD(AID.TenChiJin) > 0 && Raiju.Stacks > 0 && Mudra.Left == 0)
-            PushGCD(AID.FleetingRaiju, primaryTarget);
+        if (Raiju.Stacks > 0 && Mudra.Left == 0)
+        {
+            if (strategy.Option(Track.ForkedRaiju).As<RaijuStrategy>() == RaijuStrategy.Automatic && Player.DistanceToHitbox(BestNinjutsuTarget) is > 3 and <= 20)
+                PushGCD(AID.ForkedRaiju, BestNinjutsuTarget);
+
+            if (_state.CD(AID.TenChiJin) > 0)
+                PushGCD(AID.FleetingRaiju, primaryTarget);
+        }
 
         if (NumRangedAOETargets > 2 && Unlocked(AID.Katon))
         {
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
                 UseMudra(AID.Huton, BestRangedAOETarget);
 
-            if (Kassatsu > _state.GCD && _state.CD(AID.DreamWithinADream) > 0)
-                UseMudra(AID.GokaMekkyaku, BestRangedAOETarget);
-
-            if (Kassatsu == 0 && _state.CD(AID.DreamWithinADream) > 0)
+            if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 0)
                 UseMudra(AID.Katon, BestRangedAOETarget);
         }
         else
@@ -122,30 +125,41 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
                 UseMudra(AID.Suiton, BestNinjutsuTarget);
 
-            if (Kassatsu > _state.GCD && _state.CD(AID.DreamWithinADream) > 0)
-                UseMudra(AID.HyoshoRanryu, BestNinjutsuTarget);
-
-            if (Kassatsu == 0 && _state.CD(AID.DreamWithinADream) > 0)
-                UseMudra(AID.Raiton, BestNinjutsuTarget);
+            if (_state.CD(AID.Kassatsu) > 0 && _state.CD(AID.DreamWithinADream) > 0)
+                UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, BestNinjutsuTarget);
         }
 
         if (NumAOETargets > 2 && Unlocked(AID.DeathBlossom))
         {
-            if (ComboLastMove == AID.DeathBlossom)
+            if (ComboLastMove == AID.DeathBlossom && Unlocked(AID.HakkeMujinsatsu))
                 PushGCD(AID.HakkeMujinsatsu, Player);
 
             PushGCD(AID.DeathBlossom, Player);
         }
         else
         {
-            if (ComboLastMove == AID.GustSlash)
-                PushGCD(Kazematoi > 0 ? AID.AeolianEdge : AID.ArmorCrush, primaryTarget);
+            if (ComboLastMove == AID.GustSlash && Unlocked(AID.AeolianEdge) && primaryTarget != null)
+                PushGCD(GetComboEnder(primaryTarget), primaryTarget);
 
-            if (ComboLastMove == AID.SpinningEdge)
+            if (ComboLastMove == AID.SpinningEdge && Unlocked(AID.GustSlash))
                 PushGCD(AID.GustSlash, primaryTarget);
 
             PushGCD(AID.SpinningEdge, primaryTarget);
         }
+    }
+
+    private AID GetComboEnder(Actor primaryTarget)
+    {
+        if (!Unlocked(AID.ArmorCrush))
+            return AID.AeolianEdge;
+
+        if (Kazematoi == 0)
+            return AID.ArmorCrush;
+
+        if (Kazematoi >= 4)
+            return AID.AeolianEdge;
+
+        return GetCurrentPositional(primaryTarget) == Positional.Rear ? AID.AeolianEdge : AID.ArmorCrush;
     }
 
     private void UseMudra(AID mudra, Actor? target, bool finish = true)
@@ -157,7 +171,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     private (AID action, Actor? target) PickMudra(AID mudra, Actor? target, bool finish = true)
     {
-        if (Mudra.Param == 0 && _state.CD(AID.Ten) - 20 > _state.GCD)
+        if (Mudra.Param == 0 && _state.CD(AID.Ten1) - 20 > _state.GCD && Kassatsu == 0)
             return (AID.None, null);
 
         if (!Unlocked(mudra) || target == null)
@@ -168,10 +182,13 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
         var (len, last) = q;
 
+        var ten1 = Kassatsu > 0 ? AID.Ten2 : AID.Ten1;
+        var chi1 = Kassatsu > 0 ? AID.Chi2 : AID.Chi1;
+
         if (len == 1)
         {
             if (Mudras[0] == 0)
-                return (AID.Ten, Player);
+                return (ten1, Player);
             else if (finish)
                 return (AID.Ninjutsu, target);
         }
@@ -183,10 +200,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 return (AID.Ninjutsu, target);
 
             if (Mudras[0] == 0)
-                return (last == 1 ? AID.Chi : AID.Ten, Player);
+                return (last == 1 ? chi1 : ten1, Player);
 
             if (Mudras[1] == 0)
-                return (last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
+                return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
             else if (finish)
                 return (AID.Ninjutsu, target);
         }
@@ -198,19 +215,19 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 return (AID.Ninjutsu, target);
 
             if (Mudras[0] == 0)
-                return (last == 1 ? AID.Chi : AID.Ten, Player);
+                return (last == 1 ? chi1 : ten1, Player);
 
             if (Mudras[1] == 0)
                 return (Mudras[0] switch
                 {
-                    1 => last == 3 ? AID.ChiCombo : AID.JinCombo,
-                    2 => last == 3 ? AID.TenCombo : AID.JinCombo,
-                    3 => last == 1 ? AID.ChiCombo : AID.TenCombo,
+                    1 => last == 3 ? AID.Chi2 : AID.Jin2,
+                    2 => last == 3 ? AID.Ten2 : AID.Jin2,
+                    3 => last == 1 ? AID.Chi2 : AID.Ten2,
                     _ => AID.None
                 }, Player);
 
             if (Mudras[2] == 0)
-                return (last == 1 ? AID.TenCombo : last == 2 ? AID.ChiCombo : AID.JinCombo, Player);
+                return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
             else if (finish)
                 return (AID.Ninjutsu, target);
         }
@@ -220,29 +237,32 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        if (!Player.InCombat || BestNinjutsuTarget == null)
+        if (!Player.InCombat)
         {
             if (strategy.Option(Track.Hide).As<HideStrategy>() == HideStrategy.Automatic
                 && Mudra.Left == 0
-                && _state.CountdownRemaining == null
-                && _state.CD(AID.Ten) > 0
+                && _state.GCD == 0
+                && _state.CD(AID.Ten1) > 0
                 && _state.CanWeave(AID.Hide, 0.6f, deadline))
                 PushOGCD(AID.Hide, Player);
 
             return;
         }
 
-        if (_state.CanWeave(AID.Meisui, 0.6f, deadline) && _state.CD(AID.TrickAttack) > 0 && ShadowWalker > 0)
+        if (BestNinjutsuTarget == null)
+            return;
+
+        if (Unlocked(AID.Meisui) && _state.CanWeave(AID.Meisui, 0.6f, deadline) && _state.CD(AID.TrickAttack) > 0 && ShadowWalker > 0)
             PushOGCD(AID.Meisui, Player);
 
-        if (_state.CanWeave(AID.Kassatsu, 0.6f, deadline) && _state.CD(AID.TrickAttack) < 5)
+        if (Unlocked(AID.Kassatsu) && _state.CanWeave(AID.Kassatsu, 0.6f, deadline) && _state.CD(AID.TrickAttack) < 5)
             PushOGCD(AID.Kassatsu, Player);
 
         var buffsOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 
-        if (buffsOk)
+        if (buffsOk && Unlocked(AID.Mug))
         {
-            if (Ninki >= 10 && _state.CanWeave(AID.Mug, 0.6f, deadline))
+            if ((!Unlocked(TraitID.Shukiho) || Ninki >= 10) && _state.CanWeave(AID.Mug, 0.6f, deadline))
                 PushOGCD(AID.Mug, primaryTarget);
         }
 
@@ -252,10 +272,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (_state.GCD < 1.1f && Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && (_state.CD(AID.Mug) > 0 || !buffsOk))
             PushOGCD(AID.TrickAttack, primaryTarget);
 
-        if (_state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.DreamWithinADream, 0.6f, deadline))
+        if (Unlocked(AID.DreamWithinADream) && _state.CD(AID.TrickAttack) > 10 && _state.CanWeave(AID.DreamWithinADream, 0.6f, deadline))
             PushOGCD(AID.DreamWithinADream, primaryTarget);
 
-        if (_state.CD(AID.Ten) > 20 && Mudra.Left == 0 && Kassatsu == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline))
+        if (Unlocked(AID.TenChiJin) && _state.CD(AID.Ten1) > 20 && Mudra.Left == 0 && Kassatsu == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline))
             PushOGCD(AID.TenChiJin, Player);
 
         if (Meisui > 0 && Ninki >= 50 && _state.CanWeave(AID.Bhavacakra, 0.6f, deadline))
@@ -270,9 +290,12 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         }
     }
 
-    private (Positional, bool) GetNextPositional()
+    private (Positional, bool) GetNextPositional(Actor? primaryTarget)
     {
-        return (Kazematoi == 0 ? Positional.Flank : Positional.Rear, ComboLastMove == AID.GustSlash);
+        if (!Unlocked(AID.AeolianEdge) || primaryTarget == null)
+            return (Positional.Any, false);
+
+        return (GetComboEnder(primaryTarget) == AID.AeolianEdge ? Positional.Rear : Positional.Flank, ComboLastMove == AID.GustSlash);
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
@@ -317,7 +340,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             NumRangedAOETargets = BestRangedAOETarget == null ? 0 : 1;
         }
 
-        _state.UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
+        _state.UpdatePositionals(primaryTarget, GetNextPositional(primaryTarget), TrueNorthLeft > _state.GCD);
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));

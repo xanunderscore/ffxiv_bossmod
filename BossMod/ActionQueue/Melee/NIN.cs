@@ -15,9 +15,9 @@ public enum AID : uint
     TrickAttack = 2258, // L18, instant, 60.0s CD (group 8), range 3, single-target, targets=Hostile
     AeolianEdge = 2255, // L26, instant, GCD, range 3, single-target, targets=Hostile
     Ninjutsu = 2260, // L30, instant, GCD, range 0, single-target, targets=Self
-    Ten = 2259, // L30, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
-    Chi = 2261, // L35, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350s?
-    Jin = 2263, // L45, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
+    Ten1 = 2259, // L30, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
+    Chi1 = 2261, // L35, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350s?
+    Jin1 = 2263, // L45, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
     FumaShuriken = 2265, // L30, instant, GCD, range 25, single-target, targets=Hostile
     Katon = 2266, // L35, instant, GCD, range 20, AOE 5 circle, targets=Hostile
     Raiton = 2267, // L35, instant, GCD, range 20, single-target, targets=Hostile
@@ -29,12 +29,12 @@ public enum AID : uint
     DeathBlossom = 2254, // L38, instant, GCD, range 0, AOE 5 circle, targets=Self
     Assassinate = 2246, // L40, instant, 60.0s CD (group 9), range 3, single-target, targets=Hostile
     Shukuchi = 2262, // L40, instant, 60.0s CD (group 15/70), range 20, ???, targets=Area, animLock=0.800
-    TenCombo = 18805, // L30, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    ChiCombo = 18806, // L35, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    JinCombo = 18807, // L45, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    FumaShurikenTen = 18873, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    FumaShurikenChi = 18874, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    FumaShurikenJin = 18875, // L30, instant, GCD, range 25, single-target, targets=Hostile
+    Ten2 = 18805, // L30, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
+    Chi2 = 18806, // L35, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
+    Jin2 = 18807, // L45, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
+    FumaTen = 18873, // L30, instant, GCD, range 25, single-target, targets=Hostile
+    FumaChi = 18874, // L30, instant, GCD, range 25, single-target, targets=Hostile
+    FumaJin = 18875, // L30, instant, GCD, range 25, single-target, targets=Hostile
     TCJKaton = 18876, // L35, instant, GCD, range 20, AOE 5 circle, targets=Hostile
     TCJRaiton = 18877, // L35, instant, GCD, range 20, single-target, targets=Hostile
     TCJHyoton = 18878, // L45, instant, GCD, range 25, single-target, targets=Hostile
@@ -135,22 +135,22 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.AeolianEdge);
         d.RegisterSpell(AID.FumaShuriken);
         d.RegisterSpell(AID.Ninjutsu);
-        d.RegisterSpell(AID.FumaShurikenJin);
-        d.RegisterSpell(AID.FumaShurikenChi);
-        d.RegisterSpell(AID.FumaShurikenTen);
-        d.RegisterSpell(AID.Ten, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.FumaJin);
+        d.RegisterSpell(AID.FumaChi);
+        d.RegisterSpell(AID.FumaTen);
+        d.RegisterSpell(AID.Ten1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.RabbitMedium);
-        d.RegisterSpell(AID.TenCombo, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Ten2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.TCJRaiton);
-        d.RegisterSpell(AID.ChiCombo, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Chi2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.Raiton);
         d.RegisterSpell(AID.TCJKaton);
-        d.RegisterSpell(AID.Chi, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350s?
+        d.RegisterSpell(AID.Chi1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350s?
         d.RegisterSpell(AID.Katon);
         d.RegisterSpell(AID.DeathBlossom);
         d.RegisterSpell(AID.Assassinate);
         d.RegisterSpell(AID.Shukuchi, instantAnimLock: 0.80f); // animLock=0.800
-        d.RegisterSpell(AID.Jin, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Jin1, maxCharges: 2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.TCJSuiton);
         d.RegisterSpell(AID.TCJDoton);
         d.RegisterSpell(AID.TCJHuton);
@@ -158,7 +158,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Hyoton);
         d.RegisterSpell(AID.Huton);
         d.RegisterSpell(AID.Suiton);
-        d.RegisterSpell(AID.JinCombo, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Jin2, instantAnimLock: 0.35f); // animLock=0.350
         d.RegisterSpell(AID.Doton);
         d.RegisterSpell(AID.Kassatsu);
         d.RegisterSpell(AID.HakkeMujinsatsu);

@@ -183,8 +183,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
             PushOGCD(AID.PomMuse, BestAOETarget);
 
         if (ShouldLandscape(strategy, deadline))
-            // TODO figure out why it won't weave (in opener) if using ogcd priority
-            // motifs have 3s cast with 4s GCD, giving 1s window
+            // TODO fix prio once the queue bug is fixed
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.ScenicMuse), Player, ActionQueue.Priority.High + 600, targetPos: Player.PosRot.XYZ());
 
         if (ShouldSubtract(strategy, deadline))
@@ -266,9 +265,6 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
         return Palette > 75 || _state.RaidBuffsLeft > 0 || SpectrumLeft > 0;
     }
-
-    public override string DescribeState()
-        => $"Canvas={CanvasFlags},Creature={CreatureFlags},W={Weapon},L={Landscape},PT={Paint},PL={Palette}";
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
