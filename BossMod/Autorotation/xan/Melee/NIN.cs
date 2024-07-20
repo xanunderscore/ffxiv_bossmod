@@ -113,35 +113,41 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 PushGCD(AID.FleetingRaiju, primaryTarget);
         }
 
-        if (NumRangedAOETargets > 2 && Unlocked(AID.Katon))
+        var useAOE = NumRangedAOETargets > 2;
+
+        // TODO save charges for trick
+        if (Unlocked(AID.Raiton))
         {
             if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
-                UseMudra(AID.Huton, BestRangedAOETarget);
-
-            // this will automatically adjust to goka mekkyaku
-            if (_state.CD(AID.Kassatsu) > 0 && AssassinateCD > Kassatsu && _state.CD(AID.TrickAttack) > Kassatsu)
-                UseMudra(AID.Katon, BestRangedAOETarget);
-
-            // fallthrough - condition changed while trying to execute an earlier case
-            if (Mudra.Left > 0)
-                PushGCD(AID.Katon, BestRangedAOETarget);
-        }
-        else if (Unlocked(AID.Raiton))
-        {
-            if (_state.CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
-                UseMudra(AID.Suiton, primaryTarget);
+            {
+                if (useAOE)
+                    UseMudra(AID.Huton, BestRangedAOETarget);
+                else
+                    UseMudra(AID.Suiton, primaryTarget);
+            }
 
             if (_state.CD(AID.Kassatsu) > 0 && AssassinateCD > Kassatsu && _state.CD(AID.TrickAttack) > Kassatsu)
-                UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, primaryTarget);
+            {
+                if (useAOE)
+                    // this will get auto transformed to goka mekkyaku
+                    UseMudra(AID.Katon, BestRangedAOETarget);
+                else
+                    UseMudra(Kassatsu > 0 && Unlocked(AID.HyoshoRanryu) ? AID.HyoshoRanryu : AID.Raiton, primaryTarget);
+            }
 
-            // see above
+            // some condition changed during cast
             if (Mudra.Left > 0)
-                PushGCD(AID.Raiton, primaryTarget);
+            {
+                if (useAOE)
+                    PushGCD(AID.Katon, BestRangedAOETarget);
+                else
+                    PushGCD(AID.Raiton, primaryTarget);
+            }
         }
         else if (Unlocked(AID.FumaShuriken))
             UseMudra(AID.FumaShuriken, primaryTarget);
 
-        if (NumAOETargets > 2 && Unlocked(AID.DeathBlossom))
+        if (useAOE && Unlocked(AID.DeathBlossom))
         {
             if (ComboLastMove == AID.DeathBlossom && Unlocked(AID.HakkeMujinsatsu))
                 PushGCD(AID.HakkeMujinsatsu, Player);
@@ -202,7 +208,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         var (len, last) = combo;
 
         var ten1 = Kassatsu > 0 ? AID.Ten2 : AID.Ten1;
-        var chi1 = Kassatsu > 0 ? AID.Chi2 : AID.Chi1;
+        var jin1 = Kassatsu > 0 ? AID.Jin2 : AID.Jin1;
 
         if (len == 1)
         {
@@ -219,7 +225,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 return (AID.Ninjutsu, target);
 
             if (Mudras[0] == 0)
-                return (last == 1 ? chi1 : ten1, Player);
+                return (last == 1 ? jin1 : ten1, Player);
 
             if (Mudras[1] == 0)
                 return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
@@ -234,7 +240,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 return (AID.Ninjutsu, target);
 
             if (Mudras[0] == 0)
-                return (last == 1 ? chi1 : ten1, Player);
+                return (last == 1 ? jin1 : ten1, Player);
 
             if (Mudras[1] == 0)
                 return (Mudras[0] switch
