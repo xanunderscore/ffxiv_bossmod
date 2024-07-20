@@ -1,10 +1,8 @@
-﻿using BossMod;
-using BossMod.Autorotation;
-using ImGuiNET;
+﻿using ImGuiNET;
 using ImGuiScene;
-using System.IO;
+using BossMod;
 using System.Reflection;
-using System.Text.Json;
+using BossMod.Autorotation;
 
 namespace UIDev;
 
@@ -24,7 +22,7 @@ class UITestWindow : UIWindow
         set => RespectCloseHotkey = !value;
     }
 
-    public UITestWindow(SimpleImGuiScene scene, string configPath, string rotationRoot, string savedReplaysFile) : base("Boss mod UI development", false, new(600, 600))
+    public UITestWindow(SimpleImGuiScene scene, string configPath, string rotationRoot) : base("Boss mod UI development", false, new(600, 600))
     {
         _scene = scene;
         _testTypes = Utils.GetDerivedTypes<TestWindow>(Assembly.GetExecutingAssembly()).Where(t => !t.IsAbstract).ToList();
@@ -35,7 +33,7 @@ class UITestWindow : UIWindow
         _onConfigModified = Service.Config.Modified.Subscribe(() => ConfigModified = true);
 
         _rotationDB = new(new(rotationRoot));
-        _replayManager = new(_rotationDB.Plans, ".", savedReplaysFile);
+        _replayManager = new(_rotationDB, ".");
     }
 
     protected override void Dispose(bool disposing)

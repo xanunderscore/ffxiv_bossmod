@@ -3,16 +3,13 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.IO;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BossMod;
 
-public sealed class ReplayManager : IDisposable
+public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialogStartPath) : IDisposable
 {
-    private record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
-
     private sealed class ReplayEntry : IDisposable
     {
         public string Path;
@@ -23,13 +20,11 @@ public sealed class ReplayManager : IDisposable
         public bool AutoShowWindow;
         public bool Selected;
         public bool Disposed;
-        public DateTime SeekOnOpen;
 
-        public ReplayEntry(string path, bool autoShow, DateTime seekOnOpen = default)
+        public ReplayEntry(string path, bool autoShow)
         {
             Path = path;
             AutoShowWindow = autoShow;
-            SeekOnOpen = seekOnOpen;
             Replay = Task.Run(() => ReplayParserLog.Parse(path, ref Progress, Cancel.Token));
         }
 
@@ -43,9 +38,9 @@ public sealed class ReplayManager : IDisposable
             Disposed = true;
         }
 
-        public void Show(PlanDatabase planDB)
+        public void Show(RotationDatabase rotationDB)
         {
-            Window ??= new(Replay.Result, planDB, SeekOnOpen);
+            Window ??= new(Replay.Result, rotationDB);
             Window.IsOpen = true;
             Window.BringToFront();
         }
@@ -74,24 +69,12 @@ public sealed class ReplayManager : IDisposable
 
     private readonly List<ReplayEntry> _replayEntries = [];
     private readonly List<AnalysisEntry> _analysisEntries = [];
-    private readonly PlanDatabase planDB;
-    private readonly string savedReplaysFile;
     private int _nextAnalysisId;
     private string _path = "";
     private FileDialog? _fileDialog;
-    private string fileDialogStartPath;
-
-    public ReplayManager(PlanDatabase planDB, string fileDialogStartPath, string savedReplaysFile)
-    {
-        this.planDB = planDB;
-        this.fileDialogStartPath = fileDialogStartPath;
-        this.savedReplaysFile = savedReplaysFile;
-        LoadSaved();
-    }
 
     public void Dispose()
     {
-        SaveReplayState();
         foreach (var e in _analysisEntries)
             e.Dispose();
         foreach (var e in _replayEntries)
@@ -109,7 +92,7 @@ public sealed class ReplayManager : IDisposable
         {
             if (e.AutoShowWindow && e.Window == null && e.Replay.IsCompletedSuccessfully && e.Replay.Result.Ops.Count > 0)
             {
-                e.Show(planDB);
+                e.Show(rotationDB);
             }
         }
         // auto-show analysis windows that are now ready, auto dispose entries that had their windows closed
@@ -173,7 +156,7 @@ public sealed class ReplayManager : IDisposable
                 if (popup)
                 {
                     if (ImGui.MenuItem("Show"))
-                        e.Show(planDB);
+                        e.Show(rotationDB);
                     if (ImGui.MenuItem("Convert to verbose"))
                         ConvertLog(e.Replay.Result, ReplayLogFormat.TextVerbose);
                     if (ImGui.MenuItem("Convert to short text"))
@@ -191,7 +174,6 @@ public sealed class ReplayManager : IDisposable
                 e.Dispose();
                 foreach (var a in _analysisEntries.Where(a => !a.Disposed && a.Replays.Contains(e)))
                     a.Dispose();
-                SaveReplayState();
             }
 
             ImGui.TableNextColumn();
@@ -225,7 +207,6 @@ public sealed class ReplayManager : IDisposable
                     e.Dispose();
                 foreach (var e in _analysisEntries.Where(e => e.Replays.Any(r => r.Selected)))
                     e.Dispose();
-                SaveReplayState();
             }
         }
         ImGui.SameLine();
@@ -235,7 +216,6 @@ public sealed class ReplayManager : IDisposable
                 e.Dispose();
             foreach (var e in _analysisEntries)
                 e.Dispose();
-            SaveReplayState();
         }
     }
 
@@ -254,7 +234,6 @@ public sealed class ReplayManager : IDisposable
             if (ImGui.Button("Open"))
             {
                 _replayEntries.Add(new(_path, true));
-                SaveReplayState();
             }
         }
         ImGui.SameLine();
@@ -273,7 +252,6 @@ public sealed class ReplayManager : IDisposable
             if (ImGui.Button("Load all"))
             {
                 LoadAll(_path);
-                SaveReplayState();
             }
         }
     }
@@ -318,46 +296,5 @@ public sealed class ReplayManager : IDisposable
         player.WorldState.Frame.Timestamp = r.Ops[0].Timestamp; // so that we get correct name etc.
         using var relogger = new ReplayRecorder(player.WorldState, format, false, new FileInfo(r.Path).Directory!, format.ToString());
         player.AdvanceTo(DateTime.MaxValue, () => { });
-    }
-
-    private void SaveReplayState()
-    {
-        var cfg = Service.Config.Get<ReplayManagementConfig>();
-        if (!cfg.RememberReplays)
-            return;
-
-        using var stream = new FileStream(savedReplaysFile, FileMode.Create, FileAccess.Write, FileShare.Read);
-        using var jwriter = Serialization.WriteJson(stream);
-        JsonSerializer.Serialize(jwriter, _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)), Serialization.BuildSerializationOptions());
-        Service.Log($"Replays state saved to {savedReplaysFile}");
-    }
-
-    private void LoadSaved()
-    {
-        var cfg = Service.Config.Get<ReplayManagementConfig>();
-        if (!cfg.RememberReplays)
-            return;
-
-        var saved = new FileInfo(savedReplaysFile);
-        if (!saved.Exists)
-        {
-            Service.Log($"Saved replays file {savedReplaysFile} does not exist");
-            return;
-        }
-
-        try
-        {
-            using var json = Serialization.ReadJson(saved.FullName);
-            var serOptions = Serialization.BuildSerializationOptions();
-            var list = json.Deserialize<List<ReplayMemory>>(serOptions)!;
-
-            foreach (var memory in list)
-                _replayEntries.Add(new(memory.Path, memory.IsOpen, cfg.RememberReplayTimes ? memory.PlaybackPosition : default));
-        }
-        catch (Exception ex)
-        {
-            Service.Log($"Unable to load saved replays from {savedReplaysFile}: {ex}");
-            return;
-        }
     }
 }
