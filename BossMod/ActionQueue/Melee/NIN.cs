@@ -106,6 +106,7 @@ public enum SID : uint
     Hidden = 614, // applied by Hide to self
     Bloodbath = 84, // applied by Bloodbath to self
     TrickAttack = 3254, // applied by Trick Attack to target
+    KunaisBane = 3906, // applied by Kunai's Bane to target
     Feint = 1195, // applied by Feint to target
     TenChiJin = 1186, // applied by Fuma Shuriken, Raiton, Ten Chi Jin to self
     Mudra = 496, // applied by Ten, Ten, Chi, Jin, Jin to self
