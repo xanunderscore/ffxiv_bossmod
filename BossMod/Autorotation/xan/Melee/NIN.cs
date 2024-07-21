@@ -40,6 +40,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     public float TenriJindo;
 
     public float TargetTrickLeft; // max 15
+    public float TargetMugLeft; // max 20
 
     public int NumAOETargets;
     public int NumRangedAOETargets;
@@ -102,7 +103,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (PhantomKamaitachi > _state.GCD && Mudra.Left == 0)
+        if (PhantomKamaitachi > _state.GCD && Mudra.Left == 0 && ShouldPK(BestRangedAOETarget))
             PushGCD(AID.PhantomKamaitachi, BestRangedAOETarget);
 
         if (Raiju.Stacks > 0 && Mudra.Left == 0)
@@ -165,6 +166,17 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
             PushGCD(AID.SpinningEdge, primaryTarget);
         }
+    }
+
+    private bool ShouldPK(Actor? primaryTarget)
+    {
+        if (_state.RaidBuffsLeft > _state.GCD || TargetTrickLeft > _state.GCD || TargetMugLeft > _state.GCD)
+            return true;
+
+        if (PhantomKamaitachi < _state.GCD + _state.AttackGCDTime)
+            return true;
+
+        return Player.DistanceToHitbox(primaryTarget) is > 3 and <= 20;
     }
 
     private AID GetComboEnder(Actor primaryTarget)
@@ -298,8 +310,12 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
                 PushOGCD(AID.Bunshin, Player);
         }
 
-        if (_state.GCD < 0.8f && Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && (_state.CD(AID.Mug) > 0 || !buffsOk))
-            PushOGCD(AID.TrickAttack, primaryTarget);
+        if (Unlocked(AID.TrickAttack) && _state.CanWeave(AID.TrickAttack, 0.6f, deadline) && Hidden && (_state.CD(AID.Mug) > 0 || !buffsOk))
+        {
+            // late weave trick during 2min windows with mug/dokumori active; otherwise use on cooldown
+            if (_state.GCD < 0.8f || TargetMugLeft == 0)
+                PushOGCD(AID.TrickAttack, primaryTarget);
+        }
 
         if (Unlocked(AID.DreamWithinADream))
         {
@@ -352,18 +368,23 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         Kazematoi = gauge.Kazematoi;
 
         var mudra = Player.FindStatus(SID.Mudra);
+        // for some reason, pending status isn't cleared fast enough
         if (mudra == null)
             Mudra = (0, 0);
         else
             Mudra = (_state.StatusDuration(mudra.Value.ExpireAt), mudra.Value.Extra);
 
         ShadowWalker = StatusLeft(SID.ShadowWalker, 20);
-        Kassatsu = StatusLeft(SID.Kassatsu);
+        Kassatsu = StatusLeft(SID.Kassatsu, 15);
         PhantomKamaitachi = StatusLeft(SID.PhantomKamaitachiReady);
         HiddenStatus = StatusStacks(SID.Hidden) > 0;
         TargetTrickLeft = MathF.Max(
             _state.StatusDetails(primaryTarget, SID.TrickAttack, Player.InstanceID).Left,
             _state.StatusDetails(primaryTarget, SID.KunaisBane, Player.InstanceID).Left
+        );
+        TargetMugLeft = MathF.Max(
+            _state.StatusDetails(primaryTarget, SID.VulnerabilityUp).Left,
+            _state.StatusDetails(primaryTarget, SID.Dokumori).Left
         );
         Raiju = Status(SID.RaijuReady);
         TenChiJin = Status(SID.TenChiJin);
