@@ -1,4 +1,4 @@
-﻿
+﻿#if DEBUG
 using System.Diagnostics.CodeAnalysis;
 
 namespace BossMod.StrikingDummy;
@@ -75,5 +75,6 @@ class StrikingDummyStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Boss, PlanLevel = 97)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Boss, PlanLevel = 1)]
 public class StrikingDummy(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }
+#endif
