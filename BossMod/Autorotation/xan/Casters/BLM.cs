@@ -28,12 +28,18 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
     public float Triplecast;
     public float Thunderhead;
     public float Firestarter;
+    public bool InLeyLines;
+
+    public float TargetThunderLeft;
 
     public uint MP => Player.HPMP.CurMP;
     public int Fire => Math.Max(0, Element);
     public int Ice => Math.Max(0, -Element);
 
-    public uint PendingMP;
+    public int PolyglotMax => Unlocked(TraitID.EnhancedPolyglotII) ? 3 : Unlocked(TraitID.EnhancedPolyglot) ? 2 : 1;
+
+    private Actor? BestAOETarget;
+    private int NumAOETargets;
 
     private enum Aspect
     {
@@ -69,6 +75,14 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
+        if (_state.CountdownRemaining > 0)
+        {
+            if (_state.CountdownRemaining < GetCastTime(AID.Fire3))
+                PushGCD(AID.Fire3, primaryTarget);
+
+            return;
+        }
+
         if (Fire > 0)
         {
             GetFireGCD(strategy, primaryTarget);
@@ -81,40 +95,126 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        PushGCD(AID.Fire3, primaryTarget);
+        PushGCD(AID.Blizzard3, primaryTarget);
     }
 
     private void GetFireGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Thunderhead > _state.GCD)
-            PushGCD(AID.Thunder3, primaryTarget);
+        if (Thunderhead > _state.GCD && TargetThunderLeft < 5)
+            Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
 
-        if (Fire == 3)
+        if (Fire < 3)
+            Choose(AID.Fire3, AID.Fire2, primaryTarget);
+
+        if (NumAOETargets > 2)
         {
-            // despair requires 800 MP
-            if (MP < 800)
-                PushGCD(AID.Blizzard3, primaryTarget);
-            // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
-            else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
-                PushGCD(AID.Despair, primaryTarget);
-            else if (ElementLeft > GetSlidecastEnd(AID.Fire4) + GetCastTime(AID.Fire4))
-                PushGCD(AID.Fire4, primaryTarget);
-            else if (ElementLeft > GetSlidecastEnd(AID.Fire4) && Paradox)
-                PushGCD(AID.Fire4, primaryTarget);
-            else
-                PushGCD(AID.Fire1, primaryTarget);
+            if (Hearts == 3)
+                PushGCD(AID.Fire2, BestAOETarget);
+
+            PushGCD(AID.Flare, BestAOETarget);
+        }
+        else
+        {
+            var minF4Time = MathF.Max(_state.SpellGCDTime, GetCastTime(AID.Fire4) + _state.AnimationLockDelay);
+
+            if (Fire == 3)
+            {
+                if (_state.CanWeave(AID.LeyLines, 0.6f, _state.GCD + _state.SpellGCDTime) && GetCastTime(AID.Fire4) > 0)
+                    TryInstantCast(strategy, primaryTarget);
+
+                // despair requires 800 MP
+                if (MP < 800)
+                    PushGCD(AID.Blizzard3, primaryTarget);
+                // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
+                else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
+                    PushGCD(AID.Despair, primaryTarget);
+                // AF3 will last *at least* another two F4s, ok to cast
+                // TODO in the case where we have one triplecast stack left, this will end up checking (timer > 2.5 + 2.5) instead of (timer > 2.5 + 3.1) - i think it's ok?
+                else if (ElementLeft > TimeUntilNextCast + minF4Time * 2)
+                    PushGCD(AID.Fire4, primaryTarget);
+                // AF3 will last long enough for us to refresh using Paradox
+                else if (ElementLeft > TimeUntilNextCast + minF4Time && Paradox)
+                    PushGCD(AID.Fire4, primaryTarget);
+                else
+                    PushGCD(AID.Fire1, primaryTarget);
+            }
         }
     }
 
     private void GetIceGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (Ice < 3)
-            PushGCD(AID.Blizzard3, primaryTarget);
+            Choose(AID.Blizzard3, AID.Blizzard2, primaryTarget);
 
         if (Hearts < 3)
-            PushGCD(AID.Blizzard4, primaryTarget);
+            Choose(AID.Blizzard4, AID.Freeze, primaryTarget);
 
-        PushGCD(AID.Fire3, primaryTarget);
+        var nextGCD = _state.GCD + _state.SpellGCDTime;
+
+        if (ElementLeft > nextGCD && Firestarter > nextGCD && _state.CanWeave(AID.Transpose, 0.6f, nextGCD) && SwiftcastLeft == 0 && Triplecast == 0)
+            TryInstantCast(strategy, primaryTarget, useFirestarter: false);
+
+        Choose(AID.Fire3, AID.Fire2, primaryTarget);
+    }
+
+    private void Choose(AID st, AID aoe, Actor? primaryTarget, int additionalPrio = 0)
+    {
+        if (NumAOETargets > 2)
+            PushGCD(aoe, BestAOETarget, additionalPrio);
+        else
+            PushGCD(st, primaryTarget, additionalPrio);
+    }
+
+    private void TryInstantCast(StrategyValues strategy, Actor? primaryTarget, bool useFirestarter = true, bool useThunderhead = true, bool usePolyglot = true)
+    {
+        if (usePolyglot && Polyglot > 0)
+            Choose(AID.Xenoglossy, AID.Foul, primaryTarget);
+
+        if (useThunderhead && Thunderhead > _state.GCD)
+            Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0);
+
+        if (useFirestarter && Firestarter > _state.GCD)
+            PushGCD(AID.Fire3, primaryTarget);
+    }
+
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    {
+        if (!Player.InCombat || primaryTarget == null)
+            return;
+
+        if (Unlocked(AID.Swiftcast) && _state.CanWeave(AID.Swiftcast, 0.6f, deadline))
+            PushOGCD(AID.Swiftcast, Player);
+
+        if (Unlocked(AID.Amplifier) && _state.CanWeave(AID.Amplifier, 0.6f, deadline) && Polyglot < PolyglotMax)
+            PushOGCD(AID.Amplifier, Player);
+
+        if (ShouldTriplecast(strategy, deadline))
+            PushOGCD(AID.Triplecast, Player);
+
+        if (ShouldUseLeylines(strategy, deadline))
+            PushOGCD(AID.LeyLines, Player);
+
+        if (Unlocked(AID.Manafont) && MP == 0 && Fire > 0 && _state.CanWeave(AID.Manafont, 0.6f, deadline))
+            PushOGCD(AID.Manafont, Player);
+
+        if (Firestarter > _state.GCD && Ice > 0 && _state.CanWeave(AID.Transpose, 0.6f, deadline))
+            PushOGCD(AID.Transpose, Player);
+    }
+
+    private bool ShouldTriplecast(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.Triplecast) || !_state.CanWeave(_state.CD(AID.Triplecast) - 60, 0.6f, deadline) || Triplecast > 0)
+            return false;
+
+        return ShouldUseLeylines(strategy, _state.GCD) || InLeyLines;
+    }
+
+    private bool ShouldUseLeylines(StrategyValues strategy, float deadline)
+    {
+        if (!Unlocked(AID.LeyLines) || !_state.CanWeave(AID.LeyLines, 0.6f, deadline))
+            return false;
+
+        return strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
@@ -135,7 +235,21 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
         Triplecast = StatusLeft(SID.Triplecast);
         Thunderhead = StatusLeft(SID.Thunderhead);
+        Firestarter = StatusLeft(SID.Firestarter);
+        InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
+
+        TargetThunderLeft = _state.StatusDetails(primaryTarget, SID.Thunder3, 27).Left;
+
+        if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
+        {
+            (BestAOETarget, NumAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
+        }
+        else
+        {
+            (BestAOETarget, NumAOETargets) = (null, 0);
+        }
 
         CalcNextBestGCD(strategy, primaryTarget);
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 }

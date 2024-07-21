@@ -4,7 +4,7 @@ namespace BossMod.Autorotation.xan;
 
 public enum Targeting { Auto, Manual, AutoPrimary }
 public enum OffensiveStrategy { Automatic, Delay, Force }
-public enum AOEStrategy { AOE, SingleTarget }
+public enum AOEStrategy { AOE, SingleTarget, AOEForced }
 
 public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
 {
@@ -100,10 +100,12 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     /// <returns></returns>
     protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
 
-    protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
-    protected float GetSlidecastEnd(AID aid) => _state.GCD + GetSlidecastTime(aid);
+    protected float TimeUntilNextCast => MathF.Max(_state.GCD, _state.AnimationLock + _state.AnimationLockDelay);
 
-    protected bool CanCast(AID aid) => GetSlidecastTime(aid) <= ForceMovementIn;
+    protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
+    protected float GetSlidecastEnd(AID aid) => TimeUntilNextCast + GetSlidecastTime(aid);
+
+    protected bool CanCast(AID aid) => GetSlidecastEnd(aid) <= ForceMovementIn;
 
     protected float ForceMovementIn;
 
@@ -193,7 +195,8 @@ static class Extendxan
     {
         return def.Define(trackname).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions");
+            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions")
+            .AddOption(AOEStrategy.AOEForced, "AOEF", "Always use AOE actions");
     }
 
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
