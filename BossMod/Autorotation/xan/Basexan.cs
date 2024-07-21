@@ -49,7 +49,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         }
 
         Vector3 targetPos = default;
-        if (def.ID.ID is (uint)BossMod.BLM.AID.LeyLines or (uint)BossMod.BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse)
+        if (def.ID.ID is (uint)BossMod.BLM.AID.LeyLines or (uint)BossMod.BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse or (uint)BossMod.PCT.AID.ScenicMuse)
             targetPos = Player.PosRot.XYZ();
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos);

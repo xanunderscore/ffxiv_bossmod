@@ -84,9 +84,6 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (CombatTimer < 1 && Weapon)
-            PushGCD(AID.SteelMuse, Player);
-
         if (Starstruck > _state.GCD)
             PushGCD(AID.StarPrism, BestAOETarget);
 
