@@ -160,6 +160,9 @@ public sealed class Definitions : IDisposable
 
     private void Customize(ActionDefinitions d)
     {
+        d.RegisterChargeIncreaseTrait(AID.StrikingMuse, TraitID.EnhancedPictomancyII);
+        d.RegisterChargeIncreaseTrait(AID.LivingMuse, TraitID.EnhancedPictomancyIV);
+
         d.Spell(AID.Smudge)!.TransformAngle = (_, _, _, _) => _config.AlignDashToCamera
             ? Camera.Instance!.CameraAzimuth.Radians() + 180.Degrees()
             : null;
