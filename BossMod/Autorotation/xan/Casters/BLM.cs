@@ -25,8 +25,15 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
     public int AstralSoul; // max 6
     public bool Paradox;
 
-    public float TriplecastLeft;
-    public float ThunderheadLeft;
+    public float Triplecast;
+    public float Thunderhead;
+    public float Firestarter;
+
+    public uint MP => Player.HPMP.CurMP;
+    public int Fire => Math.Max(0, Element);
+    public int Ice => Math.Max(0, -Element);
+
+    public uint PendingMP;
 
     private enum Aspect
     {
@@ -44,17 +51,17 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     protected override float GetCastTime(AID aid)
     {
-        if (TriplecastLeft > _state.GCD)
+        if (Triplecast > _state.GCD)
             return 0;
 
         var castTime = base.GetCastTime(aid);
         if (castTime == 0)
             return 0;
 
-        if (Element == -3 && GetAspect(aid) == Aspect.Fire)
-            castTime *= 0.5f;
+        if (aid == AID.Fire3 && Firestarter > _state.GCD)
+            return 0;
 
-        if (Element == 3 && GetAspect(aid) == Aspect.Ice)
+        if (Element == -3 && GetAspect(aid) == Aspect.Fire || Element == 3 && GetAspect(aid) == Aspect.Ice)
             castTime *= 0.5f;
 
         return castTime;
@@ -62,6 +69,52 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
+        if (Fire > 0)
+        {
+            GetFireGCD(strategy, primaryTarget);
+            return;
+        }
+
+        if (Ice > 0)
+        {
+            GetIceGCD(strategy, primaryTarget);
+            return;
+        }
+
+        PushGCD(AID.Fire3, primaryTarget);
+    }
+
+    private void GetFireGCD(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (Thunderhead > _state.GCD)
+            PushGCD(AID.Thunder3, primaryTarget);
+
+        if (Fire == 3)
+        {
+            // despair requires 800 MP
+            if (MP < 800)
+                PushGCD(AID.Blizzard3, primaryTarget);
+            // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
+            else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
+                PushGCD(AID.Despair, primaryTarget);
+            else if (ElementLeft > GetSlidecastEnd(AID.Fire4) + GetCastTime(AID.Fire4))
+                PushGCD(AID.Fire4, primaryTarget);
+            else if (ElementLeft > GetSlidecastEnd(AID.Fire4) && Paradox)
+                PushGCD(AID.Fire4, primaryTarget);
+            else
+                PushGCD(AID.Fire1, primaryTarget);
+        }
+    }
+
+    private void GetIceGCD(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (Ice < 3)
+            PushGCD(AID.Blizzard3, primaryTarget);
+
+        if (Hearts < 3)
+            PushGCD(AID.Blizzard4, primaryTarget);
+
+        PushGCD(AID.Fire3, primaryTarget);
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
@@ -75,13 +128,13 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         Element = gauge.ElementStance;
         ElementLeft = gauge.ElementTimeRemaining * 0.001f;
         NextPolyglot = gauge.EnochianTimer * 0.001f;
-        Hearts = gauge.UmbralStacks;
+        Hearts = gauge.UmbralHearts;
         Polyglot = gauge.PolyglotStacks;
         Paradox = gauge.ParadoxActive;
         AstralSoul = gauge.AstralSoulStacks;
 
-        TriplecastLeft = StatusLeft(SID.Triplecast);
-        ThunderheadLeft = StatusLeft(SID.Thunderhead);
+        Triplecast = StatusLeft(SID.Triplecast);
+        Thunderhead = StatusLeft(SID.Thunderhead);
 
         CalcNextBestGCD(strategy, primaryTarget);
     }
