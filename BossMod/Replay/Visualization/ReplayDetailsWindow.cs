@@ -13,7 +13,7 @@ class ReplayDetailsWindow : UIWindow
     private RotationModuleManager _rmm;
     private readonly DateTime _first;
     private readonly DateTime _last;
-    private DateTime _curTime; // note that is could fall between frames
+    public DateTime CurrentTime { get; private set; } // note that is could fall between frames
     private DateTime _prevFrame;
     private float _playSpeed;
     private float _azimuth;
@@ -29,16 +29,17 @@ class ReplayDetailsWindow : UIWindow
     private float _pfTargetRadius = 3;
     private Positional _pfPositional = Positional.Any;
 
-    public ReplayDetailsWindow(Replay data, RotationDatabase rotationDB) : base($"Replay: {data.Path}", false, new(1500, 1000))
+    public ReplayDetailsWindow(Replay data, RotationDatabase rotationDB, DateTime savedPosition) : base($"Replay: {data.Path}", false, new(1500, 1000))
     {
         _player = new(data);
         _rotationDB = rotationDB;
         _mgr = new(_player.WorldState);
         _hintsBuilder = new(_player.WorldState, _mgr);
         _rmm = new(rotationDB, _mgr, _hints);
-        _curTime = _first = data.Ops[0].Timestamp;
+        _first = data.Ops[0].Timestamp;
         _last = data.Ops[^1].Timestamp;
-        _player.AdvanceTo(_first, _mgr.Update);
+        CurrentTime = savedPosition == default ? _first : savedPosition;
+        _player.AdvanceTo(CurrentTime, _mgr.Update);
         _config = new(Service.Config, _player.WorldState, null);
         _events = new(data, MoveTo, rotationDB.Plans);
         _analysis = new([data]);
@@ -58,7 +59,7 @@ class ReplayDetailsWindow : UIWindow
     {
         var curFrame = DateTime.Now;
         if (_playSpeed > 0)
-            MoveTo(_curTime + (curFrame - _prevFrame) * _playSpeed);
+            MoveTo(CurrentTime + (curFrame - _prevFrame) * _playSpeed);
         _prevFrame = curFrame;
 
         DrawControlRow();
@@ -147,7 +148,7 @@ class ReplayDetailsWindow : UIWindow
 
     private void DrawControlRow()
     {
-        ImGui.TextUnformatted($"{_curTime:O}");
+        ImGui.TextUnformatted($"{CurrentTime:O}");
         ImGui.SameLine();
         if (ImGui.Button("<<<"))
             Rewind(20);
@@ -192,7 +193,7 @@ class ReplayDetailsWindow : UIWindow
         cursor.Y += 4;
         dl.AddLine(cursor, cursor + new Vector2(w, 0), 0xff00ffff);
 
-        var curp = cursor + new Vector2(w * (float)((_curTime - _first) / (_last - _first)), 0);
+        var curp = cursor + new Vector2(w * (float)((CurrentTime - _first) / (_last - _first)), 0);
         dl.AddTriangleFilled(curp, curp + new Vector2(3, 5), curp + new Vector2(-3, 5), 0xff00ffff);
         foreach (var e in _player.Replay.Encounters)
         {
@@ -432,14 +433,14 @@ class ReplayDetailsWindow : UIWindow
             _rmm = new(_rotationDB, _mgr, _hints);
         }
         _player.AdvanceTo(t, _mgr.Update);
-        _curTime = t;
+        CurrentTime = t;
         ResetPF();
     }
 
     private void Rewind(float seconds)
     {
         _playSpeed = 0;
-        MoveTo(_curTime.AddSeconds(-seconds));
+        MoveTo(CurrentTime.AddSeconds(-seconds));
     }
 
     private void AdvanceNextFrame()

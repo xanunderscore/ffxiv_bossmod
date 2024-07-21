@@ -3,13 +3,16 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BossMod;
 
-public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialogStartPath) : IDisposable
+public sealed class ReplayManager : IDisposable
 {
+    private record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
+
     private sealed class ReplayEntry : IDisposable
     {
         public string Path;
@@ -20,11 +23,13 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
         public bool AutoShowWindow;
         public bool Selected;
         public bool Disposed;
+        public DateTime SavedPosition;
 
-        public ReplayEntry(string path, bool autoShow)
+        public ReplayEntry(string path, bool autoShow, DateTime savedPosition = default)
         {
             Path = path;
             AutoShowWindow = autoShow;
+            SavedPosition = savedPosition;
             Replay = Task.Run(() => ReplayParserLog.Parse(path, ref Progress, Cancel.Token));
         }
 
@@ -40,7 +45,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
 
         public void Show(RotationDatabase rotationDB)
         {
-            Window ??= new(Replay.Result, rotationDB);
+            Window ??= new(Replay.Result, rotationDB, SavedPosition);
             Window.IsOpen = true;
             Window.BringToFront();
         }
@@ -69,12 +74,24 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
 
     private readonly List<ReplayEntry> _replayEntries = [];
     private readonly List<AnalysisEntry> _analysisEntries = [];
+    private readonly RotationDatabase rotationDB;
+    private readonly string replayHistoryFile;
     private int _nextAnalysisId;
     private string _path = "";
     private FileDialog? _fileDialog;
+    private string fileDialogStartPath;
+
+    public ReplayManager(RotationDatabase rotationDB, string fileDialogStartPath, string replayHistoryFile)
+    {
+        this.rotationDB = rotationDB;
+        this.fileDialogStartPath = fileDialogStartPath;
+        this.replayHistoryFile = replayHistoryFile;
+        RestoreHistory();
+    }
 
     public void Dispose()
     {
+        SaveHistory();
         foreach (var e in _analysisEntries)
             e.Dispose();
         foreach (var e in _replayEntries)
@@ -174,6 +191,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
                 e.Dispose();
                 foreach (var a in _analysisEntries.Where(a => !a.Disposed && a.Replays.Contains(e)))
                     a.Dispose();
+                SaveHistory();
             }
 
             ImGui.TableNextColumn();
@@ -207,6 +225,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
                     e.Dispose();
                 foreach (var e in _analysisEntries.Where(e => e.Replays.Any(r => r.Selected)))
                     e.Dispose();
+                SaveHistory();
             }
         }
         ImGui.SameLine();
@@ -216,6 +235,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
                 e.Dispose();
             foreach (var e in _analysisEntries)
                 e.Dispose();
+            SaveHistory();
         }
     }
 
@@ -234,6 +254,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
             if (ImGui.Button("Open"))
             {
                 _replayEntries.Add(new(_path, true));
+                SaveHistory();
             }
         }
         ImGui.SameLine();
@@ -252,6 +273,7 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
             if (ImGui.Button("Load all"))
             {
                 LoadAll(_path);
+                SaveHistory();
             }
         }
     }
@@ -296,5 +318,46 @@ public sealed class ReplayManager(RotationDatabase rotationDB, string fileDialog
         player.WorldState.Frame.Timestamp = r.Ops[0].Timestamp; // so that we get correct name etc.
         using var relogger = new ReplayRecorder(player.WorldState, format, false, new FileInfo(r.Path).Directory!, format.ToString());
         player.AdvanceTo(DateTime.MaxValue, () => { });
+    }
+
+    private void SaveHistory()
+    {
+        var cfg = Service.Config.Get<ReplayManagementConfig>();
+        if (!cfg.RememberReplays)
+            return;
+
+        using var stream = new FileStream(replayHistoryFile, FileMode.Create, FileAccess.Write, FileShare.Read);
+        using var jwriter = Serialization.WriteJson(stream);
+        JsonSerializer.Serialize(jwriter, _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)), Serialization.BuildSerializationOptions());
+        Service.Log($"Replays state saved to {replayHistoryFile}");
+    }
+
+    private void RestoreHistory()
+    {
+        var cfg = Service.Config.Get<ReplayManagementConfig>();
+        if (!cfg.RememberReplays)
+            return;
+
+        var saved = new FileInfo(replayHistoryFile);
+        if (!saved.Exists)
+        {
+            Service.Log($"Replay history file {replayHistoryFile} does not exist.");
+            return;
+        }
+
+        try
+        {
+            using var json = Serialization.ReadJson(saved.FullName);
+            var serOptions = Serialization.BuildSerializationOptions();
+            var list = json.Deserialize<List<ReplayMemory>>(serOptions)!;
+
+            foreach (var memory in list)
+                _replayEntries.Add(new(memory.Path, memory.IsOpen, cfg.RememberReplayTimes ? memory.PlaybackPosition : default));
+        }
+        catch (Exception ex)
+        {
+            Service.Log($"Unable to load saved replays from {replayHistoryFile}: {ex}");
+            return;
+        }
     }
 }

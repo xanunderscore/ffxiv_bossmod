@@ -5,71 +5,71 @@ public enum AID : uint
     None = 0,
     Sprint = ClassShared.AID.Sprint,
 
-    Chimatsuri = 4243, // LB3, 4.5s cast, range 8, single-target, targets=Hostile, animLock=3.700s?
-    SpinningEdge = 2240, // L1, instant, GCD, range 3, single-target, targets=Hostile
-    ShadeShift = 2241, // L2, instant, 120.0s CD (group 20), range 0, single-target, targets=Self
-    GustSlash = 2242, // L4, instant, GCD, range 3, single-target, targets=Hostile
-    Hide = 2245, // L10, instant, 20.0s CD (group 2), range 0, single-target, targets=Self
-    ThrowingDagger = 2247, // L15, instant, GCD, range 20, single-target, targets=Hostile
-    Mug = 2248, // L15, instant, 120.0s CD (group 21), range 3, single-target, targets=Hostile
-    TrickAttack = 2258, // L18, instant, 60.0s CD (group 8), range 3, single-target, targets=Hostile
-    AeolianEdge = 2255, // L26, instant, GCD, range 3, single-target, targets=Hostile
-    Ninjutsu = 2260, // L30, instant, GCD, range 0, single-target, targets=Self
+    Chimatsuri = 4243, // LB3, 4.5s cast (0 charges), range 8, single-target, targets=Hostile, animLock=3.700s?
+    SpinningEdge = 2240, // L1, instant, GCD (0 charges), range 3, single-target, targets=Hostile
+    ShadeShift = 2241, // L2, instant, 120.0s CD (group 20) (0 charges), range 0, single-target, targets=Self
+    GustSlash = 2242, // L4, instant, GCD (0 charges), range 3, single-target, targets=Hostile
+    Hide = 2245, // L10, instant, 20.0s CD (group 2) (0 charges), range 0, single-target, targets=Self
+    ThrowingDagger = 2247, // L15, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    Mug = 2248, // L15, instant, 120.0s CD (group 21) (0 charges), range 3, single-target, targets=Hostile
+    TrickAttack = 2258, // L18, instant, 60.0s CD (group 8) (0 charges), range 3, single-target, targets=Hostile
+    AeolianEdge = 2255, // L26, instant, GCD (0 charges), range 3, single-target, targets=Hostile
+    FumaShuriken = 2265, // L30, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    Ninjutsu = 2260, // L30, instant, GCD (0 charges), range 0, single-target, targets=Self
+    FumaJin = 18875, // L30, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    FumaChi = 18874, // L30, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    FumaTen = 18873, // L30, instant, GCD (0 charges), range 25, single-target, targets=Hostile
     Ten1 = 2259, // L30, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
+    RabbitMedium = 2272, // L30, instant, GCD (0 charges), range 0, single-target, targets=Self
+    Ten2 = 18805, // L30, instant, GCD (0 charges), range 0, single-target, targets=Self, animLock=0.350
+    TCJRaiton = 18877, // L35, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    Chi2 = 18806, // L35, instant, GCD (0 charges), range 0, single-target, targets=Self, animLock=0.350
+    Raiton = 2267, // L35, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    TCJKaton = 18876, // L35, instant, GCD (0 charges), range 20, AOE 5 circle, targets=Hostile
     Chi1 = 2261, // L35, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350s?
-    Jin1 = 2263, // L45, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350
-    FumaShuriken = 2265, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    Katon = 2266, // L35, instant, GCD, range 20, AOE 5 circle, targets=Hostile
-    Raiton = 2267, // L35, instant, GCD, range 20, single-target, targets=Hostile
-    Hyoton = 2268, // L45, instant, GCD, range 25, single-target, targets=Hostile
-    Huton = 2269, // L45, instant, GCD, range 20, AOE 5 circle, targets=Hostile
-    Doton = 2270, // L45, instant, GCD, range 0, ???, targets=Self
-    Suiton = 2271, // L45, instant, GCD, range 20, single-target, targets=Hostile
-    RabbitMedium = 2272, // L30, instant, GCD, range 0, single-target, targets=Self
-    DeathBlossom = 2254, // L38, instant, GCD, range 0, AOE 5 circle, targets=Self
-    Assassinate = 2246, // L40, instant, 60.0s CD (group 9), range 3, single-target, targets=Hostile
-    Shukuchi = 2262, // L40, instant, 60.0s CD (group 15/70), range 20, ???, targets=Area, animLock=0.800
-    Ten2 = 18805, // L30, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    Chi2 = 18806, // L35, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    Jin2 = 18807, // L45, instant, GCD, range 0, single-target, targets=Self, animLock=0.350
-    FumaTen = 18873, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    FumaChi = 18874, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    FumaJin = 18875, // L30, instant, GCD, range 25, single-target, targets=Hostile
-    TCJKaton = 18876, // L35, instant, GCD, range 20, AOE 5 circle, targets=Hostile
-    TCJRaiton = 18877, // L35, instant, GCD, range 20, single-target, targets=Hostile
-    TCJHyoton = 18878, // L45, instant, GCD, range 25, single-target, targets=Hostile
-    TCJHuton = 18879, // L45, instant, GCD, range 20, AOE 5 circle, targets=Hostile
-    TCJDoton = 18880, // L45, instant, GCD, range 0, ???, targets=Self
-    TCJSuiton = 18881, // L45, instant, GCD, range 20, single-target, targets=Hostile
-    Kassatsu = 2264, // L50, instant, 60.0s CD (group 10), range 0, single-target, targets=Self
-    HakkeMujinsatsu = 16488, // L52, instant, GCD, range 0, AOE 5 circle, targets=Self
-    ArmorCrush = 3563, // L54, instant, GCD, range 3, single-target, targets=Hostile
-    DreamWithinADream = 3566, // L56, instant, 60.0s CD (group 11), range 3, single-target, targets=Hostile
-    HellfrogMedium = 7401, // L62, instant, 1.0s CD (group 0), range 25, AOE 6 circle, targets=Hostile
-    Dokumori = 36957, // L66, instant, 120.0s CD (group 21), range 3, single-target, targets=Hostile
-    Bhavacakra = 7402, // L68, instant, 1.0s CD (group 0), range 3, single-target, targets=Hostile
-    TenChiJin = 7403, // L70, instant, 120.0s CD (group 19), range 0, single-target, targets=Self
-    Meisui = 16489, // L72, instant, 120.0s CD (group 18), range 0, single-target, targets=Self
-    HyoshoRanryu = 16492, // L76, instant, GCD, range 25, single-target, targets=Hostile
-    GokaMekkyaku = 16491, // L76, instant, GCD, range 20, AOE 5 circle, targets=Hostile
-    Bunshin = 16493, // L80, instant, 90.0s CD (group 14), range 0, single-target, targets=Self
-    PhantomKamaitachi = 25774, // L82, instant, GCD, range 20, single-target, targets=Hostile
-    HollowNozuchi = 25776, // L86, instant, range 100, AOE 5 circle, targets=Self/Area
-    FleetingRaiju = 25778, // L90, instant, GCD, range 3, single-target, targets=Hostile
-    ForkedRaiju = 25777, // L90, instant, GCD, range 20, single-target, targets=Hostile
-    KunaisBane = 36958, // L92, instant, 60.0s CD (group 8), range 3, AOE 5 circle, targets=Hostile, animLock=???
-    DeathfrogMedium = 36959, // L96, instant, 1.0s CD (group 0), range 25, AOE 6 circle, targets=Hostile, animLock=???
-    ZeshoMeppo = 36960, // L96, instant, 1.0s CD (group 0), range 3, single-target, targets=Hostile, animLock=???
-    TenriJindo = 36961, // L100, instant, 1.0s CD (group 1), range 20, AOE 5 circle, targets=Hostile, animLock=???
+    Katon = 2266, // L35, instant, GCD (0 charges), range 20, AOE 5 circle, targets=Hostile
+    DeathBlossom = 2254, // L38, instant, GCD (0 charges), range 0, AOE 5 circle, targets=Self
+    Assassinate = 2246, // L40, instant, 60.0s CD (group 9) (0 charges), range 3, single-target, targets=Hostile
+    Shukuchi = 2262, // L40, instant, 60.0s CD (group 15/70), range 20, ???, targets=Area, animLock=0.800s?
+    Jin1 = 2263, // L45, instant, 20.0s CD (group 3/57) (2 charges), range 0, single-target, targets=Self, animLock=0.350s?
+    TCJSuiton = 18881, // L45, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    TCJDoton = 18880, // L45, instant, GCD (0 charges), range 0, ???, targets=Self
+    TCJHuton = 18879, // L45, instant, GCD (0 charges), range 20, AOE 5 circle, targets=Hostile
+    TCJHyoton = 18878, // L45, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    Hyoton = 2268, // L45, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    Huton = 2269, // L45, instant, GCD (0 charges), range 20, AOE 5 circle, targets=Hostile
+    Suiton = 2271, // L45, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    Jin2 = 18807, // L45, instant, GCD (0 charges), range 0, single-target, targets=Self, animLock=0.350
+    Doton = 2270, // L45, instant, GCD (0 charges), range 0, ???, targets=Self
+    Kassatsu = 2264, // L50, instant, 60.0s CD (group 10) (0 charges), range 0, single-target, targets=Self
+    HakkeMujinsatsu = 16488, // L52, instant, GCD (0 charges), range 0, AOE 5 circle, targets=Self
+    ArmorCrush = 3563, // L54, instant, GCD (0 charges), range 3, single-target, targets=Hostile
+    DreamWithinADream = 3566, // L56, instant, 60.0s CD (group 11) (0 charges), range 3, single-target, targets=Hostile
+    HellfrogMedium = 7401, // L62, instant, 1.0s CD (group 0) (0 charges), range 25, AOE 6 circle, targets=Hostile
+    Dokumori = 36957, // L66, instant, 120.0s CD (group 21) (0 charges), range 3, single-target, targets=Hostile
+    Bhavacakra = 7402, // L68, instant, 1.0s CD (group 0) (0 charges), range 3, single-target, targets=Hostile
+    TenChiJin = 7403, // L70, instant, 120.0s CD (group 19) (0 charges), range 0, single-target, targets=Self
+    Meisui = 16489, // L72, instant, 120.0s CD (group 18) (0 charges), range 0, single-target, targets=Self
+    HyoshoRanryu = 16492, // L76, instant, GCD (0 charges), range 25, single-target, targets=Hostile
+    GokaMekkyaku = 16491, // L76, instant, GCD (0 charges), range 20, AOE 5 circle, targets=Hostile
+    Bunshin = 16493, // L80, instant, 90.0s CD (group 14) (0 charges), range 0, single-target, targets=Self
+    PhantomKamaitachi = 25774, // L82, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    HollowNozuchi = 25776, // L86, instant (0 charges), range 100, AOE 5 circle, targets=Self/Area
+    FleetingRaiju = 25778, // L90, instant, GCD (0 charges), range 3, single-target, targets=Hostile
+    ForkedRaiju = 25777, // L90, instant, GCD (0 charges), range 20, single-target, targets=Hostile
+    KunaisBane = 36958, // L92, instant, 60.0s CD (group 8) (0 charges), range 3, AOE 5 circle, targets=Hostile
+    DeathfrogMedium = 36959, // L96, instant, 1.0s CD (group 0) (0 charges), range 25, AOE 6 circle, targets=Hostile
+    ZeshoMeppo = 36960, // L96, instant, 1.0s CD (group 0) (0 charges), range 3, single-target, targets=Hostile
+    TenriJindo = 36961, // L100, instant, 1.0s CD (group 1) (0 charges), range 20, AOE 5 circle, targets=Hostile
 
     // Shared
-    Braver = ClassShared.AID.Braver, // LB1, 2.0s cast, range 8, single-target, targets=Hostile, animLock=3.860s?
-    Bladedance = ClassShared.AID.Bladedance, // LB2, 3.0s cast, range 8, single-target, targets=Hostile, animLock=3.860s?
-    SecondWind = ClassShared.AID.SecondWind, // L8, instant, 120.0s CD (group 49), range 0, single-target, targets=Self
-    LegSweep = ClassShared.AID.LegSweep, // L10, instant, 40.0s CD (group 43), range 3, single-target, targets=Hostile
-    Bloodbath = ClassShared.AID.Bloodbath, // L12, instant, 90.0s CD (group 46), range 0, single-target, targets=Self
-    Feint = ClassShared.AID.Feint, // L22, instant, 90.0s CD (group 47), range 10, single-target, targets=Hostile
-    ArmsLength = ClassShared.AID.ArmsLength, // L32, instant, 120.0s CD (group 48), range 0, single-target, targets=Self
+    Braver = ClassShared.AID.Braver, // LB1, 2.0s cast (0 charges), range 8, single-target, targets=Hostile, animLock=3.860s?
+    Bladedance = ClassShared.AID.Bladedance, // LB2, 3.0s cast (0 charges), range 8, single-target, targets=Hostile, animLock=3.860s?
+    SecondWind = ClassShared.AID.SecondWind, // L8, instant, 120.0s CD (group 49) (0 charges), range 0, single-target, targets=Self
+    LegSweep = ClassShared.AID.LegSweep, // L10, instant, 40.0s CD (group 43) (0 charges), range 3, single-target, targets=Hostile
+    Bloodbath = ClassShared.AID.Bloodbath, // L12, instant, 90.0s CD (group 46) (0 charges), range 0, single-target, targets=Self
+    Feint = ClassShared.AID.Feint, // L22, instant, 90.0s CD (group 47) (0 charges), range 10, single-target, targets=Hostile
+    ArmsLength = ClassShared.AID.ArmsLength, // L32, instant, 120.0s CD (group 48) (0 charges), range 0, single-target, targets=Self
     TrueNorth = ClassShared.AID.TrueNorth, // L50, instant, 45.0s CD (group 45/50) (2 charges), range 0, single-target, targets=Self
 }
 
@@ -109,13 +109,13 @@ public enum SID : uint
     KunaisBane = 3906, // applied by Kunai's Bane to target
     Feint = 1195, // applied by Feint to target
     TenChiJin = 1186, // applied by Fuma Shuriken, Raiton, Ten Chi Jin to self
-    Mudra = 496, // applied by Ten, Ten, Chi, Jin, Jin to self
-    ArmsLength = 1209, // applied by Arm's Length to self
+    Mudra = 496, // applied by Ten, Ten, Chi, Jin to self
     RaijuReady = 2690, // applied by Raiton, Raiton to self
-    ShadowWalker = 3848, // applied by Suiton, Huton, Suiton to self
+    ShadowWalker = 3848, // applied by Suiton, Suiton to self
     Kassatsu = 497, // applied by Kassatsu to self
-    TrueNorth = 1250, // applied by True North to self
+    Higi = 3850, // applied by Dokumori to self
     Dokumori = 3849, // applied by Dokumori to target
+    TenriJindoReady = 3851, // applied by Ten Chi Jin to self
     Meisui = 2689, // applied by Meisui to self
     Bunshin = 1954, // applied by Bunshin to self
     PhantomKamaitachiReady = 2723, // applied by Bunshin to self
@@ -150,8 +150,8 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Katon);
         d.RegisterSpell(AID.DeathBlossom);
         d.RegisterSpell(AID.Assassinate);
-        d.RegisterSpell(AID.Shukuchi, instantAnimLock: 0.80f); // animLock=0.800
-        d.RegisterSpell(AID.Jin1, instantAnimLock: 0.35f); // animLock=0.350
+        d.RegisterSpell(AID.Shukuchi, instantAnimLock: 0.80f); // animLock=0.800s?
+        d.RegisterSpell(AID.Jin1, instantAnimLock: 0.35f); // animLock=0.350s?
         d.RegisterSpell(AID.TCJSuiton);
         d.RegisterSpell(AID.TCJDoton);
         d.RegisterSpell(AID.TCJHuton);
@@ -177,10 +177,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.HollowNozuchi);
         d.RegisterSpell(AID.FleetingRaiju);
         d.RegisterSpell(AID.ForkedRaiju);
-        d.RegisterSpell(AID.KunaisBane); // animLock=???
-        d.RegisterSpell(AID.DeathfrogMedium); // animLock=???
-        d.RegisterSpell(AID.ZeshoMeppo); // animLock=???
-        d.RegisterSpell(AID.TenriJindo); // animLock=???
+        d.RegisterSpell(AID.KunaisBane);
+        d.RegisterSpell(AID.DeathfrogMedium);
+        d.RegisterSpell(AID.ZeshoMeppo);
+        d.RegisterSpell(AID.TenriJindo);
 
         Customize(d);
     }

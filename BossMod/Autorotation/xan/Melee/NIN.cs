@@ -37,6 +37,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     public float PhantomKamaitachi; // max 45
     public float Meisui; // max 30
     public (float Left, int Stacks) Raiju;
+    public float TenriJindo;
 
     public float TargetTrickLeft; // max 15
 
@@ -274,8 +275,11 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (Unlocked(AID.Meisui) && _state.CanWeave(AID.Meisui, 0.6f, deadline) && _state.CD(AID.TrickAttack) > 0 && ShadowWalker > 0)
+        if (Unlocked(AID.Meisui) && _state.CanWeave(AID.Meisui, 0.6f, deadline) && ShadowWalker > 0 && _state.CD(AID.TrickAttack) > ShadowWalker)
             PushOGCD(AID.Meisui, Player);
+
+        if (TenriJindo > 0 && _state.CanWeave(AID.TenriJindo, 0.6f, deadline))
+            PushOGCD(AID.TenriJindo, BestRangedAOETarget);
 
         if (Unlocked(AID.Kassatsu) && _state.CanWeave(AID.Kassatsu, 0.6f, deadline) && _state.CD(AID.TrickAttack) < 5)
             PushOGCD(AID.Kassatsu, Player);
@@ -287,7 +291,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
             if ((!Unlocked(TraitID.Shukiho) || Ninki >= 10) && _state.CanWeave(AID.Mug, 0.6f, deadline))
                 PushOGCD(AID.Mug, primaryTarget);
 
-            if (Unlocked(AID.TenChiJin) && _state.CD(AID.Ten1) - 20 > _state.GCD && Mudra.Left == 0 && Kassatsu == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline) && ForceMovementIn > _state.GCD + 2)
+            if (Unlocked(AID.TenChiJin) && _state.CD(AID.Ten1) - 20 > _state.GCD && Mudra.Left == 0 && Kassatsu == 0 && ShadowWalker == 0 && _state.CanWeave(AID.TenChiJin, 0.6f, deadline) && ForceMovementIn > _state.GCD + 2)
                 PushOGCD(AID.TenChiJin, Player);
 
             if (Unlocked(AID.Bunshin) && Ninki >= 50 && _state.CanWeave(AID.Bunshin, 0.6f, deadline))
@@ -353,7 +357,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         else
             Mudra = (_state.StatusDuration(mudra.Value.ExpireAt), mudra.Value.Extra);
 
-        ShadowWalker = StatusLeft(SID.ShadowWalker);
+        ShadowWalker = StatusLeft(SID.ShadowWalker, 20);
         Kassatsu = StatusLeft(SID.Kassatsu);
         PhantomKamaitachi = StatusLeft(SID.PhantomKamaitachiReady);
         HiddenStatus = StatusStacks(SID.Hidden) > 0;
@@ -364,6 +368,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         Raiju = Status(SID.RaijuReady);
         TenChiJin = Status(SID.TenChiJin);
         Meisui = StatusLeft(SID.Meisui);
+        TenriJindo = StatusLeft(SID.TenriJindoReady);
 
         if (HiddenStatus)
             Hints.StatusesToCancel.Add(((uint)SID.Hidden, Player.InstanceID));

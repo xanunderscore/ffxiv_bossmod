@@ -75,4 +75,5 @@ class StrikingDummyStates : StateMachineBuilder
     }
 }
 
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Boss, PlanLevel = 97)]
 public class StrikingDummy(WorldState ws, Actor primary) : SimpleBossModule(ws, primary) { }

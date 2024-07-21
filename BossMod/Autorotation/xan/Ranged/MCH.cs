@@ -112,15 +112,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
             PushGCD(AID.HotShot, primaryTarget);
 
         if (NumAOETargets > 2 && Unlocked(AID.SpreadShot))
-        {
-            if (NumFlamethrowerTargets > 2 && Unlocked(AID.Flamethrower) && _state.CD(AID.Flamethrower) < _state.GCD)
-            {
-                PushGCD(AID.Flamethrower, Player);
-                return;
-            }
-
             PushGCD(AID.SpreadShot, BestAOETarget);
-        }
         else
         {
             if (ComboLastMove == AID.SlugShot && Unlocked(AID.CleanShot))
