@@ -125,8 +125,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
                 else if (Paradox && MP >= 1600)
                     PushGCD(AID.Paradox, BestAOETarget);
             }
-
-            if (MP >= 3000)
+            else if (MP >= 3000)
                 PushGCD(AID.Fire2, BestAOETarget);
 
             if (Polyglot > 0)
