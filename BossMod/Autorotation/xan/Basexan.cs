@@ -17,6 +17,8 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     protected float TrueNorthLeft { get; private set; }
     protected float CombatTimer { get; private set; }
 
+    protected uint MP;
+
     protected AID ComboLastMove => (AID)(object)_state.ComboLastAction;
 
     protected Basexan(RotationModuleManager manager, Actor player) : base(manager, player)
@@ -100,10 +102,10 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     /// <returns></returns>
     protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
 
-    protected float TimeUntilNextCast => MathF.Max(_state.GCD, _state.AnimationLock + _state.AnimationLockDelay);
+    protected float NextCastStart => _state.AnimationLock > _state.GCD ? _state.AnimationLock + _state.AnimationLockDelay : _state.GCD;
 
     protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
-    protected float GetSlidecastEnd(AID aid) => TimeUntilNextCast + GetSlidecastTime(aid);
+    protected float GetSlidecastEnd(AID aid) => NextCastStart + GetSlidecastTime(aid);
 
     protected bool CanCast(AID aid) => GetSlidecastEnd(aid) <= ForceMovementIn;
 
@@ -169,6 +171,8 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         ForceMovementIn = forceMovementIn;
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
+
+        MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
 
         Exec(strategy, primaryTarget, MathF.Max(estimatedAnimLockDelay, 0.1f));
     }
