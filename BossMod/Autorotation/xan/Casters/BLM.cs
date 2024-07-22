@@ -110,11 +110,14 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void GetFireGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Thunderhead > _state.GCD && TargetThunderLeft < 5 && ElementLeft > _state.SpellGCDTime)
+        if (Thunderhead > _state.GCD && TargetThunderLeft < 5 && ElementLeft > _state.SpellGCDTime + _state.AnimationLockDelay)
             Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
 
         if (Fire < 3 && Unlocked(AID.Fire3))
             Choose(AID.Fire3, AID.Fire2, primaryTarget);
+
+        if (AstralSoul == 6 && ElementLeft > GetCastTime(AID.FlareStar))
+            PushGCD(AID.FlareStar, BestAOETarget);
 
         if (NumAOETargets > 2 && Unlocked(AID.Fire2))
         {
@@ -317,7 +320,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
             (BestAOETarget, (NumAOETargets, _)) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget, (numTargets, target) => (numTargets, target.HPMP.CurHP));
         else
-            (BestAOETarget, NumAOETargets) = (null, 0);
+            (BestAOETarget, NumAOETargets) = (primaryTarget, 0);
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
