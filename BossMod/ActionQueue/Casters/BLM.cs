@@ -37,7 +37,7 @@ public enum AID : uint
     Amplifier = 25796, // L86, instant, 120.0s CD (group 20), range 0, single-target, targets=Self
     Paradox = 25797, // L90, instant, GCD, range 25, single-target, targets=Hostile
     HighThunder = 36986, // L92, instant, GCD, range 25, single-target, targets=Hostile, animLock=???
-    HighThunderII = 36987, // L92, instant, GCD, range 25, AOE 5 circle, targets=Hostile, animLock=???
+    HighThunder2 = 36987, // L92, instant, GCD, range 25, AOE 5 circle, targets=Hostile, animLock=???
     Retrace = 36988, // L96, instant, 40.0s CD (group 8), range 0, ???, targets=Area, animLock=???
     FlareStar = 36989, // L100, 3.0s cast, GCD, range 25, AOE 5 circle, targets=Hostile, animLock=???
 
@@ -62,7 +62,7 @@ public enum TraitID : uint
     Firestarter = 32, // L42
     ThunderMastery1 = 171, // L45
     Enochian = 460, // L56
-    EnhancedFreeze = 295, // L58
+    UmbralHeart = 295, // L58
     ThunderMastery2 = 172, // L64
     EnhancedEnochian1 = 174, // L70
     EnhancedEnochian2 = 322, // L78
@@ -88,13 +88,17 @@ public enum SID : uint
     LucidDreaming = 1204, // applied by Lucid Dreaming to self
     Swiftcast = 167, // applied by Swiftcast to self
     Manaward = 168, // applied by Manaward to self
-    Thunder3 = 163, // applied by Thunder III to target
+    Thunder = 161, // applied by Thunder to target
+    ThunderII = 162, // applied by Thunder II to target
+    ThunderIII = 163, // applied by Thunder III to target
+    ThunderIV = 1210, // applied by Thunder IV to target
     LeyLines = 737, // applied by Ley Lines to self
     CircleOfPower = 738, // applied by Ley Lines to self
-    ThunderIV = 1210, // applied by Thunder IV to target
     Triplecast = 1211, // applied by Triplecast to self
     Firestarter = 165, // applied by Paradox to self
     Thunderhead = 3870,
+    HighThunder = 3871, // applied by High Thunder to target
+    HighThunderII = 3872, // applied by High Thunder II to target
 }
 
 public sealed class Definitions : IDisposable
@@ -133,7 +137,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Amplifier);
         d.RegisterSpell(AID.Paradox);
         d.RegisterSpell(AID.HighThunder); // animLock=???
-        d.RegisterSpell(AID.HighThunderII); // animLock=???
+        d.RegisterSpell(AID.HighThunder2); // animLock=???
         d.RegisterSpell(AID.Retrace); // animLock=???
         d.RegisterSpell(AID.FlareStar); // animLock=???
 

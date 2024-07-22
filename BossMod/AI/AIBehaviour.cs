@@ -87,7 +87,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         // now give class module a chance to improve targeting
         // typically it would switch targets for multidotting, or to hit more targets with AOE
         // in case of ties, it should prefer to return original target - this would prevent useless switches
-        return new(target!, player.Class.GetRole() is Role.Ranged or Role.Healer ? 14f : 2f);
+        return new(target!, player.Class.GetRole() is Role.Ranged or Role.Healer ? 24.94f : 2.9f);
     }
 
     private void AdjustTargetPositional(Actor player, ref Targeting targeting)
