@@ -107,7 +107,14 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
     protected float GetSlidecastEnd(AID aid) => NextCastStart + GetSlidecastTime(aid);
 
-    protected bool CanCast(AID aid) => GetSlidecastEnd(aid) <= ForceMovementIn;
+    protected bool CanCast(AID aid)
+    {
+        var t = GetSlidecastTime(aid);
+        if (t == 0)
+            return true;
+
+        return NextCastStart + t <= ForceMovementIn;
+    }
 
     protected float ForceMovementIn;
 
