@@ -40,7 +40,8 @@ public sealed class RaidCooldowns : IDisposable
 
     public static bool IsDamageBuff(uint statusID) => statusID
         is (uint)AST.SID.Divination or (uint)DRG.SID.BattleLitany or (uint)RPR.SID.ArcaneCircle or (uint)MNK.SID.Brotherhood
-        or (uint)BRD.SID.BattleVoice or (uint)DNC.SID.TechnicalFinish or (uint)SMN.SID.SearingLight or (uint)RDM.SID.Embolden;
+        or (uint)BRD.SID.BattleVoice or (uint)DNC.SID.TechnicalFinish or (uint)SMN.SID.SearingLight or (uint)RDM.SID.Embolden
+        or (uint)PCT.SID.StarryMuse;
 
     public float DamageBuffLeft(Actor target)
     {
@@ -77,6 +78,7 @@ public sealed class RaidCooldowns : IDisposable
             (uint)DNC.AID.QuadrupleTechnicalFinish => UpdateDamageCooldown(actor.InstanceID, cast.Action), // DNC technical finish
             (uint)SMN.AID.SearingLight => UpdateDamageCooldown(actor.InstanceID, cast.Action),
             (uint)RDM.AID.Embolden => UpdateDamageCooldown(actor.InstanceID, cast.Action), // RDM embolden
+            (uint)PCT.AID.StarryMuse => UpdateDamageCooldown(actor.InstanceID, cast.Action), // PCT starry muse
             (uint)WAR.AID.Interject or (uint)BRD.AID.HeadGraze => UpdateInterruptCooldown(actor.InstanceID, cast.Action, 30),
             // TODO: PCT
             _ => false
