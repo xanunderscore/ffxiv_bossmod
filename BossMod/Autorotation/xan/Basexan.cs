@@ -186,8 +186,8 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
     public abstract void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay);
 
-    protected (float Left, int Stacks) Status<SID>(SID status, float pendingDuration = 1000) where SID : Enum => _state.StatusDetails(Player, status, Player.InstanceID, pendingDuration);
-    protected float StatusLeft<SID>(SID status, float pendingDuration = 1000) where SID : Enum => Status(status, pendingDuration).Left;
+    protected (float Left, int Stacks) Status<SID>(SID status) where SID : Enum => Player.FindStatus(status) is ActorStatus s ? (StatusDuration(s.ExpireAt), s.Extra & 0xFF) : (0, 0);
+    protected float StatusLeft<SID>(SID status) where SID : Enum => Status(status).Left;
     protected int StatusStacks<SID>(SID status) where SID : Enum => Status(status).Stacks;
 }
 

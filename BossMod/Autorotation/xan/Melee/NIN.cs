@@ -374,8 +374,8 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         else
             Mudra = (_state.StatusDuration(mudra.Value.ExpireAt), mudra.Value.Extra);
 
-        ShadowWalker = StatusLeft(SID.ShadowWalker, 20);
-        Kassatsu = StatusLeft(SID.Kassatsu, 15);
+        ShadowWalker = StatusLeft(SID.ShadowWalker);
+        Kassatsu = StatusLeft(SID.Kassatsu);
         PhantomKamaitachi = StatusLeft(SID.PhantomKamaitachiReady);
         HiddenStatus = StatusStacks(SID.Hidden) > 0;
         TargetTrickLeft = MathF.Max(
