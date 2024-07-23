@@ -114,7 +114,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
             }, BestGenerationTarget);
         }
 
-        if (Coil > 1 && TargetGnashLeft > _state.GCD && Swiftscaled > _state.GCD)
+        if (ShouldCoil(strategy))
             PushGCD(AID.UncoiledFury, BestRangedAOETarget);
 
         // 123 combos
@@ -134,7 +134,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (NumAOETargets > 2)
         {
-            if (Unlocked(AID.PitOfDread) && _state.CD(AID.PitOfDread) - 40 <= _state.GCD && NumNearbyGnashlessEnemies > 0 && Swiftscaled > _state.GCD)
+            if (ShouldDread(strategy))
                 PushGCD(AID.PitOfDread, Player);
 
             if (ComboLastMove is AID.HuntersBite or AID.SwiftskinsBite)
@@ -160,7 +160,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         }
         else
         {
-            if (Unlocked(AID.Dreadwinder) && _state.CD(AID.Dreadwinder) - 40 <= _state.GCD && TargetGnashLeft < 20 && Swiftscaled > _state.GCD)
+            if (ShouldDread(strategy))
                 PushGCD(AID.Dreadwinder, primaryTarget);
 
             if (ComboLastMove is AID.HuntersSting)
@@ -219,6 +219,21 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
             return true;
 
         return Offering == 100 && ComboLastMove is AID.HuntersSting or AID.SwiftskinsSting or AID.HuntersBite or AID.SwiftskinsBite;
+    }
+
+    private bool ShouldDread(StrategyValues strategy)
+    {
+        if (!Unlocked(AID.Dreadwinder) || _state.CD(AID.Dreadwinder) - 40 > _state.GCD || Swiftscaled <= _state.GCD || DreadCombo > 0)
+            return false;
+
+        return NumAOETargets > 2 && Unlocked(AID.PitOfDread)
+            ? NumNearbyGnashlessEnemies > 0
+            : TargetGnashLeft < GnashRefreshTimer;
+    }
+
+    private bool ShouldCoil(StrategyValues strategy)
+    {
+        return Coil > 1 && TargetGnashLeft > GnashRefreshTimer && Swiftscaled > _state.GCD && DreadCombo == 0;
     }
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
@@ -286,7 +301,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
         var (pos, imm) = getmain();
 
-        if (Anguine > 0 || ShouldReawaken(strategy))
+        if (Anguine > 0 || ShouldReawaken(strategy) || ShouldDread(strategy) || ShouldCoil(strategy))
             imm = false;
 
         return (pos, imm);
