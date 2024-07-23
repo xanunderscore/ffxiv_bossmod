@@ -102,6 +102,8 @@ public enum SID : uint
     FellskinsVenom = 3660, // applied by Swiftskin's Den, Twinfang Thresh to self
     TwinbloodfangST = 3773, // applied by Hunter's Coil, Swiftskin's Coil to self
     TwinbloodfangAOE = 3774, // applied by Swiftskin's Den, Hunter's Den to self
+    PoisedForTwinfang = 3665, // applied by Uncoiled Fury, Uncoiled Twinblood to self
+    PoisedForTwinblood = 3666, // applied by Uncoiled Fury, Uncoiled Twinfang to self
 }
 
 public sealed class Definitions : IDisposable
