@@ -97,6 +97,11 @@ public enum SID : uint
     None = 0,
 }
 
+public enum SID : uint
+{
+    Divination = 1878,
+}
+
 public sealed class Definitions : IDisposable
 {
     public Definitions(ActionDefinitions d)
