@@ -4,7 +4,7 @@ namespace BossMod.Autorotation.xan;
 
 public enum Targeting { Auto, Manual, AutoPrimary }
 public enum OffensiveStrategy { Automatic, Delay, Force }
-public enum AOEStrategy { AOE, SingleTarget, AOEForced }
+public enum AOEStrategy { AOE, SingleTarget, ForceAOE, ForceST }
 
 public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
 {
@@ -207,7 +207,8 @@ static class Extendxan
         return def.Define(trackname).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions")
-            .AddOption(AOEStrategy.AOEForced, "AOEF", "Always use AOE actions");
+            .AddOption(AOEStrategy.ForceAOE, "ForceAOE", "Always use AOE actions, even on one target")
+            .AddOption(AOEStrategy.ForceST, "ForceST", "Forbid any action that can hit multiple targets");
     }
 
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
