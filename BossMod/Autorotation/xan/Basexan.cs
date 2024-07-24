@@ -93,6 +93,36 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         }
     }
 
+    protected (Actor? Best, int Targets) SelectTarget(
+        Targeting track,
+        Actor? primaryTarget,
+        float range,
+        PositionCheck isInAOE
+    ) => SelectTarget(track, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
+
+    protected (Actor? Best, P Priority) SelectTarget<P>(
+        Targeting track,
+        Actor? primaryTarget,
+        float range,
+        PositionCheck isInAOE,
+        PriorityFunc<P> prioritize
+    ) where P : struct, IComparable
+    {
+        P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
+
+        return track switch
+        {
+            Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
+            Targeting.AutoPrimary => primaryTarget == null ? (null, default) : FindBetterTargetBy(
+                primaryTarget,
+                range,
+                targetPrio,
+                enemy => isInAOE(enemy.Actor, primaryTarget)
+            ),
+            _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
+        };
+    }
+
     /// <summary>
     /// Get <em>effective</em> cast time for the provided action.<br/>
     /// The default implementation returns the action's base cast time multiplied by the player's spell-speed factor, which accounts for haste buffs (like Leylines) and slow debuffs. It also accounts for Swiftcast.<br/>
@@ -132,36 +162,6 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
     protected delegate bool PositionCheck(Actor playerTarget, Actor targetToTest);
     protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
-
-    protected (Actor? Best, int Targets) SelectTarget(
-        Targeting track,
-        Actor? primaryTarget,
-        float range,
-        PositionCheck isInAOE
-    ) => SelectTarget(track, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
-
-    protected (Actor? Best, P Priority) SelectTarget<P>(
-        Targeting track,
-        Actor? primaryTarget,
-        float range,
-        PositionCheck isInAOE,
-        PriorityFunc<P> prioritize
-    ) where P : struct, IComparable
-    {
-        P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
-
-        return track switch
-        {
-            Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
-            Targeting.AutoPrimary => primaryTarget == null ? (null, default) : FindBetterTargetBy(
-                primaryTarget,
-                range,
-                targetPrio,
-                enemy => isInAOE(enemy.Actor, primaryTarget)
-            ),
-            _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
-        };
-    }
 
     protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
 
