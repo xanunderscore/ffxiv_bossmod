@@ -170,8 +170,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         var gaussRoundCD = _state.CD(AID.GaussRound) - 60;
         var ricochetCD = _state.CD(AID.Ricochet) - 60;
 
-        var canGauss = Unlocked(AID.GaussRound) && _state.CanWeave(gaussRoundCD, 0.6f, deadline) && (NumRangedAOETargets > 0 || !Unlocked(AID.DoubleCheck));
-        var canRicochet = Unlocked(AID.Ricochet) && _state.CanWeave(ricochetCD, 0.6f, deadline) && NumRangedAOETargets > 0;
+        var canGauss = Unlocked(AID.GaussRound) && _state.CanWeave(gaussRoundCD, 0.6f, deadline);
+        var canRicochet = Unlocked(AID.Ricochet) && _state.CanWeave(ricochetCD, 0.6f, deadline);
 
         if (canGauss && _state.CanWeave(MaxGaussCD, 0.6f, deadline))
             PushOGCD(AID.GaussRound, Unlocked(AID.DoubleCheck) ? BestRangedAOETarget : primaryTarget);

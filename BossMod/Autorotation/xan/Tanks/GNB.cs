@@ -54,13 +54,16 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (NumAOETargets > 1 && Unlocked(AID.DemonSlice))
         {
-            if (ShouldBust(strategy, AID.BurstStrike, AID.DemonSlice))
+            if (ShouldBust(strategy, AID.BurstStrike))
             {
                 if (Unlocked(AID.FatedCircle))
                     PushGCD(AID.FatedCircle, Player);
 
                 PushGCD(AID.BurstStrike, primaryTarget);
             }
+
+            if (ComboLastMove == AID.BrutalShell && Unlocked(AID.SolidBarrel))
+                PushGCD(AID.SolidBarrel, primaryTarget);
 
             if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter))
                 PushGCD(AID.DemonSlaughter, Player);
@@ -69,8 +72,11 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         }
         else
         {
-            if (ShouldBust(strategy, AID.BurstStrike, AID.BrutalShell))
+            if (ShouldBust(strategy, AID.BurstStrike))
                 PushGCD(AID.BurstStrike, primaryTarget);
+
+            if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter))
+                PushGCD(AID.DemonSlaughter, Player);
 
             if (ComboLastMove == AID.BrutalShell && Unlocked(AID.SolidBarrel))
                 PushGCD(AID.SolidBarrel, primaryTarget);
@@ -82,7 +88,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         }
     }
 
-    private bool ShouldBust(StrategyValues strategy, AID spend, AID combo)
+    private bool ShouldBust(StrategyValues strategy, AID spend)
     {
         if (!Unlocked(spend) || Ammo == 0)
             return false;
@@ -90,7 +96,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         if (NoMercy > _state.GCD)
             return _state.CD(AID.DoubleDown) > NoMercy || Ammo == MaxAmmo;
 
-        return ComboLastMove == combo && Ammo == MaxAmmo;
+        return ComboLastMove is AID.BrutalShell or AID.DemonSlice && Ammo == MaxAmmo;
     }
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
