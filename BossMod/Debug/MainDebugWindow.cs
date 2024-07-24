@@ -1,6 +1,5 @@
 ﻿using BossMod.Autorotation;
 using Dalamud.Game.ClientState.Objects.Types;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
@@ -212,17 +211,9 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
 
     private unsafe void DrawGauge()
     {
-        var jg = (byte*)JobGaugeManager.Instance();
+        var gauge = ws.Client.GaugePayload;
 
-        ImGui.Text($"0x{*(jg + 24):X2}");
-
-        for (var i = 0; i < 0x60; i++)
-        {
-            if (i % 8 > 0)
-                ImGui.SameLine();
-
-            ImGui.Text($"0x{*(jg + i):X2}");
-        }
+        ImGui.Text($"{gauge.Low:X16} {gauge.High:X16}");
     }
 
     private unsafe void DrawCooldowns()

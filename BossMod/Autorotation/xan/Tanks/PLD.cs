@@ -17,9 +17,9 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
         return def;
     }
 
-    public float FightOrFlightLeft; // max 20
+    public float FightOrFlight; // max 20
     public float GoringBladeReady; // max 30
-    public float DivineMightLeft; // max 30
+    public float DivineMight; // max 30
     public float AtonementReady; // max 30
     public float SupplicationReady; // max 30
     public float SepulchreReady; // max 30
@@ -39,7 +39,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
 
     protected override float GetCastTime(AID aid) => aid switch
     {
-        AID.HolyCircle or AID.HolySpirit => DivineMightLeft > _state.GCD || Requiescat.Stacks > 0 ? 0 : base.GetCastTime(aid),
+        AID.HolyCircle or AID.HolySpirit => DivineMight > _state.GCD || Requiescat.Stacks > 0 ? 0 : base.GetCastTime(aid),
         _ => 0
     };
 
@@ -63,13 +63,13 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
         if (NumAOETargets >= 3 && Unlocked(AID.TotalEclipse))
         {
             if (Unlocked(AID.HolyCircle) &&
-                (Requiescat.Left > _state.GCD || DivineMightLeft > _state.GCD && FightOrFlightLeft > _state.GCD) &&
+                (Requiescat.Left > _state.GCD || DivineMight > _state.GCD && FightOrFlight > _state.GCD) &&
                     _state.CurMP >= 1000)
                 PushGCD(AID.HolyCircle, Player);
 
             if (Unlocked(AID.Prominence) && ComboLastMove == AID.TotalEclipse)
             {
-                if (DivineMightLeft > _state.GCD && Unlocked(AID.HolyCircle) && _state.CurMP >= 1000)
+                if (DivineMight > _state.GCD && Unlocked(AID.HolyCircle) && _state.CurMP >= 1000)
                     PushGCD(AID.HolyCircle, Player);
 
                 PushGCD(AID.Prominence, Player);
@@ -80,13 +80,13 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
         else
         {
             // fallback - cast holy spirit if we don't have a melee
-            if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
+            if (DivineMight > _state.GCD && _state.CurMP >= 1000)
                 PushGCD(AID.HolySpirit, primaryTarget, -50);
 
-            if (Requiescat.Left > _state.GCD || DivineMightLeft > _state.GCD && FightOrFlightLeft > _state.GCD)
+            if (Requiescat.Left > _state.GCD || DivineMight > _state.GCD && FightOrFlight > _state.GCD)
                 PushGCD(AID.HolySpirit, primaryTarget ?? BestRangedTarget);
 
-            if (AtonementReady > _state.GCD && FightOrFlightLeft > _state.GCD)
+            if (AtonementReady > _state.GCD && FightOrFlight > _state.GCD)
                 PushGCD(AID.Atonement, primaryTarget);
 
             if (SepulchreReady > _state.GCD)
@@ -97,7 +97,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (Unlocked(AID.RageOfHalone) && ComboLastMove == AID.RiotBlade)
             {
-                if (DivineMightLeft > _state.GCD && _state.CurMP >= 1000)
+                if (DivineMight > _state.GCD && _state.CurMP >= 1000)
                     PushGCD(AID.HolySpirit, primaryTarget ?? BestRangedTarget);
 
                 if (AtonementReady > _state.GCD)
@@ -115,13 +115,13 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(float deadline, Actor? primaryTarget)
     {
-        if ((AtonementReady > 0 || Requiescat.Left > 0 || DivineMightLeft > 0) && _state.CanWeave(AID.FightOrFlight, 0.6f, deadline))
+        if ((AtonementReady > 0 || Requiescat.Left > 0 || DivineMight > 0) && _state.CanWeave(AID.FightOrFlight, 0.6f, deadline))
             PushOGCD(AID.FightOrFlight, Player);
 
         if (BladeOfHonorReady > deadline && _state.CanWeave(AID.BladeOfHonor, 0.6f, deadline))
             PushOGCD(AID.BladeOfHonor, BestRangedTarget);
 
-        if (FightOrFlightLeft > 0 && Unlocked(AID.Requiescat) && _state.CanWeave(AID.Requiescat, 0.6f, deadline))
+        if (FightOrFlight > 0 && Unlocked(AID.Requiescat) && _state.CanWeave(AID.Requiescat, 0.6f, deadline))
         {
             if (Unlocked(AID.Imperator))
                 PushOGCD(AID.Imperator, BestRangedTarget);
@@ -129,7 +129,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
                 PushOGCD(AID.Requiescat, primaryTarget);
         }
 
-        if (FightOrFlightLeft > 0 || _state.CD(AID.FightOrFlight) > 15)
+        if (FightOrFlight > 0 || _state.CD(AID.FightOrFlight) > 15)
         {
             if (Unlocked(AID.SpiritsWithin) && _state.CanWeave(AID.SpiritsWithin, 0.6f, deadline))
                 PushOGCD(AID.SpiritsWithin, primaryTarget);
@@ -138,7 +138,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
                 PushOGCD(AID.CircleOfScorn, Player);
         }
 
-        if (FightOrFlightLeft > 0 && Unlocked(AID.Intervene) && _state.CanWeave(_state.CD(AID.Intervene) - 30, 0.6f, deadline))
+        if (FightOrFlight > 0 && Unlocked(AID.Intervene) && _state.CanWeave(_state.CD(AID.Intervene) - 30, 0.6f, deadline))
             PushOGCD(AID.Intervene, primaryTarget);
     }
 
@@ -152,17 +152,17 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
         var gauge = GetGauge<PaladinGauge>();
         OathGauge = gauge.OathGauge;
 
-        FightOrFlightLeft = _state.StatusDetails(Player, SID.FightOrFlight, Player.InstanceID).Left;
-        GoringBladeReady = _state.StatusDetails(Player, SID.GoringBladeReady, Player.InstanceID).Left;
-        DivineMightLeft = _state.StatusDetails(Player, SID.DivineMight, Player.InstanceID).Left;
-        AtonementReady = _state.StatusDetails(Player, SID.AtonementReady, Player.InstanceID).Left;
-        SupplicationReady = _state.StatusDetails(Player, SID.SupplicationReady, Player.InstanceID).Left;
-        SepulchreReady = _state.StatusDetails(Player, SID.SepulchreReady, Player.InstanceID).Left;
-        BladeOfHonorReady = _state.StatusDetails(Player, SID.BladeOfHonorReady, Player.InstanceID).Left;
-        Requiescat = _state.StatusDetails(Player, SID.Requiescat, Player.InstanceID);
+        FightOrFlight = StatusLeft(SID.FightOrFlight);
+        GoringBladeReady = StatusLeft(SID.GoringBladeReady);
+        DivineMight = StatusLeft(SID.DivineMight);
+        AtonementReady = StatusLeft(SID.AtonementReady);
+        SupplicationReady = StatusLeft(SID.SupplicationReady);
+        SepulchreReady = StatusLeft(SID.SepulchreReady);
+        BladeOfHonorReady = StatusLeft(SID.BladeOfHonorReady);
+        Requiescat = Status(SID.Requiescat);
         ConfiteorCombo = gauge.ConfiteorComboStep switch
         {
-            0 => _state.StatusDetails(Player, SID.ConfiteorReady, Player.InstanceID).Left > _state.GCD ? AID.Confiteor : AID.None,
+            0 => StatusLeft(SID.ConfiteorReady) > _state.GCD ? AID.Confiteor : AID.None,
             1 => AID.BladeOfFaith,
             2 => AID.BladeOfTruth,
             3 => AID.BladeOfValor,
