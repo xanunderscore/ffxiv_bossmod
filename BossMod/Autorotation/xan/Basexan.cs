@@ -4,7 +4,9 @@ namespace BossMod.Autorotation.xan;
 
 public enum Targeting { Auto, Manual, AutoPrimary }
 public enum OffensiveStrategy { Automatic, Delay, Force }
-public enum AOEStrategy { AOE, SingleTarget, ForceAOE, ForceST }
+public enum AOEStrategy { AOE, ST, ForceAOE, ForceST }
+
+public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
 public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
 {
@@ -76,12 +78,14 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     /// <param name="strategy">Targeting strategy</param>
     /// <param name="primaryTarget">Player's current target - may be null</param>
     /// <param name="range">Maximum distance from the player to search for a candidate target</param>
-    protected void SelectPrimaryTarget(Targeting strategy, ref Actor? primaryTarget, float range)
+    protected void SelectPrimaryTarget(StrategyValues strategy, ref Actor? primaryTarget, float range)
     {
+        var t = strategy.Option(SharedTrack.Targeting).As<Targeting>();
+
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        if (strategy != Targeting.Auto)
+        if (t != Targeting.Auto)
             return;
 
         if (Player.DistanceToHitbox(primaryTarget) > range)
@@ -93,24 +97,42 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         }
     }
 
+    protected delegate bool PositionCheck(Actor playerTarget, Actor targetToTest);
+    protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
+
     protected (Actor? Best, int Targets) SelectTarget(
-        Targeting track,
+        StrategyValues strategy,
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE
-    ) => SelectTarget(track, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
+    ) => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
 
-    protected (Actor? Best, P Priority) SelectTarget<P>(
-        Targeting track,
+    protected (Actor? Best, int Targets) SelectTargetByHP(StrategyValues strategy, Actor? primaryTarget, float range, PositionCheck isInAOE)
+        => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, actor) => numTargets * 1000000 + (int)actor.HPMP.CurHP);
+
+    protected (Actor? Best, int Priority) SelectTarget(
+        StrategyValues strategy,
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE,
-        PriorityFunc<P> prioritize
-    ) where P : struct, IComparable
+        PriorityFunc<int> prioritize
+    )
     {
-        P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
+        var aoe = strategy.Option(SharedTrack.AOE).As<AOEStrategy>();
+        var targeting = strategy.Option(SharedTrack.Targeting).As<Targeting>();
 
-        return track switch
+        int targetPrio(Actor potentialTarget)
+        {
+            var numTargets = Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor));
+            return prioritize(AdjustNumTargets(strategy, numTargets), potentialTarget);
+        }
+
+        // in regular ST mode and when using a skill that deals splash damage (like Primal Rend), it is possible that primary target has prio 0 if the splash damage would hit a forbidden target
+        // however, in force-ST mode, prio is *always* 0, so we cannot find a better target - in this case, skip entirely
+        if (aoe == AOEStrategy.ForceST)
+            targeting = Targeting.Manual;
+
+        var (newtarget, newprio) = targeting switch
         {
             Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
             Targeting.AutoPrimary => primaryTarget == null ? (null, default) : FindBetterTargetBy(
@@ -119,9 +141,27 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
                 targetPrio,
                 enemy => isInAOE(enemy.Actor, primaryTarget)
             ),
-            _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget)),
+            _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
         };
+        return (newprio > 0 ? newtarget : null, newprio);
     }
+
+    protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);
+
+    protected int NumNearbyTargets(StrategyValues strategy, float range) => AdjustNumTargets(strategy, Hints.NumPriorityTargetsInAOECircle(Player.Position, range));
+
+    protected int AdjustNumTargets(StrategyValues strategy, int reported)
+        => reported == 0 ? 0 : strategy.AOE() switch
+        {
+            AOEStrategy.AOE => reported,
+            AOEStrategy.ST => 1,
+            AOEStrategy.ForceAOE => 10,
+            AOEStrategy.ForceST => 0,
+            _ => 0
+        };
+
+    protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
+    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 4);
 
     /// <summary>
     /// Get <em>effective</em> cast time for the provided action.<br/>
@@ -160,14 +200,6 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         _ => Positional.Front
     };
 
-    protected delegate bool PositionCheck(Actor playerTarget, Actor targetToTest);
-    protected delegate P PriorityFunc<P>(int totalTargets, Actor primaryTarget);
-
-    protected int NumMeleeAOETargets() => Hints.NumPriorityTargetsInAOECircle(Player.Position, 5);
-
-    protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
-    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 4);
-
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
         var pelo = Player.FindStatus(BRD.SID.Peloton);
@@ -179,6 +211,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
 
+        // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
 
         Exec(strategy, primaryTarget, MathF.Max(estimatedAnimLockDelay, 0.1f));
@@ -193,22 +226,20 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
 
 static class Extendxan
 {
-    public static RotationModuleDefinition.ConfigRef<Targeting> DefineTargeting<Index>(this RotationModuleDefinition def, Index trackname)
-         where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineShared(this RotationModuleDefinition def)
     {
-        return def.Define(trackname).As<Targeting>("Targeting")
-            .AddOption(Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
-            .AddOption(Targeting.Manual, "Manual", "Use player's current target for all actions")
-            .AddOption(Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
-    }
+        def.Define(SharedTrack.Targeting).As<Targeting>("Targeting")
+            .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
+            .AddOption(xan.Targeting.Manual, "Manual", "Use player's current target for all actions")
+            .AddOption(xan.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
 
-    public static RotationModuleDefinition.ConfigRef<AOEStrategy> DefineAOE<Index>(this RotationModuleDefinition def, Index trackname) where Index : Enum
-    {
-        return def.Define(trackname).As<AOEStrategy>("AOE")
+        def.Define(SharedTrack.AOE).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
-            .AddOption(AOEStrategy.SingleTarget, "ST", "Use single-target actions")
+            .AddOption(AOEStrategy.ST, "ST", "Use single-target actions")
             .AddOption(AOEStrategy.ForceAOE, "ForceAOE", "Always use AOE actions, even on one target")
             .AddOption(AOEStrategy.ForceST, "ForceST", "Forbid any action that can hit multiple targets");
+
+        return def.DefineSimple(SharedTrack.Buffs, "Buffs");
     }
 
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
@@ -218,4 +249,8 @@ static class Extendxan
             .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use")
             .AddOption(OffensiveStrategy.Force, "Force", "Use ASAP");
     }
+
+    public static AOEStrategy AOE(this StrategyValues strategy) => strategy.Option(SharedTrack.AOE).As<AOEStrategy>();
+    public static Targeting Targeting(this StrategyValues strategy) => strategy.Option(SharedTrack.Targeting).As<Targeting>();
+    public static bool BuffsOk(this StrategyValues strategy) => strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 }

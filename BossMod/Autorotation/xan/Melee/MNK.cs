@@ -4,15 +4,11 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
-
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("MNK", "Monk", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.MNK, Class.PGL), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.RiddleOfFire, AID.RiddleOfWind, AID.Brotherhood);
+        def.DefineShared().AddAssociatedActions(AID.RiddleOfFire, AID.RiddleOfWind, AID.Brotherhood);
 
         return def;
     }
@@ -190,10 +186,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
     {
-        var buff = strategy.Option(Track.Buffs).As<OffensiveStrategy>();
         if (Player.InCombat && _state.GCD > 0)
         {
-            if (buff != OffensiveStrategy.Delay)
+            if (strategy.BuffsOk())
             {
                 QueuePB(strategy, deadline);
 
@@ -256,8 +251,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<MonkGauge>();
@@ -280,16 +274,18 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
         BrotherhoodLeft = StatusLeft(SID.Brotherhood);
         (var currentBlitz, var currentBlitzIsTargeted) = GetCurrentBlitz();
 
+        NumAOETargets = NumMeleeAOETargets(strategy);
+
         if (BlitzLeft > _state.GCD)
         {
             if (currentBlitzIsTargeted)
             {
-                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(targeting, primaryTarget, 3, IsSplashTarget);
+                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
             }
             else
             {
                 BestBlitzTarget = Player;
-                NumBlitzTargets = NumMeleeAOETargets();
+                NumBlitzTargets = NumAOETargets;
             }
         }
         else
@@ -300,13 +296,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
 
         (CurrentForm, FormLeft) = DetermineForm();
 
-        BestRangedTarget = SelectTarget(targeting, primaryTarget, 20, IsSplashTarget).Best;
-        (BestLineTarget, NumLineTargets) = SelectTarget(targeting, primaryTarget, 10, IsEnlightenmentTarget);
-        NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
-        {
-            AOEStrategy.AOE => NumMeleeAOETargets(),
-            _ => 0
-        };
+        BestRangedTarget = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget).Best;
+        (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, IsEnlightenmentTarget);
 
         _state.UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
 

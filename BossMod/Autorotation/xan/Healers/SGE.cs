@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Kardia, Druo }
+    public enum Track { Kardia = SharedTrack.Count, Druo }
     public enum KardiaStrategy { Auto, Manual }
     public enum DruoStrategy { Auto, Manual }
 
@@ -12,8 +12,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var def = new RotationModuleDefinition("SGE", "Sage", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.SGE), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
+        def.DefineShared();
 
         def.Define(Track.Kardia).As<KardiaStrategy>("Kardia")
             .AddOption(KardiaStrategy.Auto, "Auto", "Automatically choose Kardia target")
@@ -139,8 +138,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<SageGauge>();
@@ -150,31 +148,29 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
         NextGall = MathF.Max(0, 20f - gauge.AddersgallTimer / 1000f);
         Eukrasia = gauge.EukrasiaActive;
 
-        (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(targeting, primaryTarget, 6, IsSplashTarget);
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
-        (BestPneumaTarget, NumPneumaTargets) = SelectTarget(targeting, primaryTarget, 25, Is25yRectTarget);
+        (BestPhlegmaTarget, NumPhlegmaTargets) = SelectTarget(strategy, primaryTarget, 6, IsSplashTarget);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
+        (BestPneumaTarget, NumPneumaTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
 
-        var aoeStrat = strategy.Option(Track.AOE).As<AOEStrategy>();
-        if (aoeStrat == AOEStrategy.AOE)
+        NumAOETargets = 0;
+        NumNearbyDotTargets = 0;
+        foreach (var t in Hints.PotentialTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 5))
         {
-            var meleeAOETargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 5);
-            NumAOETargets = 0;
-            NumNearbyDotTargets = 0;
-            foreach (var target in meleeAOETargets)
+            if (t.Priority < 0)
             {
-                NumAOETargets++;
-                if (!HaveDot(target.Actor))
-                    NumNearbyDotTargets++;
+                NumAOETargets = 0;
+                NumNearbyDotTargets = 0;
+                break;
             }
-        }
-        else
-        {
-            // allow Dyskrasia (instant cast) for dps uptime during movement
-            NumAOETargets = _state.RangeToTarget <= 5 ? 1 : 0;
-            NumNearbyDotTargets = 0;
+            NumAOETargets++;
+            if (!HaveDot(t.Actor))
+                NumNearbyDotTargets++;
         }
 
-        if (targeting == Targeting.Auto)
+        NumAOETargets = AdjustNumTargets(strategy, NumAOETargets);
+        NumNearbyDotTargets = AdjustNumTargets(strategy, NumNearbyDotTargets);
+
+        if (strategy.Targeting() == Targeting.Auto)
         {
             var allPossibleDotTargets = Hints.PriorityTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 25);
             if (allPossibleDotTargets.Count() > 2)

@@ -6,15 +6,11 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
-
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("VPR", "Viper", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.VPR), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs");
+        def.DefineShared().AddAssociatedActions(AID.Reawaken);
 
         return def;
     }
@@ -200,7 +196,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private bool ShouldReawaken(StrategyValues strategy)
     {
-        if (!Unlocked(AID.Reawaken) || ReawakenReady == 0 && Offering < 50 || ReawakenLeft > 0)
+        if (!Unlocked(AID.Reawaken) || ReawakenReady == 0 && Offering < 50 || ReawakenLeft > 0 || !strategy.BuffsOk())
             return false;
 
         // todo force
@@ -319,8 +315,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var track = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(track, ref primaryTarget, 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<ViperGaugeEx>();
@@ -369,13 +364,9 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         TargetGnashLeft = GnashLeft(primaryTarget);
         NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
 
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(track, primaryTarget, 20, IsSplashTarget);
-        BestGenerationTarget = SelectTarget(track, primaryTarget, 3, IsSplashTarget).Best;
-        NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
-        {
-            AOEStrategy.AOE => Unlocked(AID.SteelMaw) ? NumMeleeAOETargets() : 0,
-            _ => _state.RangeToTarget <= 5 ? 1 : 0
-        };
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
+        BestGenerationTarget = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget).Best;
+        NumAOETargets = NumMeleeAOETargets(strategy);
 
         _state.UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > _state.GCD);
 

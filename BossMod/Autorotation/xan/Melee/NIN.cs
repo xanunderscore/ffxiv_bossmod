@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs, Hide, ForkedRaiju }
+    public enum Track { Hide = SharedTrack.Count, ForkedRaiju }
     public enum HideStrategy { Automatic, Manual }
     public enum RaijuStrategy { Manual, Automatic }
 
@@ -12,9 +12,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var def = new RotationModuleDefinition("NIN", "Ninja", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.ROG, Class.NIN), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.Dokumori);
+        def.DefineShared().AddAssociatedActions(AID.Dokumori);
 
         def.Define(Track.Hide).As<HideStrategy>("Hide")
             .AddOption(HideStrategy.Automatic, "Auto", "Use when out of combat to restore charges")
@@ -296,7 +294,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (Unlocked(AID.Kassatsu) && _state.CanWeave(AID.Kassatsu, 0.6f, deadline) && _state.CD(AID.TrickAttack) < 5)
             PushOGCD(AID.Kassatsu, Player);
 
-        var buffsOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
+        var buffsOk = strategy.BuffsOk();
 
         if (buffsOk && Unlocked(AID.Mug))
         {
@@ -358,9 +356,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<NinjaGauge>();
@@ -388,15 +384,9 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         if (HiddenStatus)
             Hints.StatusesToCancel.Add(((uint)SID.Hidden, Player.InstanceID));
 
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 20, IsSplashTarget);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
 
-        if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
-            NumAOETargets = NumMeleeAOETargets();
-        else
-        {
-            NumAOETargets = 0;
-            NumRangedAOETargets = BestRangedAOETarget == null ? 0 : 1;
-        }
+        NumAOETargets = NumMeleeAOETargets(strategy);
 
         _state.UpdatePositionals(primaryTarget, GetNextPositional(primaryTarget), TrueNorthLeft > _state.GCD);
 

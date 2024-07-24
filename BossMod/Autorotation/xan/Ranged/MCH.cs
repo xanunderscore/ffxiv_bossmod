@@ -17,9 +17,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var def = new RotationModuleDefinition("MCH", "Machinist", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.MCH), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.BarrelStabilizer, AID.Wildfire);
+        def.DefineShared().AddAssociatedActions(AID.BarrelStabilizer, AID.Wildfire);
 
         def.Define(Track.Queen).As<QueenStrategy>("Queen", "Automaton Queen")
             .AddOption(QueenStrategy.MinGauge, "Min", "Summon at 50+ gauge")
@@ -272,19 +270,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-
-        var wildfireTarget = Hints.PriorityTargets.FirstOrDefault(x => x.Actor.FindStatus(SID.WildfireTarget, Player.InstanceID) != null)?.Actor;
-
-        // if autotarget enabled, force all weaponskills to hit wildfire'd target during effect to maximize potency
-        if (wildfireTarget != null && targeting == Targeting.Auto)
-        {
-            primaryTarget = wildfireTarget;
-            targeting = Targeting.AutoPrimary;
-        }
-        else
-            SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
-
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<MachinistGauge>();
@@ -303,13 +289,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
 
         Flamethrower = StatusLeft(SID.Flamethrower) > 0;
 
-        (BestAOETarget, NumAOETargets) = strategy.Option(Track.AOE).As<AOEStrategy>() switch
-        {
-            AOEStrategy.AOE => SelectTarget(targeting, primaryTarget, 12, IsConeAOETarget),
-            _ => (primaryTarget, 0)
-        };
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
-        (BestChainsawTarget, NumSawTargets) = SelectTarget(targeting, primaryTarget, 25, Is25yRectTarget);
+        (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 12, IsConeAOETarget);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
+        (BestChainsawTarget, NumSawTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
         NumFlamethrowerTargets = Hints.NumPriorityTargetsInAOECone(Player.Position, 8, Player.Rotation.ToDirection(), 45.Degrees());
 
         CalcNextBestGCD(strategy, primaryTarget);

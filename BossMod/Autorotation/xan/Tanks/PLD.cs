@@ -4,15 +4,11 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
-
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("PLD", "Paladin", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PLD, Class.GLA), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.FightOrFlight);
+        def.DefineShared().AddAssociatedActions(AID.FightOrFlight);
 
         return def;
     }
@@ -33,7 +29,6 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
     public AID ConfiteorCombo;
 
     public int NumAOETargets;
-    public int NumScornTargets; // Circle of Scorn is part of single target rotation
 
     private Actor? BestRangedTarget;
 
@@ -134,7 +129,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
             if (Unlocked(AID.SpiritsWithin) && _state.CanWeave(AID.SpiritsWithin, 0.6f, deadline))
                 PushOGCD(AID.SpiritsWithin, primaryTarget);
 
-            if (Unlocked(AID.CircleOfScorn) && _state.CanWeave(AID.CircleOfScorn, 0.6f, deadline) && NumScornTargets > 0)
+            if (Unlocked(AID.CircleOfScorn) && _state.CanWeave(AID.CircleOfScorn, 0.6f, deadline) && NumAOETargets > 0)
                 PushOGCD(AID.CircleOfScorn, Player);
         }
 
@@ -144,8 +139,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
 
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
@@ -169,11 +163,9 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
             _ => AID.None
         };
 
-        BestRangedTarget = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget).Best;
+        BestRangedTarget = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget).Best;
 
-        var aoeType = strategy.Option(Track.AOE).As<AOEStrategy>();
-        NumScornTargets = NumMeleeAOETargets();
-        NumAOETargets = aoeType == AOEStrategy.SingleTarget ? 0 : NumScornTargets;
+        NumAOETargets = NumMeleeAOETargets(strategy);
 
         CalcNextBestGCD(primaryTarget);
 

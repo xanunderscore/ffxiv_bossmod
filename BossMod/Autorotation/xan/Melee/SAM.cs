@@ -4,15 +4,13 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs, Higanbana }
+    public enum Track { Higanbana = SharedTrack.Count }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("SAM", "Samurai", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.SAM), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.Ikishoten, AID.HissatsuSenei);
+        def.DefineShared().AddAssociatedActions(AID.Ikishoten, AID.HissatsuSenei);
 
         def.Define(Track.Higanbana).As<OffensiveStrategy>("Higanbana")
             .AddOption(OffensiveStrategy.Automatic, "Auto", "Keep Higanbana uptime against 1 or 2 targets")
@@ -263,9 +261,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
         if (primaryTarget == null || !HaveFugetsu)
             return;
 
-        var buffOk = strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
+        var buffsOk = strategy.BuffsOk();
 
-        if (buffOk)
+        if (buffsOk)
         {
             if (Unlocked(AID.Ikishoten) && _state.CanWeave(AID.Ikishoten, 0.6f, deadline))
                 PushOGCD(AID.Ikishoten, Player);
@@ -299,9 +297,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<SamuraiGauge>();
@@ -321,28 +317,18 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
         Zanshin = StatusLeft(SID.ZanshinReady);
         Tendo = StatusLeft(SID.Tendo);
 
-        (BestOgiTarget, NumOgiTargets) = SelectTarget(targeting, primaryTarget, 8, InConeAOE);
+        (BestOgiTarget, NumOgiTargets) = SelectTarget(strategy, primaryTarget, 8, InConeAOE);
 
-        if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
-        {
-            NumAOECircleTargets = NumMeleeAOETargets();
-            if (Unlocked(AID.Fuko))
-                (BestAOETarget, NumAOETargets) = (null, NumAOECircleTargets);
-            else
-                (BestAOETarget, NumAOETargets) = (BestOgiTarget, NumOgiTargets);
-
-            NumTenkaTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 8);
-            (BestLineTarget, NumLineTargets) = SelectTarget(targeting, primaryTarget, 10, InLineAOE);
-        }
+        NumAOECircleTargets = NumMeleeAOETargets(strategy);
+        if (Unlocked(AID.Fuko))
+            (BestAOETarget, NumAOETargets) = (null, NumAOECircleTargets);
         else
-        {
-            NumAOECircleTargets = 0;
-            NumTenkaTargets = 0;
-            (BestAOETarget, NumAOETargets) = (null, 0);
-            (BestLineTarget, NumLineTargets) = (primaryTarget, Player.DistanceToHitbox(primaryTarget) <= 10 ? 1 : 0);
-        }
+            (BestAOETarget, NumAOETargets) = (BestOgiTarget, NumOgiTargets);
 
-        if (Hints.PriorityTargets.Count() >= 3)
+        NumTenkaTargets = NumNearbyTargets(strategy, 8);
+        (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, InLineAOE);
+
+        if (Hints.PriorityTargets.Count() > 2)
             TargetDotLeft = float.MaxValue;
         else
         {
@@ -351,7 +337,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Basexan<A
                 OffensiveStrategy.Automatic => HiganbanaLeft(primaryTarget),
                 OffensiveStrategy.Delay => float.MaxValue,
                 OffensiveStrategy.Force => 0,
-                _ => throw new NotImplementedException("sigh")
+                _ => 0
             };
         }
 

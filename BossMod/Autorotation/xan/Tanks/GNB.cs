@@ -10,9 +10,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var def = new RotationModuleDefinition("GNB", "Gunbreaker", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.GNB), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.Bloodfest);
+        def.DefineShared().AddAssociatedActions(AID.Bloodfest);
 
         return def;
     }
@@ -24,7 +22,6 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
     public bool Continuation;
     public float NoMercy;
 
-    public int NumDDTargets;
     public int NumAOETargets;
 
     public bool FastGCD => _state.AttackGCDTime <= 2.47f;
@@ -37,7 +34,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (_state.CD(AID.GnashingFang) > 0 && NumDDTargets > 0 && Ammo >= 2 && _state.CD(AID.DoubleDown) < _state.GCD)
+        if (_state.CD(AID.GnashingFang) > 0 && NumAOETargets > 0 && Ammo >= 2 && _state.CD(AID.DoubleDown) < _state.GCD)
             PushGCD(AID.DoubleDown, Player);
 
         if (_state.CD(AID.GnashingFang) > 0 && SonicBreak > _state.GCD)
@@ -126,7 +123,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
             if (Unlocked(AID.BlastingZone) && _state.CanWeave(AID.BlastingZone, 0.6f, deadline))
                 PushOGCD(AID.BlastingZone, primaryTarget);
 
-            if (Unlocked(AID.BowShock) && _state.CanWeave(AID.BowShock, 0.6f, deadline) && NumDDTargets > 0)
+            if (Unlocked(AID.BowShock) && _state.CanWeave(AID.BowShock, 0.6f, deadline) && NumAOETargets > 0)
                 PushOGCD(AID.BowShock, Player);
         }
     }
@@ -151,8 +148,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, 3);
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<GunbreakerGauge>();
@@ -160,21 +156,14 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         AmmoCombo = gauge.AmmoComboStep;
 
         SonicBreak = StatusLeft(SID.ReadyToBreak);
-        Continuation = Player.Statuses.Any(x => (SID)x.ID switch
-        {
-            SID.ReadyToBlast or SID.ReadyToRaze or SID.ReadyToGouge or SID.ReadyToTear or SID.ReadyToRip => true,
-            _ => false
-        });
+        Continuation = Player.Statuses.Any(s => IsContinuationStatus((SID)s.ID));
         NoMercy = StatusLeft(SID.NoMercy);
 
-        NumDDTargets = NumMeleeAOETargets();
-        NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
-        {
-            AOEStrategy.AOE => NumDDTargets,
-            _ => 0
-        };
+        NumAOETargets = NumMeleeAOETargets(strategy);
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
+
+    private bool IsContinuationStatus(SID sid) => sid is SID.ReadyToBlast or SID.ReadyToRaze or SID.ReadyToGouge or SID.ReadyToTear or SID.ReadyToRip;
 }

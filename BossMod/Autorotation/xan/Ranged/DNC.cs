@@ -12,9 +12,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var def = new RotationModuleDefinition("DNC", "Dancer", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.DNC), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.TechnicalStep);
+        def.DefineShared().AddAssociatedActions(AID.TechnicalStep);
 
         def.Define(Track.Partner).As<PartnerStrategy>("Partner")
             .AddOption(PartnerStrategy.Automatic, "Auto", "Choose dance partner automatically (based on job aDPS)")
@@ -274,8 +272,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<DancerGauge>();
@@ -304,16 +301,12 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<A
         FinishingMoveLeft = StatusLeft(SID.FinishingMoveReady);
         DanceOfTheDawnLeft = StatusLeft(SID.DanceOfTheDawnReady);
 
-        (BestFan4Target, NumFan4Targets) = SelectTarget(targeting, primaryTarget, 15, IsFan4Target);
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget);
-        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(targeting, primaryTarget, 25, Is25yRectTarget);
+        (BestFan4Target, NumFan4Targets) = SelectTarget(strategy, primaryTarget, 15, IsFan4Target);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
+        (BestStarfallTarget, NumStarfallTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
 
-        NumDanceTargets = Hints.NumPriorityTargetsInAOECircle(Player.Position, 15);
-        NumAOETargets = strategy.Option(Track.AOE).As<AOEStrategy>() switch
-        {
-            AOEStrategy.AOE => NumMeleeAOETargets(),
-            _ => 0
-        };
+        NumDanceTargets = NumNearbyTargets(strategy, 15);
+        NumAOETargets = NumMeleeAOETargets(strategy);
 
         if (Unlocked(AID.ClosedPosition)
             && strategy.Option(Track.Partner).As<PartnerStrategy>() == PartnerStrategy.Automatic

@@ -4,15 +4,11 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
-
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("BLM", "Black Mage", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.BLM, Class.THM), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.LeyLines);
+        def.DefineShared().AddAssociatedActions(AID.LeyLines);
 
         return def;
     }
@@ -284,13 +280,12 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Unlocked(AID.LeyLines) || !_state.CanWeave(AID.LeyLines, 0.6f, deadline) || ForceMovementIn < 30)
             return false;
 
-        return strategy.Option(Track.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
+        return strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var targeting = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(targeting, ref primaryTarget, range: 25);
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<BlackMageGauge>();
@@ -317,10 +312,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
             _state.StatusDetails(primaryTarget, SID.HighThunderII, Player.InstanceID, 24).Left
         );
 
-        if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.AOE)
-            (BestAOETarget, (NumAOETargets, _)) = SelectTarget(targeting, primaryTarget, 25, IsSplashTarget, (numTargets, target) => (numTargets, target.HPMP.CurHP));
-        else
-            (BestAOETarget, NumAOETargets) = (primaryTarget, 0);
+        (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));

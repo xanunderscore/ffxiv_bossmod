@@ -4,16 +4,14 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs, Motif, Holy, Hammer }
+    public enum Track { Motif = SharedTrack.Count, Holy, Hammer }
     public enum MotifStrategy { Instant, Downtime, Combat }
 
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("PCT", "Pictomancer", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.PCT), 100);
 
-        def.DefineAOE(Track.AOE);
-        def.DefineTargeting(Track.Targeting);
-        def.DefineSimple(Track.Buffs, "Buffs").AddAssociatedActions(AID.StarryMuse);
+        def.DefineShared().AddAssociatedActions(AID.StarryMuse);
 
         def.Define(Track.Motif).As<MotifStrategy>("Motifs")
             .AddOption(MotifStrategy.Instant, "Instant", "Only cast motifs when they are instant (out of combat)")
@@ -54,6 +52,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
     public float Starstruck;
 
     public int NumAOETargets;
+    public int NumLineTargets;
 
     private Actor? BestAOETarget;
     private Actor? BestLineTarget;
@@ -241,7 +240,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
     private bool ShouldLandscape(StrategyValues strategy, float deadline)
     {
-        if (strategy.Option(Track.Buffs).As<OffensiveStrategy>() == OffensiveStrategy.Delay)
+        if (!strategy.BuffsOk())
             return false;
 
         if (CombatTimer < 10 && !CanvasFlags.HasFlag(CanvasFlags.Wing))
@@ -264,8 +263,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
-        var track = strategy.Option(Track.Targeting).As<Targeting>();
-        SelectPrimaryTarget(track, ref primaryTarget, 25);
+        SelectPrimaryTarget(strategy, ref primaryTarget, 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<PictomancerGauge>();
@@ -293,14 +291,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Basexan<A
 
         Hues = ah1 > 0 ? AetherHues.One : ah2 > 0 ? AetherHues.Two : AetherHues.None;
 
-        (BestAOETarget, (NumAOETargets, _)) = SelectTarget(track, primaryTarget, 25, IsSplashTarget,
-            (numTargets, target) => (numTargets, target.HPMP.CurHP)
-        );
+        (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
 
-        if (strategy.Option(Track.AOE).As<AOEStrategy>() == AOEStrategy.SingleTarget)
-            NumAOETargets = 0;
-
-        BestLineTarget = SelectTarget(track, primaryTarget, 25, Is25yRectTarget).Best;
+        BestLineTarget = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget).Best;
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
