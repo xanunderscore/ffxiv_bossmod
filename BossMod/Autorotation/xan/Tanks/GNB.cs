@@ -37,17 +37,23 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
             return;
         }
 
-        if (_state.CD(AID.GnashingFang) > 0 && NumDDTargets > 0 && Ammo >= 2)
+        if (_state.CD(AID.GnashingFang) > 0 && NumDDTargets > 0 && Ammo >= 2 && _state.CD(AID.DoubleDown) < _state.GCD)
             PushGCD(AID.DoubleDown, Player);
 
         if (_state.CD(AID.GnashingFang) > 0 && SonicBreak > _state.GCD)
             PushGCD(AID.SonicBreak, primaryTarget);
 
         if (AmmoCombo == 2)
+        {
             PushGCD(AID.WickedTalon, primaryTarget);
+            return;
+        }
 
         if (AmmoCombo == 1)
+        {
             PushGCD(AID.SavageClaw, primaryTarget);
+            return;
+        }
 
         if (_state.CD(AID.NoMercy) > 20 && Ammo > 0 && Unlocked(AID.GnashingFang) && _state.CD(AID.GnashingFang) < _state.GCD)
             PushGCD(AID.GnashingFang, primaryTarget);
@@ -75,7 +81,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
             if (ShouldBust(strategy, AID.BurstStrike))
                 PushGCD(AID.BurstStrike, primaryTarget);
 
-            if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter))
+            if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter) && NumAOETargets > 0)
                 PushGCD(AID.DemonSlaughter, Player);
 
             if (ComboLastMove == AID.BrutalShell && Unlocked(AID.SolidBarrel))

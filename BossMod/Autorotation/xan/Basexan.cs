@@ -110,26 +110,17 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     {
         P targetPrio(Actor potentialTarget) => prioritize(Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor)), potentialTarget);
 
-        switch (track)
+        return track switch
         {
-            case Targeting.Auto:
-                return FindBetterTargetBy(primaryTarget, range, targetPrio);
-            case Targeting.AutoPrimary:
-                if (primaryTarget == null)
-                    return (null, default);
-                return FindBetterTargetBy(
-                    primaryTarget,
-                    range,
-                    targetPrio,
-                    enemy => isInAOE(enemy.Actor, primaryTarget)
-                );
-            default:
-                if (primaryTarget == null)
-                    return (null, default);
-                // if AOE action on primary target would hit a forbidden target, return null
-                var cnt = Hints.NumPriorityTargetsInAOE(enemy => isInAOE(primaryTarget, enemy.Actor));
-                return cnt > 0 ? (primaryTarget, prioritize(cnt, primaryTarget)) : (null, default);
-        }
+            Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
+            Targeting.AutoPrimary => primaryTarget == null ? (null, default) : FindBetterTargetBy(
+                primaryTarget,
+                range,
+                targetPrio,
+                enemy => isInAOE(enemy.Actor, primaryTarget)
+            ),
+            _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget)),
+        };
     }
 
     /// <summary>

@@ -367,13 +367,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         Ninki = gauge.Ninki;
         Kazematoi = gauge.Kazematoi;
 
-        var mudra = Player.FindStatus(SID.Mudra);
-        // for some reason, pending status isn't cleared fast enough
-        if (mudra == null)
-            Mudra = (0, 0);
-        else
-            Mudra = (_state.StatusDuration(mudra.Value.ExpireAt), mudra.Value.Extra);
-
+        Mudra = Status(SID.Mudra);
         ShadowWalker = StatusLeft(SID.ShadowWalker);
         Kassatsu = StatusLeft(SID.Kassatsu);
         PhantomKamaitachi = StatusLeft(SID.PhantomKamaitachiReady);
