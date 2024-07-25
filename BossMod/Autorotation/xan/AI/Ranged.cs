@@ -49,12 +49,12 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private bool PelotonWillExpire(Actor actor)
     {
-        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)GenericSID.Peloton);
+        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BRD.SID.Peloton);
         if (pending != null)
             // just applied, should have >30s remaining duration, assume that's fine
             return false;
 
-        var status = actor.FindStatus((uint)GenericSID.Peloton);
+        var status = actor.FindStatus((uint)BRD.SID.Peloton);
         if (status == null)
             return true;
 

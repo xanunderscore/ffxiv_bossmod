@@ -26,21 +26,6 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
     internal float HPRatio => (float)Player.HPMP.CurHP / Player.HPMP.MaxHP;
 }
 
-enum GenericAID : uint
-{
-    Unmend = 3624,
-    Grit = 3629,
-    RoyalGuard = 16142,
-    LightningShot = 16143
-}
-
-enum GenericSID : uint
-{
-    Grit = 743,
-    RoyalGuard = 1833,
-    Peloton = 1199
-}
-
 public enum AbilityUse
 {
     Enabled,

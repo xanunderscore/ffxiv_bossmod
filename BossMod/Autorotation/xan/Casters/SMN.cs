@@ -5,11 +5,30 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
+    public enum Track { Cyclone = SharedTrack.Count }
+    public enum CycloneUse
+    {
+        Automatic,
+        Force,
+        Delay,
+        DelayMove,
+        SkipMove,
+        Skip
+    }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("SMN", "Summoner", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.SMN, Class.ACN), 100);
 
         def.DefineShared().AddAssociatedActions(AID.SearingLight);
+
+        def.Define(Track.Cyclone).As<CycloneUse>("Cyclone")
+            .AddOption(CycloneUse.Automatic, "Auto", "Use after Ruby Rite")
+            .AddOption(CycloneUse.Force, "Force", "Use before Ruby Rite")
+            .AddOption(CycloneUse.Delay, "Delay", "Delay automatic use, but do not overwrite Ifrit with any other summon")
+            .AddOption(CycloneUse.DelayMove, "DelayMove", "Delay automatic use until player is not holding a movement key - do not overwrite Ifrit with any other summon")
+            .AddOption(CycloneUse.SkipMove, "SkipMove", "Skip if a movement key is held, otherwise use")
+            .AddOption(CycloneUse.Skip, "Skip", "Do not use at all");
 
         return def;
     }
@@ -53,8 +72,50 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (Carbuncle == null)
             PushGCD(AID.SummonCarbuncle, Player);
 
+        if (primaryTarget == null)
+            return;
+
+        if (_state.CountdownRemaining > 0)
+        {
+            if (_state.CountdownRemaining < 1.5)
+                PushGCD(AID.Ruin1, primaryTarget);
+
+            return;
+        }
+
+        if (ComboLastMove == AID.CrimsonCyclone)
+            PushGCD(AID.CrimsonStrike, BestMeleeTarget);
+
         if (Favor == Favor.Garuda)
             PushGCD(AID.Slipstream, BestAOETarget);
+
+        if (Favor == Favor.Ifrit)
+        {
+            switch (strategy.Option(Track.Cyclone).As<CycloneUse>())
+            {
+                case CycloneUse.Automatic: // use once we're out of rubies
+                    if (AttunementType == AttunementType.None)
+                        PushGCD(AID.CrimsonCyclone, BestAOETarget);
+                    break;
+                case CycloneUse.Force: // asap
+                    PushGCD(AID.CrimsonCyclone, BestAOETarget);
+                    break;
+                case CycloneUse.Delay: // do nothing, pause rotation
+                    return;
+                case CycloneUse.DelayMove:
+                    if (ForceMovementIn == 0)
+                        return;
+                    else
+                        PushGCD(AID.CrimsonCyclone, BestAOETarget);
+                    break;
+                case CycloneUse.SkipMove:
+                    if (ForceMovementIn > 0)
+                        PushGCD(AID.CrimsonCyclone, BestAOETarget);
+                    break;
+                case CycloneUse.Skip:
+                    break;
+            }
+        }
 
         if (AttunementType != AttunementType.None)
         {
@@ -63,12 +124,6 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
 
             PushGCD(AID.Gemshine, primaryTarget);
         }
-
-        if (ComboLastMove == AID.CrimsonCyclone)
-            PushGCD(AID.CrimsonStrike, BestMeleeTarget);
-
-        if (Favor == Favor.Ifrit && ForceMovementIn > 5) // idk what to put here
-            PushGCD(AID.CrimsonCyclone, BestAOETarget);
 
         if (SummonLeft <= _state.GCD)
         {
@@ -81,7 +136,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             if (Arcanum.HasFlag(Arcanum.Ruby))
                 PushGCD(AID.SummonRuby, primaryTarget);
 
-            if (_state.CD(AID.Aethercharge) < _state.GCD)
+            if (_state.CD(AID.Aethercharge) <= _state.GCD)
             {
                 var isTargeted = Unlocked(TraitID.AetherchargeMastery);
                 // scarlet flame and wyrmwave are both single target, this is ok

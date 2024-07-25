@@ -78,6 +78,10 @@ public enum TraitID : uint
 public enum SID : uint
 {
     None = 0,
+    BloodWeapon = 742,
+    Grit = 743,
+    SaltedEarth = 749,
+    Delirium = 1972,
 }
 
 public sealed class Definitions : IDisposable

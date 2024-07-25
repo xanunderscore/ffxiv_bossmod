@@ -108,7 +108,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     ) => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, _) => numTargets, a => a);
 
     protected (Actor? Best, int Targets) SelectTargetByHP(StrategyValues strategy, Actor? primaryTarget, float range, PositionCheck isInAOE)
-        => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, actor) => (numTargets, actor.HPMP.CurHP), args => args.numTargets);
+        => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, actor) => (numTargets, numTargets > 2 ? actor.HPMP.CurHP : 0), args => args.numTargets);
 
     protected (Actor? Best, int Priority) SelectTarget<P>(
         StrategyValues strategy,

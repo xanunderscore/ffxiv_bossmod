@@ -24,7 +24,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         Class.GLA or Class.PLD => ActionID.MakeSpell(BossMod.PLD.AID.ShieldLob),
         Class.MRD or Class.WAR => ActionID.MakeSpell(WAR.AID.Tomahawk),
-        Class.DRK => ActionID.MakeSpell(GenericAID.Unmend),
+        Class.DRK => ActionID.MakeSpell(BossMod.DRK.AID.Unmend),
         Class.GNB => ActionID.MakeSpell(BossMod.GNB.AID.LightningShot),
         _ => default
     };
@@ -33,7 +33,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         Class.GLA or Class.PLD => (ActionID.MakeSpell(BossMod.PLD.AID.IronWill), (uint)BossMod.PLD.SID.IronWill),
         Class.MRD or Class.WAR => (ActionID.MakeSpell(WAR.AID.Defiance), (uint)WAR.SID.Defiance),
-        Class.DRK => (ActionID.MakeSpell(GenericAID.Grit), (uint)GenericSID.Grit),
+        Class.DRK => (ActionID.MakeSpell(BossMod.DRK.AID.Grit), (uint)BossMod.DRK.SID.Grit),
         Class.GNB => (ActionID.MakeSpell(BossMod.GNB.AID.RoyalGuard), (uint)BossMod.GNB.SID.RoyalGuard),
         _ => default
     };
