@@ -9,7 +9,6 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
     public enum CycloneUse
     {
         Automatic,
-        Force,
         Delay,
         DelayMove,
         SkipMove,
@@ -23,8 +22,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         def.DefineShared().AddAssociatedActions(AID.SearingLight);
 
         def.Define(Track.Cyclone).As<CycloneUse>("Cyclone")
-            .AddOption(CycloneUse.Automatic, "Auto", "Use after Ruby Rite")
-            .AddOption(CycloneUse.Force, "Force", "Use before Ruby Rite")
+            .AddOption(CycloneUse.Automatic, "Auto", "Use when Ifrit is summoned")
             .AddOption(CycloneUse.Delay, "Delay", "Delay automatic use, but do not overwrite Ifrit with any other summon")
             .AddOption(CycloneUse.DelayMove, "DelayMove", "Delay automatic use until player is not holding a movement key - do not overwrite Ifrit with any other summon")
             .AddOption(CycloneUse.SkipMove, "SkipMove", "Skip if a movement key is held, otherwise use")
@@ -40,6 +38,8 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
     public int Attunement;
     public float SummonLeft;
     public float FurtherRuin;
+    public float SearingFlash;
+
     public int Aetherflow => Trance.HasFlag(Trance.Aetherflow2) ? 2 : Trance.HasFlag(Trance.Aetherflow) ? 1 : 0;
 
     public int NumAOETargets;
@@ -89,15 +89,19 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (Favor == Favor.Garuda)
             PushGCD(AID.Slipstream, BestAOETarget);
 
+        if (AttunementType != AttunementType.None)
+        {
+            if (Unlocked(AID.PreciousBrilliance) && NumAOETargets > 2)
+                PushGCD(AID.PreciousBrilliance, BestAOETarget);
+
+            PushGCD(AID.Gemshine, primaryTarget);
+        }
+
         if (Favor == Favor.Ifrit)
         {
             switch (strategy.Option(Track.Cyclone).As<CycloneUse>())
             {
-                case CycloneUse.Automatic: // use once we're out of rubies
-                    if (AttunementType == AttunementType.None)
-                        PushGCD(AID.CrimsonCyclone, BestAOETarget);
-                    break;
-                case CycloneUse.Force: // asap
+                case CycloneUse.Automatic:
                     PushGCD(AID.CrimsonCyclone, BestAOETarget);
                     break;
                 case CycloneUse.Delay: // do nothing, pause rotation
@@ -117,16 +121,17 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             }
         }
 
-        if (AttunementType != AttunementType.None)
-        {
-            if (Unlocked(AID.PreciousBrilliance) && NumAOETargets > 2)
-                PushGCD(AID.PreciousBrilliance, BestAOETarget);
-
-            PushGCD(AID.Gemshine, primaryTarget);
-        }
-
         if (SummonLeft <= _state.GCD)
         {
+            // TODO make this configurable - this will summon baha/phoenix and ignore current gems
+            // balance says to default to summons if you don't know whether you will lose a usage or not
+            if (_state.CD(AID.Aethercharge) <= _state.GCD)
+            {
+                var isTargeted = Unlocked(TraitID.AetherchargeMastery);
+                // scarlet flame and wyrmwave are both single target, this is ok
+                PushGCD(AID.Aethercharge, isTargeted ? primaryTarget : Player);
+            }
+
             if (Arcanum.HasFlag(Arcanum.Topaz))
                 PushGCD(AID.SummonTopaz, primaryTarget);
 
@@ -135,13 +140,6 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (Arcanum.HasFlag(Arcanum.Ruby))
                 PushGCD(AID.SummonRuby, primaryTarget);
-
-            if (_state.CD(AID.Aethercharge) <= _state.GCD)
-            {
-                var isTargeted = Unlocked(TraitID.AetherchargeMastery);
-                // scarlet flame and wyrmwave are both single target, this is ok
-                PushGCD(AID.Aethercharge, isTargeted ? primaryTarget : Player);
-            }
         }
 
         if (FurtherRuin > _state.GCD && SummonLeft == 0)
@@ -195,6 +193,9 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             PushOGCD(AID.EnergyDrain, primaryTarget);
         }
 
+        if (SearingFlash > 0 && _state.CanWeave(AID.SearingFlash, 0.6f, deadline))
+            PushOGCD(AID.SearingFlash, BestAOETarget);
+
         if (MP <= 7000 && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
             PushOGCD(AID.LucidDreaming, Player);
     }
@@ -223,6 +224,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             _ => Favor.None
         };
         FurtherRuin = StatusLeft(SID.FurtherRuin);
+        SearingFlash = StatusLeft(SID.RubysGlimmer);
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
         (BestMeleeTarget, NumMeleeTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
