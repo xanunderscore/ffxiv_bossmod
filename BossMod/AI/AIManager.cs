@@ -114,6 +114,7 @@ sealed class AIManager : IDisposable
     public void AIEnable()
     {
         SwitchToFollow(PartyState.PlayerSlot);
+        _aiPreset ??= _autorot.Database.Presets.Presets.FirstOrDefault(x => x.Name == "AI");
         if (_beh != null)
             _beh.AIPreset = _aiPreset;
     }
