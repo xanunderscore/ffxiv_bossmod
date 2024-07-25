@@ -216,7 +216,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
 
-        Exec(strategy, primaryTarget, MathF.Max(estimatedAnimLockDelay, 0.1f));
+        Exec(strategy, primaryTarget, estimatedAnimLockDelay);
     }
 
     public abstract void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay);
