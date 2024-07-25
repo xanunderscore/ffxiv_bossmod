@@ -135,7 +135,11 @@ public enum SID : uint
     LucidDreaming = 1204, // applied by Lucid Dreaming to self, MP restore
     Swiftcast = 167, // applied by Swiftcast to self, next cast is instant
     Sleep = 3, // applied by Sleep to target
+    FurtherRuin = 2701,
     SearingLight = 2703,
+    IfritsFavor = 2724,
+    GarudasFavor = 2725,
+    TitansFavor = 2853
 }
 
 public sealed class Definitions : IDisposable

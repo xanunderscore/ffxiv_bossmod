@@ -105,23 +105,24 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE
-    ) => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, _) => numTargets);
+    ) => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, _) => numTargets, a => a);
 
     protected (Actor? Best, int Targets) SelectTargetByHP(StrategyValues strategy, Actor? primaryTarget, float range, PositionCheck isInAOE)
-        => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, actor) => numTargets * 1000000 + (int)actor.HPMP.CurHP);
+        => SelectTarget(strategy, primaryTarget, range, isInAOE, (numTargets, actor) => (numTargets, actor.HPMP.CurHP), args => args.numTargets);
 
-    protected (Actor? Best, int Priority) SelectTarget(
+    protected (Actor? Best, int Priority) SelectTarget<P>(
         StrategyValues strategy,
         Actor? primaryTarget,
         float range,
         PositionCheck isInAOE,
-        PriorityFunc<int> prioritize
-    )
+        PriorityFunc<P> prioritize,
+        Func<P, int> simplify
+    ) where P : struct, IComparable
     {
         var aoe = strategy.Option(SharedTrack.AOE).As<AOEStrategy>();
         var targeting = strategy.Option(SharedTrack.Targeting).As<Targeting>();
 
-        int targetPrio(Actor potentialTarget)
+        P targetPrio(Actor potentialTarget)
         {
             var numTargets = Hints.NumPriorityTargetsInAOE(enemy => isInAOE(potentialTarget, enemy.Actor));
             return prioritize(AdjustNumTargets(strategy, numTargets), potentialTarget);
@@ -143,7 +144,8 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
             ),
             _ => (primaryTarget, primaryTarget == null ? default : targetPrio(primaryTarget))
         };
-        return (newprio > 0 ? newtarget : null, newprio);
+        var newnewprio = simplify(newprio);
+        return (newnewprio > 0 ? newtarget : null, newnewprio);
     }
 
     protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);

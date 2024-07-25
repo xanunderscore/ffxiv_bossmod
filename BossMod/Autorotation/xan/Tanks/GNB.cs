@@ -120,7 +120,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         if (Continuation)
             PushOGCD(AID.Continuation, primaryTarget);
 
-        if (Unlocked(AID.Bloodfest) && _state.CanWeave(AID.Bloodfest, 0.6f, deadline) && Ammo == 0)
+        if (strategy.BuffsOk() && Unlocked(AID.Bloodfest) && _state.CanWeave(AID.Bloodfest, 0.6f, deadline) && Ammo == 0)
             PushOGCD(AID.Bloodfest, primaryTarget);
 
         var usedNM = _state.CD(AID.NoMercy) > 20;
