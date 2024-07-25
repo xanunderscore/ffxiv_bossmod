@@ -199,7 +199,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             PushOGCD(AID.LucidDreaming, Player);
     }
 
-    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
@@ -233,7 +233,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 0x10)]
-internal unsafe struct SmnGauge
+internal struct SmnGauge
 {
     [FieldOffset(0x8)] public ushort SummonTimer;
     [FieldOffset(0xE)] public byte AttunementFlags;
@@ -244,18 +244,18 @@ internal unsafe struct SmnGauge
 public enum Trance
 {
     Bahamut = 0,
-    Aetherflow = 1,
-    Aetherflow2 = 2,
-    Phoenix = 4
+    Aetherflow = 1 << 0,
+    Aetherflow2 = 1 << 1,
+    Phoenix = 1 << 2
 }
 
 [Flags]
 public enum Arcanum
 {
     None = 0,
-    Ruby = 2,
-    Topaz = 4,
-    Emerald = 8
+    Ruby = 1 << 1,
+    Topaz = 1 << 2,
+    Emerald = 1 << 3
 }
 
 public enum AttunementType
