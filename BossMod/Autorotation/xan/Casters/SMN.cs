@@ -91,7 +91,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (AttunementType != AttunementType.None)
         {
-            if (Unlocked(AID.PreciousBrilliance) && NumAOETargets > 2)
+            if (NumAOETargets > 2)
                 PushGCD(AID.PreciousBrilliance, BestAOETarget);
 
             PushGCD(AID.Gemshine, primaryTarget);
@@ -145,7 +145,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (FurtherRuin > _state.GCD && SummonLeft == 0)
             PushGCD(AID.Ruin4, BestAOETarget);
 
-        if (Unlocked(AID.Outburst) && NumAOETargets > 2)
+        if (NumAOETargets > 2)
             PushGCD(AID.Outburst, BestAOETarget);
 
         PushGCD(AID.Ruin1, primaryTarget);
@@ -156,47 +156,39 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Player.InCombat || primaryTarget == null)
             return;
 
-        if (strategy.BuffsOk() && Unlocked(AID.SearingLight) && _state.CanWeave(AID.SearingLight, 0.6f, deadline))
+        if (strategy.BuffsOk())
             PushOGCD(AID.SearingLight, Player);
 
-        if (Favor == Favor.Titan && _state.CanWeave(AID.MountainBuster, 0.6f, deadline))
+        if (Favor == Favor.Titan)
             PushOGCD(AID.MountainBuster, BestAOETarget);
 
         if (DreadwyrmTrance)
         {
-            if (Unlocked(AID.EnkindleBahamut) && _state.CanWeave(AID.EnkindleBahamut, 0.6f, deadline))
-                PushOGCD(AID.EnkindleBahamut, BestAOETarget);
-
-            if (_state.CanWeave(AID.Deathflare, 0.6f, deadline))
-                PushOGCD(AID.Deathflare, BestAOETarget);
+            PushOGCD(AID.EnkindleBahamut, BestAOETarget);
+            PushOGCD(AID.Deathflare, BestAOETarget);
         }
 
-        if (FirebirdTrance && _state.CanWeave(AID.EnkindlePhoenix, 0.6f, deadline))
+        if (FirebirdTrance)
             PushOGCD(AID.EnkindlePhoenix, BestAOETarget);
 
         if (Aetherflow > 0)
         {
+            // have to separate these because they don't share a cdgroup, meaning you can accidentally do painflare and fester in one window when 2 festers in 2 windows is optimal
             if (Unlocked(AID.Painflare) && NumAOETargets > 2)
-            {
-                if (_state.CanWeave(AID.Painflare, 0.6f, deadline))
-                    PushOGCD(AID.Painflare, BestAOETarget);
-            }
-            else if (_state.CanWeave(AID.Fester, 0.6f, deadline))
+                PushOGCD(AID.Painflare, BestAOETarget);
+            else
                 PushOGCD(AID.Fester, primaryTarget);
         }
 
-        if (_state.CanWeave(AID.EnergyDrain, 0.6f, deadline))
-        {
-            if (Unlocked(AID.EnergySiphon) && NumAOETargets > 2)
-                PushOGCD(AID.EnergySiphon, BestAOETarget);
+        if (NumAOETargets > 2)
+            PushOGCD(AID.EnergySiphon, BestAOETarget);
 
-            PushOGCD(AID.EnergyDrain, primaryTarget);
-        }
+        PushOGCD(AID.EnergyDrain, primaryTarget);
 
-        if (SearingFlash > 0 && _state.CanWeave(AID.SearingFlash, 0.6f, deadline))
+        if (SearingFlash > 0)
             PushOGCD(AID.SearingFlash, BestAOETarget);
 
-        if (MP <= 7000 && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
+        if (MP <= 7000)
             PushOGCD(AID.LucidDreaming, Player);
     }
 
