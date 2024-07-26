@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
     public enum Track { Kardia = SharedTrack.Count, Druo }
     public enum KardiaStrategy { Auto, Manual }
@@ -45,101 +45,9 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
 
     protected override float GetCastTime(AID aid) => Eukrasia ? 0 : base.GetCastTime(aid);
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
-            && Unlocked(AID.Kardia)
-            && Player.FindStatus((uint)SID.Kardia) == null
-            && FindKardiaTarget() is Actor kardiaTarget
-            && !World.Party.Members[World.Party.FindSlot(kardiaTarget.InstanceID)].InCutscene)
-            PushGCD(AID.Kardia, kardiaTarget);
-
-        if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia)
-            PushGCD(AID.Eukrasia, Player);
-
-        if (Unlocked(AID.Eukrasia))
-        {
-            if (NumNearbyDotTargets > 1 && Unlocked(AID.EukrasianDyskrasia))
-            {
-                if (!Eukrasia)
-                    PushGCD(AID.Eukrasia, Player);
-
-                PushGCD(AID.Dyskrasia, Player);
-            }
-            else if (BestDotTarget != null)
-            {
-                if (!Eukrasia)
-                    PushGCD(AID.Eukrasia, Player);
-
-                PushGCD(AID.Dosis, BestDotTarget);
-            }
-        }
-
-        if (Unlocked(AID.Pneuma) && _state.CD(AID.Pneuma) < _state.GCD && NumPneumaTargets > 1)
-            PushGCD(AID.Pneuma, BestPneumaTarget);
-
-        if (Unlocked(AID.Phlegma)
-            && (NumPhlegmaTargets > 2 && _state.CD(AID.Phlegma) - 40 < _state.GCD
-                || _state.CD(AID.Phlegma) < _state.GCD))
-            PushGCD(AID.Phlegma, BestPhlegmaTarget);
-
-        if (NumAOETargets > 1)
-        {
-            if (Sting > 0 && NumPhlegmaTargets > 1)
-                PushGCD(AID.Toxikon, BestPhlegmaTarget);
-
-            if (Unlocked(AID.Dyskrasia))
-                PushGCD(AID.Dyskrasia, Player);
-        }
-
-        PushGCD(AID.Dosis, primaryTarget);
-
-        if (Unlocked(AID.Phlegma) && _state.CD(AID.Phlegma) - 40 < _state.GCD && NumPhlegmaTargets > 0)
-            PushGCD(AID.Phlegma, BestPhlegmaTarget);
-
-        if (Unlocked(AID.Toxikon) && NumRangedAOETargets > 0 && Sting > 0)
-            PushGCD(AID.Toxikon, BestRangedAOETarget);
-
-        if (NumAOETargets > 0 && Unlocked(AID.Dyskrasia))
-            PushGCD(AID.Dyskrasia, Player);
-    }
-
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
-    {
-        if (!Player.InCombat)
-            return;
-
-        if (Unlocked(AID.Rhizomata) && Gall < 2 && NextGall > 10 && _state.CanWeave(AID.Rhizomata, 0.6f, deadline))
-            PushOGCD(AID.Rhizomata, Player);
-
-        if (Unlocked(AID.Druochole) && (Gall == 3 || Gall == 2 && NextGall < 2.5f) && Player.HPMP.CurMP <= 9000 && strategy.Option(Track.Druo).As<DruoStrategy>() == DruoStrategy.Auto)
-        {
-            var healTarget = World.Party.WithoutSlot().MinBy(x => x.HPMP.CurHP / x.HPMP.MaxHP);
-            PushOGCD(AID.Druochole, healTarget);
-        }
-
-        if (Player.HPMP.CurMP <= 7000 && Unlocked(AID.LucidDreaming) && _state.CanWeave(AID.LucidDreaming, 0.6f, deadline))
-            PushOGCD(AID.LucidDreaming, Player);
-
-        if (Unlocked(AID.Psyche) && _state.CanWeave(AID.Psyche, 0.6f, deadline) && NumRangedAOETargets > 0)
-            PushOGCD(AID.Psyche, BestRangedAOETarget);
-    }
-
-    static readonly SID[] DotStatus = [SID.EukrasianDosis, SID.EukrasianDosisII, SID.EukrasianDosisIII, SID.EukrasianDyskrasia];
-
-    private bool HaveDot(Actor x)
-    {
-        foreach (var stat in DotStatus)
-            if (_state.StatusDetails(x, (uint)stat, Player.InstanceID).Left > _state.SpellGCDTime)
-                return true;
-
-        return false;
-    }
-
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<SageGauge>();
 
@@ -183,8 +91,95 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
             BestDotTarget = primaryTarget == null || HaveDot(primaryTarget) ? null : primaryTarget;
         }
 
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        DoGCD(strategy, primaryTarget);
+        DoOGCD(strategy, primaryTarget);
+    }
+
+    private void DoGCD(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
+            && Unlocked(AID.Kardia)
+            && Player.FindStatus((uint)SID.Kardia) == null
+            && FindKardiaTarget() is Actor kardiaTarget
+            && !World.Party.Members[World.Party.FindSlot(kardiaTarget.InstanceID)].InCutscene)
+            PushGCD(AID.Kardia, kardiaTarget);
+
+        if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia)
+            PushGCD(AID.Eukrasia, Player);
+
+        if (Unlocked(AID.Eukrasia))
+        {
+            if (NumNearbyDotTargets > 1 && Unlocked(AID.EukrasianDyskrasia))
+            {
+                if (!Eukrasia)
+                    PushGCD(AID.Eukrasia, Player);
+
+                PushGCD(AID.Dyskrasia, Player);
+            }
+            else if (BestDotTarget != null)
+            {
+                if (!Eukrasia)
+                    PushGCD(AID.Eukrasia, Player);
+
+                PushGCD(AID.Dosis, BestDotTarget);
+            }
+        }
+
+        if (CD(AID.Pneuma) <= GCD && NumPneumaTargets > 1)
+            PushGCD(AID.Pneuma, BestPneumaTarget);
+
+        if (NumPhlegmaTargets > 2 && CD(AID.Phlegma) - 40 <= GCD || CD(AID.Phlegma) <= GCD)
+            PushGCD(AID.Phlegma, BestPhlegmaTarget);
+
+        if (NumAOETargets > 1)
+        {
+            if (Sting > 0 && NumPhlegmaTargets > 1)
+                PushGCD(AID.Toxikon, BestPhlegmaTarget);
+
+            PushGCD(AID.Dyskrasia, Player);
+        }
+
+        PushGCD(AID.Dosis, primaryTarget);
+
+        // fallbacks for forced movement
+        if (CD(AID.Phlegma) - 40 <= GCD && NumPhlegmaTargets > 0)
+            PushGCD(AID.Phlegma, BestPhlegmaTarget);
+        if (NumRangedAOETargets > 0 && Sting > 0)
+            PushGCD(AID.Toxikon, BestRangedAOETarget);
+        if (NumAOETargets > 0)
+            PushGCD(AID.Dyskrasia, Player);
+    }
+
+    private void DoOGCD(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (!Player.InCombat)
+            return;
+
+        if (Gall < 2 && NextGall > 10)
+            PushOGCD(AID.Rhizomata, Player);
+
+        if ((Gall == 3 || Gall == 2 && NextGall < 2.5f) && Player.HPMP.CurMP <= 9000 && strategy.Option(Track.Druo).As<DruoStrategy>() == DruoStrategy.Auto)
+        {
+            var healTarget = World.Party.WithoutSlot().MinBy(x => x.HPMP.CurHP / x.HPMP.MaxHP);
+            PushOGCD(AID.Druochole, healTarget);
+        }
+
+        if (Player.HPMP.CurMP <= 7000)
+            PushOGCD(AID.LucidDreaming, Player);
+
+        if (NumRangedAOETargets > 0)
+            PushOGCD(AID.Psyche, BestRangedAOETarget);
+    }
+
+    static readonly SID[] DotStatus = [SID.EukrasianDosis, SID.EukrasianDosisII, SID.EukrasianDosisIII, SID.EukrasianDyskrasia];
+
+    private bool HaveDot(Actor x)
+    {
+        foreach (var stat in DotStatus)
+            if (StatusDetails(x, (uint)stat, Player.InstanceID).Left > 3)
+                return true;
+
+        return false;
     }
 
     private Actor? FindKardiaTarget()
