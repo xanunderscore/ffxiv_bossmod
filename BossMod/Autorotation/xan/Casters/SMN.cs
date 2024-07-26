@@ -217,12 +217,6 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
         (BestMeleeTarget, NumMeleeTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
 
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
-    }
-
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
         if (Carbuncle == null)
             PushGCD(AID.SummonCarbuncle, Player);
 
@@ -236,6 +230,8 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
 
             return;
         }
+
+        OGCDs(strategy, primaryTarget);
 
         if (ComboLastMove == AID.CrimsonCyclone)
             PushGCD(AID.CrimsonStrike, BestMeleeTarget);
@@ -303,11 +299,12 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(BestOutburst, BestAOETarget);
 
         PushGCD(BestRuin, primaryTarget);
+
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void OGCDs(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Player.InCombat || primaryTarget == null)
+        if (!Player.InCombat)
             return;
 
         if (Favor == Favor.Titan)
