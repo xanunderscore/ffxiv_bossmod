@@ -36,6 +36,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
     public float NastrondReady;
     public float LifeSurge;
     public float DraconianFire;
+    public float DragonsFlight;
 
     public int NumAOETargets; // standard combo (10x4 rect)
     public int NumLongAOETargets; // GSK, nastrond (15x4 rect)
@@ -121,14 +122,25 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
         if (DiveReady == 0 && posOk)
             PushOGCD(AID.HighJump, primaryTarget);
 
-        if (LanceCharge > _state.GCD && LifeSurge == 0 && ComboLastMove is AID.WheelingThrust or AID.VorpalThrust)
-            PushOGCD(AID.LifeSurge, Player);
+        if (LanceCharge > _state.GCD && LifeSurge == 0)
+        {
+            if (NumAOETargets > 2)
+            {
+                if (ComboLastMove is AID.SonicThrust || DraconianFire > _state.GCD)
+                    PushOGCD(AID.LifeSurge, Player);
+            }
+            else if (ComboLastMove is AID.WheelingThrust or AID.VorpalThrust)
+                PushOGCD(AID.LifeSurge, Player);
+        }
 
         if (moveOk)
             PushOGCD(AID.DragonfireDive, BestDiveTarget);
 
         if (NastrondReady > 0)
             PushOGCD(AID.Nastrond, BestLongAOETarget);
+
+        if (DragonsFlight > 0)
+            PushOGCD(AID.RiseOfTheDragon, BestDiveTarget);
 
         if (DiveReady > 0)
             PushOGCD(AID.MirageDive, primaryTarget);
@@ -169,6 +181,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
         LifeSurge = StatusLeft(SID.LifeSurge);
         LanceCharge = StatusLeft(SID.LanceCharge);
         DraconianFire = StatusLeft(SID.DraconianFire);
+        DragonsFlight = StatusLeft(SID.DragonsFlight);
 
         (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 10, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2));
         (BestLongAOETarget, NumLongAOETargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));

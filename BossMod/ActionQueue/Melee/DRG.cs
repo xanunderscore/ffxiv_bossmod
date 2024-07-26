@@ -92,6 +92,7 @@ public enum SID : uint
     Feint = 1195, // applied by Feint to target, -10% phys and -5% magic damage dealt
     Stun = 2, // applied by Leg Sweep to target
     NastrondReady = 3844, // applied by Geirskogul to self
+    DragonsFlight = 3845, // applied by Dragonfire Dive to self
 }
 
 public sealed class Definitions : IDisposable
