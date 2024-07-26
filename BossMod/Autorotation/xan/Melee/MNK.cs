@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -54,13 +54,13 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
             return (AID.None, false);
 
         if (HasBothNadi)
-            return (AID.TornadoKick, true);
+            return (Unlocked(AID.PhantomRush) ? AID.PhantomRush : AID.TornadoKick, true);
 
         var bc = BeastChakra;
         if (bc[0] == bc[1] && bc[1] == bc[2])
-            return (AID.ElixirField, false);
+            return (Unlocked(AID.ElixirBurst) ? AID.ElixirBurst : AID.ElixirField, false);
         if (bc[0] != bc[1] && bc[1] != bc[2] && bc[0] != bc[2])
-            return (AID.FlintStrike, false);
+            return (Unlocked(AID.RisingPhoenix) ? AID.RisingPhoenix : AID.FlintStrike, false);
         return (AID.CelestialRevolution, true);
     }
 
@@ -72,24 +72,73 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
 
     private (Positional, bool) GetNextPositional() => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, EffectiveForm == Form.Coeurl);
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
+        SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
+
+        var gauge = GetGauge<MonkGauge>();
+
+        Chakra = gauge.Chakra;
+        BeastChakra = gauge.BeastChakra;
+        BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
+        Nadi = gauge.Nadi;
+
+        OpoStacks = gauge.OpoOpoStacks;
+        RaptorStacks = gauge.RaptorStacks;
+        CoeurlStacks = gauge.CoeurlStacks;
+
+        PerfectBalanceLeft = StatusLeft(SID.PerfectBalance);
+        FormShiftLeft = StatusLeft(SID.FormlessFist);
+        FireLeft = StatusLeft(SID.RiddleOfFire);
+        WindsReplyLeft = StatusLeft(SID.WindsRumination);
+        FiresReplyLeft = StatusLeft(SID.FiresRumination);
+        EarthsReplyLeft = StatusLeft(SID.EarthsRumination);
+        BrotherhoodLeft = StatusLeft(SID.Brotherhood);
+        (var currentBlitz, var currentBlitzIsTargeted) = GetCurrentBlitz();
+
+        NumAOETargets = NumMeleeAOETargets(strategy);
+
+        if (BlitzLeft > GCD)
+        {
+            if (currentBlitzIsTargeted)
+                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
+            else
+            {
+                BestBlitzTarget = Player;
+                NumBlitzTargets = NumAOETargets;
+            }
+        }
+        else
+        {
+            BestBlitzTarget = Player;
+            NumBlitzTargets = 0;
+        }
+
+        (CurrentForm, FormLeft) = DetermineForm();
+
+        BestRangedTarget = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget).Best;
+        (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, IsEnlightenmentTarget);
+
+        UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > GCD);
+
+        OGCD(strategy, primaryTarget);
+
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.SteeledMeditation), Player, ActionQueue.Priority.Minimal + 1);
+            PushGCD(AID.SteeledMeditation, Player, -4500);
 
         if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.FormShift), Player, ActionQueue.Priority.Minimal);
+            PushGCD(AID.FormShift, Player, -4500);
 
-        if (_state.CountdownRemaining > 0)
+        if (World.Client.CountdownRemaining > 0)
         {
-            if (_state.CountdownRemaining < 0.2 && _state.RangeToTarget is > 3 and < 25 && Unlocked(AID.Thunderclap))
+            if (World.Client.CountdownRemaining < 0.2 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
 
             return;
         }
 
         if (NumBlitzTargets > 0)
-            PushGCD(AID.MasterfulBlitz, BestBlitzTarget);
+            PushGCD(currentBlitz, BestBlitzTarget);
 
         // demo opener might be optimal sometimes
         //if (FormShiftLeft > _state.GCD && CoeurlStacks == 0)
@@ -97,20 +146,20 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (PerfectBalanceLeft == 0 && BlitzLeft == 0)
         {
-            if (FormShiftLeft == 0 && FiresReplyLeft > _state.GCD)
+            if (FormShiftLeft == 0 && FiresReplyLeft > GCD)
                 PushGCD(AID.FiresReply, BestRangedTarget);
 
-            if (WindsReplyLeft > _state.GCD)
+            if (WindsReplyLeft > GCD)
                 PushGCD(AID.WindsReply, BestLineTarget);
         }
 
         if (NumAOETargets > 2 && Unlocked(AID.ArmOfTheDestroyer))
         {
-            if (EffectiveForm == Form.Coeurl && Unlocked(AID.Rockbreaker))
+            if (EffectiveForm == Form.Coeurl)
                 PushGCD(AID.Rockbreaker, Player);
 
             // TODO this is actually still suboptimal on 3 targets
-            if (EffectiveForm == Form.Raptor && Unlocked(AID.FourPointFury))
+            if (EffectiveForm == Form.Raptor)
                 PushGCD(AID.FourPointFury, Player);
 
             PushGCD(AID.ArmOfTheDestroyer, Player);
@@ -155,14 +204,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
         }
     }
 
-    private void QueuePB(StrategyValues strategy, float deadline)
+    private void QueuePB(StrategyValues strategy)
     {
-        if (CurrentForm != Form.Raptor
-            || !Unlocked(AID.PerfectBalance)
-            || !_state.CanWeave(_state.CD(AID.PerfectBalance) - 40, 0.6f, deadline)
-            || BeastChakra[0] != BeastChakraType.None
-            || FiresReplyLeft > _state.GCD
-            )
+        if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || FiresReplyLeft > GCD)
             return;
 
         // prevent odd window double blitz
@@ -176,134 +220,46 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
         // earliest we can press PB before next RoF
         var gcdsAhead = wantSolar ? 1 : 2;
 
-        if (_state.CanWeave(AID.RiddleOfFire, 0.6f, _state.GCD + _state.AttackGCDTime * gcdsAhead))
+        if (CanWeave(AID.RiddleOfFire, gcdsAhead))
             PushOGCD(AID.PerfectBalance, Player);
 
         // can PB if we have 4 GCDs worth of buff remaining
-        if (FireLeft > _state.GCD + _state.AttackGCDTime * 3)
+        if (CanFitGCD(FireLeft, 3))
             PushOGCD(AID.PerfectBalance, Player);
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Player.InCombat && _state.GCD > 0)
+        if (!Player.InCombat || GCD == 0)
+            return;
+
+        if (strategy.BuffsOk())
         {
-            if (strategy.BuffsOk())
-            {
-                QueuePB(strategy, deadline);
+            QueuePB(strategy);
 
-                if (ShouldUseBH(strategy, deadline))
-                    PushOGCD(AID.Brotherhood, Player);
+            if (CombatTimer >= 10 || BeastCount == 3)
+                PushOGCD(AID.Brotherhood, Player);
 
-                if (ShouldUseRoF(strategy, deadline))
-                    PushOGCD(AID.RiddleOfFire, Player, delay: GCD - 0.8f);
+            if (ShouldRoF)
+                PushOGCD(AID.RiddleOfFire, Player, delay: GCD - 0.8f);
 
-                if (_state.CD(AID.RiddleOfFire) > 0)
-                    PushOGCD(AID.RiddleOfWind, Player);
+            if (CD(AID.RiddleOfFire) > 0)
+                PushOGCD(AID.RiddleOfWind, Player);
 
-                if (ShouldUseTrueNorth(strategy, deadline))
-                    PushOGCD(AID.TrueNorth, Player);
-            }
+            if (NextPositionalImminent && !NextPositionalCorrect)
+                PushOGCD(AID.TrueNorth, Player, delay: ShouldRoF ? 0 : GCD - 0.8f);
+        }
 
-            if (Chakra >= 5 && _state.CanWeave(AID.SteelPeak, 0.6f, deadline))
-            {
-                if (Unlocked(AID.HowlingFist) && NumLineTargets >= 3)
-                    PushOGCD(AID.HowlingFist, BestLineTarget);
+        if (Chakra >= 5)
+        {
+            if (NumLineTargets >= 3)
+                PushOGCD(AID.HowlingFist, BestLineTarget);
 
-                PushOGCD(AID.SteelPeak, primaryTarget);
-            }
+            PushOGCD(AID.SteelPeak, primaryTarget);
         }
     }
 
-    private bool ShouldUseBH(StrategyValues strategy, float deadline)
-    {
-        if (!Unlocked(AID.Brotherhood) || !_state.CanWeave(AID.Brotherhood, 0.6f, deadline))
-            return false;
-
-        // delay in opener for party cd alignment
-        if (CombatTimer < 10)
-            return BeastCount == 3;
-
-        return true;
-    }
-
-    private bool ShouldUseRoF(StrategyValues strategy, float deadline)
-    {
-        if (!Unlocked(AID.RiddleOfFire) || !_state.CanWeave(AID.RiddleOfFire, 0.6f, deadline))
-            return false;
-
-        return !Unlocked(AID.Brotherhood) || _state.CD(AID.Brotherhood) > 0;
-    }
-
-    private bool ShouldUseTrueNorth(StrategyValues strategy, float deadline)
-    {
-        if (!Unlocked(AID.TrueNorth) || !_state.CanWeave(_state.CD(AID.TrueNorth) - 45, 0.6f, deadline))
-            return false;
-
-        var wrong = _state.NextPositionalImminent && !_state.NextPositionalCorrect;
-
-        // always late weave unless it would delay riddle of fire
-        if (ShouldUseRoF(strategy, _state.GCD))
-            return wrong;
-        else
-            return wrong && _state.GCD < 0.8f;
-    }
-
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
-    {
-        SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
-
-        var gauge = GetGauge<MonkGauge>();
-
-        Chakra = gauge.Chakra;
-        BeastChakra = gauge.BeastChakra;
-        BlitzLeft = gauge.BlitzTimeRemaining / 1000f;
-        Nadi = gauge.Nadi;
-
-        OpoStacks = gauge.OpoOpoStacks;
-        RaptorStacks = gauge.RaptorStacks;
-        CoeurlStacks = gauge.CoeurlStacks;
-
-        PerfectBalanceLeft = StatusLeft(SID.PerfectBalance);
-        FormShiftLeft = StatusLeft(SID.FormlessFist);
-        FireLeft = StatusLeft(SID.RiddleOfFire);
-        WindsReplyLeft = StatusLeft(SID.WindsRumination);
-        FiresReplyLeft = StatusLeft(SID.FiresRumination);
-        EarthsReplyLeft = StatusLeft(SID.EarthsRumination);
-        BrotherhoodLeft = StatusLeft(SID.Brotherhood);
-        (var currentBlitz, var currentBlitzIsTargeted) = GetCurrentBlitz();
-
-        NumAOETargets = NumMeleeAOETargets(strategy);
-
-        if (BlitzLeft > _state.GCD)
-        {
-            if (currentBlitzIsTargeted)
-            {
-                (BestBlitzTarget, NumBlitzTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
-            }
-            else
-            {
-                BestBlitzTarget = Player;
-                NumBlitzTargets = NumAOETargets;
-            }
-        }
-        else
-        {
-            BestBlitzTarget = Player;
-            NumBlitzTargets = 0;
-        }
-
-        (CurrentForm, FormLeft) = DetermineForm();
-
-        BestRangedTarget = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget).Best;
-        (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, IsEnlightenmentTarget);
-
-        _state.UpdatePositionals(primaryTarget, GetNextPositional(), TrueNorthLeft > _state.GCD);
-
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
-    }
+    private bool ShouldRoF => CanWeave(AID.RiddleOfFire) && (CD(AID.Brotherhood) > 0 || !Unlocked(AID.Brotherhood));
 
     private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2);
 
@@ -312,15 +268,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
         if (PerfectBalanceLeft > 0)
             return (Form.None, 0);
 
-        var s = _state.StatusDetails(Player, SID.OpoOpoForm, Player.InstanceID).Left;
+        var s = StatusLeft(SID.OpoOpoForm);
         if (s > 0)
             return (Form.OpoOpo, s);
-        s = _state.StatusDetails(Player, SID.RaptorForm, Player.InstanceID).Left;
+        s = StatusLeft(SID.RaptorForm);
         if (s > 0)
             return (Form.Raptor, s);
-        s = _state.StatusDetails(Player, SID.CoeurlForm, Player.InstanceID).Left;
-        if (s > 0)
-            return (Form.Coeurl, s);
-        return (Form.None, 0);
+        s = StatusLeft(SID.CoeurlForm);
+
+        return s > 0 ? (Form.Coeurl, s) : (Form.None, 0);
     }
 }

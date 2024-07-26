@@ -44,6 +44,8 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs);
     }
 
+    public bool CanFitGCD(float duration, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < duration;
+
     protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
     protected uint MP;
@@ -240,18 +242,21 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         _ => Positional.Front
     };
 
+    protected bool NextPositionalImminent;
+    protected bool NextPositionalCorrect;
+
     protected void UpdatePositionals(Actor? target, (Positional pos, bool imm) positional, bool trueNorth)
     {
         var ignore = trueNorth || (target?.Omnidirectional ?? true);
         var next = positional.pos;
-        var imminent = !ignore && positional.imm;
-        var correct = ignore || target == null || positional.pos switch
+        NextPositionalImminent = !ignore && positional.imm;
+        NextPositionalCorrect = ignore || target == null || positional.pos switch
         {
             Positional.Flank => MathF.Abs(target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized())) < 0.7071067f,
             Positional.Rear => target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized()) < -0.7071068f,
             _ => true
         };
-        Manager.Hints.RecommendedPositional = (target, next, imminent, correct);
+        Manager.Hints.RecommendedPositional = (target, next, NextPositionalImminent, NextPositionalCorrect);
     }
 
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
