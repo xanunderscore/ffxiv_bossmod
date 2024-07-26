@@ -105,7 +105,6 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
             if (Player.DistanceToHitbox(primaryTarget) > range)
             {
                 var newTarget = Hints.PriorityTargets.FirstOrDefault(x => Player.DistanceToHitbox(x.Actor) <= range)?.Actor;
-                Service.Log($"{newTarget}");
                 if (newTarget != null)
                     primaryTarget = newTarget;
                 // Hints.ForcedTarget = primaryTarget;
