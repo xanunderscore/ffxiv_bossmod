@@ -20,6 +20,8 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
     protected float AttackGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
     protected float SpellGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
 
+    protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
+
     protected uint MP;
 
     protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;

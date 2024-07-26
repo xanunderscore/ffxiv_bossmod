@@ -268,10 +268,10 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Basexan<A
         return _state.CD(AID.Drill) > 0;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<MachinistGauge>();
 

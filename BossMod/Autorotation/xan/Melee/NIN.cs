@@ -354,10 +354,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Basexan<A
         return (GetComboEnder(primaryTarget) == AID.AeolianEdge ? Positional.Rear : Positional.Flank, ComboLastMove == AID.GustSlash);
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<NinjaGauge>();
         Ninki = gauge.Ninki;

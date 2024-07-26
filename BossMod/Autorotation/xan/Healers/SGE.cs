@@ -136,10 +136,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Basexan<A
         return false;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<SageGauge>();
 

@@ -249,10 +249,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
             return wrong && _state.GCD < 0.8f;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<MonkGauge>();
 

@@ -348,10 +348,10 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         return SearingLightLeft == 0;
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<SummonerGauge>();
         TranceFlags = (SmnFlags)gauge.AetherFlags;

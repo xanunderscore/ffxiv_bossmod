@@ -137,11 +137,10 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Basexan<A
             PushOGCD(AID.Intervene, primaryTarget);
     }
 
-    public override unsafe void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<PaladinGauge>();
         OathGauge = gauge.OathGauge;

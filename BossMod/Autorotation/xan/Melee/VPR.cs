@@ -313,10 +313,10 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         [FieldOffset(0x10)] public byte ComboEx; // extra combo stuff
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
+        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<ViperGaugeEx>();
         DreadCombo = gauge.DreadCombo;
