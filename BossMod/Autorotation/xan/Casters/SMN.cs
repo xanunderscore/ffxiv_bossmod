@@ -40,7 +40,7 @@ public enum Trance
     Lightwyrm
 }
 
-public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
     public enum Track { Cyclone = SharedTrack.Count }
     public enum CycloneUse
@@ -188,6 +188,39 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         _ => Unlocked(AID.TriDisaster) ? AID.TriDisaster : AID.Outburst,
     };
 
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
+    {
+        SelectPrimaryTarget(strategy, ref primaryTarget, 25);
+
+        var gauge = GetGauge<SummonerGauge>();
+        TranceFlags = (SmnFlags)gauge.AetherFlags;
+        SummonLeft = gauge.SummonTimer * 0.001f;
+        AttunementType = (AttunementType)(gauge.Attunement & 3);
+        Attunement = gauge.Attunement >> 2;
+
+        Carbuncle = World.Actors.FirstOrDefault(x => x.Type == ActorType.Pet && x.OwnerID == Player.InstanceID);
+
+        var favor = Player.Statuses.FirstOrDefault(x => (SID)x.ID is SID.GarudasFavor or SID.IfritsFavor or SID.TitansFavor);
+
+        Favor = (SID)favor.ID switch
+        {
+            SID.GarudasFavor => Favor.Garuda,
+            SID.IfritsFavor => Favor.Ifrit,
+            SID.TitansFavor => Favor.Titan,
+            _ => Favor.None
+        };
+        FurtherRuin = StatusLeft(SID.FurtherRuin);
+        SearingFlash = StatusLeft(SID.RubysGlimmer);
+        SearingLightLeft = Player.FindStatus(SID.SearingLight) is ActorStatus s ? StatusDuration(s.ExpireAt) : 0;
+        RefulgentLux = StatusLeft(SID.RefulgentLux);
+
+        (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
+        (BestMeleeTarget, NumMeleeTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
+
+        CalcNextBestGCD(strategy, primaryTarget);
+        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+    }
+
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (Carbuncle == null)
@@ -196,9 +229,9 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (primaryTarget == null)
             return;
 
-        if (_state.CountdownRemaining > 0)
+        if (World.Client.CountdownRemaining > 0)
         {
-            if (_state.CountdownRemaining < 1.5)
+            if (World.Client.CountdownRemaining < 1.5)
                 PushGCD(AID.Ruin1, primaryTarget);
 
             return;
@@ -242,11 +275,11 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             }
         }
 
-        if (SummonLeft <= _state.GCD)
+        if (SummonLeft <= GCD)
         {
             // TODO make this configurable - this will summon baha/phoenix and ignore current gems
             // balance says to default to summons if you don't know whether you will lose a usage or not
-            if (_state.CD(AID.Aethercharge) <= _state.GCD)
+            if (CD(AID.Aethercharge) <= GCD)
             {
                 var isTargeted = Unlocked(TraitID.AetherchargeMastery);
                 // scarlet flame and wyrmwave are both single target, this is ok
@@ -263,7 +296,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
                 PushGCD(AID.SummonRuby, primaryTarget);
         }
 
-        if (FurtherRuin > _state.GCD && SummonLeft == 0)
+        if (FurtherRuin > GCD && SummonLeft == 0)
             PushGCD(AID.Ruin4, BestAOETarget);
 
         if (NumAOETargets > 2)
@@ -299,7 +332,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             case Trance.Phoenix:
                 PushOGCD(AID.EnkindlePhoenix, BestAOETarget);
 
-                if (_state.CanWeave(AID.Rekindle, 0.6f, deadline))
+                if (CD(AID.Rekindle) == 0)
                 {
                     static float HPRatio(Actor a) => (float)a.HPMP.CurHP / a.HPMP.MaxHP;
 
@@ -346,40 +379,5 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
             return SummonLeft < 13;
 
         return SearingLightLeft == 0;
-    }
-
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
-    {
-        SelectPrimaryTarget(strategy, ref primaryTarget, 25);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
-
-        var gauge = GetGauge<SummonerGauge>();
-        TranceFlags = (SmnFlags)gauge.AetherFlags;
-        Service.Log($"{TranceFlags}");
-        SummonLeft = gauge.SummonTimer * 0.001f;
-        AttunementType = (AttunementType)(gauge.Attunement & 3);
-        Attunement = gauge.Attunement >> 2;
-
-        Carbuncle = World.Actors.FirstOrDefault(x => x.Type == ActorType.Pet && x.OwnerID == Player.InstanceID);
-
-        var favor = Player.Statuses.FirstOrDefault(x => (SID)x.ID is SID.GarudasFavor or SID.IfritsFavor or SID.TitansFavor);
-
-        Favor = (SID)favor.ID switch
-        {
-            SID.GarudasFavor => Favor.Garuda,
-            SID.IfritsFavor => Favor.Ifrit,
-            SID.TitansFavor => Favor.Titan,
-            _ => Favor.None
-        };
-        FurtherRuin = StatusLeft(SID.FurtherRuin);
-        SearingFlash = StatusLeft(SID.RubysGlimmer);
-        SearingLightLeft = _state.StatusDetails(Player, SID.SearingLight, pendingDuration: 20).Left;
-        RefulgentLux = StatusLeft(SID.RefulgentLux);
-
-        (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
-        (BestMeleeTarget, NumMeleeTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
-
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 }

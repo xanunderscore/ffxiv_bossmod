@@ -2,7 +2,7 @@
 
 namespace BossMod.Autorotation.xan;
 
-public enum Targeting { Manual, Auto, AutoPrimary }
+public enum Targeting { Manual, Auto, AutoPrimary, AutoTryPri }
 public enum OffensiveStrategy { Automatic, Delay, Force }
 public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 
@@ -148,6 +148,9 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         if (aoe == AOEStrategy.ForceST)
             targeting = Targeting.Manual;
 
+        if (targeting == Targeting.AutoTryPri)
+            targeting = primaryTarget == null ? Targeting.Auto : Targeting.AutoPrimary;
+
         var (newtarget, newprio) = targeting switch
         {
             Targeting.Auto => FindBetterTargetBy(primaryTarget, range, targetPrio),
@@ -284,7 +287,8 @@ static class Extendxan
         def.Define(SharedTrack.Targeting).As<Targeting>("Targeting")
             .AddOption(xan.Targeting.Manual, "Manual", "Use player's current target for all actions")
             .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
-            .AddOption(xan.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
+            .AddOption(xan.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit")
+            .AddOption(xan.Targeting.AutoTryPri, "AutoTryPri", "Automatically select best target for AOE actions - if player has a target, ensure that target is hit");
 
         def.Define(SharedTrack.AOE).As<AOEStrategy>("AOE")
             .AddOption(AOEStrategy.ST, "ST", "Use single-target actions")
