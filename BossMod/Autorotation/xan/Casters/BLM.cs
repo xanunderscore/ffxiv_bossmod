@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class BLM(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
+public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -37,247 +37,27 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Newxan<AI
     private Actor? BestAOETarget;
     private int NumAOETargets;
 
-    private float GCDLength => SpellGCDTime;
-
-    private enum Aspect
-    {
-        None,
-        Fire,
-        Ice,
-        Thunder
-    }
-
-    public bool CanFit(float deadline, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < deadline;
-    public bool CanFit(AID aid, int extraGCDs = 0) => CanFit(CD(aid), extraGCDs);
-
-    private Aspect GetAspect(AID aid) => aid switch
-    {
-        AID.Fire1 or AID.Fire2 or AID.Fire3 or AID.Fire4 or AID.HighFire2 or AID.Flare or AID.FlareStar => Aspect.Fire,
-        AID.Blizzard1 or AID.Blizzard2 or AID.Blizzard3 or AID.Blizzard4 or AID.HighBlizzard2 or AID.Freeze => Aspect.Ice,
-        AID.Thunder1 or AID.Thunder2 or AID.Thunder3 or AID.Thunder4 or AID.HighThunder or AID.HighThunder2 => Aspect.Thunder,
-        _ => Aspect.None
-    };
-
     protected override float GetCastTime(AID aid)
     {
-        var aspect = GetAspect(aid);
+        if (Triplecast > GCD)
+            return 0;
 
-        if (Triplecast > GCD
-            || aid == AID.Fire3 && Firestarter > GCD
+        var aspect = ActionDefinitions.Instance.Spell(aid)!.Aspect;
+
+        if (aid == AID.Fire3 && Firestarter > GCD
             || aid == AID.Foul && Unlocked(TraitID.EnhancedFoul)
-            || aspect == Aspect.Thunder && Thunderhead > GCD)
+            || aspect == ActionAspect.Thunder && Thunderhead > GCD)
             return 0;
 
         var castTime = base.GetCastTime(aid);
         if (castTime == 0)
             return 0;
 
-        if (Element == -3 && aspect == Aspect.Fire || Element == 3 && aspect == Aspect.Ice)
+        if (Element == -3 && aspect == ActionAspect.Fire || Element == 3 && aspect == ActionAspect.Ice)
             castTime *= 0.5f;
 
         return castTime;
     }
-
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (World.Client.CountdownRemaining > 0)
-        {
-            if (World.Client.CountdownRemaining < GetCastTime(AID.Fire3))
-                PushGCD(AID.Fire3, primaryTarget);
-
-            return;
-        }
-
-        if (primaryTarget == null)
-        {
-            if (Unlocked(AID.UmbralSoul) && Ice > 0 && (Ice < 3 || Hearts < MaxHearts || ElementLeft < 3))
-                PushGCD(AID.UmbralSoul, Player);
-
-            return;
-        }
-
-        if (Fire > 0)
-            GetFireGCD(strategy, primaryTarget);
-        else if (Ice > 0)
-            GetIceGCD(strategy, primaryTarget);
-        else if (!Player.InCombat && MP >= 9600)
-            GetFireGCD(strategy, primaryTarget);
-        else
-            GetIceGCD(strategy, primaryTarget);
-
-        if (Polyglot > 0)
-            Choose(AID.Xenoglossy, AID.Foul, primaryTarget);
-    }
-
-    private void GetFireGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
-            Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
-
-        if (Fire < 3 && Unlocked(AID.Fire3))
-            Choose(AID.Fire3, AID.Fire2, primaryTarget);
-
-        if (AstralSoul == 6 && ElementLeft > GetCastTime(AID.FlareStar))
-            PushGCD(AID.FlareStar, BestAOETarget);
-
-        if (NumAOETargets > 2 && Unlocked(AID.Fire2))
-        {
-            if (Unlocked(AID.Flare) && Hearts < 3 && MP >= 800)
-            {
-                if (ElementLeft > GetSlidecastEnd(AID.Flare))
-                    PushGCD(AID.Flare, BestAOETarget);
-                else if (Paradox && MP >= 1600)
-                    PushGCD(AID.Paradox, BestAOETarget);
-            }
-            else if (MP >= 3000)
-                PushGCD(AID.Fire2, BestAOETarget);
-
-            if (Polyglot > 0)
-                PushGCD(AID.Foul, BestAOETarget);
-
-            PushGCD(AID.Blizzard2, BestAOETarget);
-        }
-        else if (Unlocked(AID.Fire4))
-        {
-            var minF4Time = MathF.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
-
-            if (Fire == 3)
-            {
-                if (CanFit(AID.LeyLines, 1) && GetCastTime(AID.Fire4) > 0)
-                    TryInstantCast(strategy, primaryTarget);
-
-                // despair requires 800 MP
-                if (MP < 800)
-                {
-                    if (CanFit(AID.Manafont, 1))
-                        TryInstantCast(strategy, primaryTarget);
-
-                    PushGCD(AID.Blizzard3, primaryTarget);
-                }
-                // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
-                else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
-                    PushGCD(AID.Despair, primaryTarget);
-                // AF3 will last *at least* another two F4s, ok to cast
-                // TODO in the case where we have one triplecast stack left, this will end up checking (timer > 2.5 + 2.5) instead of (timer > 2.5 + 3.1) - i think it's ok?
-                else if (ElementLeft > NextCastStart + minF4Time * 2)
-                {
-                    if (Polyglot == MaxPolyglot && NextPolyglot < 5)
-                        PushGCD(AID.Xenoglossy, primaryTarget);
-
-                    PushGCD(AID.Fire4, primaryTarget);
-                }
-                // AF3 will last long enough for us to refresh using Paradox
-                // TODO the extra 0.1 is a guesstimate for how long it actually takes instant fire spells to refresh the timer, should look at replays to be sure
-                else if (ElementLeft > NextCastStart + minF4Time + 0.1f && Paradox)
-                    PushGCD(AID.Fire4, primaryTarget);
-                else if (Paradox)
-                    PushGCD(AID.Paradox, primaryTarget);
-                else if (Firestarter > GCD)
-                    PushGCD(AID.Fire3, primaryTarget);
-                else
-                    PushGCD(AID.Blizzard3, primaryTarget);
-            }
-        }
-        else if (Unlocked(AID.Fire3))
-        {
-            // TODO this will skip free F3 to switch to UI (so we can transpose F3 for next fire phase)
-            // 1. is this a DPS gain 2. does anyone actually care at level 50
-            if (MP < 1600)
-                PushGCD(AID.Blizzard3, primaryTarget);
-
-            PushGCD(Firestarter > GCD ? AID.Fire3 : AID.Fire1, primaryTarget);
-        }
-        else if (MP >= 1600)
-            PushGCD(AID.Fire1, primaryTarget);
-        else
-            PushGCD(AID.Blizzard1, primaryTarget);
-    }
-
-    private void GetIceGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (Ice < 3 && Unlocked(AID.Blizzard3))
-            Choose(AID.Blizzard3, AID.Blizzard2, primaryTarget);
-
-        if (MP == 10000 && Unlocked(AID.Fire3))
-        {
-            var nextGCD = GCD + GCDLength;
-
-            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanFit(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0 && MP == 10000)
-                TryInstantCast(strategy, primaryTarget, useFirestarter: false);
-
-            Choose(AID.Fire3, AID.Fire2, primaryTarget);
-        }
-        else if (Unlocked(AID.Freeze))
-            Choose(Unlocked(AID.Blizzard4) ? AID.Blizzard4 : AID.Freeze, AID.Freeze, primaryTarget);
-        else if (MP == 10000)
-            Choose(AID.Fire1, AID.Fire2, primaryTarget);
-        else
-            Choose(AID.Blizzard1, AID.Blizzard2, primaryTarget);
-    }
-
-    private void Choose(AID st, AID aoe, Actor? primaryTarget, int additionalPrio = 0)
-    {
-        if (NumAOETargets > 2 && Unlocked(aoe))
-            PushGCD(aoe, BestAOETarget, additionalPrio);
-        else
-            PushGCD(st, primaryTarget, additionalPrio);
-    }
-
-    private void TryInstantCast(StrategyValues strategy, Actor? primaryTarget, bool useFirestarter = true, bool useThunderhead = true, bool usePolyglot = true)
-    {
-        var tp = useThunderhead && Thunderhead > GCD;
-
-        if (tp && TargetThunderLeft < 5)
-            Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
-
-        if (usePolyglot && Polyglot > 0)
-            Choose(AID.Xenoglossy, AID.Foul, primaryTarget);
-
-        if (tp)
-            Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0);
-
-        if (useFirestarter && Firestarter > GCD)
-            PushGCD(AID.Fire3, primaryTarget);
-    }
-
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
-    {
-        if (primaryTarget == null)
-        {
-            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && CD(AID.Transpose) == 0)
-                PushOGCD(AID.Transpose, Player);
-
-            return;
-        }
-
-        if (!Player.InCombat)
-            return;
-
-        if (Unlocked(AID.Swiftcast))
-            PushOGCD(AID.Swiftcast, Player);
-
-        if (Unlocked(AID.Amplifier) && Polyglot < MaxPolyglot)
-            PushOGCD(AID.Amplifier, Player);
-
-        if (ShouldTriplecast(strategy))
-            PushOGCD(AID.Triplecast, Player);
-
-        if (ShouldUseLeylines(strategy))
-            PushOGCD(AID.LeyLines, Player);
-
-        if (Unlocked(AID.Manafont) && MP < 800 && Fire > 0)
-            PushOGCD(AID.Manafont, Player);
-
-        if (Firestarter > GCD && Ice > 0 && Hearts == MaxHearts && NumAOETargets < 3)
-            PushOGCD(AID.Transpose, Player);
-    }
-
-    private bool ShouldTriplecast(StrategyValues strategy) => Triplecast == 0 && (ShouldUseLeylines(strategy) || InLeyLines);
-
-    private bool ShouldUseLeylines(StrategyValues strategy)
-        => CanFit(AID.LeyLines)
-        && ForceMovementIn >= 30
-        && strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -309,8 +89,238 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Newxan<AI
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
 
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        if (World.Client.CountdownRemaining > 0)
+        {
+            if (World.Client.CountdownRemaining < GetCastTime(AID.Fire3))
+                PushGCD(AID.Fire3, primaryTarget);
+
+            return;
+        }
+
+        if (primaryTarget == null)
+        {
+            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && CD(AID.Transpose) == 0)
+                PushOGCD(AID.Transpose, Player);
+
+            if (Unlocked(AID.UmbralSoul) && Ice > 0 && (Ice < 3 || Hearts < MaxHearts || ElementLeft < 3))
+                PushGCD(AID.UmbralSoul, Player);
+
+            return;
+        }
+
+        if (Unlocked(AID.Swiftcast))
+            PushOGCD(AID.Swiftcast, Player);
+
+        if (Unlocked(AID.Amplifier) && Polyglot < MaxPolyglot)
+            PushOGCD(AID.Amplifier, Player);
+
+        if (ShouldTriplecast(strategy))
+            PushOGCD(AID.Triplecast, Player);
+
+        if (ShouldUseLeylines(strategy))
+            PushOGCD(AID.LeyLines, Player);
+
+        if (Unlocked(AID.Manafont) && MP < 800 && Fire > 0)
+            PushOGCD(AID.Manafont, Player);
+
+        if (ShouldTranspose(strategy))
+            PushOGCD(AID.Transpose, Player);
+
+        if (Fire > 0)
+            FirePhase(strategy, primaryTarget);
+        else if (Ice > 0)
+            IcePhase(strategy, primaryTarget);
+        else if (!Player.InCombat && MP >= 9600)
+            FirePhase(strategy, primaryTarget);
+        else
+            IcePhase(strategy, primaryTarget);
+
+        if (Polyglot > 0)
+        {
+            if (NumAOETargets > 2)
+                PushGCD(AID.Foul, BestAOETarget);
+
+            PushGCD(AID.Xenoglossy, primaryTarget);
+        }
+    }
+
+    private void FirePhase(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (NumAOETargets > 2 && Unlocked(AID.Flare))
+            FirePhaseAOE(strategy);
+        else
+            FirePhaseST(strategy, primaryTarget);
+    }
+
+    private void FirePhaseST(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
+            PushGCD(AID.Thunder1, primaryTarget);
+
+        if (Fire < 3 && Unlocked(AID.Fire3))
+            PushGCD(AID.Fire3, primaryTarget);
+
+        if (AstralSoul == 6 && ElementLeft > GetCastTime(AID.FlareStar))
+            PushGCD(AID.FlareStar, BestAOETarget);
+
+        if (Unlocked(AID.Fire4))
+        {
+            var minF4Time = MathF.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
+
+            if (Fire == 3)
+            {
+                if (ShouldUseLeylines(strategy, 1) && GetCastTime(AID.Fire4) > 0)
+                    TryInstantCast(strategy, primaryTarget);
+
+                // despair requires 800 MP
+                if (MP < 800)
+                {
+                    if (CanWeave(AID.Manafont, 1))
+                        TryInstantCast(strategy, primaryTarget);
+
+                    PushGCD(AID.Blizzard3, primaryTarget);
+                }
+                // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
+                else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
+                    PushGCD(AID.Despair, primaryTarget);
+                // AF3 will last *at least* another two F4s, ok to cast
+                // TODO in the case where we have one triplecast stack left, this will end up checking (timer > 2.5 + 2.5) instead of (timer > 2.5 + 3.1) - i think it's ok?
+                else if (ElementLeft > NextCastStart + minF4Time * 2)
+                {
+                    if (Polyglot == MaxPolyglot && NextPolyglot < 5)
+                        PushGCD(AID.Xenoglossy, primaryTarget);
+
+                    PushGCD(AID.Fire4, primaryTarget);
+                }
+                // AF3 will last long enough for us to refresh using Paradox
+                // TODO the extra 0.1 is a guesstimate for how long it actually takes instant fire spells to refresh the timer, should look at replays to be sure
+                else if (ElementLeft > NextCastStart + minF4Time + 0.1f && Paradox)
+                    PushGCD(AID.Fire4, primaryTarget);
+                else if (Paradox)
+                    PushGCD(AID.Paradox, primaryTarget);
+                else if (Firestarter > GCD)
+                    PushGCD(AID.Fire3, primaryTarget);
+                else
+                    PushGCD(AID.Blizzard3, primaryTarget);
+            }
+        }
+        else if (Unlocked(AID.Fire3))
+        {
+            // TODO this will skip free F3 to switch to UI (so we can transpose F3 for next fire phase)
+            // 1. is this a DPS gain 2. does anyone actually care about level 50
+            if (MP < 1600)
+                PushGCD(AID.Blizzard3, primaryTarget);
+
+            PushGCD(Firestarter > GCD ? AID.Fire3 : AID.Fire1, primaryTarget);
+        }
+        else if (MP >= 1600)
+            PushGCD(AID.Fire1, primaryTarget);
+        else
+            PushGCD(AID.Blizzard1, primaryTarget);
+    }
+
+    private void FirePhaseAOE(StrategyValues strategy)
+    {
+        if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
+            PushGCD(AID.Thunder2, BestAOETarget);
+
+        if (AstralSoul == 6)
+            PushGCD(AID.FlareStar, BestAOETarget);
+
+        if (Unlocked(AID.Flare) && MP >= 800 && Fire > 0)
+        {
+            if (ElementLeft > GetSlidecastEnd(AID.Flare))
+                PushGCD(AID.Flare, BestAOETarget);
+            else if (Paradox && MP >= 1600)
+                PushGCD(AID.Paradox, BestAOETarget);
+        }
+
+        TryInstantCast(strategy, BestAOETarget);
+
+        PushGCD(AID.Fire2, BestAOETarget);
+    }
+
+    private void IcePhase(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (NumAOETargets > 2 && Unlocked(AID.Blizzard2))
+            IcePhaseAOE(strategy, primaryTarget);
+        else
+            IcePhaseST(strategy, primaryTarget);
+    }
+
+    private void IcePhaseAOE(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (Ice == 0)
+            PushGCD(AID.Fire2, BestAOETarget);
+        else if (Hearts < MaxHearts && Unlocked(AID.Freeze))
+            PushGCD(AID.Freeze, BestAOETarget);
+
+        TryInstantCast(strategy, primaryTarget);
+    }
+
+    private void IcePhaseST(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (Ice < 3 && Unlocked(AID.Blizzard3))
+            PushGCD(AID.Blizzard3, primaryTarget);
+
+        if (MP == 10000 && Unlocked(AID.Fire3))
+        {
+            var nextGCD = GCD + GCDLength;
+
+            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanWeave(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0 && MP == 10000)
+                TryInstantCast(strategy, primaryTarget, useFirestarter: false);
+
+            PushGCD(AID.Fire3, primaryTarget);
+        }
+        else if (Unlocked(AID.Blizzard4))
+            PushGCD(AID.Blizzard4, primaryTarget);
+        else if (Unlocked(AID.Freeze) && NumAOETargets > 0)
+            PushGCD(AID.Freeze, primaryTarget);
+        else if (MP == 10000)
+            PushGCD(AID.Fire1, primaryTarget);
+        else
+            PushGCD(AID.Blizzard1, primaryTarget);
+
+    }
+
+    private void Choose(AID st, AID aoe, Actor? primaryTarget, int additionalPrio = 0)
+    {
+        if (NumAOETargets > 2 && Unlocked(aoe))
+            PushGCD(aoe, BestAOETarget, additionalPrio);
+        else
+            PushGCD(st, primaryTarget, additionalPrio);
+    }
+
+    private void TryInstantCast(StrategyValues strategy, Actor? primaryTarget, bool useFirestarter = true, bool useThunderhead = true, bool usePolyglot = true)
+    {
+        var tp = useThunderhead && Thunderhead > GCD;
+
+        if (tp && TargetThunderLeft < 5)
+            Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
+
+        if (usePolyglot && Polyglot > 0)
+            Choose(AID.Xenoglossy, AID.Foul, primaryTarget);
+
+        if (tp)
+            Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0);
+
+        if (useFirestarter && Firestarter > GCD)
+            PushGCD(AID.Fire3, primaryTarget);
+    }
+
+    private bool ShouldTriplecast(StrategyValues strategy) => Triplecast == 0 && (ShouldUseLeylines(strategy) || InLeyLines);
+
+    private bool ShouldUseLeylines(StrategyValues strategy, int extraGCDs = 0)
+        => CanWeave(AID.LeyLines, extraGCDs)
+        && ForceMovementIn >= 30
+        && strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
+
+    private bool ShouldTranspose(StrategyValues strategy)
+    {
+        if (NumAOETargets > 2)
+            return Fire > 0 && MP < 800 || Ice > 0 && Hearts > 0 && MP >= 2400;
+        else
+            return Firestarter > GCD && Ice > 0 && Hearts == MaxHearts;
     }
 
     private float MaxAll(float first, params float[] rest)

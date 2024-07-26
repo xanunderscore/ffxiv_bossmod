@@ -8,6 +8,18 @@ public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 
 public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
+public abstract class Attackxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
+    where AID : Enum where TraitID : Enum
+{
+    protected sealed override float GCDLength => AttackGCDLength;
+}
+
+public abstract class Castxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
+    where AID : Enum where TraitID : Enum
+{
+    protected sealed override float GCDLength => SpellGCDLength;
+}
+
 public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
     where AID : Enum where TraitID : Enum
 {
@@ -17,8 +29,18 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
     protected float CombatTimer { get; private set; }
     protected float AnimationLockDelay { get; private set; }
 
-    protected float AttackGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
-    protected float SpellGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
+    protected float AttackGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
+    protected float SpellGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
+
+    protected virtual float GCDLength => AttackGCDLength;
+
+    public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0)
+        => MathF.Max(cooldown, World.Client.AnimationLock) + actionLock + AnimationLockDelay <= GCD + GCDLength * extraGCDs;
+    public bool CanWeave(AID aid, int extraGCDs = 0)
+    {
+        var def = ActionDefinitions.Instance[ActionID.MakeSpell(aid)]!;
+        return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs);
+    }
 
     protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
@@ -183,7 +205,7 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
     /// </summary>
     /// <param name="aid"></param>
     /// <returns></returns>
-    protected virtual float GetCastTime(AID aid) => SwiftcastLeft > GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * SpellGCDTime / 2.5f;
+    protected virtual float GetCastTime(AID aid) => SwiftcastLeft > GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * SpellGCDLength / 2.5f;
 
     protected float NextCastStart => World.Client.AnimationLock > GCD ? World.Client.AnimationLock + AnimationLockDelay : GCD;
 
