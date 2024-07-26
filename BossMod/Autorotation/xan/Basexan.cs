@@ -8,25 +8,21 @@ public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 
 public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
-public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum where TraitID : Enum
+public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+    where AID : Enum where TraitID : Enum
 {
-    public class State(RotationModule module) : CommonState(module) { }
-
-    protected State _state;
-
     protected float PelotonLeft { get; private set; }
     protected float SwiftcastLeft { get; private set; }
     protected float TrueNorthLeft { get; private set; }
     protected float CombatTimer { get; private set; }
+    protected float AnimationLockDelay { get; private set; }
+
+    protected float AttackGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
+    protected float SpellGCDTime => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
 
     protected uint MP;
 
-    protected AID ComboLastMove => (AID)(object)_state.ComboLastAction;
-
-    protected Basexan(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
+    protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;
 
     protected void PushGCD(AID aid, Actor? target, int additionalPrio = 0, float delay = 0)
         => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio, delay);
@@ -59,14 +55,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos, delay: delay);
     }
 
-    protected void QueueOGCD(Action<float> ogcdFun)
-    {
-        var deadline = _state.GCD > 0 ? _state.GCD : float.MaxValue;
-        if (_state.CanWeave(deadline - _state.OGCDSlotLength))
-            ogcdFun(deadline - _state.OGCDSlotLength);
-        if (_state.CanWeave(deadline))
-            ogcdFun(deadline);
-    }
+    protected void QueueOGCD(Action<float> ogcdFun) => ogcdFun(GCD > 0 ? GCD : float.MaxValue);
 
     /// <summary>
     /// Tries to select a suitable primary target.<br/>
@@ -148,6 +137,26 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         return (newnewprio > 0 ? newtarget : null, newnewprio);
     }
 
+    protected (Actor? Target, P Priority) FindBetterTargetBy<P>(Actor? initial, float maxDistanceFromPlayer, Func<Actor, P> prioFunc, Func<AIHints.Enemy, bool>? filterFunc = null) where P : struct, IComparable
+    {
+        var bestTarget = initial;
+        var bestPrio = initial != null ? prioFunc(initial) : default;
+        foreach (var enemy in Hints.PriorityTargets.Where(x =>
+            x.Actor != initial &&
+            x.Actor.Position.InCircle(Player.Position, maxDistanceFromPlayer + x.Actor.HitboxRadius)
+            && (filterFunc == null || filterFunc(x))
+        ))
+        {
+            var newPrio = prioFunc(enemy.Actor);
+            if (newPrio.CompareTo(bestPrio) > 0)
+            {
+                bestPrio = newPrio;
+                bestTarget = enemy.Actor;
+            }
+        }
+        return (bestTarget, bestPrio);
+    }
+
     protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);
 
     protected int NumNearbyTargets(StrategyValues strategy, float range) => AdjustNumTargets(strategy, Hints.NumPriorityTargetsInAOECircle(Player.Position, range));
@@ -172,9 +181,9 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     /// </summary>
     /// <param name="aid"></param>
     /// <returns></returns>
-    protected virtual float GetCastTime(AID aid) => SwiftcastLeft > _state.GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * _state.SpellGCDTime / 2.5f;
+    protected virtual float GetCastTime(AID aid) => SwiftcastLeft > GCD ? 0 : ActionDefinitions.Instance.Spell(aid)!.CastTime * SpellGCDTime / 2.5f;
 
-    protected float NextCastStart => _state.AnimationLock > _state.GCD ? _state.AnimationLock + _state.AnimationLockDelay : _state.GCD;
+    protected float NextCastStart => World.Client.AnimationLock > GCD ? World.Client.AnimationLock + AnimationLockDelay : GCD;
 
     protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
     protected float GetSlidecastEnd(AID aid) => NextCastStart + GetSlidecastTime(aid);
@@ -205,25 +214,39 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
         var pelo = Player.FindStatus(BRD.SID.Peloton);
-        PelotonLeft = pelo != null ? _state.StatusDuration(pelo.Value.ExpireAt) : 0;
+        PelotonLeft = pelo != null ? StatusDuration(pelo.Value.ExpireAt) : 0;
         SwiftcastLeft = StatusLeft(WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
 
         ForceMovementIn = forceMovementIn;
+        AnimationLockDelay = estimatedAnimLockDelay;
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
 
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
 
-        Exec(strategy, primaryTarget, estimatedAnimLockDelay);
+        Exec(strategy, primaryTarget);
     }
 
-    public abstract void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay);
+    public abstract void Exec(StrategyValues strategy, Actor? primaryTarget);
 
     protected (float Left, int Stacks) Status<SID>(SID status) where SID : Enum => Player.FindStatus(status) is ActorStatus s ? (StatusDuration(s.ExpireAt), s.Extra & 0xFF) : (0, 0);
     protected float StatusLeft<SID>(SID status) where SID : Enum => Status(status).Left;
     protected int StatusStacks<SID>(SID status) where SID : Enum => Status(status).Stacks;
+
+}
+
+public abstract class Basexan<AID, TraitID> : Newxan<AID, TraitID> where AID : Enum where TraitID : Enum
+{
+    public class State(RotationModule module) : CommonState(module) { }
+
+    protected State _state;
+
+    protected Basexan(RotationModuleManager manager, Actor player) : base(manager, player)
+    {
+        _state = new(this);
+    }
 }
 
 static class Extendxan
