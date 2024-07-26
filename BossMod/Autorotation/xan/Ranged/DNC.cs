@@ -324,7 +324,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<A
 
     private Actor? FindDancePartner()
     {
-        var player = World.Party.WithoutSlot().Exclude(Player).MaxBy(p => p.Class switch
+        var partner = World.Party.WithoutSlot().Exclude(Player).Where(x => Player.DistanceToHitbox(x) <= 30).MaxBy(p => p.Class switch
         {
             Class.SAM => 100,
             Class.NIN or Class.VPR => 99,
@@ -340,9 +340,14 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Basexan<A
             _ => 1
         });
 
-        // check if valid target is in cutscene
-        if (player != null)
-            return World.Party.Members[World.Party.FindSlot(player.InstanceID)].InCutscene ? null : player;
+        if (partner != null)
+        {
+            // target is in cutscene, we're probably in a raid or something - wait for it to finish
+            if (World.Party.Members[World.Party.FindSlot(partner.InstanceID)].InCutscene)
+                return null;
+
+            return partner;
+        }
 
         return World.Actors.FirstOrDefault(x => x.Type == ActorType.Chocobo && x.OwnerID == Player.InstanceID);
     }
