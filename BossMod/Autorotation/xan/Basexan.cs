@@ -100,15 +100,16 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
-        if (t != Targeting.Auto)
-            return;
-
-        if (Player.DistanceToHitbox(primaryTarget) > range)
+        if (t is Targeting.Auto or Targeting.AutoTryPri)
         {
-            var newTarget = Hints.PriorityTargets.FirstOrDefault(x => Player.DistanceToHitbox(x.Actor) <= range)?.Actor;
-            if (newTarget != null)
-                primaryTarget = newTarget;
-            // Hints.ForcedTarget = primaryTarget;
+            if (Player.DistanceToHitbox(primaryTarget) > range)
+            {
+                var newTarget = Hints.PriorityTargets.FirstOrDefault(x => Player.DistanceToHitbox(x.Actor) <= range)?.Actor;
+                Service.Log($"{newTarget}");
+                if (newTarget != null)
+                    primaryTarget = newTarget;
+                // Hints.ForcedTarget = primaryTarget;
+            }
         }
     }
 
