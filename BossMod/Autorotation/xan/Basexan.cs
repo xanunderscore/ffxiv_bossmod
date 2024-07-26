@@ -28,13 +28,13 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         _state = new(this);
     }
 
-    protected void PushGCD(AID aid, Actor? target, int additionalPrio = 0)
-        => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio);
+    protected void PushGCD(AID aid, Actor? target, int additionalPrio = 0, float delay = 0)
+        => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio, delay);
 
-    protected void PushOGCD(AID aid, Actor? target, int additionalPrio = 0)
-        => PushAction(aid, target, ActionQueue.Priority.Low + 500 + additionalPrio);
+    protected void PushOGCD(AID aid, Actor? target, int additionalPrio = 0, float delay = 0)
+        => PushAction(aid, target, ActionQueue.Priority.Low + 500 + additionalPrio, delay);
 
-    protected void PushAction(AID aid, Actor? target, float priority)
+    protected void PushAction(AID aid, Actor? target, float priority, float delay)
     {
         if ((uint)(object)aid == 0)
             return;
@@ -56,7 +56,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         if (def.ID.ID is (uint)BossMod.BLM.AID.LeyLines or (uint)BossMod.BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse or (uint)BossMod.PCT.AID.ScenicMuse)
             targetPos = Player.PosRot.XYZ();
 
-        Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos);
+        Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos, delay: delay);
     }
 
     protected void QueueOGCD(Action<float> ogcdFun)

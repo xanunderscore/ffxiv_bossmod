@@ -195,10 +195,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Basexan<A
                 if (ShouldUseBH(strategy, deadline))
                     PushOGCD(AID.Brotherhood, Player);
 
-                if (_state.GCD < 0.8f && ShouldUseRoF(strategy, deadline))
-                    PushOGCD(AID.RiddleOfFire, Player);
+                if (ShouldUseRoF(strategy, deadline))
+                    PushOGCD(AID.RiddleOfFire, Player, delay: GCD - 0.8f);
 
-                if (_state.CD(AID.RiddleOfFire) > 0 && _state.CanWeave(AID.RiddleOfWind, 0.6f, deadline))
+                if (_state.CD(AID.RiddleOfFire) > 0)
                     PushOGCD(AID.RiddleOfWind, Player);
 
                 if (ShouldUseTrueNorth(strategy, deadline))
