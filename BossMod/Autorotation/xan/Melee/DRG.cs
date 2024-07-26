@@ -2,15 +2,15 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan.Melee;
-public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public enum Track { Dive = SharedTrack.Count }
 
     public enum DiveStrategy
     {
         Allow,
-        DenyMove,
-        DenyLock
+        NoMove,
+        NoLock
     }
 
     public static RotationModuleDefinition Definition()
@@ -21,8 +21,8 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
 
         def.Define(Track.Dive).As<DiveStrategy>("Dive")
             .AddOption(DiveStrategy.Allow, "Allow", "Use dives according to standard rotation")
-            .AddOption(DiveStrategy.DenyMove, "NoMove", "Disallow dive actions that move you to the target")
-            .AddOption(DiveStrategy.DenyLock, "NoLock", "Disallow dive actions that prevent you from moving (all except Mirage Dive)");
+            .AddOption(DiveStrategy.NoMove, "NoMove", "Disallow dive actions that move you to the target")
+            .AddOption(DiveStrategy.NoLock, "NoLock", "Disallow dive actions that prevent you from moving (all except Mirage Dive)");
 
         return def;
     }
@@ -64,7 +64,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
                     break;
             }
 
-            PushGCD(DraconianFire > _state.GCD ? AID.DraconianFury : AID.DoomSpike, BestAOETarget);
+            PushGCD(DraconianFire > GCD ? AID.DraconianFury : AID.DoomSpike, BestAOETarget);
         }
         else
         {
@@ -96,7 +96,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
             }
         }
 
-        PushGCD(DraconianFire > _state.GCD ? AID.RaidenThrust : AID.TrueThrust, primaryTarget);
+        PushGCD(DraconianFire > GCD ? AID.RaidenThrust : AID.TrueThrust, primaryTarget);
     }
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
@@ -122,11 +122,11 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
         if (DiveReady == 0 && posOk)
             PushOGCD(AID.HighJump, primaryTarget);
 
-        if (LanceCharge > _state.GCD && LifeSurge == 0)
+        if (LanceCharge > GCD && LifeSurge == 0)
         {
             if (NumAOETargets > 2)
             {
-                if (ComboLastMove is AID.SonicThrust || DraconianFire > _state.GCD)
+                if (ComboLastMove is AID.SonicThrust || DraconianFire > GCD)
                     PushOGCD(AID.LifeSurge, Player);
             }
             else if (ComboLastMove is AID.WheelingThrust or AID.VorpalThrust)
@@ -150,7 +150,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
     }
 
     private bool MoveOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() == DiveStrategy.Allow;
-    private bool PosLockOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() != DiveStrategy.DenyLock;
+    private bool PosLockOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() != DiveStrategy.NoLock;
 
     private (Positional, bool) GetPositional(StrategyValues strategy) => ComboLastMove switch
     {
@@ -167,7 +167,6 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         var gauge = GetGauge<DragoonGauge>();
 
@@ -187,7 +186,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Basexan<A
         (BestLongAOETarget, NumLongAOETargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));
         (BestDiveTarget, NumDiveTargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
 
-        _state.UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > _state.GCD);
+        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
 
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));

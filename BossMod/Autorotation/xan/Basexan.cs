@@ -240,6 +240,20 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         _ => Positional.Front
     };
 
+    protected void UpdatePositionals(Actor? target, (Positional pos, bool imm) positional, bool trueNorth)
+    {
+        var ignore = trueNorth || (target?.Omnidirectional ?? true);
+        var next = positional.pos;
+        var imminent = !ignore && positional.imm;
+        var correct = ignore || target == null || positional.pos switch
+        {
+            Positional.Flank => MathF.Abs(target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized())) < 0.7071067f,
+            Positional.Rear => target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized()) < -0.7071068f,
+            _ => true
+        };
+        Manager.Hints.RecommendedPositional = (target, next, imminent, correct);
+    }
+
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
         var pelo = Player.FindStatus(BRD.SID.Peloton);
