@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class BLM(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -37,6 +37,8 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
     private Actor? BestAOETarget;
     private int NumAOETargets;
 
+    private float GCDLength => SpellGCDTime;
+
     private enum Aspect
     {
         None,
@@ -44,6 +46,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         Ice,
         Thunder
     }
+
+    public bool CanFit(float deadline, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < deadline;
+    public bool CanFit(AID aid, int extraGCDs = 0) => CanFit(CD(aid), extraGCDs);
 
     private Aspect GetAspect(AID aid) => aid switch
     {
@@ -57,10 +62,10 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
     {
         var aspect = GetAspect(aid);
 
-        if (Triplecast > _state.GCD
-            || aid == AID.Fire3 && Firestarter > _state.GCD
+        if (Triplecast > GCD
+            || aid == AID.Fire3 && Firestarter > GCD
             || aid == AID.Foul && Unlocked(TraitID.EnhancedFoul)
-            || aspect == Aspect.Thunder && Thunderhead > _state.GCD)
+            || aspect == Aspect.Thunder && Thunderhead > GCD)
             return 0;
 
         var castTime = base.GetCastTime(aid);
@@ -75,9 +80,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (_state.CountdownRemaining > 0)
+        if (World.Client.CountdownRemaining > 0)
         {
-            if (_state.CountdownRemaining < GetCastTime(AID.Fire3))
+            if (World.Client.CountdownRemaining < GetCastTime(AID.Fire3))
                 PushGCD(AID.Fire3, primaryTarget);
 
             return;
@@ -106,7 +111,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void GetFireGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Thunderhead > _state.GCD && TargetThunderLeft < 5 && ElementLeft > _state.SpellGCDTime + _state.AnimationLockDelay)
+        if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
             Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
 
         if (Fire < 3 && Unlocked(AID.Fire3))
@@ -134,17 +139,17 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         }
         else if (Unlocked(AID.Fire4))
         {
-            var minF4Time = MathF.Max(_state.SpellGCDTime, GetCastTime(AID.Fire4) + _state.AnimationLockDelay);
+            var minF4Time = MathF.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
 
             if (Fire == 3)
             {
-                if (_state.CanWeave(AID.LeyLines, 0.6f, _state.GCD + _state.SpellGCDTime) && GetCastTime(AID.Fire4) > 0)
+                if (CanFit(AID.LeyLines, 1) && GetCastTime(AID.Fire4) > 0)
                     TryInstantCast(strategy, primaryTarget);
 
                 // despair requires 800 MP
                 if (MP < 800)
                 {
-                    if (_state.CanWeave(AID.Manafont, 0.6f, _state.GCD + _state.SpellGCDTime))
+                    if (CanFit(AID.Manafont, 1))
                         TryInstantCast(strategy, primaryTarget);
 
                     PushGCD(AID.Blizzard3, primaryTarget);
@@ -167,7 +172,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
                     PushGCD(AID.Fire4, primaryTarget);
                 else if (Paradox)
                     PushGCD(AID.Paradox, primaryTarget);
-                else if (Firestarter > _state.GCD)
+                else if (Firestarter > GCD)
                     PushGCD(AID.Fire3, primaryTarget);
                 else
                     PushGCD(AID.Blizzard3, primaryTarget);
@@ -180,7 +185,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
             if (MP < 1600)
                 PushGCD(AID.Blizzard3, primaryTarget);
 
-            PushGCD(Firestarter > _state.GCD ? AID.Fire3 : AID.Fire1, primaryTarget);
+            PushGCD(Firestarter > GCD ? AID.Fire3 : AID.Fire1, primaryTarget);
         }
         else if (MP >= 1600)
             PushGCD(AID.Fire1, primaryTarget);
@@ -195,9 +200,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (MP == 10000 && Unlocked(AID.Fire3))
         {
-            var nextGCD = _state.GCD + _state.SpellGCDTime;
+            var nextGCD = GCD + GCDLength;
 
-            if (ElementLeft > nextGCD && Firestarter > nextGCD && _state.CanWeave(AID.Transpose, 0.6f, nextGCD) && SwiftcastLeft == 0 && Triplecast == 0 && MP == 10000)
+            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanFit(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0 && MP == 10000)
                 TryInstantCast(strategy, primaryTarget, useFirestarter: false);
 
             Choose(AID.Fire3, AID.Fire2, primaryTarget);
@@ -220,7 +225,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
     private void TryInstantCast(StrategyValues strategy, Actor? primaryTarget, bool useFirestarter = true, bool useThunderhead = true, bool usePolyglot = true)
     {
-        var tp = useThunderhead && Thunderhead > _state.GCD;
+        var tp = useThunderhead && Thunderhead > GCD;
 
         if (tp && TargetThunderLeft < 5)
             Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
@@ -231,7 +236,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         if (tp)
             Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0);
 
-        if (useFirestarter && Firestarter > _state.GCD)
+        if (useFirestarter && Firestarter > GCD)
             PushGCD(AID.Fire3, primaryTarget);
     }
 
@@ -239,7 +244,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
     {
         if (primaryTarget == null)
         {
-            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && _state.CD(AID.Transpose) == 0)
+            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && CD(AID.Transpose) == 0)
                 PushOGCD(AID.Transpose, Player);
 
             return;
@@ -248,45 +253,35 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Player.InCombat)
             return;
 
-        if (Unlocked(AID.Swiftcast) && _state.CanWeave(AID.Swiftcast, 0.6f, deadline))
+        if (Unlocked(AID.Swiftcast))
             PushOGCD(AID.Swiftcast, Player);
 
-        if (Unlocked(AID.Amplifier) && _state.CanWeave(AID.Amplifier, 0.6f, deadline) && Polyglot < MaxPolyglot)
+        if (Unlocked(AID.Amplifier) && Polyglot < MaxPolyglot)
             PushOGCD(AID.Amplifier, Player);
 
-        if (ShouldTriplecast(strategy, deadline))
+        if (ShouldTriplecast(strategy))
             PushOGCD(AID.Triplecast, Player);
 
-        if (ShouldUseLeylines(strategy, deadline))
+        if (ShouldUseLeylines(strategy))
             PushOGCD(AID.LeyLines, Player);
 
-        if (Unlocked(AID.Manafont) && MP == 0 && Fire > 0 && _state.CanWeave(AID.Manafont, 0.6f, deadline))
+        if (Unlocked(AID.Manafont) && MP < 800 && Fire > 0)
             PushOGCD(AID.Manafont, Player);
 
-        if (Firestarter > _state.GCD && Ice > 0 && Hearts == MaxHearts && _state.CanWeave(AID.Transpose, 0.6f, deadline) && NumAOETargets < 3)
+        if (Firestarter > GCD && Ice > 0 && Hearts == MaxHearts && NumAOETargets < 3)
             PushOGCD(AID.Transpose, Player);
     }
 
-    private bool ShouldTriplecast(StrategyValues strategy, float deadline)
-    {
-        if (!Unlocked(AID.Triplecast) || !_state.CanWeave(_state.CD(AID.Triplecast) - 60, 0.6f, deadline) || Triplecast > 0)
-            return false;
+    private bool ShouldTriplecast(StrategyValues strategy) => Triplecast == 0 && (ShouldUseLeylines(strategy) || InLeyLines);
 
-        return ShouldUseLeylines(strategy, _state.GCD) || InLeyLines;
-    }
+    private bool ShouldUseLeylines(StrategyValues strategy)
+        => CanFit(AID.LeyLines)
+        && ForceMovementIn >= 30
+        && strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
 
-    private bool ShouldUseLeylines(StrategyValues strategy, float deadline)
-    {
-        if (!Unlocked(AID.LeyLines) || !_state.CanWeave(AID.LeyLines, 0.6f, deadline) || ForceMovementIn < 30)
-            return false;
-
-        return strategy.Option(SharedTrack.Buffs).As<OffensiveStrategy>() != OffensiveStrategy.Delay;
-    }
-
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
-        _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
         var gauge = GetGauge<BlackMageGauge>();
 
@@ -300,16 +295,16 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
 
         Triplecast = StatusLeft(SID.Triplecast);
         Thunderhead = StatusLeft(SID.Thunderhead);
-        Firestarter = Player.FindStatus((uint)SID.Firestarter) is ActorStatus s ? _state.StatusDuration(s.ExpireAt) : 0;
+        Firestarter = StatusLeft(SID.Firestarter);
         InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
 
-        TargetThunderLeft = Max(
-            _state.StatusDetails(primaryTarget, SID.Thunder, Player.InstanceID, 24).Left,
-            _state.StatusDetails(primaryTarget, SID.ThunderII, Player.InstanceID, 18).Left,
-            _state.StatusDetails(primaryTarget, SID.ThunderIII, Player.InstanceID, 27).Left,
-            _state.StatusDetails(primaryTarget, SID.ThunderIV, Player.InstanceID, 21).Left,
-            _state.StatusDetails(primaryTarget, SID.HighThunder, Player.InstanceID, 30).Left,
-            _state.StatusDetails(primaryTarget, SID.HighThunderII, Player.InstanceID, 24).Left
+        TargetThunderLeft = MaxAll(
+            StatusDetails(primaryTarget, SID.Thunder, Player.InstanceID, 24).Left,
+            StatusDetails(primaryTarget, SID.ThunderII, Player.InstanceID, 18).Left,
+            StatusDetails(primaryTarget, SID.ThunderIII, Player.InstanceID, 27).Left,
+            StatusDetails(primaryTarget, SID.ThunderIV, Player.InstanceID, 21).Left,
+            StatusDetails(primaryTarget, SID.HighThunder, Player.InstanceID, 30).Left,
+            StatusDetails(primaryTarget, SID.HighThunderII, Player.InstanceID, 24).Left
         );
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
@@ -318,7 +313,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Basexan<A
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
 
-    private float Max(float first, params float[] rest)
+    private float MaxAll(float first, params float[] rest)
     {
         foreach (var f in rest)
             first = MathF.Max(f, first);
