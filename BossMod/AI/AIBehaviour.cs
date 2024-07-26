@@ -54,7 +54,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         _naviDecision = BuildNavigationDecision(player, master, ref target);
 
         bool masterIsMoving = TrackMasterMovement(master);
-        bool moveWithMaster = masterIsMoving && (master == player || _followMaster);
+        bool moveWithMaster = masterIsMoving && _followMaster && master != player;
         _maxCastTime = moveWithMaster || ctrl.ForceFacing ? 0 : _naviDecision.LeewaySeconds;
 
         // note: that there is a 1-frame delay if target and/or strategy changes - we don't really care?..
