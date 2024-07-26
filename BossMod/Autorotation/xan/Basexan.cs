@@ -28,6 +28,8 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
     protected float TrueNorthLeft { get; private set; }
     protected float CombatTimer { get; private set; }
     protected float AnimationLockDelay { get; private set; }
+    protected float RaidBuffsIn { get; private set; }
+    protected float RaidBuffsLeft { get; private set; }
 
     protected float AttackGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
     protected float SpellGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
@@ -246,9 +248,11 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
         AnimationLockDelay = estimatedAnimLockDelay;
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
+        (RaidBuffsLeft, RaidBuffsIn) = EstimateRaidBuffTimings(primaryTarget);
 
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
+
 
         Exec(strategy, primaryTarget);
     }
