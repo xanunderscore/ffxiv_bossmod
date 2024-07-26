@@ -136,6 +136,7 @@ public enum SID : uint
     IfritsFavor = 2724, // applied by Summon Ifrit II to self
     GarudasFavor = 2725, // applied by Summon Garuda II to self
     RubysGlimmer = 3873, // applied by Searing Light to self
+    RefulgentLux = 3874, // applied by Summon Solar Bahamut to self
 }
 
 public sealed class Definitions : IDisposable

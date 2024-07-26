@@ -2,9 +2,9 @@
 
 namespace BossMod.Autorotation.xan;
 
-public enum Targeting { Auto, Manual, AutoPrimary }
+public enum Targeting { Manual, Auto, AutoPrimary }
 public enum OffensiveStrategy { Automatic, Delay, Force }
-public enum AOEStrategy { AOE, ST, ForceAOE, ForceST }
+public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 
 public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
@@ -231,13 +231,13 @@ static class Extendxan
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineShared(this RotationModuleDefinition def)
     {
         def.Define(SharedTrack.Targeting).As<Targeting>("Targeting")
-            .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
             .AddOption(xan.Targeting.Manual, "Manual", "Use player's current target for all actions")
+            .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
             .AddOption(xan.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit");
 
         def.Define(SharedTrack.AOE).As<AOEStrategy>("AOE")
-            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.ST, "ST", "Use single-target actions")
+            .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.ForceAOE, "ForceAOE", "Always use AOE actions, even on one target")
             .AddOption(AOEStrategy.ForceST, "ForceST", "Forbid any action that can hit multiple targets");
 

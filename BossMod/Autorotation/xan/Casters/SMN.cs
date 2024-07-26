@@ -1,7 +1,44 @@
 ﻿using BossMod.SMN;
-using System.Runtime.InteropServices;
+using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
+
+[Flags]
+public enum SmnFlags
+{
+    None = 0,
+    Aetherflow = 1 << 0,
+    Aetherflow2 = 1 << 1,
+    Phoenix = 1 << 2,
+    SolarBahamut = 1 << 3,
+    Ruby = 1 << 5,
+    Topaz = 1 << 6,
+    Emerald = 1 << 7
+}
+
+public enum AttunementType
+{
+    None = 0,
+    Ruby = 1,
+    Topaz = 2,
+    Emerald = 3
+}
+
+public enum Favor
+{
+    None,
+    Ifrit,
+    Titan,
+    Garuda
+}
+
+public enum Trance
+{
+    None,
+    Dreadwyrm,
+    Phoenix,
+    Lightwyrm
+}
 
 public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
 {
@@ -31,8 +68,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         return def;
     }
 
-    public TranceFlags TranceFlags;
-    public GemFlags GemFlags;
+    public SmnFlags TranceFlags;
     public Favor Favor;
     public AttunementType AttunementType;
     public int Attunement;
@@ -40,8 +76,9 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
     public float FurtherRuin;
     public float SearingLightLeft;
     public float SearingFlash;
+    public float RefulgentLux;
 
-    public int Aetherflow => TranceFlags.HasFlag(TranceFlags.Aetherflow2) ? 2 : TranceFlags.HasFlag(TranceFlags.Aetherflow) ? 1 : 0;
+    public int Aetherflow => TranceFlags.HasFlag(SmnFlags.Aetherflow2) ? 2 : TranceFlags.HasFlag(SmnFlags.Aetherflow) ? 1 : 0;
 
     public int NumAOETargets;
     public int NumMeleeTargets;
@@ -56,7 +93,10 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         {
             if (SummonLeft > 0 && AttunementType == AttunementType.None)
             {
-                if (TranceFlags.HasFlag(TranceFlags.Phoenix))
+                if (TranceFlags.HasFlag(SmnFlags.SolarBahamut))
+                    return Trance.Lightwyrm;
+
+                if (TranceFlags.HasFlag(SmnFlags.Phoenix))
                     return Trance.Phoenix;
 
                 if (Unlocked(AID.DreadwyrmTrance))
@@ -128,37 +168,25 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         }
     }
 
-    public AID BestRuin
+    public AID BestRuin => Trance switch
     {
-        get
-        {
-            if (Trance == Trance.Phoenix)
-                return AID.FountainOfFire;
+        Trance.Dreadwyrm => AID.AstralImpulse,
+        Trance.Phoenix => AID.FountainOfFire,
+        Trance.Lightwyrm => AID.UmbralImpulse,
+        _ => Unlocked(AID.Ruin3)
+            ? AID.Ruin3
+            : Unlocked(AID.Ruin2)
+                ? AID.Ruin2
+                : AID.Ruin1,
+    };
 
-            if (Trance == Trance.Dreadwyrm)
-                return AID.AstralImpulse;
-
-            return Unlocked(AID.Ruin3)
-                ? AID.Ruin3
-                : Unlocked(AID.Ruin2)
-                    ? AID.Ruin2
-                    : AID.Ruin1;
-        }
-    }
-
-    public AID BestOutburst
+    public AID BestOutburst => Trance switch
     {
-        get
-        {
-            if (Trance == Trance.Phoenix)
-                return AID.BrandOfPurgatory;
-
-            if (Trance == Trance.Dreadwyrm)
-                return AID.AstralFlare;
-
-            return Unlocked(AID.TriDisaster) ? AID.TriDisaster : AID.Outburst;
-        }
-    }
+        Trance.Dreadwyrm => AID.AstralFlare,
+        Trance.Phoenix => AID.BrandOfPurgatory,
+        Trance.Lightwyrm => AID.UmbralFlare,
+        _ => Unlocked(AID.TriDisaster) ? AID.TriDisaster : AID.Outburst,
+    };
 
     private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -225,13 +253,13 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
                 PushGCD(AID.Aethercharge, isTargeted ? primaryTarget : Player);
             }
 
-            if (GemFlags.HasFlag(GemFlags.Topaz))
+            if (TranceFlags.HasFlag(SmnFlags.Topaz))
                 PushGCD(AID.SummonTopaz, primaryTarget);
 
-            if (GemFlags.HasFlag(GemFlags.Emerald))
+            if (TranceFlags.HasFlag(SmnFlags.Emerald))
                 PushGCD(AID.SummonEmerald, primaryTarget);
 
-            if (GemFlags.HasFlag(GemFlags.Ruby))
+            if (TranceFlags.HasFlag(SmnFlags.Ruby))
                 PushGCD(AID.SummonRuby, primaryTarget);
         }
 
@@ -249,31 +277,40 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Player.InCombat || primaryTarget == null)
             return;
 
-        // don't overwrite other player's searing light in roulettes lol i guess
-        if (strategy.BuffsOk() && SearingLightLeft == 0)
-            PushOGCD(AID.SearingLight, Player);
-
         if (Favor == Favor.Titan)
             PushOGCD(AID.MountainBuster, BestAOETarget);
 
-        if (Trance == Trance.Dreadwyrm)
+        // don't overwrite other player's searing light in roulettes lol i guess
+        if (ShouldBuff(strategy))
+            PushOGCD(AID.SearingLight, Player);
+
+        switch (Trance)
         {
-            PushOGCD(AID.EnkindleBahamut, BestAOETarget);
-            PushOGCD(AID.Deathflare, BestAOETarget);
-        }
+            case Trance.Dreadwyrm:
+                PushOGCD(AID.EnkindleBahamut, BestAOETarget);
+                PushOGCD(AID.Deathflare, BestAOETarget);
+                break;
 
-        if (Trance == Trance.Phoenix)
-        {
-            PushOGCD(AID.EnkindlePhoenix, BestAOETarget);
+            case Trance.Lightwyrm:
+                PushOGCD(AID.EnkindleSolarBahamut, BestAOETarget);
+                PushOGCD(AID.Sunflare, BestAOETarget);
+                break;
 
-            if (_state.CanWeave(AID.Rekindle, 0.6f, deadline))
-            {
-                static float HPRatio(Actor a) => (float)a.HPMP.CurHP / a.HPMP.MaxHP;
+            case Trance.Phoenix:
+                PushOGCD(AID.EnkindlePhoenix, BestAOETarget);
 
-                var rekindleTarget = World.Party.WithoutSlot().Where(x => HPRatio(x) < 1).MinBy(HPRatio);
-                if (rekindleTarget is Actor a)
-                    PushOGCD(AID.Rekindle, a);
-            }
+                if (_state.CanWeave(AID.Rekindle, 0.6f, deadline))
+                {
+                    static float HPRatio(Actor a) => (float)a.HPMP.CurHP / a.HPMP.MaxHP;
+
+                    var rekindleTarget = World.Party.WithoutSlot().Where(x => HPRatio(x) < 1).MinBy(HPRatio);
+                    if (rekindleTarget is Actor a)
+                        PushOGCD(AID.Rekindle, a);
+
+                    if (SummonLeft < 2)
+                        PushOGCD(AID.Rekindle, Player);
+                }
+                break;
         }
 
         if (Aetherflow > 0)
@@ -295,6 +332,20 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
 
         if (MP <= 7000)
             PushOGCD(AID.LucidDreaming, Player);
+
+        if (RefulgentLux is > 0 and < 2.5f)
+            PushOGCD(AID.LuxSolaris, Player);
+    }
+
+    private bool ShouldBuff(StrategyValues strategy)
+    {
+        if (!strategy.BuffsOk())
+            return false;
+
+        if (CombatTimer < 10)
+            return SummonLeft < 13;
+
+        return SearingLightLeft == 0;
     }
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay)
@@ -302,12 +353,12 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
         _state.UpdateCommon(primaryTarget, estimatedAnimLockDelay);
 
-        var gauge = GetGauge<SmnGauge>();
-        TranceFlags = (TranceFlags)(gauge.SummonFlags & 7);
-        GemFlags = (GemFlags)(gauge.SummonFlags >> 4);
+        var gauge = GetGauge<SummonerGauge>();
+        TranceFlags = (SmnFlags)gauge.AetherFlags;
+        Service.Log($"{TranceFlags}");
         SummonLeft = gauge.SummonTimer * 0.001f;
-        AttunementType = (AttunementType)(gauge.AttunementFlags & 3);
-        Attunement = gauge.AttunementFlags >> 2;
+        AttunementType = (AttunementType)(gauge.Attunement & 3);
+        Attunement = gauge.Attunement >> 2;
 
         Carbuncle = World.Actors.FirstOrDefault(x => x.Type == ActorType.Pet && x.OwnerID == Player.InstanceID);
 
@@ -323,6 +374,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         FurtherRuin = StatusLeft(SID.FurtherRuin);
         SearingFlash = StatusLeft(SID.RubysGlimmer);
         SearingLightLeft = _state.StatusDetails(Player, SID.SearingLight, pendingDuration: 20).Left;
+        RefulgentLux = StatusLeft(SID.RefulgentLux);
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
         (BestMeleeTarget, NumMeleeTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
@@ -330,53 +382,4 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Basexan<A
         CalcNextBestGCD(strategy, primaryTarget);
         QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
     }
-}
-
-[StructLayout(LayoutKind.Explicit, Size = 0x10)]
-internal struct SmnGauge
-{
-    [FieldOffset(0x8)] public ushort SummonTimer;
-    [FieldOffset(0xE)] public byte AttunementFlags;
-    [FieldOffset(0xF)] public byte SummonFlags;
-}
-
-[Flags]
-public enum TranceFlags
-{
-    Bahamut = 0,
-    Aetherflow = 1 << 0,
-    Aetherflow2 = 1 << 1,
-    Phoenix = 1 << 2
-}
-
-[Flags]
-public enum GemFlags
-{
-    None = 0,
-    Ruby = 1 << 1,
-    Topaz = 1 << 2,
-    Emerald = 1 << 3
-}
-
-public enum AttunementType
-{
-    None = 0,
-    Ruby = 1,
-    Topaz = 2,
-    Emerald = 3
-}
-
-public enum Favor
-{
-    None,
-    Ifrit,
-    Titan,
-    Garuda
-}
-
-public enum Trance
-{
-    None,
-    Dreadwyrm,
-    Phoenix
 }
