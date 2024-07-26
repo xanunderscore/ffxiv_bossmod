@@ -91,6 +91,7 @@ public enum SID : uint
     Bloodbath = 84, // applied by Bloodbath to self, lifesteal
     Feint = 1195, // applied by Feint to target, -10% phys and -5% magic damage dealt
     Stun = 2, // applied by Leg Sweep to target
+    NastrondReady = 3844, // applied by Geirskogul to self
 }
 
 public sealed class Definitions : IDisposable

@@ -163,7 +163,7 @@ public abstract class Basexan<AID, TraitID> : LegacyModule where AID : Enum wher
         };
 
     protected PositionCheck IsSplashTarget => (Actor primary, Actor other) => Hints.TargetInAOECircle(other, primary.Position, 5);
-    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 4);
+    protected PositionCheck Is25yRectTarget => (Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 25, 2);
 
     /// <summary>
     /// Get <em>effective</em> cast time for the provided action.<br/>
