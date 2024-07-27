@@ -51,7 +51,7 @@ public sealed record class ActionDefinition(ActionID ID)
     public int ExtraCooldownGroup = -1;
     public float Cooldown; // for single charge (if multi-charge action); can be adjusted by a number of factors (TODO: add functor)
     public ActionAspect Aspect; // useful for BLM and BLU
-    public int MaxChargesBase = 1; // baseline max-charges when action is unlocked
+    public int MaxChargesBase; // baseline max-charges when action is unlocked
     public readonly List<(int Charges, int Level, uint UnlockLink)> MaxChargesOverride = []; // trait overrides for max-charges (applied in order)
     public float InstantAnimLock = 0.6f; // animation lock if ability is instant-cast
     public float CastAnimLock = 0.1f; // animation lock if ability is non-instant
@@ -302,7 +302,8 @@ public sealed class ActionDefinitions : IDisposable
         _ => 0
     };
 
-    public int SpellBaseMaxCharges(Lumina.Excel.GeneratedSheets.Action? data) => data?.MaxCharges ?? 1;
+    // the vast majority of chargeless actions have MaxCharges=0, even though they logically have 1
+    public int SpellBaseMaxCharges(Lumina.Excel.GeneratedSheets.Action? data) => Math.Max(data?.MaxCharges ?? 1, (byte)1);
     public int SpellBaseMaxCharges(uint spellId) => SpellBaseMaxCharges(ActionData(spellId));
     public int ActionBaseMaxCharges(ActionID aid) => SpellBaseMaxCharges(aid.SpellId());
 
