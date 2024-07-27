@@ -154,7 +154,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         if (ShouldWildfire(strategy))
-            PushOGCD(AID.Wildfire, primaryTarget);
+            PushOGCD(AID.Wildfire, primaryTarget, delay: GCD - 0.8f);
 
         if (ShouldReassemble(strategy, primaryTarget))
             PushOGCD(AID.Reassemble, Player);

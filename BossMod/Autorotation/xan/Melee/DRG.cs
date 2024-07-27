@@ -46,8 +46,32 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
     private Actor? BestLongAOETarget;
     private Actor? BestDiveTarget;
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
+
+        var gauge = GetGauge<DragoonGauge>();
+
+        Eyes = gauge.EyeCount;
+        Focus = gauge.FirstmindsFocusCount;
+        LotD = gauge.LotdTimer * 0.001f;
+
+        PowerSurge = StatusLeft(SID.PowerSurge);
+        DiveReady = StatusLeft(SID.DiveReady);
+        NastrondReady = StatusLeft(SID.NastrondReady);
+        LifeSurge = StatusLeft(SID.LifeSurge);
+        LanceCharge = StatusLeft(SID.LanceCharge);
+        DraconianFire = StatusLeft(SID.DraconianFire);
+        DragonsFlight = StatusLeft(SID.DragonsFlight);
+
+        (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 10, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2));
+        (BestLongAOETarget, NumLongAOETargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));
+        (BestDiveTarget, NumDiveTargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
+
+        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
+
+        OGCD(strategy, primaryTarget);
+
         if (primaryTarget == null)
             return;
 
@@ -78,6 +102,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
                 case AID.ChaoticSpring:
                     PushGCD(AID.WheelingThrust, primaryTarget);
                     break;
+                case AID.FullThrust:
                 case AID.HeavensThrust:
                     PushGCD(AID.FangAndClaw, primaryTarget);
                     break;
@@ -85,7 +110,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
                     PushGCD(AID.ChaosThrust, primaryTarget);
                     break;
                 case AID.VorpalThrust:
-                    PushGCD(AID.HeavensThrust, primaryTarget);
+                    PushGCD(AID.FullThrust, primaryTarget);
                     break;
                 case AID.TrueThrust:
                 case AID.RaidenThrust:
@@ -99,7 +124,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         PushGCD(DraconianFire > GCD ? AID.RaidenThrust : AID.TrueThrust, primaryTarget);
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (primaryTarget == null || !Player.InCombat || PowerSurge == 0)
             return;
@@ -107,8 +132,8 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         var moveOk = MoveOk(strategy);
         var posOk = PosLockOk(strategy);
 
-        if (LotD > 0 && moveOk)
-            PushOGCD(AID.Stardiver, BestDiveTarget);
+        if (NextPositionalImminent && !NextPositionalCorrect)
+            PushOGCD(AID.TrueNorth, Player, additionalPrio: -20, delay: GCD - 0.8f);
 
         if (strategy.BuffsOk())
         {
@@ -116,11 +141,19 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.BattleLitany, Player);
         }
 
+        // delay all damaging ogcds until we've used lance charge
+        // first one (jump) unlocks at level 30, same as lance charge, so we don't need extra checks
+        if (CD(AID.LanceCharge) == 0)
+            return;
+
+        if (LotD > 0 && moveOk)
+            PushOGCD(AID.Stardiver, BestDiveTarget);
+
         if (NastrondReady == 0)
             PushOGCD(AID.Geirskogul, BestLongAOETarget);
 
         if (DiveReady == 0 && posOk)
-            PushOGCD(AID.HighJump, primaryTarget);
+            PushOGCD(AID.Jump, primaryTarget);
 
         if (LanceCharge > GCD && LifeSurge == 0)
         {
@@ -129,7 +162,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
                 if (ComboLastMove is AID.SonicThrust || DraconianFire > GCD)
                     PushOGCD(AID.LifeSurge, Player);
             }
-            else if (ComboLastMove is AID.WheelingThrust or AID.VorpalThrust)
+            else if (ComboLastMove is AID.WheelingThrust or AID.VorpalThrust or AID.FangAndClaw)
                 PushOGCD(AID.LifeSurge, Player);
         }
 
@@ -149,6 +182,26 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.WyrmwindThrust, BestLongAOETarget);
     }
 
+    private bool ShouldLifeSurge()
+    {
+        if (NumAOETargets > 2 && Unlocked(AID.DoomSpike))
+        {
+            // coerthan torment is always our strongest aoe GCD (draconian fury just gives eyeball)
+            if (Unlocked(AID.CoerthanTorment))
+                return ComboLastMove == AID.SonicThrust;
+
+            if (Unlocked(AID.SonicThrust))
+                return ComboLastMove == AID.DoomSpike;
+
+            // doom spike is our only AOE skill at this level, always use
+            return true;
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     private bool MoveOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() == DiveStrategy.Allow;
     private bool PosLockOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() != DiveStrategy.NoLock;
 
@@ -163,32 +216,4 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         AID.Drakesbane => (PowerSurge < 12.5 ? Positional.Rear : Positional.Flank, false),
         _ => (Positional.Any, false)
     };
-
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
-    {
-        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-
-        var gauge = GetGauge<DragoonGauge>();
-
-        Eyes = gauge.EyeCount;
-        Focus = gauge.FirstmindsFocusCount;
-        LotD = gauge.LotdTimer * 0.001f;
-
-        PowerSurge = StatusLeft(SID.PowerSurge);
-        DiveReady = StatusLeft(SID.DiveReady);
-        NastrondReady = StatusLeft(SID.NastrondReady);
-        LifeSurge = StatusLeft(SID.LifeSurge);
-        LanceCharge = StatusLeft(SID.LanceCharge);
-        DraconianFire = StatusLeft(SID.DraconianFire);
-        DragonsFlight = StatusLeft(SID.DragonsFlight);
-
-        (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 10, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2));
-        (BestLongAOETarget, NumLongAOETargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));
-        (BestDiveTarget, NumDiveTargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
-
-        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
-
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
-    }
 }

@@ -158,7 +158,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
                 PushOGCD(AID.NoMercy, Player);
         }
         else if (Ammo > 0)
-            PushOGCD(AID.NoMercy, Player, delay: GCD - 1.1f);
+            PushOGCD(AID.NoMercy, Player, delay: GCD - 0.8f);
     }
 
     private bool IsContinuationStatus(SID sid) => sid is SID.ReadyToBlast or SID.ReadyToRaze or SID.ReadyToGouge or SID.ReadyToTear or SID.ReadyToRip;

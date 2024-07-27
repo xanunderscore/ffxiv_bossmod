@@ -35,7 +35,11 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float NextChargeIn(AID action) => Unlocked(action) ? ActionDefinitions.Instance.Spell(action)!.ReadyIn(World.Client.Cooldowns) : float.MaxValue;
     protected float MaxChargesIn(AID action) => Unlocked(action) ? ActionDefinitions.Instance.Spell(action)!.ChargeCapIn(World.Client.Cooldowns, Player.Level) : float.MaxValue;
 
-    protected virtual float GCDLength => AttackGCDLength;
+    protected abstract float GCDLength { get; }
+
+    public bool CanFitGCD(float duration, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < duration;
+
+    protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
     public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0)
         => MathF.Max(cooldown, World.Client.AnimationLock) + actionLock + AnimationLockDelay <= GCD + GCDLength * extraGCDs;
@@ -44,10 +48,6 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         var def = ActionDefinitions.Instance[ActionID.MakeSpell(aid)]!;
         return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs);
     }
-
-    public bool CanFitGCD(float duration, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < duration;
-
-    protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
     protected uint MP;
 
@@ -83,8 +83,6 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos, delay: delay);
     }
-
-    protected void QueueOGCD(Action<float> ogcdFun) => ogcdFun(GCD > 0 ? GCD : float.MaxValue);
 
     /// <summary>
     /// Tries to select a suitable primary target.<br/>
@@ -175,7 +173,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         var bestPrio = initial != null ? prioFunc(initial) : default;
         foreach (var enemy in Hints.PriorityTargets.Where(x =>
             x.Actor != initial &&
-            x.Actor.Position.InCircle(Player.Position, maxDistanceFromPlayer + x.Actor.HitboxRadius)
+            Player.DistanceToHitbox(x.Actor) <= maxDistanceFromPlayer
             && (filterFunc == null || filterFunc(x))
         ))
         {
@@ -275,7 +273,6 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
-
 
         Exec(strategy, primaryTarget);
     }
