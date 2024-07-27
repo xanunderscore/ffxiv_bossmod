@@ -1,6 +1,4 @@
-﻿using BossMod.Autorotation.Legacy;
-
-namespace BossMod.Autorotation.xan;
+﻿namespace BossMod.Autorotation.xan;
 
 public enum Targeting { Manual, Auto, AutoPrimary, AutoTryPri }
 public enum OffensiveStrategy { Automatic, Delay, Force }
@@ -8,19 +6,19 @@ public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 
 public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
-public abstract class Attackxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
+public abstract class Attackxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
     where AID : Enum where TraitID : Enum
 {
     protected sealed override float GCDLength => AttackGCDLength;
 }
 
-public abstract class Castxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Newxan<AID, TraitID>(manager, player)
+public abstract class Castxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
     where AID : Enum where TraitID : Enum
 {
     protected sealed override float GCDLength => SpellGCDLength;
 }
 
-public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
     where AID : Enum where TraitID : Enum
 {
     protected float PelotonLeft { get; private set; }
@@ -288,18 +286,6 @@ public abstract class Newxan<AID, TraitID>(RotationModuleManager manager, Actor 
     protected float StatusLeft<SID>(SID status) where SID : Enum => Status(status).Left;
     protected int StatusStacks<SID>(SID status) where SID : Enum => Status(status).Stacks;
 
-}
-
-public abstract class Basexan<AID, TraitID> : Newxan<AID, TraitID> where AID : Enum where TraitID : Enum
-{
-    public class State(RotationModule module) : CommonState(module) { }
-
-    protected State _state;
-
-    protected Basexan(RotationModuleManager manager, Actor player) : base(manager, player)
-    {
-        _state = new(this);
-    }
 }
 
 static class Extendxan
