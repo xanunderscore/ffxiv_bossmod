@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace BossMod.Autorotation.xan;
 
-public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class VPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -59,8 +59,64 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
     private int CoilMax => Unlocked(TraitID.EnhancedVipersRattle) ? 3 : 2;
     private float GnashRefreshTimer => 20;
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
+
+        var gauge = GetGauge<ViperGaugeEx>();
+        DreadCombo = gauge.DreadCombo;
+        Coil = gauge.RattlingCoilStacks;
+        Offering = gauge.SerpentOffering;
+        Anguine = gauge.AnguineTribute;
+
+        CurSerpentsTail = (gauge.ComboEx >> 2) switch
+        {
+            1 => AID.DeathRattle,
+            2 => AID.LastLash,
+            3 => AID.FirstLegacy,
+            4 => AID.SecondLegacy,
+            5 => AID.ThirdLegacy,
+            6 => AID.FourthLegacy,
+            _ => AID.SerpentsTail,
+        };
+        // this doesn't really matter because the GCDs grant unique statuses, but might as well track regardless
+        TwinCombo = (gauge.ComboEx >> 2) switch
+        {
+            7 => TwinType.SingleTarget,
+            8 => TwinType.AOE,
+            9 => TwinType.Coil,
+            _ => TwinType.None
+        };
+        TwinStacks = gauge.ComboEx & 3;
+
+        FlanksbaneVenom = StatusLeft(SID.FlanksbaneVenom);
+        FlankstungVenom = StatusLeft(SID.FlankstungVenom);
+        HindsbaneVenom = StatusLeft(SID.HindsbaneVenom);
+        HindstungVenom = StatusLeft(SID.HindstungVenom);
+        Swiftscaled = StatusLeft(SID.Swiftscaled);
+        Instinct = StatusLeft(SID.HuntersInstinct);
+        HuntersVenom = StatusLeft(SID.HuntersVenom);
+        SwiftskinsVenom = StatusLeft(SID.SwiftskinsVenom);
+        FellhuntersVenom = StatusLeft(SID.FellhuntersVenom);
+        FellskinsVenom = StatusLeft(SID.FellskinsVenom);
+        GrimhuntersVenom = StatusLeft(SID.GrimhuntersVenom);
+        GrimskinsVenom = StatusLeft(SID.GrimskinsVenom);
+        PoisedForTwinfang = StatusLeft(SID.PoisedForTwinfang);
+        PoisedForTwinblood = StatusLeft(SID.PoisedForTwinblood);
+        ReawakenReady = StatusLeft(SID.ReawakenReady);
+        ReawakenLeft = StatusLeft(SID.Reawakened);
+
+        TargetGnashLeft = GnashLeft(primaryTarget);
+        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
+
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
+        BestGenerationTarget = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget).Best;
+        NumAOETargets = NumMeleeAOETargets(strategy);
+
+        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
+
+        OGCD(strategy, primaryTarget);
+
         if (CombatTimer < 1 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 20)
             PushGCD(AID.Slither, primaryTarget);
 
@@ -135,7 +191,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (ComboLastMove is AID.HuntersBite or AID.SwiftskinsBite)
             {
-                if (GrimskinsVenom > _state.GCD)
+                if (GrimskinsVenom > GCD)
                     PushGCD(AID.BloodiedMaw, Player);
 
                 PushGCD(AID.JaggedMaw, Player);
@@ -161,7 +217,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (ComboLastMove is AID.HuntersSting)
             {
-                if (FlankstungVenom > _state.GCD)
+                if (FlankstungVenom > GCD)
                     PushGCD(AID.FlankstingStrike, primaryTarget);
 
                 PushGCD(AID.FlanksbaneFang, primaryTarget);
@@ -169,7 +225,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
             if (ComboLastMove is AID.SwiftskinsSting)
             {
-                if (HindstungVenom > _state.GCD)
+                if (HindstungVenom > GCD)
                     PushGCD(AID.HindstingStrike, primaryTarget);
 
                 PushGCD(AID.HindsbaneFang, primaryTarget);
@@ -192,6 +248,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         // fallback for out of range
         if (Coil > 0)
             PushGCD(AID.UncoiledFury, BestRangedAOETarget);
+
     }
 
     private bool ShouldReawaken(StrategyValues strategy)
@@ -206,12 +263,12 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         if (Unlocked(TraitID.EnhancedSerpentsLineage))
             baseDuration += 2;
 
-        var actual = baseDuration * _state.AttackGCDTime / 2.5f;
+        var actual = baseDuration * AttackGCDLength / 2.5f;
 
         if (NumAOETargets == 0 || Instinct < actual || Swiftscaled < actual || TargetGnashLeft < actual || DreadCombo > 0)
             return false;
 
-        if (_state.RaidBuffsIn > 9000 || _state.RaidBuffsLeft > 10 || ReawakenReady > _state.GCD)
+        if (RaidBuffsIn > 9000 || RaidBuffsLeft > 10 || ReawakenReady > GCD)
             return true;
 
         return Offering == 100 && ComboLastMove is AID.HuntersSting or AID.SwiftskinsSting or AID.HuntersBite or AID.SwiftskinsBite;
@@ -219,7 +276,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private bool ShouldDread(StrategyValues strategy)
     {
-        if (!Unlocked(AID.Dreadwinder) || _state.CD(AID.Dreadwinder) - 40 > _state.GCD || Swiftscaled <= _state.GCD || DreadCombo > 0)
+        if (Swiftscaled <= GCD || DreadCombo > 0)
             return false;
 
         return NumAOETargets > 2 && Unlocked(AID.PitOfDread)
@@ -229,45 +286,45 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
 
     private bool ShouldCoil(StrategyValues strategy)
     {
-        return Coil > 1 && TargetGnashLeft > GnashRefreshTimer && Swiftscaled > _state.GCD && DreadCombo == 0;
+        return Coil > 1 && TargetGnashLeft > GnashRefreshTimer && Swiftscaled > GCD && DreadCombo == 0;
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (!Player.InCombat || primaryTarget == null)
             return;
 
-        if (CurSerpentsTail != AID.SerpentsTail && _state.CanWeave(AID.SerpentsTail, 0.6f, deadline))
+        if (CurSerpentsTail != AID.SerpentsTail)
             PushOGCD(CurSerpentsTail, primaryTarget);
 
         switch (TwinCombo)
         {
             case TwinType.Coil:
-                if (PoisedForTwinblood > deadline && _state.CanWeave(AID.UncoiledTwinblood, 0.6f, deadline))
+                if (PoisedForTwinblood > 0)
                     PushOGCD(AID.UncoiledTwinblood, BestRangedAOETarget);
 
-                if (PoisedForTwinfang > deadline && _state.CanWeave(AID.UncoiledTwinfang, 0.6f, deadline))
+                if (PoisedForTwinfang > 0)
                     PushOGCD(AID.UncoiledTwinfang, BestRangedAOETarget);
                 break;
 
             case TwinType.AOE:
-                if (FellhuntersVenom > deadline && _state.CanWeave(AID.TwinfangThresh, 0.6f, deadline))
+                if (FellhuntersVenom > 0)
                     PushOGCD(AID.TwinfangThresh, Player);
 
-                if (FellskinsVenom > deadline && _state.CanWeave(AID.TwinbloodThresh, 0.6f, deadline))
+                if (FellskinsVenom > 0)
                     PushOGCD(AID.TwinbloodThresh, Player);
                 break;
 
             case TwinType.SingleTarget:
-                if (HuntersVenom > deadline && _state.CanWeave(AID.TwinfangBite, 0.6f, deadline))
+                if (HuntersVenom > 0)
                     PushOGCD(AID.TwinfangBite, primaryTarget);
 
-                if (SwiftskinsVenom > deadline && _state.CanWeave(AID.TwinbloodBite, 0.6f, deadline))
+                if (SwiftskinsVenom > 0)
                     PushOGCD(AID.TwinbloodBite, primaryTarget);
                 break;
         }
 
-        if (Unlocked(AID.SerpentsIre) && Coil < CoilMax && _state.CanWeave(AID.SerpentsIre, 0.6f, deadline))
+        if (Unlocked(AID.SerpentsIre) && Coil < CoilMax)
             PushOGCD(AID.SerpentsIre, Player);
     }
 
@@ -313,66 +370,5 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Basexan<A
         [FieldOffset(0x10)] public byte ComboEx; // extra combo stuff
     }
 
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
-    {
-        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
-
-        var gauge = GetGauge<ViperGaugeEx>();
-        DreadCombo = gauge.DreadCombo;
-        Coil = gauge.RattlingCoilStacks;
-        Offering = gauge.SerpentOffering;
-        Anguine = gauge.AnguineTribute;
-
-        CurSerpentsTail = (gauge.ComboEx >> 2) switch
-        {
-            1 => AID.DeathRattle,
-            2 => AID.LastLash,
-            3 => AID.FirstLegacy,
-            4 => AID.SecondLegacy,
-            5 => AID.ThirdLegacy,
-            6 => AID.FourthLegacy,
-            _ => AID.SerpentsTail,
-        };
-        // this doesn't really matter because the GCDs grant unique statuses, but might as well track regardless
-        TwinCombo = (gauge.ComboEx >> 2) switch
-        {
-            7 => TwinType.SingleTarget,
-            8 => TwinType.AOE,
-            9 => TwinType.Coil,
-            _ => TwinType.None
-        };
-        TwinStacks = gauge.ComboEx & 3;
-
-        FlanksbaneVenom = StatusLeft(SID.FlanksbaneVenom);
-        FlankstungVenom = StatusLeft(SID.FlankstungVenom);
-        HindsbaneVenom = StatusLeft(SID.HindsbaneVenom);
-        HindstungVenom = StatusLeft(SID.HindstungVenom);
-        Swiftscaled = StatusLeft(SID.Swiftscaled);
-        Instinct = StatusLeft(SID.HuntersInstinct);
-        HuntersVenom = StatusLeft(SID.HuntersVenom);
-        SwiftskinsVenom = StatusLeft(SID.SwiftskinsVenom);
-        FellhuntersVenom = StatusLeft(SID.FellhuntersVenom);
-        FellskinsVenom = StatusLeft(SID.FellskinsVenom);
-        GrimhuntersVenom = StatusLeft(SID.GrimhuntersVenom);
-        GrimskinsVenom = StatusLeft(SID.GrimskinsVenom);
-        PoisedForTwinfang = StatusLeft(SID.PoisedForTwinfang);
-        PoisedForTwinblood = StatusLeft(SID.PoisedForTwinblood);
-        ReawakenReady = StatusLeft(SID.ReawakenReady);
-        ReawakenLeft = StatusLeft(SID.Reawakened);
-
-        TargetGnashLeft = GnashLeft(primaryTarget);
-        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
-
-        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
-        BestGenerationTarget = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget).Best;
-        NumAOETargets = NumMeleeAOETargets(strategy);
-
-        _state.UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > _state.GCD);
-
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
-    }
-
-    private float GnashLeft(Actor? a) => _state.StatusDetails(a, SID.NoxiousGnash, Player.InstanceID).Left;
+    private float GnashLeft(Actor? a) => StatusDetails(a, SID.NoxiousGnash, Player.InstanceID).Left;
 }

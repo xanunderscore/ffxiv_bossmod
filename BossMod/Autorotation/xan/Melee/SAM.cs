@@ -221,7 +221,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
                 (false, true) => AID.Gekko,
                 (true, false) => AID.Kasha,
                 // only use yukikaze to get sen, as it's the weakest ender
-                _ => !Ice ? AID.Yukikaze : AID.Gekko,
+                _ => Ice ? AID.Gekko : AID.Yukikaze,
             };
         }
     }
