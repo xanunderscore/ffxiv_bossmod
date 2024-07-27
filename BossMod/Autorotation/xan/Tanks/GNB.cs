@@ -2,10 +2,8 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { AOE, Targeting, Buffs }
-
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("GNB", "Gunbreaker", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.GNB), 100);
@@ -28,21 +26,37 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
 
     private Actor? BestReignTarget;
 
-    public bool FastGCD => _state.AttackGCDTime <= 2.47f;
+    public bool FastGCD => GCDLength <= 2.47f;
     public int MaxAmmo => Unlocked(TraitID.CartridgeChargeII) ? 3 : 2;
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
+    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (_state.CountdownRemaining > 0)
+        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
+
+        var gauge = GetGauge<GunbreakerGauge>();
+        Ammo = gauge.Ammo;
+        AmmoCombo = gauge.AmmoComboStep;
+
+        Reign = StatusLeft(SID.ReadyToReign);
+        SonicBreak = StatusLeft(SID.ReadyToBreak);
+        Continuation = Player.Statuses.Any(s => IsContinuationStatus((SID)s.ID));
+        NoMercy = StatusLeft(SID.NoMercy);
+
+        NumAOETargets = NumMeleeAOETargets(strategy);
+        (BestReignTarget, NumReignTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
+
+        CalcNextBestOGCD(strategy, primaryTarget);
+
+        if (World.Client.CountdownRemaining > 0)
             return;
 
-        if (_state.CD(AID.NoMercy) > 20 && Ammo > 0 && Unlocked(AID.GnashingFang) && _state.CD(AID.GnashingFang) < _state.GCD)
+        if (CD(AID.NoMercy) > 20 && Ammo > 0)
             PushGCD(AID.GnashingFang, primaryTarget);
 
-        if (NumAOETargets > 0 && Ammo >= 2 && _state.CD(AID.DoubleDown) < _state.GCD && NoMercy > _state.GCD)
+        if (NumAOETargets > 0 && Ammo >= 2 && NoMercy > GCD)
             PushGCD(AID.DoubleDown, Player);
 
-        if (SonicBreak > _state.GCD)
+        if (SonicBreak > GCD)
             PushGCD(AID.SonicBreak, primaryTarget);
 
         switch (AmmoCombo)
@@ -61,23 +75,22 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
                 return;
         }
 
-        if (Reign > _state.GCD && _state.CD(AID.GnashingFang) > 0 && _state.CD(AID.DoubleDown) > 0 && SonicBreak == 0)
+        if (Reign > GCD && CD(AID.GnashingFang) > 0 && CD(AID.DoubleDown) > 0 && SonicBreak == 0)
             PushGCD(AID.ReignOfBeasts, BestReignTarget);
 
         if (NumAOETargets > 1 && Unlocked(AID.DemonSlice))
         {
             if (ShouldBust(strategy, AID.BurstStrike))
             {
-                if (Unlocked(AID.FatedCircle))
-                    PushGCD(AID.FatedCircle, Player);
+                PushGCD(AID.FatedCircle, Player);
 
                 PushGCD(AID.BurstStrike, primaryTarget);
             }
 
-            if (ComboLastMove == AID.BrutalShell && Unlocked(AID.SolidBarrel))
+            if (ComboLastMove == AID.BrutalShell)
                 PushGCD(AID.SolidBarrel, primaryTarget);
 
-            if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter))
+            if (ComboLastMove == AID.DemonSlice)
                 PushGCD(AID.DemonSlaughter, Player);
 
             PushGCD(AID.DemonSlice, Player);
@@ -87,17 +100,18 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
             if (ShouldBust(strategy, AID.BurstStrike))
                 PushGCD(AID.BurstStrike, primaryTarget);
 
-            if (ComboLastMove == AID.DemonSlice && Unlocked(AID.DemonSlaughter) && NumAOETargets > 0)
+            if (ComboLastMove == AID.DemonSlice && NumAOETargets > 0)
                 PushGCD(AID.DemonSlaughter, Player);
 
-            if (ComboLastMove == AID.BrutalShell && Unlocked(AID.SolidBarrel))
+            if (ComboLastMove == AID.BrutalShell)
                 PushGCD(AID.SolidBarrel, primaryTarget);
 
-            if (ComboLastMove == AID.KeenEdge && Unlocked(AID.BrutalShell))
+            if (ComboLastMove == AID.KeenEdge)
                 PushGCD(AID.BrutalShell, primaryTarget);
 
             PushGCD(AID.KeenEdge, primaryTarget);
         }
+
     }
 
     // TODO handle forced 2 cartridge burst
@@ -106,13 +120,13 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         if (!Unlocked(spend) || Ammo == 0)
             return false;
 
-        if (NoMercy > _state.GCD)
-            return _state.CD(AID.DoubleDown) > NoMercy || Ammo == MaxAmmo || (Ammo == 1 && _state.CD(AID.DoubleDown) < NoMercy);
+        if (NoMercy > GCD)
+            return CD(AID.DoubleDown) > NoMercy || Ammo == MaxAmmo || (Ammo == 1 && CD(AID.DoubleDown) < NoMercy);
 
         return ComboLastMove is AID.BrutalShell or AID.DemonSlice && Ammo == MaxAmmo;
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (!Player.InCombat || primaryTarget == null)
             return;
@@ -120,61 +134,31 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Basexan<A
         if (Continuation)
             PushOGCD(AID.Continuation, primaryTarget);
 
-        if (strategy.BuffsOk() && Unlocked(AID.Bloodfest) && _state.CanWeave(AID.Bloodfest, 0.6f, deadline) && Ammo == 0)
+        if (strategy.BuffsOk() && Unlocked(AID.Bloodfest) && Ammo == 0)
             PushOGCD(AID.Bloodfest, primaryTarget);
 
-        var usedNM = _state.CD(AID.NoMercy) > 20;
+        UseNoMercy(strategy);
 
-        if (ShouldNoMercy(strategy, deadline))
-            PushOGCD(AID.NoMercy, Player);
+        var usedNM = CD(AID.NoMercy) > 20;
 
         if (usedNM)
         {
-            if (Unlocked(AID.BlastingZone) && _state.CanWeave(AID.BlastingZone, 0.6f, deadline))
-                PushOGCD(AID.BlastingZone, primaryTarget);
+            PushOGCD(AID.BlastingZone, primaryTarget);
 
-            if (Unlocked(AID.BowShock) && _state.CanWeave(AID.BowShock, 0.6f, deadline) && NumAOETargets > 0)
+            if (NumAOETargets > 0)
                 PushOGCD(AID.BowShock, Player);
         }
     }
 
-    private bool ShouldNoMercy(StrategyValues strategy, float deadline)
+    private void UseNoMercy(StrategyValues strategy)
     {
-        if (!Unlocked(AID.NoMercy) || !_state.CanWeave(AID.NoMercy, 0.6f, deadline))
-            return false;
-
         if (FastGCD)
         {
-            if (CombatTimer < 10)
-                return ComboLastMove == AID.BrutalShell || NumAOETargets > 1;
-
-            return true;
+            if (CombatTimer >= 10 || ComboLastMove == AID.BrutalShell || NumAOETargets > 1)
+                PushOGCD(AID.NoMercy, Player);
         }
-        else
-        {
-            return Ammo > 0 && _state.GCD < 1.1f;
-        }
-    }
-
-    public override void Exec(StrategyValues strategy, Actor? primaryTarget)
-    {
-        SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
-
-        var gauge = GetGauge<GunbreakerGauge>();
-        Ammo = gauge.Ammo;
-        AmmoCombo = gauge.AmmoComboStep;
-
-        Reign = StatusLeft(SID.ReadyToReign);
-        SonicBreak = StatusLeft(SID.ReadyToBreak);
-        Continuation = Player.Statuses.Any(s => IsContinuationStatus((SID)s.ID));
-        NoMercy = StatusLeft(SID.NoMercy);
-
-        NumAOETargets = NumMeleeAOETargets(strategy);
-        (BestReignTarget, NumReignTargets) = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget);
-
-        CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        else if (Ammo > 0)
+            PushOGCD(AID.NoMercy, Player, delay: GCD - 1.1f);
     }
 
     private bool IsContinuationStatus(SID sid) => sid is SID.ReadyToBlast or SID.ReadyToRaze or SID.ReadyToGouge or SID.ReadyToTear or SID.ReadyToRip;
