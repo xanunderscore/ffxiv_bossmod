@@ -122,9 +122,11 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
                     PushGCD(AID.FangAndClaw, primaryTarget);
                     break;
                 case AID.Disembowel:
+                case AID.SpiralBlow:
                     PushGCD(AID.ChaosThrust, primaryTarget);
                     break;
                 case AID.VorpalThrust:
+                case AID.LanceBarrage:
                     PushGCD(AID.FullThrust, primaryTarget);
                     break;
                 case AID.TrueThrust:
@@ -216,7 +218,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
 
                 // also 440 potency, level 86
                 if (Unlocked(AID.HeavensThrust))
-                    ok |= ComboLastMove is AID.VorpalThrust;
+                    ok |= ComboLastMove is AID.VorpalThrust or AID.LanceBarrage;
 
                 return ok;
             }
@@ -248,31 +250,17 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
             return (buffsUp ? Positional.Flank : Positional.Rear, false);
         }
 
-        switch (ComboLastMove)
+        return ComboLastMove switch
         {
-            case AID.ChaosThrust:
-                return Unlocked(AID.WheelingThrust) ? (Positional.Rear, true) : predictNext(0);
-            case AID.ChaoticSpring:
-                // wheeling thrust is unlocked
-                return (Positional.Rear, true);
-            case AID.Disembowel:
-                return (Positional.Rear, true);
-            case AID.None:
-            case AID.Drakesbane:
-                return predictNext(0);
-            case AID.TrueThrust:
-            case AID.RaidenThrust:
-                return predictNext(-1);
-            case AID.VorpalThrust:
-                return (Positional.Flank, false);
-            case AID.HeavensThrust:
-            case AID.FullThrust:
-                return (Positional.Flank, true);
-            case AID.WheelingThrust:
-            case AID.FangAndClaw:
-                return predictNext(Unlocked(AID.Drakesbane) ? 1 : 0);
-            default:
-                throw new NotImplementedException($"move: {ComboLastMove}");
-        }
+            AID.ChaosThrust => Unlocked(AID.WheelingThrust) ? (Positional.Rear, true) : predictNext(0),
+            AID.ChaoticSpring => (Positional.Rear, true), // wheeling thrust is unlocked
+            AID.Disembowel or AID.SpiralBlow => (Positional.Rear, true),
+            AID.TrueThrust or AID.RaidenThrust => predictNext(-1),
+            AID.VorpalThrust or AID.LanceBarrage => (Positional.Flank, false),
+            AID.HeavensThrust or AID.FullThrust => (Positional.Flank, true),
+            AID.WheelingThrust or AID.FangAndClaw => predictNext(Unlocked(AID.Drakesbane) ? 1 : 0),
+            // last action is AOE, or nothing, or drakesbane - loop reset
+            _ => predictNext(0)
+        };
     }
 }
