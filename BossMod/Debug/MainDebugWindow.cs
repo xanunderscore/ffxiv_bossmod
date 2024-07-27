@@ -76,6 +76,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         {
             DrawGauge();
         }
+        if (ImGui.CollapsingHeader("Movement"))
+        {
+            DrawMove();
+        }
         if (ImGui.CollapsingHeader("Autorotation"))
         {
             _debugAutorot.Draw();
@@ -214,6 +218,16 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         var gauge = ws.Client.GaugePayload;
 
         ImGui.Text($"{gauge.Low:X16} {gauge.High:X16}");
+    }
+
+    private unsafe void DrawMove()
+    {
+        var m = MovementOverride.Instance!;
+
+        ImGui.Text($"Requested: {m.IsMoveRequested()}");
+        ImGui.Text($"Moving: {m.IsMoving()}");
+        ImGui.Text($"Blocked: {m.MovementBlocked}");
+        ImGui.Text($"Unblocked: {m.IsForceUnblocked()}");
     }
 
     private unsafe void DrawCooldowns()
