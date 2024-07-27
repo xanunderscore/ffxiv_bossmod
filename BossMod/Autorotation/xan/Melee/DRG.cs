@@ -38,6 +38,8 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
     public float DraconianFire;
     public float DragonsFlight;
 
+    public float TargetDotLeft;
+
     public int NumAOETargets; // standard combo (10x4 rect)
     public int NumLongAOETargets; // GSK, nastrond (15x4 rect)
     public int NumDiveTargets; // dragonfire, stardiver, etc
@@ -63,12 +65,16 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         LanceCharge = StatusLeft(SID.LanceCharge);
         DraconianFire = StatusLeft(SID.DraconianFire);
         DragonsFlight = StatusLeft(SID.DragonsFlight);
+        TargetDotLeft = MathF.Max(
+            StatusDetails(primaryTarget, SID.ChaosThrust, Player.InstanceID).Left,
+            StatusDetails(primaryTarget, SID.ChaoticSpring, Player.InstanceID).Left
+        );
 
         (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 10, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2));
         (BestLongAOETarget, NumLongAOETargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));
         (BestDiveTarget, NumDiveTargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
 
-        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
+        UpdatePositionals(primaryTarget, GetPositional(strategy, primaryTarget), TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 
@@ -86,6 +92,15 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
                 case AID.DraconianFury:
                     PushGCD(AID.SonicThrust, BestAOETarget);
                     break;
+            }
+
+            // lol
+            if (!Unlocked(AID.SonicThrust) && PowerSurge < GCD)
+            {
+                if (ComboLastMove == AID.TrueThrust)
+                    PushGCD(AID.Disembowel, primaryTarget);
+
+                PushGCD(AID.TrueThrust, primaryTarget);
             }
 
             PushGCD(DraconianFire > GCD ? AID.DraconianFury : AID.DoomSpike, BestAOETarget);
@@ -143,6 +158,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
 
         // delay all damaging ogcds until we've used lance charge
         // first one (jump) unlocks at level 30, same as lance charge, so we don't need extra checks
+        // TODO check if this is actually a good idea
         if (CD(AID.LanceCharge) == 0)
             return;
 
@@ -155,16 +171,8 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         if (DiveReady == 0 && posOk)
             PushOGCD(AID.Jump, primaryTarget);
 
-        if (LanceCharge > GCD && LifeSurge == 0)
-        {
-            if (NumAOETargets > 2)
-            {
-                if (ComboLastMove is AID.SonicThrust || DraconianFire > GCD)
-                    PushOGCD(AID.LifeSurge, Player);
-            }
-            else if (ComboLastMove is AID.WheelingThrust or AID.VorpalThrust or AID.FangAndClaw)
-                PushOGCD(AID.LifeSurge, Player);
-        }
+        if (LanceCharge > GCD && ShouldLifeSurge())
+            PushOGCD(AID.LifeSurge, Player);
 
         if (moveOk)
             PushOGCD(AID.DragonfireDive, BestDiveTarget);
@@ -184,6 +192,9 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool ShouldLifeSurge()
     {
+        if (LifeSurge > 0)
+            return false;
+
         if (NumAOETargets > 2 && Unlocked(AID.DoomSpike))
         {
             // coerthan torment is always our strongest aoe GCD (draconian fury just gives eyeball)
@@ -198,22 +209,70 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         }
         else
         {
-            throw new NotImplementedException();
+            // 440 potency, level 64
+            if (Unlocked(AID.Drakesbane))
+            {
+                var ok = ComboLastMove is AID.WheelingThrust or AID.FangAndClaw;
+
+                // also 440 potency, level 86
+                if (Unlocked(AID.HeavensThrust))
+                    ok |= ComboLastMove is AID.VorpalThrust;
+
+                return ok;
+            }
+
+            // 380 potency, level 26
+            if (Unlocked(AID.FullThrust))
+                return ComboLastMove is AID.VorpalThrust;
+
+            // below level 26, strongest GCD is vorpal thrust
+            return ComboLastMove is AID.TrueThrust;
         }
     }
 
     private bool MoveOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() == DiveStrategy.Allow;
     private bool PosLockOk(StrategyValues strategy) => strategy.Option(Track.Dive).As<DiveStrategy>() != DiveStrategy.NoLock;
 
-    private (Positional, bool) GetPositional(StrategyValues strategy) => ComboLastMove switch
+    private (Positional, bool) GetPositional(StrategyValues strategy, Actor? primaryTarget)
     {
-        AID.TrueThrust or AID.RaidenThrust => (PowerSurge < 10 ? Positional.Rear : Positional.Flank, false),
-        AID.Disembowel or AID.ChaosThrust or AID.ChaoticSpring => (Positional.Rear, true),
-        AID.FangAndClaw => (Positional.Rear, false),
-        AID.WheelingThrust => (Positional.Flank, false),
-        AID.VorpalThrust => (Positional.Flank, false),
-        AID.HeavensThrust => (Positional.Flank, true),
-        AID.Drakesbane => (PowerSurge < 12.5 ? Positional.Rear : Positional.Flank, false),
-        _ => (Positional.Any, false)
-    };
+        // no positional
+        if (NumAOETargets > 2 && Unlocked(AID.DoomSpike) || !Unlocked(AID.ChaosThrust) || primaryTarget == null)
+            return (Positional.Any, false);
+
+        if (!Unlocked(AID.FangAndClaw))
+            return (Positional.Rear, ComboLastMove == AID.Disembowel);
+
+        (Positional, bool) predictNext(int gcdsBeforeTrueThrust)
+        {
+            var buffsUp = CanFitGCD(TargetDotLeft, gcdsBeforeTrueThrust + 3) && CanFitGCD(PowerSurge, gcdsBeforeTrueThrust + 2);
+            return (buffsUp ? Positional.Flank : Positional.Rear, false);
+        }
+
+        switch (ComboLastMove)
+        {
+            case AID.ChaosThrust:
+                return Unlocked(AID.WheelingThrust) ? (Positional.Rear, true) : predictNext(0);
+            case AID.ChaoticSpring:
+                // wheeling thrust is unlocked
+                return (Positional.Rear, true);
+            case AID.Disembowel:
+                return (Positional.Rear, true);
+            case AID.None:
+            case AID.Drakesbane:
+                return predictNext(0);
+            case AID.TrueThrust:
+            case AID.RaidenThrust:
+                return predictNext(-1);
+            case AID.VorpalThrust:
+                return (Positional.Flank, false);
+            case AID.HeavensThrust:
+            case AID.FullThrust:
+                return (Positional.Flank, true);
+            case AID.WheelingThrust:
+            case AID.FangAndClaw:
+                return predictNext(Unlocked(AID.Drakesbane) ? 1 : 0);
+            default:
+                throw new NotImplementedException($"move: {ComboLastMove}");
+        }
+    }
 }
