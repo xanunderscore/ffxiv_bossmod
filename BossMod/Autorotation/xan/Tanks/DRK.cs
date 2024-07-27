@@ -2,7 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class DRK(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
+public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -35,7 +35,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Basexan<A
         PushGCD(AID.HardSlash, primaryTarget);
     }
 
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget, float deadline)
+    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget)
     {
         if (primaryTarget == null)
             return;
@@ -43,27 +43,20 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Basexan<A
         if (Darkside < 20)
             PushOGCD(AID.EdgeOfDarkness, primaryTarget);
 
-        if (_state.CanWeave(AID.LivingShadow, 0.6f, deadline))
-            PushOGCD(AID.LivingShadow, Player);
+        PushOGCD(AID.LivingShadow, Player);
 
-        if (Blood > 0 && _state.CanWeave(AID.Delirium, 0.6f, deadline))
+        if (Blood > 0)
             PushOGCD(AID.Delirium, Player);
 
-        if (_state.CD(AID.Delirium) > 0)
+        if (CD(AID.Delirium) > 0)
         {
-            if (_state.CanWeave(AID.SaltedEarth, 0.6f, deadline))
-                PushOGCD(AID.SaltedEarth, Player);
+            PushOGCD(AID.SaltedEarth, Player);
 
-            if (_state.CanWeave(AID.Shadowbringer, 0.6f, deadline))
-                PushOGCD(AID.Shadowbringer, primaryTarget);
+            PushOGCD(AID.Shadowbringer, primaryTarget);
 
-            if (_state.CanWeave(AID.CarveAndSpit, 0.6f, deadline))
-                PushOGCD(AID.CarveAndSpit, primaryTarget);
+            PushOGCD(AID.CarveAndSpit, primaryTarget);
 
-            if (_state.CanWeave(_state.CD(AID.Shadowbringer) - 60, 0.6f, deadline))
-                PushOGCD(AID.Shadowbringer, primaryTarget);
-
-            if (SaltedEarth > 0 && _state.CanWeave(AID.SaltAndDarkness, 0.6f, deadline))
+            if (SaltedEarth > 0)
                 PushOGCD(AID.SaltAndDarkness, Player);
         }
     }
@@ -71,7 +64,6 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Basexan<A
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 3);
-        _state.UpdateCommon(primaryTarget, AnimationLockDelay);
 
         Gauge = GetGauge<DarkKnightGauge>();
 
@@ -80,6 +72,6 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Basexan<A
         SaltedEarth = StatusLeft(SID.SaltedEarth);
 
         CalcNextBestGCD(strategy, primaryTarget);
-        QueueOGCD(deadline => CalcNextBestOGCD(strategy, primaryTarget, deadline));
+        CalcNextBestOGCD(strategy, primaryTarget);
     }
 }
