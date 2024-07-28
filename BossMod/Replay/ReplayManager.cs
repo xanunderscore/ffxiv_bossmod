@@ -45,9 +45,11 @@ public sealed class ReplayManager : IDisposable
 
         public void Show(RotationDatabase rotationDB)
         {
-            Window ??= new(Replay.Result, rotationDB, SavedPosition);
+            Window ??= new(Replay.Result, rotationDB);
             Window.IsOpen = true;
             Window.BringToFront();
+            if (SavedPosition != default)
+                Window.CurrentTime = SavedPosition;
         }
     }
 
