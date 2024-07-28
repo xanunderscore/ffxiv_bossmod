@@ -41,7 +41,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
         // ranged
-        if (strategy.Enabled(Track.Ranged) && ActionUnlocked(RangedAction) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
+        if (strategy.Enabled(Track.Ranged) && Player.DistanceToHitbox(primaryTarget) is > 5 and <= 20 && primaryTarget!.Type is ActorType.Enemy && !primaryTarget.IsAlly)
             Hints.ActionsToExecute.Push(RangedAction, primaryTarget, ActionQueue.Priority.Low);
 
         // stance
@@ -50,15 +50,15 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
             Hints.ActionsToExecute.Push(stanceAction, Player, ActionQueue.Priority.Minimal);
 
         // interrupt
-        if (strategy.Enabled(Track.Interject) && Unlocked(ClassShared.AID.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
+        if (strategy.Enabled(Track.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
         {
-            var interruptibleEnemy = Hints.PotentialTargets.Find(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
+            var interruptibleEnemy = Hints.PotentialTargets.FirstOrDefault(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (interruptibleEnemy != null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Interject), interruptibleEnemy.Actor, ActionQueue.Priority.Minimal);
         }
 
         // low blow
-        if (strategy.Enabled(Track.Stun) && Unlocked(ClassShared.AID.LowBlow) && Cooldown(ClassShared.AID.LowBlow) == 0)
+        if (strategy.Enabled(Track.Stun) && Cooldown(ClassShared.AID.LowBlow) == 0)
         {
             var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (stunnableEnemy != null)
