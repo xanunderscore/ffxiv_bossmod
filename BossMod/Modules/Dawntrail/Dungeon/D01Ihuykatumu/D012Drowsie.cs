@@ -53,9 +53,8 @@ class D012DrowsieStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 826, NameID = 12716)]
 public class D012Drowsie(WorldState ws, Actor primary) : BossModule(ws, primary, new(80, 53), new ArenaBoundsCircle(20))
 {
-    public override void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        base.CalculateAIHints(slot, actor, assignment, hints);
         foreach (var e in hints.PotentialTargets)
         {
             if ((OID)e.Actor.OID == OID.Boss)

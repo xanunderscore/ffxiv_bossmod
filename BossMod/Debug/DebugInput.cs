@@ -1,6 +1,5 @@
 ﻿using BossMod.Autorotation;
 using Dalamud.Game.ClientState.Keys;
-using Dalamud.Hooking;
 using ImGuiNET;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -74,7 +73,7 @@ unsafe sealed class DebugInput : IDisposable
     private delegate ref int GetRefValueDelegate(int vkCode);
     private readonly GetRefValueDelegate _getKeyRef;
 
-    private readonly PlayerController* _playerController;
+    //private readonly PlayerController* _playerController;
 
     //private delegate void RMIWalkDelegate(PlayerMoveControllerWalk* self, float* sumLeft, float* sumForward, float* sumTurnLeft, byte* haveBackwardOrStrafe, byte* a6, byte bAdditiveUnk);
     //private readonly Hook<RMIWalkDelegate> _rmiWalkHook;
@@ -105,7 +104,9 @@ unsafe sealed class DebugInput : IDisposable
     //private float _pmcCameraSpeedH;
     //private float _pmcCameraSpeedV;
 
+#pragma warning disable IDE0290 // Use primary constructor
     public DebugInput(RotationModuleManager autorot)
+#pragma warning restore IDE0290 // Use primary constructor
     {
         _convertVirtualKey = Service.KeyState.GetType().GetMethod("ConvertVirtualKey", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<ConvertVirtualKeyDelegate>(Service.KeyState);
         _getKeyRef = Service.KeyState.GetType().GetMethod("GetRefValue", BindingFlags.NonPublic | BindingFlags.Instance)!.CreateDelegate<GetRefValueDelegate>(Service.KeyState);
@@ -113,8 +114,8 @@ unsafe sealed class DebugInput : IDisposable
         //_amex = autorot.ActionManager;
         //_navi = new(_amex);
 
-        _playerController = (PlayerController*)Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 3C 01 75 1E 48 8D 0D");
-        Service.Log($"[DebugInput] playerController addess: 0x{(nint)_playerController:X}");
+        //_playerController = (PlayerController*)Service.SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 3C 01 75 1E 48 8D 0D");
+        //Service.Log($"[DebugInput] playerController addess: 0x{(nint)_playerController:X}");
 
         //_rmiWalkHook = Service.Hook.HookFromSignature<RMIWalkDelegate>("E8 ?? ?? ?? ?? 80 7B 3E 00 48 8D 3D", RMIWalkDetour);
         //Service.Log($"[DebugInput] rmiwalk addess: 0x{_rmiWalkHook.Address:X}");
