@@ -43,7 +43,7 @@ public sealed class AIHintsBuilder : IDisposable
         hints.Normalize();
     }
 
-    private unsafe void CalculateAutoHints(AIHints hints, Actor player)
+    private void CalculateAutoHints(AIHints hints, Actor player)
     {
         var currentFateId = _ws.Client.ActiveFate.ID;
         var withinFateLevel = false;

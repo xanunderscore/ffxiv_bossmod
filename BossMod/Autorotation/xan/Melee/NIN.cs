@@ -200,7 +200,6 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
             PushGCD(AID.SpinningEdge, primaryTarget);
         }
-
     }
 
     private bool ShouldPK(Actor? primaryTarget)
