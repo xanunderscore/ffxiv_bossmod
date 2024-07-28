@@ -35,11 +35,11 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
         {
             foreach (var d in Hints.PredictedDamage)
             {
-                if (d.players.NumSetBits() != 1)
+                var allies = World.Party.WithSlot().IncludedInMask(d.players);
+                if (allies.Count() != 1)
                     continue;
 
-                var (_, ally) = World.Party.WithSlot().IncludedInMask(d.players).First();
-                yield return (ally, d.activation);
+                yield return (allies.First().Item2, d.activation);
             }
         }
     }
