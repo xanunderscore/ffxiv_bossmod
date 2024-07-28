@@ -70,7 +70,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
 
-    private (Positional, bool) NextPositional => (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, EffectiveForm == Form.Coeurl);
+    public static readonly int AOEBreakpoint = 4;
+    public bool UseAOE => NumAOETargets >= AOEBreakpoint;
+
+    private (Positional, bool) NextPositional => UseAOE
+        ? (Positional.Any, false)
+        : (CoeurlStacks > 0 ? Positional.Flank : Positional.Rear, EffectiveForm == Form.Coeurl);
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -153,12 +158,11 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(AID.WindsReply, BestLineTarget);
         }
 
-        if (NumAOETargets > 2 && Unlocked(AID.ArmOfTheDestroyer))
+        if (UseAOE && Unlocked(AID.ArmOfTheDestroyer))
         {
             if (EffectiveForm == Form.Coeurl)
                 PushGCD(AID.Rockbreaker, Player);
 
-            // TODO this is actually still suboptimal on 3 targets
             if (EffectiveForm == Form.Raptor)
                 PushGCD(AID.FourPointFury, Player);
 
@@ -185,8 +189,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             if (PerfectBalanceLeft == 0)
                 return CurrentForm;
 
-            // hack: allow double lunar opener
-            var forcedSolar = ForcedSolar || HasLunar && !HasSolar && CombatTimer > 30;
+            // hack: allow double lunar opener - only in boss fights
+            // trash packs should get regular lunar solar
+            var forceDoubleLunar = CombatTimer < 30 && !UseAOE;
+            var forcedSolar = ForcedSolar || HasLunar && !HasSolar && !forceDoubleLunar;
 
             var canCoeurl = forcedSolar;
             var canRaptor = forcedSolar;
