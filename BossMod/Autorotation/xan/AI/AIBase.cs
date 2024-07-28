@@ -5,7 +5,10 @@ namespace BossMod.Autorotation.xan;
 public abstract class AIBase(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
     internal bool Unlocked<AID>(AID aid) where AID : Enum => ActionUnlocked(ActionID.MakeSpell(aid));
-    internal float Cooldown<AID>(AID aid) where AID : Enum => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
+    internal float Cooldown<AID>(AID aid) where AID : Enum => Cooldown(ActionID.MakeSpell(aid));
+    internal float Cooldown(ActionID action) => World.Client.Cooldowns[ActionDefinitions.Instance[action]!.MainCooldownGroup].Remaining;
+
+    internal static ActionID Spell<AID>(AID aid) where AID : Enum => ActionID.MakeSpell(aid);
 
     internal bool ShouldInterrupt(Actor act) => IsCastReactable(act) && act.CastInfo!.Interruptible;
     internal bool ShouldStun(Actor act) => IsCastReactable(act) && !act.CastInfo!.Interruptible && !IsBossFromIcon(act.OID);
@@ -24,6 +27,22 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
     internal IEnumerable<AIHints.Enemy> EnemiesAutoingMe => Hints.PriorityTargets.Where(x => x.Actor.CastInfo == null && x.Actor.TargetID == Player.InstanceID && Player.DistanceToHitbox(x.Actor) <= 6);
 
     internal float HPRatio => (float)Player.HPMP.CurHP / Player.HPMP.MaxHP;
+
+    internal IEnumerable<DateTime> Raidwides => Hints.PredictedDamage.Where(d => World.Party.WithSlot().IncludedInMask(d.players).Count() >= 2).Select(t => t.activation);
+    internal IEnumerable<(Actor, DateTime)> Tankbusters
+    {
+        get
+        {
+            foreach (var d in Hints.PredictedDamage)
+            {
+                if (d.players.NumSetBits() != 1)
+                    continue;
+
+                var (_, ally) = World.Party.WithSlot().IncludedInMask(d.players).First();
+                yield return (ally, d.activation);
+            }
+        }
+    }
 }
 
 public enum AbilityUse
