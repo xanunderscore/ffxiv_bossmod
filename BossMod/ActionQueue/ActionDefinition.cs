@@ -100,8 +100,7 @@ public sealed record class ActionDefinition(ActionID ID)
         if (MainCooldownGroup < 0)
             return 0;
         var cdg = cooldowns[MainCooldownGroup];
-        // TODO MaxChargesAtLevel is zero for some actions with charges (like Air Anchor), but cdg.Total can only be nonzero if the action is on cooldown, i.e. if it was used, i.e. it has more than 0 charges
-        return cdg.Total > 0 ? (Math.Max(1, MaxChargesAtLevel(level)) * Cooldown - cdg.Elapsed) : 0;
+        return cdg.Total > 0 ? (MaxChargesAtLevel(level) * Cooldown - cdg.Elapsed) : 0;
     }
 
     private static bool LinkUnlocked(uint link) => link == 0 || (ActionDefinitions.Instance.UnlockCheck?.Invoke(link) ?? true);
