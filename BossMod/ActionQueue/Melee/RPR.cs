@@ -88,6 +88,7 @@ public enum SID : uint
     Bloodbath = 84,
     Feint = 1195,
     Stun = 2,
+    IdealHost = 3905,
 }
 
 public sealed class Definitions : IDisposable

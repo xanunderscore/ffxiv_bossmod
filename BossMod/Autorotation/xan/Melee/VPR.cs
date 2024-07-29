@@ -107,7 +107,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Attackxan
         ReawakenLeft = StatusLeft(SID.Reawakened);
 
         TargetGnashLeft = GnashLeft(primaryTarget);
-        NumNearbyGnashlessEnemies = Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer);
+        NumNearbyGnashlessEnemies = AdjustNumTargets(strategy, Hints.PriorityTargets.Count(x => x.Actor.DistanceToHitbox(Player) <= 5 && GnashLeft(x.Actor) < GnashRefreshTimer));
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
         BestGenerationTarget = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget).Best;
