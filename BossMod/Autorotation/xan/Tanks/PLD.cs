@@ -81,7 +81,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
 
         // use goring blade even in AOE
         if (GoringBladeReady > GCD)
-            PushGCD(AID.GoringBlade, primaryTarget, 50);
+            PushGCD(AID.GoringBlade, primaryTarget, priority: 50);
 
         if (NumAOETargets >= 3 && Unlocked(AID.TotalEclipse))
         {

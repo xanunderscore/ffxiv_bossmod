@@ -152,7 +152,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         var posOk = PosLockOk(strategy);
 
         if (NextPositionalImminent && !NextPositionalCorrect)
-            PushOGCD(AID.TrueNorth, Player, additionalPrio: -20, delay: GCD - 0.8f);
+            PushOGCD(AID.TrueNorth, Player, priority: -20, delay: GCD - 0.8f);
 
         if (strategy.BuffsOk())
         {

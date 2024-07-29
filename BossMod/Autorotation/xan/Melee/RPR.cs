@@ -2,7 +2,13 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
-public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
+
+public enum GCDPriority
+{
+    None = 0
+}
+
+public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID, GCDPriority>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -28,6 +34,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
     public float EnhancedVoidReaping;
     public float EnhancedCrossReaping;
     public float EnhancedHarpe;
+    public float Oblatio;
 
     public float TargetDDLeft;
     public int NumNearbyUndeathedEnemies;
@@ -63,6 +70,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         EnhancedVoidReaping = StatusLeft(SID.EnhancedVoidReaping);
         EnhancedCrossReaping = StatusLeft(SID.EnhancedCrossReaping);
         EnhancedHarpe = StatusLeft(SID.EnhancedHarpe);
+        Oblatio = StatusLeft(SID.Oblatio);
 
         TargetDDLeft = DDLeft(primaryTarget);
         NumNearbyUndeathedEnemies = AdjustNumTargets(strategy, Hints.PriorityTargets.Count(x => Player.DistanceToHitbox(x.Actor) <= 5 && !CanFitGCD(DDLeft(x.Actor), 1)));
@@ -167,6 +175,9 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (SoulReaver > 0)
             return;
 
+        if (Oblatio > 0)
+            PushOGCD(AID.Sacrificium, BestRangedAOETarget);
+
         if (Void >= 2)
             PushOGCD(AID.LemuresSlice, primaryTarget);
 
@@ -192,7 +203,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
     private (Positional, bool) GetNextPositional(Actor? primaryTarget)
     {
-        if (primaryTarget == null || !Unlocked(AID.Gibbet))
+        if (primaryTarget == null || !Unlocked(AID.Gibbet) || NumConeTargets > 2)
             return (Positional.Any, false);
 
         Positional nextPos;

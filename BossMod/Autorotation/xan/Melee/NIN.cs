@@ -355,7 +355,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             if (NumRangedAOETargets > 2 || !Unlocked(AID.Bhavacakra))
                 PushOGCD(AID.HellfrogMedium, BestRangedAOETarget);
 
-            PushOGCD(AID.Bhavacakra, primaryTarget, Meisui > 0 ? 50 : 0);
+            PushOGCD(AID.Bhavacakra, primaryTarget, priority: Meisui > 0 ? 50 : 0);
         }
     }
 

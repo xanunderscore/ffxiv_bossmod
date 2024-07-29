@@ -7,19 +7,19 @@ public enum AOEStrategy { ST, AOE, ForceAOE, ForceST }
 public enum SharedTrack { Targeting, AOE, Buffs, Count }
 
 public abstract class Attackxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
-    where AID : Enum where TraitID : Enum
+    where AID : struct, Enum where TraitID : Enum
 {
     protected sealed override float GCDLength => AttackGCDLength;
 }
 
 public abstract class Castxan<AID, TraitID>(RotationModuleManager manager, Actor player) : Basexan<AID, TraitID>(manager, player)
-    where AID : Enum where TraitID : Enum
+    where AID : struct, Enum where TraitID : Enum
 {
     protected sealed override float GCDLength => SpellGCDLength;
 }
 
 public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
-    where AID : Enum where TraitID : Enum
+    where AID : struct, Enum where TraitID : Enum
 {
     protected float PelotonLeft { get; private set; }
     protected float SwiftcastLeft { get; private set; }
@@ -49,32 +49,40 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs);
     }
 
+    protected AID NextGCD = default;
+    protected int NextGCDPrio;
     protected uint MP;
 
     protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;
 
-    protected void PushGCD(AID aid, Actor? target, int additionalPrio = 0, float delay = 0)
-        => PushAction(aid, target, ActionQueue.Priority.High + 500 + additionalPrio, delay);
+    protected void PushGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
+    {
+        if (PushAction(aid, target, ActionQueue.Priority.High + priority, delay) && priority > NextGCDPrio)
+        {
+            NextGCD = aid;
+            NextGCDPrio = priority;
+        }
+    }
 
-    protected void PushOGCD(AID aid, Actor? target, int additionalPrio = 0, float delay = 0)
-        => PushAction(aid, target, ActionQueue.Priority.Low + 500 + additionalPrio, delay);
+    protected void PushOGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
+        => PushAction(aid, target, ActionQueue.Priority.Low + priority, delay);
 
-    protected void PushAction(AID aid, Actor? target, float priority, float delay)
+    protected bool PushAction(AID aid, Actor? target, float priority, float delay)
     {
         if ((uint)(object)aid == 0)
-            return;
+            return false;
 
         if (!CanCast(aid))
-            return;
+            return false;
 
         var def = ActionDefinitions.Instance.Spell(aid);
         if (def == null)
-            return;
+            return false;
 
         if (def.Range != 0 && target == null)
         {
             // Service.Log($"Queued targeted action ({aid}) with no target");
-            return;
+            return false;
         }
 
         Vector3 targetPos = default;
@@ -82,6 +90,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
             targetPos = Player.PosRot.XYZ();
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos, delay: delay);
+        return true;
     }
 
     /// <summary>
