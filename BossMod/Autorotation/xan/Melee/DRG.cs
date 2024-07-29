@@ -66,6 +66,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         LanceCharge = StatusLeft(SID.LanceCharge);
         DraconianFire = StatusLeft(SID.DraconianFire);
         DragonsFlight = StatusLeft(SID.DragonsFlight);
+        StarcrossReady = StatusLeft(SID.StarcrossReady);
         TargetDotLeft = MathF.Max(
             StatusDetails(primaryTarget, SID.ChaosThrust, Player.InstanceID).Left,
             StatusDetails(primaryTarget, SID.ChaoticSpring, Player.InstanceID).Left
