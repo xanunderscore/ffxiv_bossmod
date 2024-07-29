@@ -129,10 +129,12 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         var threat = Hints.PriorityTargets.FirstOrDefault(x =>
             World.Actors.Find(x.Actor.TargetID) is Actor victim
+            // assume that during dungeon pull, we can clip these guys with AOE actions and don't need to worry about provoke
+            // update this doesn't really work, see paired mobs on ihuykatumu boat, etc
+            // they sit in melee range and one aggros onto party member - need to find a better way
+            // && Player.DistanceToHitbox(x.Actor) > 3
             && victim.IsAlly
             && victim.Class.GetRole() != Role.Tank
-            // assume that during dungeon pull, we can clip these guys with AOE actions and don't need to worry about provoke
-            && Player.DistanceToHitbox(x.Actor) > 3
         );
         if (threat != null)
         {
