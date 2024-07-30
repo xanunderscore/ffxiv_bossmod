@@ -216,7 +216,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         // prevent odd window double blitz
-        if (HasBothNadi && FireLeft > 0)
+        // TODO figure out the actual mathematical equation that differentiates odd windows, this is stupid
+        if (BrotherhoodLeft == 0 && CD(AID.PerfectBalance) > 30)
             return;
 
         // TODO forced solar in strategy
