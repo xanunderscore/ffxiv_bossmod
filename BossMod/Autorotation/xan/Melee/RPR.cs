@@ -3,12 +3,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
 
-public enum GCDPriority
-{
-    None = 0
-}
-
-public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID, GCDPriority>(manager, player)
+public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public static RotationModuleDefinition Definition()
     {
@@ -19,12 +14,12 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         return def;
     }
 
-    public int Soul;
-    public int Shroud;
+    public int RedGauge;
+    public int BlueGauge;
     public bool Soulsow;
     public float EnshroudLeft;
-    public int Lemure;
-    public int Void;
+    public int BlueSouls;
+    public int PurpleSouls;
     public float SoulReaver;
     public float EnhancedGallows;
     public float EnhancedGibbet;
@@ -37,7 +32,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
     public float Oblatio;
 
     public float TargetDDLeft;
-    public int NumNearbyUndeathedEnemies;
+    public float ShortestNearbyDDLeft;
 
     public int NumAOETargets; // melee
     public int NumRangedAOETargets; // gluttony, communio
@@ -48,17 +43,36 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
     private Actor? BestConeTarget;
     private Actor? BestLineTarget;
 
+    public enum GCDPriority
+    {
+        None = 0,
+        Soulsow = 1,
+        EnhancedHarpe = 100,
+        HarvestMoon = 150,
+        Filler = 200,
+        FillerAOE = 201,
+        SoulSlice = 300,
+        DDExtend = 600,
+        Harvest = 650,
+        Reaver = 700,
+        Lemure = 700,
+        Communio = 750,
+        DDExpiring = 900,
+    }
+
+    private bool Enshrouded => BlueSouls > 0;
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 3);
 
         var gauge = GetGauge<ReaperGauge>();
 
-        Soul = gauge.Soul;
-        Shroud = gauge.Shroud;
+        RedGauge = gauge.Soul;
+        BlueGauge = gauge.Shroud;
         EnshroudLeft = gauge.EnshroudedTimeRemaining * 0.001f;
-        Lemure = gauge.LemureShroud;
-        Void = gauge.VoidShroud;
+        BlueSouls = gauge.LemureShroud;
+        PurpleSouls = gauge.VoidShroud;
 
         Soulsow = Player.FindStatus(SID.Soulsow) != null;
         SoulReaver = StatusLeft(SID.SoulReaver);
@@ -72,9 +86,23 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         EnhancedHarpe = StatusLeft(SID.EnhancedHarpe);
         Oblatio = StatusLeft(SID.Oblatio);
 
-        TargetDDLeft = DDLeft(primaryTarget);
-        NumNearbyUndeathedEnemies = AdjustNumTargets(strategy, Hints.PriorityTargets.Count(x => Player.DistanceToHitbox(x.Actor) <= 5 && !CanFitGCD(DDLeft(x.Actor), 1)));
+        var primaryEnemy = Hints.PotentialTargets.FirstOrDefault(x => x.Actor.InstanceID == primaryTarget?.InstanceID);
 
+        TargetDDLeft = DDLeft(primaryEnemy);
+        ShortestNearbyDDLeft = float.MaxValue;
+
+        switch (strategy.AOE())
+        {
+            case AOEStrategy.AOE:
+            case AOEStrategy.ForceAOE:
+                var nearbyDD = Hints.PriorityTargets.Where(x => Player.DistanceToHitbox(x.Actor) <= 5).Select(DDLeft);
+                var minNeeded = strategy.AOE() == AOEStrategy.ForceAOE ? 1 : 2;
+                if (nearbyDD.Count(x => x < 30) >= minNeeded)
+                    ShortestNearbyDDLeft = nearbyDD.Min();
+                break;
+        }
+
+        NumAOETargets = NumMeleeAOETargets(strategy);
         (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 15, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 15, 2));
         (BestConeTarget, NumConeTargets) = SelectTarget(strategy, primaryTarget, 8, (primary, other) => Hints.TargetInAOECone(other, Player.Position, 8, Player.DirectionTo(primary), 60.Degrees()));
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
@@ -83,120 +111,180 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
-        if (!Soulsow && !Hints.PriorityTargets.Any())
-            PushGCD(AID.SoulSow, Player);
+        if (Soulsow)
+            PushGCD(AID.HarvestMoon, BestRangedAOETarget, GCDPriority.HarvestMoon);
+        else
+            PushGCD(AID.SoulSow, Player, GCDPriority.Soulsow);
 
-        // dd refresh
-        if (NumNearbyUndeathedEnemies > 1)
-            PushGCD(AID.WhorlofDeath, Player);
+        if (EnhancedHarpe > GCD)
+            PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);
 
-        if (!CanFitGCD(TargetDDLeft, 1))
-            PushGCD(AID.ShadowofDeath, primaryTarget);
+        DDRefresh(primaryTarget);
 
         if (SoulReaver > GCD)
         {
             if (NumConeTargets > 2)
-                PushGCD(AID.Guillotine, BestConeTarget);
+                PushGCD(AID.Guillotine, BestConeTarget, GCDPriority.Reaver);
 
             if (primaryTarget != null)
             {
                 if (EnhancedGallows > GCD)
-                    PushGCD(AID.Gallows, primaryTarget);
+                    PushGCD(AID.Gallows, primaryTarget, GCDPriority.Reaver);
                 else if (EnhancedGibbet > GCD)
-                    PushGCD(AID.Gibbet, primaryTarget);
+                    PushGCD(AID.Gibbet, primaryTarget, GCDPriority.Reaver);
                 else if (GetCurrentPositional(primaryTarget!) == Positional.Rear)
-                    PushGCD(AID.Gallows, primaryTarget);
+                    PushGCD(AID.Gallows, primaryTarget, GCDPriority.Reaver);
                 else
-                    PushGCD(AID.Gibbet, primaryTarget);
+                    PushGCD(AID.Gibbet, primaryTarget, GCDPriority.Reaver);
             }
         }
 
-        if (Lemure > 0)
-        {
-            if (Lemure == 1 && Unlocked(AID.Communio))
-                PushGCD(AID.Communio, BestRangedAOETarget);
-            else
-            {
-                if (NumConeTargets > 2)
-                    PushGCD(AID.GrimReaping, BestConeTarget);
-
-                PushGCD(EnhancedCrossReaping > GCD ? AID.CrossReaping : AID.VoidReaping, primaryTarget);
-            }
-        }
+        EnshroudGCDs(strategy, primaryTarget);
 
         if (ImmortalSacrifice.Stacks > 0 && BloodsownCircle == 0)
-            PushGCD(AID.PlentifulHarvest, BestLineTarget);
+            PushGCD(AID.PlentifulHarvest, BestLineTarget, GCDPriority.Harvest);
 
-        if (Soul <= 50)
+        if (BlueSouls > 0)
+            return;
+
+        if (RedGauge <= 50)
         {
             if (NumConeTargets > 2)
-                PushGCD(AID.SoulScythe, BestConeTarget);
+                PushGCD(AID.SoulScythe, BestConeTarget, GCDPriority.SoulSlice);
 
-            PushGCD(AID.SoulSlice, primaryTarget);
+            PushGCD(AID.SoulSlice, primaryTarget, GCDPriority.SoulSlice);
         }
 
-        if (NumAOETargets > 2 && Unlocked(AID.SpinningScythe))
+        if (NumAOETargets > 2)
         {
             if (ComboLastMove == AID.SpinningScythe)
-                PushGCD(AID.NightmareScythe, Player);
+                PushGCD(AID.NightmareScythe, Player, GCDPriority.FillerAOE);
 
-            PushGCD(AID.SpinningScythe, Player);
-        }
-        else
-        {
-            if (ComboLastMove == AID.WaxingSlice)
-                PushGCD(AID.InfernalSlice, primaryTarget);
-
-            if (ComboLastMove == AID.Slice)
-                PushGCD(AID.WaxingSlice, primaryTarget);
-
-            PushGCD(AID.Slice, primaryTarget);
+            PushGCD(AID.SpinningScythe, Player, GCDPriority.FillerAOE);
         }
 
-        if (Soulsow)
-            PushGCD(AID.HarvestMoon, BestRangedAOETarget);
+        if (ComboLastMove == AID.WaxingSlice)
+            PushGCD(AID.InfernalSlice, primaryTarget, GCDPriority.Filler);
 
-        if (EnhancedHarpe > GCD)
-            PushGCD(AID.Harpe, primaryTarget);
+        if (ComboLastMove == AID.Slice)
+            PushGCD(AID.WaxingSlice, primaryTarget, GCDPriority.Filler);
+
+        PushGCD(AID.Slice, primaryTarget, GCDPriority.Filler);
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (primaryTarget == null)
+        if (primaryTarget == null || !Player.InCombat)
             return;
 
         if (strategy.BuffsOk())
         {
             // wait for soul slice in opener
             if (CD(AID.SoulSlice) > 0 || CombatTimer > 20)
-                PushOGCD(AID.ArcaneCircle, Player, delay: GCD - 1.8f);
+                PushOGCD(AID.ArcaneCircle, Player, delay: GCD - 1.6f);
         }
+
+        if (NextPositionalImminent && !NextPositionalCorrect)
+            PushOGCD(AID.TrueNorth, Player, delay: GCD - 0.8f);
 
         if (SoulReaver > 0)
             return;
 
-        if (Oblatio > 0)
+        if (Oblatio > 0 && (RaidBuffsLeft > 0 || CD(AID.ArcaneCircle) > EnshroudLeft))
             PushOGCD(AID.Sacrificium, BestRangedAOETarget);
 
-        if (Void >= 2)
+        if (PurpleSouls > 1)
+        {
+            if (NumConeTargets > 2)
+                PushOGCD(AID.LemuresScythe, BestConeTarget);
+
             PushOGCD(AID.LemuresSlice, primaryTarget);
+        }
 
-        // TODO: if Perfectio Occulta or Perfectio Parata, add 1
-        var shroudComboEndLength = 1;
-
-        if ((Shroud >= 50 || IdealHost > 0) && CanFitGCD(TargetDDLeft - 6, shroudComboEndLength))
+        if (ShouldEnshroud(strategy))
             PushOGCD(AID.Enshroud, Player);
 
-        if (Soul >= 50 && CanFitGCD(TargetDDLeft, 2))
+        UseSoul(strategy, primaryTarget);
+    }
+
+    private void DDRefresh(Actor? primaryTarget)
+    {
+        void Extend(float timer, AID action, Actor? target)
+        {
+            if (!CanFitGCD(timer, CanWeave(AID.Gluttony) ? 2 : 1))
+                PushGCD(action, target, GCDPriority.DDExpiring);
+
+            if (timer < 30 && CanWeave(AID.ArcaneCircle, 1) && CD(AID.SoulSlice) > 0)
+                PushGCD(action, target, GCDPriority.DDExtend);
+        }
+
+        Extend(ShortestNearbyDDLeft, AID.WhorlofDeath, Player);
+        Extend(TargetDDLeft, AID.ShadowofDeath, primaryTarget);
+    }
+
+    private bool ShouldEnshroud(StrategyValues strategy)
+    {
+        if (Enshrouded)
+            return false;
+
+        if (IdealHost > 0)
+            return true;
+
+        if (BlueGauge < 50)
+            return false;
+
+        if (RaidBuffsLeft > GCD + 6)
+            return true;
+
+        if (CanWeave(AID.ArcaneCircle, 2, extraFixedDelay: 1.5f)) // stupid fixed recast timer
+            return true;
+
+        // TODO tweak deadline, i need a simulator or something
+        return CD(AID.ArcaneCircle) > 65;
+    }
+
+    private void UseSoul(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (RedGauge < 50 || Enshrouded)
+            return;
+
+        if (ImmortalSacrifice.Stacks > 0 && CanWeave(BloodsownCircle, 0.6f, 1))
+            return;
+
+        var debuffLeft = Math.Min(TargetDDLeft, ShortestNearbyDDLeft);
+
+        if (CanFitGCD(debuffLeft, 2))
             PushOGCD(AID.Gluttony, BestRangedAOETarget);
 
-        if (Soul >= 50 && CanFitGCD(TargetDDLeft, 1))
+        if (CanFitGCD(debuffLeft, 1) && (RaidBuffsLeft > 0 || BlueGauge < 50) && !CanWeave(AID.Gluttony, 5))
         {
-            // terrible abuse of "CanWeave", treating the Bloodsown Circle status as if it were a cooldown, since it prevents us from casting Plentiful Harvest
-            var willHarvest = ImmortalSacrifice.Stacks > 0 && CanWeave(BloodsownCircle, 0.6f, 1);
-            if (!willHarvest)
-                PushOGCD(AID.BloodStalk, primaryTarget);
+            if (NumConeTargets > 2)
+                PushOGCD(AID.GrimSwathe, BestConeTarget);
+
+            PushOGCD(AID.BloodStalk, primaryTarget);
         }
+    }
+
+    private void EnshroudGCDs(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (BlueSouls == 0)
+            return;
+
+        if (BlueSouls == 1)
+            PushGCD(AID.Communio, BestRangedAOETarget, GCDPriority.Communio);
+
+        var prio = GCDPriority.Lemure;
+
+        if (CanWeave(AID.ArcaneCircle, 2, extraFixedDelay: 1.5f) && BlueSouls < 5)
+            prio = GCDPriority.None;
+
+        if (RaidBuffsLeft > 0)
+            prio = GCDPriority.Lemure;
+
+        if (NumConeTargets > 2 && prio > 0)
+            PushGCD(AID.GrimReaping, BestConeTarget, prio + 1);
+
+        PushGCD(EnhancedCrossReaping > GCD ? AID.CrossReaping : AID.VoidReaping, primaryTarget, prio);
     }
 
     protected override float GetCastTime(AID aid) => aid == AID.Harpe && EnhancedHarpe > GCD ? 0 : base.GetCastTime(aid);
@@ -221,5 +309,8 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         return (nextPos, SoulReaver > GCD);
     }
 
-    private float DDLeft(Actor? target) => StatusDetails(target, SID.DeathsDesign, Player.InstanceID, 30).Left;
+    private float DDLeft(AIHints.Enemy? target)
+        => (target?.ForbidDOTs ?? false)
+            ? float.MaxValue
+            : StatusDetails(target?.Actor, SID.DeathsDesign, Player.InstanceID, 30).Left;
 }
