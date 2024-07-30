@@ -128,12 +128,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
-        if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            PushGCD(AID.SteeledMeditation, Player, priority: -1);
-
-        if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            PushGCD(AID.FormShift, Player, priority: -1);
-
         if (World.Client.CountdownRemaining > 0)
         {
             if (World.Client.CountdownRemaining < 0.2 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
@@ -180,6 +174,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                     PushGCD(OpoStacks == 0 && Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget); break;
             }
         }
+
+        if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
+            PushGCD(AID.SteeledMeditation, Player);
+
+        if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
+            PushGCD(AID.FormShift, Player);
     }
 
     private Form EffectiveForm
@@ -236,7 +236,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Player.InCombat || GCD == 0)
+        if (!Player.InCombat || GCD == 0 || primaryTarget == null)
             return;
 
         if (strategy.BuffsOk())
