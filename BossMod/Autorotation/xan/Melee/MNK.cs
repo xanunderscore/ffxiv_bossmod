@@ -129,10 +129,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         OGCD(strategy, primaryTarget);
 
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            PushGCD(AID.SteeledMeditation, Player, priority: -4500);
+            PushGCD(AID.SteeledMeditation, Player, priority: -1);
 
         if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            PushGCD(AID.FormShift, Player, priority: -4500);
+            PushGCD(AID.FormShift, Player, priority: -1);
 
         if (World.Client.CountdownRemaining > 0)
         {

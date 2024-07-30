@@ -41,12 +41,16 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
-    public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0)
-        => MathF.Max(cooldown, World.Client.AnimationLock) + actionLock + AnimationLockDelay <= GCD + GCDLength * extraGCDs;
-    public bool CanWeave(AID aid, int extraGCDs = 0)
+    public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0, float extraFixedDelay = 0)
+        => MathF.Max(cooldown, World.Client.AnimationLock) + actionLock + AnimationLockDelay <= GCD + GCDLength * extraGCDs + extraFixedDelay;
+    public bool CanWeave(AID aid, int extraGCDs = 0, float extraFixedDelay = 0)
     {
+        // TODO is this actually helpful?
+        if (!Unlocked(aid))
+            return false;
+
         var def = ActionDefinitions.Instance[ActionID.MakeSpell(aid)]!;
-        return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs);
+        return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs, extraFixedDelay);
     }
 
     protected AID NextGCD = default;
@@ -55,8 +59,14 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;
 
-    protected void PushGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
+    protected void PushGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
+        => PushGCD(aid, target, (int)(object)priority, delay);
+
+    protected void PushGCD(AID aid, Actor? target, int priority = 1, float delay = 0)
     {
+        if (priority == 0)
+            return;
+
         if (PushAction(aid, target, ActionQueue.Priority.High + priority, delay) && priority > NextGCDPrio)
         {
             NextGCD = aid;
@@ -64,7 +74,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         }
     }
 
-    protected void PushOGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
+    protected void PushOGCD(AID aid, Actor? target, int priority = 1, float delay = 0)
         => PushAction(aid, target, ActionQueue.Priority.Low + priority, delay);
 
     protected bool PushAction(AID aid, Actor? target, float priority, float delay)
