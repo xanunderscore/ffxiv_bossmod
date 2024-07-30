@@ -287,7 +287,16 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         PushGCD(EnhancedCrossReaping > GCD ? AID.CrossReaping : AID.VoidReaping, primaryTarget, prio);
     }
 
-    protected override float GetCastTime(AID aid) => aid == AID.Harpe && EnhancedHarpe > GCD ? 0 : base.GetCastTime(aid);
+    protected override float GetCastTime(AID aid)
+    {
+        if (aid == AID.Harpe && EnhancedHarpe > GCD)
+            return 0;
+
+        if (aid == AID.SoulSow && !Player.InCombat)
+            return 0;
+
+        return base.GetCastTime(aid);
+    }
 
     private (Positional, bool) GetNextPositional(Actor? primaryTarget)
     {
