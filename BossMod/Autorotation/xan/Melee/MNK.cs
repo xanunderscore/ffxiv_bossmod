@@ -210,6 +210,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
     }
 
+    // TODO the monk document is updated AGAIN, now we early PB in solar windows again?????????????
+    // FUCK
     private void QueuePB(StrategyValues strategy)
     {
         if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || FiresReplyLeft > GCD)
@@ -220,18 +222,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (BrotherhoodLeft == 0 && CD(AID.PerfectBalance) > 30)
             return;
 
-        // TODO forced solar in strategy
-        // default: solar in odd windows only, opener/2m is always lunar
-        var wantSolar = HasLunar && !HasSolar && FireLeft == 0;
-
-        // earliest we can press PB before next RoF
-        var gcdsAhead = wantSolar ? 1 : 2;
-
-        if (CanWeave(AID.RiddleOfFire, gcdsAhead))
-            PushOGCD(AID.PerfectBalance, Player);
-
-        // can PB if we have 4 GCDs worth of buff remaining
-        if (CanFitGCD(FireLeft, 3))
+        if (CanWeave(AID.RiddleOfFire, 3) || CanFitGCD(FireLeft, 3))
             PushOGCD(AID.PerfectBalance, Player);
     }
 
