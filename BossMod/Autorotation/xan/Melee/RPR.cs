@@ -113,7 +113,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         if (Soulsow)
             PushGCD(AID.HarvestMoon, BestRangedAOETarget, GCDPriority.HarvestMoon);
-        else
+        else if (!Hints.PriorityTargets.Any())
             PushGCD(AID.SoulSow, Player, GCDPriority.Soulsow);
 
         if (EnhancedHarpe > GCD)
@@ -144,7 +144,8 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (ImmortalSacrifice.Stacks > 0 && BloodsownCircle == 0)
             PushGCD(AID.PlentifulHarvest, BestLineTarget, GCDPriority.Harvest);
 
-        if (BlueSouls > 0)
+        // other GCDs are all disabled during enshroud
+        if (Enshrouded)
             return;
 
         if (RedGauge <= 50)
@@ -245,9 +246,11 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
     private void UseSoul(StrategyValues strategy, Actor? primaryTarget)
     {
+        // can't
         if (RedGauge < 50 || Enshrouded)
             return;
 
+        // don't, it would delay Plentiful Harvest
         if (ImmortalSacrifice.Stacks > 0 && CanWeave(BloodsownCircle, 0.6f, 1))
             return;
 
@@ -256,7 +259,16 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (CanFitGCD(debuffLeft, 2))
             PushOGCD(AID.Gluttony, BestRangedAOETarget);
 
-        if (CanFitGCD(debuffLeft, 1) && (RaidBuffsLeft > 0 || BlueGauge < 50) && !CanWeave(AID.Gluttony, 5))
+        // can't, we need to refresh debuff first and using sod removes Soul Reaver
+        if (!CanFitGCD(debuffLeft, 1))
+            return;
+
+        // use in raidbuffs
+        // use to get blue gauge, we need 50 before each 2min window
+        var spendEarly = RaidBuffsLeft > 0 || BlueGauge < 50;
+        var gluttonySoon = CanWeave(AID.Gluttony, 5);
+
+        if (RedGauge == 100 || spendEarly && !gluttonySoon)
         {
             if (NumConeTargets > 2)
                 PushOGCD(AID.GrimSwathe, BestConeTarget);
