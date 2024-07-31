@@ -101,6 +101,7 @@ public enum SID : uint
     Stun = 2,
     IdealHost = 3905,
     Oblatio = 3857,
+    Executioner = 3858,
 }
 
 public sealed class Definitions : IDisposable

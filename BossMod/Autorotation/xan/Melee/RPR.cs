@@ -30,6 +30,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
     public float EnhancedCrossReaping;
     public float EnhancedHarpe;
     public float Oblatio;
+    public float Executioner;
 
     public float TargetDDLeft;
     public float ShortestNearbyDDLeft;
@@ -45,7 +46,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
     public enum GCDPriority
     {
-        None = 0,
+        None = -1,
         Soulsow = 1,
         EnhancedHarpe = 100,
         HarvestMoon = 150,
@@ -85,6 +86,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         EnhancedCrossReaping = StatusLeft(SID.EnhancedCrossReaping);
         EnhancedHarpe = StatusLeft(SID.EnhancedHarpe);
         Oblatio = StatusLeft(SID.Oblatio);
+        Executioner = StatusLeft(SID.Executioner);
 
         var primaryEnemy = Hints.PotentialTargets.FirstOrDefault(x => x.Actor.InstanceID == primaryTarget?.InstanceID);
 
@@ -121,21 +123,25 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         DDRefresh(primaryTarget);
 
-        if (SoulReaver > GCD)
+        if (SoulReaver > GCD || Executioner > GCD)
         {
+            var gib = Executioner > GCD ? AID.ExecutionersGibbet : AID.Gibbet;
+            var gal = Executioner > GCD ? AID.ExecutionersGallows : AID.Gallows;
+            var gui = Executioner > GCD ? AID.ExecutionersGuillotine : AID.Guillotine;
+
             if (NumConeTargets > 2)
-                PushGCD(AID.Guillotine, BestConeTarget, GCDPriority.Reaver);
+                PushGCD(gui, BestConeTarget, GCDPriority.Reaver);
 
             if (primaryTarget != null)
             {
                 if (EnhancedGallows > GCD)
-                    PushGCD(AID.Gallows, primaryTarget, GCDPriority.Reaver);
+                    PushGCD(gal, primaryTarget, GCDPriority.Reaver);
                 else if (EnhancedGibbet > GCD)
-                    PushGCD(AID.Gibbet, primaryTarget, GCDPriority.Reaver);
+                    PushGCD(gib, primaryTarget, GCDPriority.Reaver);
                 else if (GetCurrentPositional(primaryTarget!) == Positional.Rear)
-                    PushGCD(AID.Gallows, primaryTarget, GCDPriority.Reaver);
+                    PushGCD(gal, primaryTarget, GCDPriority.Reaver);
                 else
-                    PushGCD(AID.Gibbet, primaryTarget, GCDPriority.Reaver);
+                    PushGCD(gib, primaryTarget, GCDPriority.Reaver);
             }
         }
 
@@ -181,14 +187,14 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (strategy.BuffsOk())
         {
             // wait for soul slice in opener
-            if (CD(AID.SoulSlice) > 0 || CombatTimer > 20)
+            if (RedGauge > 0)
                 PushOGCD(AID.ArcaneCircle, Player, delay: GCD - 1.6f);
         }
 
         if (NextPositionalImminent && !NextPositionalCorrect)
             PushOGCD(AID.TrueNorth, Player, delay: GCD - 0.8f);
 
-        if (SoulReaver > 0)
+        if (SoulReaver > 0 || Executioner > 0)
             return;
 
         if (Oblatio > 0 && (RaidBuffsLeft > 0 || CD(AID.ArcaneCircle) > EnshroudLeft))
@@ -327,7 +333,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             nextPos = closest == Positional.Front ? Positional.Flank : closest;
         }
 
-        return (nextPos, SoulReaver > GCD);
+        return (nextPos, SoulReaver > GCD || Executioner > GCD);
     }
 
     private float DDLeft(AIHints.Enemy? target)

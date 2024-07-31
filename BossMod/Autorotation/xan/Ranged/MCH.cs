@@ -117,7 +117,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (NumAOETargets > 2)
             PushGCD(AID.Bioblaster, BestAOETarget);
 
-        PushGCD(AID.Drill, primaryTarget, priority: CD(AID.Drill) <= GCD ? 20 : 1);
+        PushGCD(AID.Drill, primaryTarget, priority: CD(AID.Drill) <= GCD ? 20 : 0);
 
         // TODO work out priorities
         if (FMFLeft > GCD && ExcavatorLeft == 0)
