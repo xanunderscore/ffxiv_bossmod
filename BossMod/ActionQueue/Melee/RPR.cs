@@ -102,6 +102,8 @@ public enum SID : uint
     IdealHost = 3905,
     Oblatio = 3857,
     Executioner = 3858,
+    PerfectioOcculta = 3859,
+    PerfectioParata = 3860
 }
 
 public sealed class Definitions : IDisposable

@@ -31,6 +31,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
     public float EnhancedHarpe;
     public float Oblatio;
     public float Executioner;
+    public float PerfectioParata;
 
     public float TargetDDLeft;
     public float ShortestNearbyDDLeft;
@@ -87,6 +88,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         EnhancedHarpe = StatusLeft(SID.EnhancedHarpe);
         Oblatio = StatusLeft(SID.Oblatio);
         Executioner = StatusLeft(SID.Executioner);
+        PerfectioParata = StatusLeft(SID.PerfectioParata);
 
         var primaryEnemy = Hints.PotentialTargets.FirstOrDefault(x => x.Actor.InstanceID == primaryTarget?.InstanceID);
 
@@ -115,7 +117,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         if (Soulsow)
             PushGCD(AID.HarvestMoon, BestRangedAOETarget, GCDPriority.HarvestMoon);
-        else if (!Hints.PriorityTargets.Any())
+        else if (!Player.InCombat)
             PushGCD(AID.SoulSow, Player, GCDPriority.Soulsow);
 
         if (EnhancedHarpe > GCD)
@@ -144,6 +146,9 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
                     PushGCD(gib, primaryTarget, GCDPriority.Reaver);
             }
         }
+
+        if (PerfectioParata > GCD)
+            PushGCD(AID.Perfectio, BestRangedAOETarget, GCDPriority.Communio);
 
         EnshroudGCDs(strategy, primaryTarget);
 
@@ -258,6 +263,10 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         // don't, it would delay Plentiful Harvest
         if (ImmortalSacrifice.Stacks > 0 && CanWeave(BloodsownCircle, 0.6f, 1))
+            return;
+
+        // don't, we would immediately overwrite Soul Reaver with Perfectio
+        if (CanFitGCD(PerfectioParata))
             return;
 
         var debuffLeft = Math.Min(TargetDDLeft, ShortestNearbyDDLeft);
