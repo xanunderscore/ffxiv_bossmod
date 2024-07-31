@@ -159,7 +159,8 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (Enshrouded)
             return;
 
-        if (RedGauge <= 50)
+        // manually check CD since queue will be delayed in certain circumstances otherwise
+        if (RedGauge <= 50 && NextChargeIn(AID.SoulSlice) <= GCD)
         {
             if (NumConeTargets > 2)
                 PushGCD(AID.SoulScythe, BestConeTarget, GCDPriority.SoulSlice);
