@@ -130,10 +130,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         // minimize priority of these actions
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            PushOGCD(AID.SteeledMeditation, Player);
+            PushAction(AID.SteeledMeditation, Player, ActionQueue.Priority.Minimal + 1, 0);
 
         if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            PushOGCD(AID.FormShift, Player);
+            PushAction(AID.FormShift, Player, ActionQueue.Priority.Minimal + 1, 0);
 
         if (World.Client.CountdownRemaining > 0)
         {
@@ -227,7 +227,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         if (CanWeave(AID.RiddleOfFire, 3) || CanFitGCD(FireLeft, 3))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.PerfectBalance), Player, ActionQueue.Priority.ManualOGCD + 1);
+            PushAction(AID.PerfectBalance, Player, ActionQueue.Priority.ManualOGCD + 1, 0);
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
@@ -240,10 +240,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             QueuePB(strategy);
 
             if (CombatTimer >= 10 || BeastCount == 3)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.Brotherhood), Player, ActionQueue.Priority.ManualOGCD + 3);
+                PushAction(AID.Brotherhood, Player, ActionQueue.Priority.ManualOGCD + 3, 0);
 
             if (ShouldRoF)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.RiddleOfFire), Player, ActionQueue.Priority.ManualOGCD + 2);
+                PushAction(AID.RiddleOfFire, Player, ActionQueue.Priority.ManualOGCD + 2, GCD - 0.8f);
 
             if (CD(AID.RiddleOfFire) > 0)
                 PushOGCD(AID.RiddleOfWind, Player);
