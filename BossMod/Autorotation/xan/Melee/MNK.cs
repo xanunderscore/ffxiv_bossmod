@@ -128,16 +128,20 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
+        // minimize priority of these actions
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.SteeledMeditation), Player, ActionQueue.Priority.Medium);
+            PushOGCD(AID.SteeledMeditation, Player);
 
         if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.FormShift), Player, ActionQueue.Priority.Medium);
+            PushOGCD(AID.FormShift, Player);
 
         if (World.Client.CountdownRemaining > 0)
         {
             if (World.Client.CountdownRemaining < 0.2 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
+
+            if (World.Client.CountdownRemaining is > 7 and < 8)
+                PushGCD(AID.FormShift, Player);
 
             return;
         }
@@ -223,7 +227,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         if (CanWeave(AID.RiddleOfFire, 3) || CanFitGCD(FireLeft, 3))
-            PushOGCD(AID.PerfectBalance, Player);
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.PerfectBalance), Player, ActionQueue.Priority.ManualOGCD + 1);
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
@@ -236,10 +240,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             QueuePB(strategy);
 
             if (CombatTimer >= 10 || BeastCount == 3)
-                PushOGCD(AID.Brotherhood, Player);
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.Brotherhood), Player, ActionQueue.Priority.ManualOGCD + 3);
 
             if (ShouldRoF)
-                PushOGCD(AID.RiddleOfFire, Player, delay: GCD - 0.8f);
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.RiddleOfFire), Player, ActionQueue.Priority.ManualOGCD + 2);
 
             if (CD(AID.RiddleOfFire) > 0)
                 PushOGCD(AID.RiddleOfWind, Player);
