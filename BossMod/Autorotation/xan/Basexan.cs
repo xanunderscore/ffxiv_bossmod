@@ -56,7 +56,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs, extraFixedDelay);
     }
 
-    protected AID NextGCD = default;
+    protected AID NextGCD;
     protected int NextGCDPrio;
     protected uint MP;
 

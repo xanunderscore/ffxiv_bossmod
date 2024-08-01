@@ -70,7 +70,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
 
-    public static readonly int AOEBreakpoint = 4;
+    public const int AOEBreakpoint = 4;
     public bool UseAOE => NumAOETargets >= AOEBreakpoint;
 
     private (Positional, bool) NextPositional => UseAOE

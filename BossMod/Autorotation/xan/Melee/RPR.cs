@@ -101,8 +101,8 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             case AOEStrategy.ForceAOE:
                 var nearbyDD = Hints.PriorityTargets.Where(x => Player.DistanceToHitbox(x.Actor) <= 5).Select(DDLeft);
                 var minNeeded = strategy.AOE() == AOEStrategy.ForceAOE ? 1 : 2;
-                if (nearbyDD.Count(x => x < 30) >= minNeeded)
-                    ShortestNearbyDDLeft = nearbyDD.Min();
+                if (MinIfEnoughElements(nearbyDD.Where(x => x < 30), minNeeded) is float m)
+                    ShortestNearbyDDLeft = m;
                 break;
         }
 
@@ -358,4 +358,17 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         => (target?.ForbidDOTs ?? false)
             ? float.MaxValue
             : StatusDetails(target?.Actor, SID.DeathsDesign, Player.InstanceID, 30).Left;
+
+    private float? MinIfEnoughElements(IEnumerable<float> collection, int minElements)
+    {
+        float min = float.MaxValue;
+        var elements = 0;
+        foreach (var flt in collection)
+        {
+            elements++;
+            min = MathF.Min(flt, min);
+        }
+
+        return elements >= minElements ? min : null;
+    }
 }
