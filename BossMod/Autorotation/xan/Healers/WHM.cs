@@ -5,7 +5,7 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
 {
     public enum Track { Raise = SharedTrack.Count, Assize, Misery }
     public enum RaiseStrategy { None, Fast, Slow }
-    public enum AssizeStrategy { HitAny, HitAll, Heal }
+    public enum AssizeStrategy { None, HitSomething, HitEverything }
     public enum MiseryStrategy { ASAP, BuffedOnly, Delay }
 
     public static RotationModuleDefinition Definition()
@@ -18,9 +18,9 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
             .AddOption(RaiseStrategy.Fast, "Fast", "Raise if Swiftcast is available")
             .AddOption(RaiseStrategy.Slow, "Slow", "Always raise, hardcast if necessary");
         def.Define(Track.Assize).As<AssizeStrategy>("Assize")
-            .AddOption(AssizeStrategy.HitAny, "HitAny", "Use if it would hit any priority target")
-            .AddOption(AssizeStrategy.HitAll, "HitAll", "Use if it would hit all priority targets")
-            .AddOption(AssizeStrategy.Heal, "Heal", "Use to heal teammates");
+            .AddOption(AssizeStrategy.None, "None", "Don't automatically use")
+            .AddOption(AssizeStrategy.HitSomething, "HitSomething", "Use if it would hit any priority target")
+            .AddOption(AssizeStrategy.HitEverything, "HitEverything", "Use if it would hit all priority targets");
         def.Define(Track.Misery).As<MiseryStrategy>("Afflatus Misery")
             .AddOption(MiseryStrategy.ASAP, "ASAP", "Use on best target at 3 Blood Lilies")
             .AddOption(MiseryStrategy.BuffedOnly, "Buffs", "Use during raid buffs")
@@ -97,22 +97,16 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
         if (RaidBuffsLeft >= 15 || RaidBuffsIn > 9000)
             PushOGCD(AID.PresenceOfMind, Player);
 
-        if (CD(AID.Assize) < GCD)
+        switch (strategy.Option(Track.Assize).As<AssizeStrategy>())
         {
-            switch (strategy.Option(Track.Assize).As<AssizeStrategy>())
-            {
-                case AssizeStrategy.HitAll:
-                    if (NumAssizeTargets == Hints.PriorityTargets.Count())
-                        PushOGCD(AID.Assize, Player);
-                    break;
-                case AssizeStrategy.HitAny:
-                    if (NumAssizeTargets > 0)
-                        PushOGCD(AID.Assize, Player);
-                    break;
-                case AssizeStrategy.Heal:
-                    // implement me!
-                    break;
-            }
+            case AssizeStrategy.HitEverything:
+                if (NumAssizeTargets == Hints.PriorityTargets.Count())
+                    PushOGCD(AID.Assize, Player);
+                break;
+            case AssizeStrategy.HitSomething:
+                if (NumAssizeTargets > 0)
+                    PushOGCD(AID.Assize, Player);
+                break;
         }
 
         if (MP <= 7000)
