@@ -69,92 +69,105 @@ class ReplayDetailsWindow : UIWindow
 
         DrawControlRow();
         DrawTimelineRow();
-        ImGui.TextUnformatted($"Num loaded modules: {_mgr.LoadedModules.Count}, num active modules: {_mgr.LoadedModules.Count(m => m.StateMachine.ActiveState != null)}, active module: {_mgr.ActiveModule?.GetType()}");
-        if (!_azimuthOverride)
-            _azimuth = _mgr.WorldState.Client.CameraAzimuth.Deg;
-        ImGui.DragFloat("Camera azimuth", ref _azimuth, 1, -180, 180);
-        ImGui.SameLine();
-        ImGui.Checkbox("Override", ref _azimuthOverride);
-        if (_mgr.ActiveModule != null)
+
+        if (ImGui.BeginTable("table", 2, ImGuiTableFlags.SizingStretchSame))
         {
-            _hintsBuilder.Update(_hints, _povSlot);
-            _rmm.Update(0, float.MaxValue);
+            ImGui.TableSetupColumn("###arena");
+            ImGui.TableSetupColumn("###meta");
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
 
-            var drawTimerPre = DateTime.Now;
-            _mgr.ActiveModule.Draw(_azimuthOverride ? _azimuth.Degrees() : _mgr.WorldState.Client.CameraAzimuth, _povSlot, true, true);
-            var drawTimerPost = DateTime.Now;
-
-            var compList = string.Join(", ", _mgr.ActiveModule.Components.Select(c => c.GetType().Name));
-            var pov = _mgr.WorldState.Party[_povSlot];
-            var povOffsetString = "";
-            if (pov != null)
+            ImGui.TextUnformatted($"Num loaded modules: {_mgr.LoadedModules.Count}, num active modules: {_mgr.LoadedModules.Count(m => m.StateMachine.ActiveState != null)}, active module: {_mgr.ActiveModule?.GetType()}");
+            if (!_azimuthOverride)
+                _azimuth = _mgr.WorldState.Client.CameraAzimuth.Deg;
+            ImGui.DragFloat("Camera azimuth", ref _azimuth, 1, -180, 180);
+            ImGui.SameLine();
+            ImGui.Checkbox("Override", ref _azimuthOverride);
+            if (_mgr.ActiveModule != null)
             {
-                var povOffset = pov.Position - _mgr.ActiveModule.Center;
-                povOffsetString = $"{povOffset} [R={povOffset.Length():f3}, dir={Angle.FromDirection(povOffset)}]";
-            }
-            ImGui.TextUnformatted($"Current state: {_mgr.ActiveModule.StateMachine.ActiveState?.ID:X}, Time since pull: {_mgr.ActiveModule.StateMachine.TimeSinceActivation:f3}, Draw time: {(drawTimerPost - drawTimerPre).TotalMilliseconds:f3}ms, Components: {compList}, Player offset: {povOffsetString}, Draw cache: {_mgr.ActiveModule.Arena.DrawCacheStats()}");
+                _hintsBuilder.Update(_hints, _povSlot);
+                _rmm.Update(0, float.MaxValue);
 
-            if (ImGui.CollapsingHeader("Plan execution"))
-            {
-                if (ImGui.Button("Timeline"))
+                var drawTimerPre = DateTime.Now;
+                _mgr.ActiveModule.Draw(_azimuthOverride ? _azimuth.Degrees() : _mgr.WorldState.Client.CameraAzimuth, _povSlot, true, true);
+                var drawTimerPost = DateTime.Now;
+
+                var compList = string.Join(", ", _mgr.ActiveModule.Components.Select(c => c.GetType().Name));
+                var pov = _mgr.WorldState.Party[_povSlot];
+                var povOffsetString = "";
+                if (pov != null)
                 {
-                    _ = new StateMachineWindow(_mgr.ActiveModule);
+                    var povOffset = pov.Position - _mgr.ActiveModule.Center;
+                    povOffsetString = $"{povOffset} [R={povOffset.Length():f3}, dir={Angle.FromDirection(povOffset)}]";
                 }
+                ImGui.TextUnformatted($"Current state: {_mgr.ActiveModule.StateMachine.ActiveState?.ID:X}, Time since pull: {_mgr.ActiveModule.StateMachine.TimeSinceActivation:f3}, Draw time: {(drawTimerPost - drawTimerPre).TotalMilliseconds:f3}ms, Components: {compList}, Player offset: {povOffsetString}, Draw cache: {_mgr.ActiveModule.Arena.DrawCacheStats()}");
 
-                if (_mgr.ActiveModule.Info?.PlanLevel > 0)
+                ImGui.TableNextColumn();
+
+                if (ImGui.CollapsingHeader("Plan execution"))
                 {
-                    ImGui.SameLine();
-                    var plans = _rotationDB.Plans.GetPlans(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
-                    var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "Plan");
-                    if (newSel != plans.SelectedIndex)
+                    if (ImGui.Button("Timeline"))
                     {
-                        plans.SelectedIndex = newSel;
-                        _rotationDB.Plans.ModifyManifest(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
+                        _ = new StateMachineWindow(_mgr.ActiveModule);
                     }
 
-                    ImGui.SameLine();
-                    if (ImGui.Button(plans.SelectedIndex >= 0 ? "Edit" : "New"))
+                    if (_mgr.ActiveModule.Info?.PlanLevel > 0)
                     {
-                        if (plans.SelectedIndex < 0)
+                        ImGui.SameLine();
+                        var plans = _rotationDB.Plans.GetPlans(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
+                        var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "Plan");
+                        if (newSel != plans.SelectedIndex)
                         {
-                            var plan = new Plan($"New {plans.Plans.Count + 1}", _mgr.ActiveModule.GetType()) { Guid = Guid.NewGuid().ToString(), Class = _mgr.WorldState.Party.Player()?.Class ?? Class.None, Level = _mgr.ActiveModule.Info.PlanLevel };
-                            plans.SelectedIndex = plans.Plans.Count;
-                            _rotationDB.Plans.ModifyPlan(null, plan);
+                            plans.SelectedIndex = newSel;
+                            _rotationDB.Plans.ModifyManifest(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
                         }
 
-                        var enc = _player.Replay.Encounters.FirstOrDefault(e => e.InstanceID == _mgr.ActiveModule.PrimaryActor.InstanceID);
-                        if (enc != null)
+                        ImGui.SameLine();
+                        if (ImGui.Button(plans.SelectedIndex >= 0 ? "Edit" : "New"))
                         {
-                            _ = new ReplayTimelineWindow(_player.Replay, enc, new(1), _rotationDB.Plans, this);
+                            if (plans.SelectedIndex < 0)
+                            {
+                                var plan = new Plan($"New {plans.Plans.Count + 1}", _mgr.ActiveModule.GetType()) { Guid = Guid.NewGuid().ToString(), Class = _mgr.WorldState.Party.Player()?.Class ?? Class.None, Level = _mgr.ActiveModule.Info.PlanLevel };
+                                plans.SelectedIndex = plans.Plans.Count;
+                                _rotationDB.Plans.ModifyPlan(null, plan);
+                            }
+
+                            var enc = _player.Replay.Encounters.FirstOrDefault(e => e.InstanceID == _mgr.ActiveModule.PrimaryActor.InstanceID);
+                            if (enc != null)
+                            {
+                                _ = new ReplayTimelineWindow(_player.Replay, enc, new(1), _rotationDB.Plans, this);
+                            }
                         }
                     }
-                }
 
-                // TODO: more fancy action history/queue...
-                ImGui.TextUnformatted($"Modules: {_rmm}");
-                ImGui.TextUnformatted($"GCD={_mgr.WorldState.Client.Cooldowns[ActionDefinitions.GCDGroup].Remaining:f3}, AnimLock={_mgr.WorldState.Client.AnimationLock:f3}, Combo={_mgr.WorldState.Client.ComboState.Remaining:f3}, RBIn={_mgr.RaidCooldowns.NextDamageBuffIn():f3}");
-                var player = _mgr.WorldState.Party.Player();
-                if (player != null)
-                {
-                    var best = _hints.ActionsToExecute.FindBest(_mgr.WorldState, player, _mgr.WorldState.Client.Cooldowns, _mgr.WorldState.Client.AnimationLock, _hints, 0.02f);
-                    ImGui.TextUnformatted($"! {best.Action} ({best.Priority:f2}) in {best.Delay:f3}");
-                }
-                foreach (var a in _hints.ActionsToExecute.Entries)
-                {
-                    ImGui.TextUnformatted($"> {a.Action} ({a.Priority:f2}) in {a.Delay:f3}");
+                    // TODO: more fancy action history/queue...
+                    ImGui.TextUnformatted($"Modules: {_rmm}");
+                    ImGui.TextUnformatted($"GCD={_mgr.WorldState.Client.Cooldowns[ActionDefinitions.GCDGroup].Remaining:f3}, AnimLock={_mgr.WorldState.Client.AnimationLock:f3}, Combo={_mgr.WorldState.Client.ComboState.Remaining:f3}, RBIn={_mgr.RaidCooldowns.NextDamageBuffIn():f3}");
+                    var player = _mgr.WorldState.Party.Player();
+                    if (player != null)
+                    {
+                        var best = _hints.ActionsToExecute.FindBest(_mgr.WorldState, player, _mgr.WorldState.Client.Cooldowns, _mgr.WorldState.Client.AnimationLock, _hints, 0.02f);
+                        ImGui.TextUnformatted($"! {best.Action} ({best.Priority:f2}) in {best.Delay:f3}");
+                    }
+                    foreach (var a in _hints.ActionsToExecute.Entries)
+                    {
+                        ImGui.TextUnformatted($"> {a.Action} ({a.Priority:f2}) in {a.Delay:f3}");
+                    }
                 }
             }
+
+            DrawPartyTable();
+            DrawEnemyTables();
+            DrawAllActorsTable();
+            DrawAI();
+
+            if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
+                _events.Draw();
+            if (ImGui.CollapsingHeader("Analysis"))
+                _analysis.Draw();
+
+            ImGui.EndTable();
         }
-
-        DrawPartyTable();
-        DrawEnemyTables();
-        DrawAllActorsTable();
-        DrawAI();
-
-        if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
-            _events.Draw();
-        if (ImGui.CollapsingHeader("Analysis"))
-            _analysis.Draw();
     }
 
     private void DrawControlRow()
