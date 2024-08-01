@@ -84,9 +84,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (IsPausedForFlamethrower)
             return;
 
-        if (World.Client.CountdownRemaining > 0)
+        if (CountdownRemaining > 0)
         {
-            if (World.Client.CountdownRemaining < 0.4f)
+            if (CountdownRemaining < 0.4)
                 PushGCD(AID.AirAnchor, primaryTarget);
 
             return;
@@ -147,7 +147,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (World.Client.CountdownRemaining is > 0 and < 5 && ReassembleLeft == 0)
+        if (CountdownRemaining is > 0 and < 5 && ReassembleLeft == 0)
             PushOGCD(AID.Reassemble, Player);
 
         if (IsPausedForFlamethrower || !Player.InCombat || primaryTarget == null)

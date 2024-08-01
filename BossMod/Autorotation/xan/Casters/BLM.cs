@@ -89,9 +89,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
         (BestAOETarget, NumAOETargets) = SelectTargetByHP(strategy, primaryTarget, 25, IsSplashTarget);
 
-        if (World.Client.CountdownRemaining > 0)
+        if (CountdownRemaining > 0)
         {
-            if (World.Client.CountdownRemaining < GetCastTime(AID.Fire3))
+            if (CountdownRemaining < GetCastTime(AID.Fire3))
                 PushGCD(AID.Fire3, primaryTarget);
 
             return;

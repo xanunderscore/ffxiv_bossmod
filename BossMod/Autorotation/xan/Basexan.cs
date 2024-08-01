@@ -28,6 +28,9 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float AnimationLockDelay { get; private set; }
     protected float RaidBuffsIn { get; private set; }
     protected float RaidBuffsLeft { get; private set; }
+    protected float DowntimeIn { get; private set; }
+
+    protected float? CountdownRemaining => World.Client.CountdownRemaining;
 
     protected float AttackGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
     protected float SpellGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
@@ -281,7 +284,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     {
         var pelo = Player.FindStatus(BRD.SID.Peloton);
         PelotonLeft = pelo != null ? StatusDuration(pelo.Value.ExpireAt) : 0;
-        SwiftcastLeft = StatusLeft(WHM.SID.Swiftcast);
+        SwiftcastLeft = StatusLeft(BossMod.WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
 
         ForceMovementIn = forceMovementIn;
@@ -289,6 +292,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
         (RaidBuffsLeft, RaidBuffsIn) = EstimateRaidBuffTimings(primaryTarget);
+        DowntimeIn = Manager.Planner?.EstimateTimeToNextDowntime().Item2 ?? float.MaxValue;
 
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);

@@ -172,7 +172,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
             PushOGCD(AID.Druochole, healTarget);
         }
 
-        if (Player.HPMP.CurMP <= 7000)
+        if (MP <= 7000)
             PushOGCD(AID.LucidDreaming, Player);
 
         if (NumRangedAOETargets > 0)

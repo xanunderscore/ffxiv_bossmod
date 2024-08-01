@@ -7,7 +7,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 {
     public static RotationModuleDefinition Definition()
     {
-        var def = new RotationModuleDefinition("RPR", "Reaper", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.RPR), 100);
+        var def = new RotationModuleDefinition("xan RPR", "Reaper", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.RPR), 100);
 
         def.DefineShared().AddAssociatedActions(AID.ArcaneCircle);
 
@@ -119,6 +119,14 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             PushGCD(AID.HarvestMoon, BestRangedAOETarget, GCDPriority.HarvestMoon);
         else if (!Player.InCombat)
             PushGCD(AID.SoulSow, Player, GCDPriority.Soulsow);
+
+        if (CountdownRemaining > 0)
+        {
+            if (CountdownRemaining < 1.7)
+                PushGCD(AID.Harpe, primaryTarget);
+
+            return;
+        }
 
         if (EnhancedHarpe > GCD)
             PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);

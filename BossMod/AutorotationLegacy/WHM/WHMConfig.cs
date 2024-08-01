@@ -1,6 +1,7 @@
 ﻿namespace BossMod;
 
 // TODO: reconsider all this...
+/*
 [ConfigDisplay(Parent = typeof(ActionTweaksConfig))]
 class WHMConfig : ConfigNode
 {
@@ -10,3 +11,4 @@ class WHMConfig : ConfigNode
     [PropertyDisplay("Never overcap blood lilies: cast misery instead of solace/rapture if needed")]
     public bool NeverOvercapBloodLilies = false;
 }
+*/

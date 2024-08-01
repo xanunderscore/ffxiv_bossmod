@@ -68,9 +68,9 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
 
         CalcNextBestOGCD(strategy, primaryTarget);
 
-        if (World.Client.CountdownRemaining > 0)
+        if (CountdownRemaining > 0)
         {
-            if (World.Client.CountdownRemaining < 2)
+            if (CountdownRemaining < GetCastTime(AID.HolySpirit))
                 PushGCD(AID.HolySpirit, BestRangedTarget);
 
             return;
