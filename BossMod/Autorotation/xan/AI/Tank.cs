@@ -162,10 +162,10 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         if (EnemiesAutoingMe.Count() > 1)
         {
-            if (HPRatio < 0.8)
+            if (HPRatio() < 0.8)
                 Hints.ActionsToExecute.Push(JobActions.ShortMit, Player, ActionQueue.Priority.Minimal);
 
-            if (HPRatio < 0.6)
+            if (HPRatio() < 0.6)
                 // set arbitrary deadline to 1 second in the future
                 UseOneMit(1);
         }
@@ -179,7 +179,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         if (strategy.Enabled(Track.Mit) && EnemiesAutoingMe.Any())
         {
-            if (HPRatio < 0.8 && Player.FindStatus(BossMod.GNB.SID.Aurora) == null)
+            if (HPRatio() < 0.8 && Player.FindStatus(BossMod.GNB.SID.Aurora) == null)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.GNB.AID.Aurora), Player, ActionQueue.Priority.Minimal);
         }
     }
@@ -188,10 +188,10 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     {
         if (strategy.Enabled(Track.Mit) && EnemiesAutoingMe.Any())
         {
-            if (HPRatio < 0.75)
+            if (HPRatio() < 0.75)
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(WAR.AID.Bloodwhetting), Player, ActionQueue.Priority.Low, delay: GCD - 1f);
 
-            if (HPRatio < 0.5)
+            if (HPRatio() < 0.5)
             {
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(WAR.AID.ThrillOfBattle), Player, ActionQueue.Priority.Low);
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(WAR.AID.Equilibrium), Player, ActionQueue.Priority.Low);

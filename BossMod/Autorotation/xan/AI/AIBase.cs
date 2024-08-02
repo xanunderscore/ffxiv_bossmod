@@ -26,7 +26,11 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Rota
 
     internal IEnumerable<AIHints.Enemy> EnemiesAutoingMe => Hints.PriorityTargets.Where(x => x.Actor.CastInfo == null && x.Actor.TargetID == Player.InstanceID && Player.DistanceToHitbox(x.Actor) <= 6);
 
-    internal float HPRatio => (float)Player.HPMP.CurHP / Player.HPMP.MaxHP;
+    internal float HPRatio(Actor actor) => (float)actor.HPMP.CurHP / Player.HPMP.MaxHP;
+    internal float HPRatio() => HPRatio(Player);
+
+    internal uint PredictedHP(Actor actor) => (uint)Math.Clamp(actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID), 0, actor.HPMP.MaxHP);
+    internal float PredictedHPRatio(Actor actor) => (float)PredictedHP(actor) / actor.HPMP.MaxHP;
 
     internal IEnumerable<DateTime> Raidwides => Hints.PredictedDamage.Where(d => World.Party.WithSlot().IncludedInMask(d.players).Count() >= 2).Select(t => t.activation);
     internal IEnumerable<(Actor, DateTime)> Tankbusters

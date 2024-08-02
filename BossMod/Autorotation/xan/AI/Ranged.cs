@@ -41,7 +41,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
         // second wind
-        if (strategy.Enabled(Track.SecondWind) && Player.InCombat && HPRatio <= 0.5)
+        if (strategy.Enabled(Track.SecondWind) && Player.InCombat && HPRatio() <= 0.5)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
     }
 

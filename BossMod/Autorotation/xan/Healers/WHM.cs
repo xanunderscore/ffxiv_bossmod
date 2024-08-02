@@ -86,10 +86,12 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Holy1, Player);
 
         // TODO make a track for this
-        if (Lily == 3 || !CanFitGCD(NextLily, 1) && Lily == 2)
+        if (Lily == 3 || !CanFitGCD(NextLily, 2) && Lily == 2)
         {
-            var healTarget = World.Party.WithoutSlot().MinBy(x => x.HPMP.CurHP / x.HPMP.MaxHP);
-            PushGCD(AID.AfflatusSolace, healTarget);
+            if (World.Party.WithoutSlot().Average(PredictedHPRatio) < 0.9)
+                PushGCD(AID.AfflatusRapture, Player, 1);
+
+            PushGCD(AID.AfflatusSolace, World.Party.WithoutSlot().MinBy(PredictedHPRatio), 1);
         }
 
         PushGCD(AID.Stone1, primaryTarget);

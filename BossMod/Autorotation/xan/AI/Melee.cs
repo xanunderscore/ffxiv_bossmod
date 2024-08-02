@@ -19,11 +19,11 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
             return;
 
         // second wind
-        if (strategy.Enabled(Track.SecondWind) && Player.InCombat && HPRatio <= 0.5)
+        if (strategy.Enabled(Track.SecondWind) && Player.InCombat && HPRatio() <= 0.5)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
 
         // bloodbath
-        if (strategy.Enabled(Track.Bloodbath) && Player.InCombat && HPRatio <= 0.75)
+        if (strategy.Enabled(Track.Bloodbath) && Player.InCombat && HPRatio() <= 0.75)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bloodbath), Player, ActionQueue.Priority.Medium);
 
         // low blow
@@ -41,7 +41,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
     private void AISAM()
     {
         // if nearby enemies are auto-attacking us, use guard skill
-        if (HPRatio <= 0.8 && EnemiesAutoingMe.Any())
+        if (HPRatio() <= 0.8 && EnemiesAutoingMe.Any())
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.SAM.AID.ThirdEye), Player, ActionQueue.Priority.Low);
     }
 }
