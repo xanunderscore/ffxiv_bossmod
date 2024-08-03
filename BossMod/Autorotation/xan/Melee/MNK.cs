@@ -132,16 +132,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
             PushAction(AID.SteeledMeditation, Player, ActionQueue.Priority.Minimal + 1, 0);
 
-        if (Unlocked(AID.FormShift) && PerfectBalanceLeft == 0 && FormShiftLeft < 5)
-            PushAction(AID.FormShift, Player, ActionQueue.Priority.Minimal + 1, 0);
-
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining is > 7 and < 8)
+            if (CountdownRemaining is > 2 and < 8 && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
-
-            if (CountdownRemaining < 1.4)
-                Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionStr, Player, ActionQueue.Priority.Low);
 
             if (CountdownRemaining < 0.4 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);

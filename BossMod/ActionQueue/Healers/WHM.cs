@@ -162,6 +162,7 @@ public sealed class Definitions : IDisposable
     private void Customize(ActionDefinitions d)
     {
         d.RegisterChargeIncreaseTrait(AID.DivineBenison, TraitID.EnhancedDivineBenison);
+        d.RegisterChargeIncreaseTrait(AID.Tetragrammaton, TraitID.EnhancedTetragrammaton);
 
         d.Spell(AID.AetherialShift)!.TransformAngle = (ws, _, _, _) => _config.AlignDashToCamera
             ? ws.Client.CameraAzimuth + 180.Degrees()

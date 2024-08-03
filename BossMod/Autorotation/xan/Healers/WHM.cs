@@ -32,12 +32,14 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
     public uint Lily;
     public uint BloodLily;
     public float NextLily;
+    public int SacredSight;
 
     public float TargetDotLeft;
 
     public int NumHolyTargets;
     public int NumAssizeTargets;
     public int NumMiseryTargets;
+    public int NumSolaceTargets;
 
     private Actor? BestMiseryTarget;
 
@@ -51,9 +53,13 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
         Lily = gauge.Lily;
         BloodLily = gauge.BloodLily;
 
+        SacredSight = StatusStacks(SID.SacredSight);
+
         NumHolyTargets = NumNearbyTargets(strategy, 8);
         NumAssizeTargets = NumNearbyTargets(strategy, 15);
         (BestMiseryTarget, NumMiseryTargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
+
+        NumSolaceTargets = World.Party.WithoutSlot().Count(x => Player.DistanceToHitbox(x) <= 20);
 
         TargetDotLeft = DotLeft(primaryTarget);
 
@@ -88,13 +94,19 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
         // TODO make a track for this
         if (Lily == 3 || !CanFitGCD(NextLily, 2) && Lily == 2)
         {
-            if (World.Party.WithoutSlot().Average(PredictedHPRatio) < 0.9)
+            if (World.Party.WithoutSlot().Average(PredictedHPRatio) < 0.8 && NumSolaceTargets == World.Party.WithoutSlot().Count())
                 PushGCD(AID.AfflatusRapture, Player, 1);
 
             PushGCD(AID.AfflatusSolace, World.Party.WithoutSlot().MinBy(PredictedHPRatio), 1);
         }
 
+        if (SacredSight > 0)
+            PushGCD(AID.GlareIV, primaryTarget);
+
         PushGCD(AID.Stone1, primaryTarget);
+
+        if (!Player.InCombat)
+            return;
 
         if (RaidBuffsLeft >= 15 || RaidBuffsIn > 9000)
             PushOGCD(AID.PresenceOfMind, Player);
