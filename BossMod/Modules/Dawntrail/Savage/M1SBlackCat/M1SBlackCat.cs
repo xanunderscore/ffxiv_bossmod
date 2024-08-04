@@ -1,3 +1,4 @@
+
 namespace BossMod.Dawntrail.Savage.M1SBlackCat;
 
 public enum OID : uint
@@ -147,6 +148,7 @@ class BlackCatStates : StateMachineBuilder
         Cast(id + 0x11100, AID._Spell_Soulshade, 2, 3);
         LeapingQuadrupleCrossing(id + 0x12000, 2.6f);
         Cast(id + 0x12100, AID._Weaponskill_BloodyScratch, 5.6f, 5, "Raidwide");
+        Mouser(id + 0x20000, 13.4f);
 
         Timeout(0x80000, 800, "Enrage");
     }
@@ -204,6 +206,19 @@ class BlackCatStates : StateMachineBuilder
         Condition(id, delay, () => !(Module.FindComponent<QuadrupleSwipe>()?.Active ?? false) && !(Module.FindComponent<DoubleSwipe>()?.Active ?? false) && !(Module.FindComponent<QuadrupleSwipe2>()?.Active ?? false), "Stacks");
     }
 
+    private void Mouser(uint id, float delay)
+    {
+        CastStart(id, AID._Weaponskill_Mouser, delay, "Mouser start")
+            .ActivateOnEnter<Mouser>();
+        ComponentCondition<Mouser>(id + 0x10, 10.1f, comp => comp.NumCasts >= 28, "Show tiles");
+        ComponentCondition<Mouser>(id + 0x20, 10.1f, comp => comp.NumTiles == 4, "Destroy tiles").OnExit(() =>
+        {
+            var horiz = Module.FindComponent<Mouser>()!.IsHorizontal;
+            Module.Arena.Bounds = horiz ? BlackCat.SmallBoundsEW : BlackCat.SmallBoundsNS;
+        });
+        Cast(id + 0x30, AID._Spell_Copycat, 7.8f, 3, "Clone");
+    }
+
     //private void XXX(uint id, float delay)
 }
 
@@ -212,6 +227,84 @@ class QuadrupleSwipe2(BossModule module) : Components.StackWithCastTargets(modul
 class DoubleSwipe(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_DoubleSwipe1), 4, 4);
 
 class BloodyScratch(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Weaponskill_BloodyScratch));
+
+class Mouser(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<(DateTime, WPos)> _recorded = [];
+
+    enum TileState
+    {
+        Normal = 0,
+        Damaged = 1,
+        Destroyed = 2
+    }
+
+    public bool IsHorizontal => TileStates[0] == TileState.Destroyed && TileStates[1] == TileState.Destroyed && TileStates[2] == TileState.Destroyed && TileStates[3] == TileState.Destroyed;
+
+    public int NumTiles => TileStates.Count(x => x != TileState.Destroyed);
+
+    private readonly TileState[] TileStates = new TileState[16];
+    private static readonly List<Vector2> TileCenters = [
+        new(85, 85),
+        new(95, 85),
+        new(105, 85),
+        new(115, 85),
+        new(85, 95),
+        new(95, 95),
+        new(105, 95),
+        new(115, 95),
+        new(85, 105),
+        new(95, 105),
+        new(105, 105),
+        new(115, 105),
+        new(85, 115),
+        new(95, 115),
+        new(105, 115),
+        new(115, 115),
+    ];
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID is AID._Weaponskill_2 or AID._Weaponskill_3)
+        {
+            NumCasts++;
+            _recorded.Add((WorldState.CurrentTime.AddSeconds(10.45f), caster.Position));
+        }
+    }
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _recorded.Where(x => x.Item1 > WorldState.CurrentTime).Zip(Enumerable.Range(1, int.MaxValue)).Select(aoe => new AOEInstance(new AOEShapeRect(5, 5, 5), aoe.First.Item2, default, aoe.First.Item1, aoe.Second < 4 ? ArenaColor.Danger : ArenaColor.AOE)).Take(6);
+
+    public override void OnEventEnvControl(byte index, uint state)
+    {
+        if (state == 0x20001)
+            TileStates[index] = TileState.Damaged;
+        if (state == 0x200010)
+            TileStates[index] = TileState.Destroyed;
+        if (state == 0x1000004)
+            TileStates[index] = TileState.Normal;
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        base.DrawArenaBackground(pcSlot, pc);
+
+        for (var i = 0; i < TileStates.Length; i++)
+        {
+            var tile = TileStates[i];
+            switch (tile)
+            {
+                case TileState.Normal:
+                    break;
+                case TileState.Damaged:
+                    new AOEShapeRect(5, 5, 5).Draw(Module.Arena, new WPos(TileCenters[i]), default, 0x20ffffff);
+                    break;
+                case TileState.Destroyed:
+                    new AOEShapeRect(5, 5, 5).Draw(Module.Arena, new WPos(TileCenters[i]), default, 0x206666ff);
+                    break;
+            }
+        }
+    }
+}
 
 class LeapingQuadrupleCrossing(BossModule module) : Crossing(module, AID._Weaponskill_LeapingQuadrupleCrossing, () => module.Enemies(OID._Gen_).FirstOrDefault() ?? module.PrimaryActor, AID._Weaponskill_LeapingQuadrupleCrossing2, AID._Weaponskill_LeapingQuadrupleCrossing4);
 
@@ -390,4 +483,9 @@ class AddsOneTwoPaw1(BossModule module) : Components.SelfTargetedAOEs(module, Ac
 class AddsOneTwoPaw2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_OneTwoPaw5), new AOEShapeCone(100, 90.Degrees()));
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 986, NameID = 12686)]
-public class BlackCat(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsSquare(20)) { }
+public class BlackCat(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsSquare(20))
+{
+    public static readonly ArenaBoundsRect DefaultBounds = new(20, 20);
+    public static readonly ArenaBoundsRect SmallBoundsNS = new(10, 20);
+    public static readonly ArenaBoundsRect SmallBoundsEW = new(20, 10);
+}
