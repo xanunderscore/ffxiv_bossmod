@@ -16,15 +16,16 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
     public AstrologianCard Arcana;
     public int NumCards => Cards.Count(x => x != AstrologianCard.None);
 
-    public float TargetDotLeft;
     public float LightspeedLeft;
     public float DivinationLeft;
     public float Divining;
+    public float TargetDotLeft;
 
     public int NumCrownTargets;
     public int NumAOETargets;
 
     private Actor? BestAOETarget;
+    private Actor? BestDotTarget;
 
     protected override float GetCastTime(AID aid)
     {
@@ -51,14 +52,7 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
 
         (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
         NumCrownTargets = NumNearbyTargets(strategy, 20);
-
-        TargetDotLeft = MathF.Max(
-            StatusDetails(primaryTarget, SID.Combust, Player.InstanceID).Left,
-            MathF.Max(
-                StatusDetails(primaryTarget, SID.CombustII, Player.InstanceID).Left,
-                StatusDetails(primaryTarget, SID.CombustIII, Player.InstanceID).Left
-            )
-        );
+        (BestDotTarget, TargetDotLeft) = SelectDotTarget(strategy, primaryTarget, CombustLeft, 2);
 
         OGCD(strategy, primaryTarget);
 
@@ -74,7 +68,7 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Gravity, BestAOETarget);
 
         if (!CanFitGCD(TargetDotLeft, 1))
-            PushGCD(AID.Combust, primaryTarget);
+            PushGCD(AID.Combust, BestDotTarget);
 
         PushGCD(AID.Malefic, primaryTarget);
     }
@@ -116,6 +110,12 @@ public sealed class AST(RotationModuleManager manager, Actor player) : Castxan<A
 
         return LightspeedLeft == 0 && (DivinationLeft > 10 || CanWeave(AID.Divination, 2));
     }
+
+    private float CombustLeft(Actor? actor) => actor == null ? float.MaxValue : Utils.MaxAll(
+        StatusDetails(actor, SID.Combust, Player.InstanceID).Left,
+        StatusDetails(actor, SID.CombustII, Player.InstanceID).Left,
+        StatusDetails(actor, SID.CombustIII, Player.InstanceID).Left
+    );
 
     private bool HaveLord => Unlocked(AID.MinorArcana) && Arcana == AstrologianCard.Lord;
     private bool HaveBuffCard => Cards[0] != AstrologianCard.None;

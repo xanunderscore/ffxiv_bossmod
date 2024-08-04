@@ -78,7 +78,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         Firestarter = StatusLeft(SID.Firestarter);
         InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
 
-        TargetThunderLeft = MaxAll(
+        TargetThunderLeft = Utils.MaxAll(
             StatusDetails(primaryTarget, SID.Thunder, Player.InstanceID, 24).Left,
             StatusDetails(primaryTarget, SID.ThunderII, Player.InstanceID, 18).Left,
             StatusDetails(primaryTarget, SID.ThunderIII, Player.InstanceID, 27).Left,
@@ -321,13 +321,5 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             return Fire > 0 && MP < 800 || Ice > 0 && Hearts > 0 && MP >= 2400;
         else
             return Firestarter > GCD && Ice > 0 && Hearts == MaxHearts;
-    }
-
-    private float MaxAll(float first, params float[] rest)
-    {
-        foreach (var f in rest)
-            first = MathF.Max(f, first);
-
-        return first;
     }
 }

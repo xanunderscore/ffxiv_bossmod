@@ -63,8 +63,15 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     private void AutoRaise(StrategyValues strategy)
     {
         var swiftcast = StatusDetails(Player, (uint)BossMod.WHM.SID.Swiftcast, Player.InstanceID, 15).Left;
-        var swiftcastCD = Cooldown(BossMod.WHM.AID.Swiftcast);
+        var thinair = StatusDetails(Player, (uint)BossMod.WHM.SID.ThinAir, Player.InstanceID, 12).Left;
+        var swiftcastCD = NextChargeIn(BossMod.WHM.AID.Swiftcast);
         var raise = strategy.Option(Track.Raise).As<RaiseStrategy>();
+
+        void UseThinAir()
+        {
+            if (thinair == 0 && Player.Class == Class.WHM)
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.ThinAir), Player, ActionQueue.Priority.VeryHigh + 3);
+        }
 
         switch (raise)
         {
@@ -72,13 +79,19 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 break;
             case RaiseStrategy.Hardcast:
                 if (swiftcast == 0 && GetRaiseTarget(strategy) is Actor tar)
+                {
+                    UseThinAir();
                     Hints.ActionsToExecute.Push(RaiseAction, tar, ActionQueue.Priority.VeryHigh);
+                }
                 break;
             case RaiseStrategy.Swiftcast:
                 if (GetRaiseTarget(strategy) is Actor tar2)
                 {
                     if (swiftcast > GCD)
+                    {
+                        UseThinAir();
                         Hints.ActionsToExecute.Push(RaiseAction, tar2, ActionQueue.Priority.VeryHigh);
+                    }
                     else
                         Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Swiftcast), Player, ActionQueue.Priority.VeryHigh);
                 }
@@ -86,6 +99,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             case RaiseStrategy.Slowcast:
                 if (GetRaiseTarget(strategy) is Actor tar3)
                 {
+                    UseThinAir();
                     Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Swiftcast), Player, ActionQueue.Priority.VeryHigh + 2);
                     if (swiftcastCD > 8)
                         Hints.ActionsToExecute.Push(RaiseAction, tar3, ActionQueue.Priority.VeryHigh + 1);
@@ -103,12 +117,20 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             _ => World.Party.WithoutSlot(true, true)
         };
 
-        return candidates.Where(x => x.IsDead && Player.DistanceToHitbox(x) <= 30 && x.FindStatus(BossMod.WHM.SID.Raise) == null).MaxBy(actor => actor.Class.GetRole() switch
+        return candidates.Where(x => x.IsDead && Player.DistanceToHitbox(x) <= 30 && !BeingRaised(x)).MaxBy(actor => actor.Class.GetRole() switch
         {
             Role.Healer => 5,
             Role.Tank => 4,
             _ => actor.Class is Class.RDM or Class.SMN or Class.ACN ? 3 : 2
         });
+    }
+
+    private bool BeingRaised(Actor actor)
+    {
+        if (Player.FindStatus(BossMod.WHM.SID.Raise) != null)
+            return true;
+
+        return World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BossMod.WHM.SID.Raise) != null;
     }
 
     private void AutoWHM(StrategyValues strategy)

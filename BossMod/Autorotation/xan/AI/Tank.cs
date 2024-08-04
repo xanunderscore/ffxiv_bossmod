@@ -89,7 +89,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
             Hints.ActionsToExecute.Push(JobActions.Stance, Player, ActionQueue.Priority.Minimal);
 
         // interrupt
-        if (strategy.Enabled(Track.Interject) && Cooldown(ClassShared.AID.Interject) == 0)
+        if (strategy.Enabled(Track.Interject) && NextChargeIn(ClassShared.AID.Interject) == 0)
         {
             var interruptibleEnemy = Hints.PotentialTargets.FirstOrDefault(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (interruptibleEnemy != null)
@@ -97,7 +97,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         }
 
         // low blow
-        if (strategy.Enabled(Track.Stun) && Cooldown(ClassShared.AID.LowBlow) == 0)
+        if (strategy.Enabled(Track.Stun) && NextChargeIn(ClassShared.AID.LowBlow) == 0)
         {
             var stunnableEnemy = Hints.PotentialTargets.Find(e => ShouldStun(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (stunnableEnemy != null)
@@ -223,7 +223,7 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
 
     private (bool Ready, bool Active, bool Usable) GetMitStatus(ActionID action, float actionDuration, float deadline, Func<RotationModule, bool>? resourceCheck = null)
     {
-        var currentCD = Cooldown(action);
+        var currentCD = NextChargeIn(action);
         var maxCD = ActionDefinitions.Instance[action]!.Cooldown;
         var effectRemaining = MathF.Max(0, actionDuration + currentCD - maxCD);
         var ready = currentCD < deadline;

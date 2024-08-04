@@ -21,7 +21,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             _pelotonLockout = World.CurrentTime;
 
         // interrupt
-        if (strategy.Enabled(Track.Interrupt) && Cooldown(ClassShared.AID.HeadGraze) == 0)
+        if (strategy.Enabled(Track.Interrupt) && NextChargeIn(ClassShared.AID.HeadGraze) == 0)
         {
             var interruptibleEnemy = Hints.PotentialTargets.FirstOrDefault(e => ShouldInterrupt(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 25);
             if (interruptibleEnemy != null)
@@ -47,12 +47,12 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private bool PelotonWillExpire(Actor actor)
     {
-        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BRD.SID.Peloton);
+        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BossMod.BRD.SID.Peloton);
         if (pending != null)
             // just applied, should have >30s remaining duration, assume that's fine
             return false;
 
-        var status = actor.FindStatus((uint)BRD.SID.Peloton);
+        var status = actor.FindStatus((uint)BossMod.BRD.SID.Peloton);
         if (status == null)
             return true;
 

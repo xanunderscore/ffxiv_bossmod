@@ -5,8 +5,8 @@ namespace BossMod.Autorotation.xan;
 public abstract class AIBase(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
     internal bool Unlocked<AID>(AID aid) where AID : Enum => ActionUnlocked(ActionID.MakeSpell(aid));
-    internal float Cooldown<AID>(AID aid) where AID : Enum => Cooldown(ActionID.MakeSpell(aid));
-    internal float Cooldown(ActionID action) => World.Client.Cooldowns[ActionDefinitions.Instance[action]!.MainCooldownGroup].Remaining;
+    internal float NextChargeIn<AID>(AID aid) where AID : Enum => NextChargeIn(ActionID.MakeSpell(aid));
+    internal float NextChargeIn(ActionID action) => ActionDefinitions.Instance[action]!.ReadyIn(World.Client.Cooldowns);
 
     internal static ActionID Spell<AID>(AID aid) where AID : Enum => ActionID.MakeSpell(aid);
 

@@ -27,7 +27,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bloodbath), Player, ActionQueue.Priority.Medium);
 
         // low blow
-        if (strategy.Enabled(Track.Stun) && Cooldown(ClassShared.AID.LegSweep) == 0)
+        if (strategy.Enabled(Track.Stun) && NextChargeIn(ClassShared.AID.LegSweep) == 0)
         {
             var stunnableEnemy = Hints.PotentialTargets.FirstOrDefault(e => ShouldStun(e.Actor) && Player.DistanceToHitbox(e.Actor) <= 3);
             if (stunnableEnemy != null)

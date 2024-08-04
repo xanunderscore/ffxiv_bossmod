@@ -107,11 +107,9 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     }
 
     /// <summary>
-    /// Tries to select a suitable primary target.<br/>
-    ///
-    /// If the provided <paramref name="primaryTarget"/> is null, an NPC, or non-enemy object; it will be reset to <c>null</c>.<br/>
-    ///
-    /// Additionally, if <paramref name="range"/> is set to <c>Targeting.Auto</c>, and the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table. If no closer target is found, <paramref name="primaryTarget"/> will remain unchanged.
+    /// <para>Tries to select a suitable primary target.</para>
+    /// <para>If the provided <paramref name="primaryTarget"/> is null, an NPC, or non-enemy object; it will be reset to <c>null</c>.</para>
+    /// <para>Additionally, if <paramref name="range"/> is set to <c>Targeting.Auto</c>, and the user's current target is more than <paramref name="range"/> yalms from the player, this function attempts to find a closer one. No prioritization is done; if any target is returned, it is simply the actor that was earliest in the object table. If no closer target is found, <paramref name="primaryTarget"/> will remain unchanged.</para>
     /// </summary>
     /// <param name="strategy">Targeting strategy</param>
     /// <param name="primaryTarget">Player's current target - may be null</param>
@@ -209,6 +207,54 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         return (bestTarget, bestPrio);
     }
 
+    /// <summary>
+    /// <para>Find a good target to apply a DoT effect to. Has no effect if auto-targeting is disabled.</para>
+    /// <para>If <c>Hints.PriorityTargets</c> contains more than <c>maxAllowedTargets</c>, <c>null</c> will be returned. Enemies with <c>ForbidDOTs = true</c> are not counted in this case.</para>
+    /// </summary>
+    /// <typeparam name="P"></typeparam>
+    /// <param name="strategy"></param>
+    /// <param name="initial"></param>
+    /// <param name="getTimer"></param>
+    /// <param name="maxAllowedTargets"></param>
+    /// <returns></returns>
+    protected (Actor? Target, P Timer) SelectDotTarget<P>(StrategyValues strategy, Actor? initial, Func<Actor?, P> getTimer, int maxAllowedTargets) where P : struct, IComparable
+    {
+        switch (strategy.Targeting())
+        {
+            case Targeting.Manual:
+            case Targeting.AutoPrimary:
+                return (initial, getTimer(initial));
+            case Targeting.AutoTryPri:
+                if (initial != null)
+                    return (initial, getTimer(initial));
+                break;
+        }
+
+        var newTarget = initial;
+        var initialTimer = getTimer(initial);
+        var newTimer = initialTimer;
+
+        var numTargets = 0;
+
+        foreach (var dotTarget in Hints.PriorityTargets)
+        {
+            if (dotTarget.ForbidDOTs)
+                continue;
+
+            if (++numTargets > maxAllowedTargets)
+                return (null, getTimer(null));
+
+            var thisTimer = getTimer(dotTarget.Actor);
+            if (thisTimer.CompareTo(newTimer) < 0)
+            {
+                newTarget = dotTarget.Actor;
+                newTimer = thisTimer;
+            }
+        }
+
+        return (newTarget, newTimer);
+    }
+
     protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);
 
     protected int NumNearbyTargets(StrategyValues strategy, float range) => AdjustNumTargets(strategy, Hints.NumPriorityTargetsInAOECircle(Player.Position, range));
@@ -282,7 +328,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
-        var pelo = Player.FindStatus(BRD.SID.Peloton);
+        var pelo = Player.FindStatus(BossMod.BRD.SID.Peloton);
         PelotonLeft = pelo != null ? StatusDuration(pelo.Value.ExpireAt) : 0;
         SwiftcastLeft = StatusLeft(BossMod.WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
