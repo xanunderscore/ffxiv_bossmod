@@ -22,7 +22,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         Class.CNJ or Class.WHM => ActionID.MakeSpell(BossMod.WHM.AID.Raise),
         Class.ACN or Class.SCH => ActionID.MakeSpell(SCH.AID.Resurrection),
-        Class.AST => ActionID.MakeSpell(AST.AID.Ascend),
+        Class.AST => ActionID.MakeSpell(BossMod.AST.AID.Ascend),
         Class.SGE => ActionID.MakeSpell(BossMod.SGE.AID.Egeiro),
         _ => default
     };

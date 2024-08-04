@@ -50,7 +50,6 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
     public float GrandImpact;
     public float Prefulgence;
 
-    public uint HighestMana => Math.Max(BlackMana, WhiteMana);
     public uint LowestMana => Math.Min(BlackMana, WhiteMana);
 
     public int NumAOETargets;
