@@ -138,7 +138,10 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
         );
         if (threat != null)
         {
-            Hints.ActionsToExecute.Push(JobActions.Ranged, threat.Actor, ActionQueue.Priority.VeryHigh);
+            if (Player.DistanceToHitbox(threat.Actor) > 3)
+                Hints.ActionsToExecute.Push(JobActions.Ranged, threat.Actor, ActionQueue.Priority.VeryHigh);
+            else
+                Hints.ForcedTarget = threat.Actor;
 
             // fate mobs are immune to provoke
             if (threat.Actor.FateID == 0)

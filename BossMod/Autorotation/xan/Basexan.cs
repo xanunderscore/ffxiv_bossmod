@@ -348,7 +348,8 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     private new (float Left, float In) EstimateRaidBuffTimings(Actor? primaryTarget)
     {
-        if (primaryTarget?.OID != 0x385)
+        // striking dummy that spawns in Explorer Mode
+        if (primaryTarget?.OID != 0x2DE0)
             return (Bossmods.RaidCooldowns.DamageBuffLeft(Player), Bossmods.RaidCooldowns.NextDamageBuffIn2());
 
         return base.EstimateRaidBuffTimings(primaryTarget);

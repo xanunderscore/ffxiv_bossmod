@@ -20,46 +20,14 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
 
     public float Darkside => Gauge.DarksideTimer * 0.001f;
     public int Blood => Gauge.Blood;
+    public bool DarkArts => Gauge.DarkArtsState == 1;
 
-    private void CalcNextBestGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (Delirium > 0)
-            PushGCD(AID.Bloodspiller, primaryTarget);
+    public int NumAOETargets;
+    public int NumRangedAOETargets;
+    public int NumLineTargets;
 
-        if (ComboLastMove == AID.SyphonStrike)
-            PushGCD(AID.Souleater, primaryTarget);
-
-        if (ComboLastMove == AID.HardSlash)
-            PushGCD(AID.SyphonStrike, primaryTarget);
-
-        PushGCD(AID.HardSlash, primaryTarget);
-    }
-
-    private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget)
-    {
-        if (primaryTarget == null)
-            return;
-
-        if (Darkside < 20)
-            PushOGCD(AID.EdgeOfDarkness, primaryTarget);
-
-        PushOGCD(AID.LivingShadow, Player);
-
-        if (Blood > 0)
-            PushOGCD(AID.Delirium, Player);
-
-        if (CD(AID.Delirium) > 0)
-        {
-            PushOGCD(AID.SaltedEarth, Player);
-
-            PushOGCD(AID.Shadowbringer, primaryTarget);
-
-            PushOGCD(AID.CarveAndSpit, primaryTarget);
-
-            if (SaltedEarth > 0)
-                PushOGCD(AID.SaltAndDarkness, Player);
-        }
-    }
+    private Actor? BestRangedAOETarget;
+    private Actor? BestLineTarget;
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -71,7 +39,96 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
         Delirium = StatusStacks(SID.Delirium);
         SaltedEarth = StatusLeft(SID.SaltedEarth);
 
-        CalcNextBestGCD(strategy, primaryTarget);
-        CalcNextBestOGCD(strategy, primaryTarget);
+        NumAOETargets = NumMeleeAOETargets(strategy);
+        (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
+        (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, (primary, other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2));
+
+        OGCD(strategy, primaryTarget);
+
+        if (CountdownRemaining > 0)
+        {
+            return;
+        }
+
+        if (Darkside > GCD && ShouldBlood(strategy))
+        {
+            if (NumAOETargets > 2)
+                PushGCD(AID.Quietus, Player);
+
+            PushGCD(AID.Bloodspiller, primaryTarget);
+        }
+
+        if (NumAOETargets > 2)
+        {
+            if (ComboLastMove == AID.Unleash)
+                PushGCD(AID.StalwartSoul, Player);
+
+            PushGCD(AID.Unleash, Player);
+        }
+
+        if (ComboLastMove == AID.SyphonStrike)
+            PushGCD(AID.Souleater, primaryTarget);
+
+        if (ComboLastMove == AID.HardSlash)
+            PushGCD(AID.SyphonStrike, primaryTarget);
+
+        PushGCD(AID.HardSlash, primaryTarget);
+    }
+
+    private void OGCD(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (primaryTarget == null || !Player.InCombat)
+            return;
+
+        var mpNeeded = Unlocked(AID.TheBlackestNight) ? 6000 : 3000;
+
+        if (MP >= mpNeeded || DarkArts)
+        {
+            if (NumLineTargets > 2)
+                PushOGCD(AID.FloodOfDarkness, BestLineTarget);
+
+            PushOGCD(AID.EdgeOfDarkness, primaryTarget);
+        }
+
+        PushOGCD(AID.LivingShadow, Player);
+
+        if (Blood > 0)
+            PushOGCD(AID.Delirium, Player);
+
+        if (CD(AID.Delirium) > 0)
+        {
+            if (NumAOETargets > 0)
+                PushOGCD(AID.SaltedEarth, Player);
+
+            if (NumLineTargets > 0)
+                PushOGCD(AID.Shadowbringer, BestLineTarget);
+
+            if (NumRangedAOETargets > 2)
+                PushOGCD(AID.AbyssalDrain, BestRangedAOETarget);
+
+            PushOGCD(AID.CarveAndSpit, primaryTarget);
+
+            if (SaltedEarth > 0)
+                PushOGCD(AID.SaltAndDarkness, Player);
+        }
+    }
+
+    private bool ShouldBlood(StrategyValues strategy)
+    {
+        if (Darkside < GCD)
+            return false;
+
+        if (Delirium > 0)
+            return true;
+
+        if (Blood < 50)
+            return false;
+
+        if (RaidBuffsLeft > GCD)
+            return true;
+
+        var impendingBlood = ComboLastMove == (NumAOETargets > 2 ? AID.Unleash : AID.Souleater);
+
+        return Blood + (impendingBlood ? 20 : 0) > 100;
     }
 }
