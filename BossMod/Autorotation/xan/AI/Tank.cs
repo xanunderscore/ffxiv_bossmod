@@ -128,11 +128,9 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
     private void AutoProtect()
     {
         var threat = Hints.PriorityTargets.FirstOrDefault(x =>
-            World.Actors.Find(x.Actor.TargetID) is Actor victim
-            // assume that during dungeon pull, we can clip these guys with AOE actions and don't need to worry about provoke
-            // update this doesn't really work, see paired mobs on ihuykatumu boat, etc
-            // they sit in melee range and one aggros onto party member - need to find a better way
-            // && Player.DistanceToHitbox(x.Actor) > 3
+            // skip all of this for fates mobs, we can't provoke them and probably don't care about this anyway
+            x.Actor.FateID == 0
+            && World.Actors.Find(x.Actor.TargetID) is Actor victim
             && victim.IsAlly
             && victim.Class.GetRole() != Role.Tank
         );
@@ -141,11 +139,10 @@ public class TankAI(RotationModuleManager manager, Actor player) : AIBase(manage
             if (Player.DistanceToHitbox(threat.Actor) > 3)
                 Hints.ActionsToExecute.Push(JobActions.Ranged, threat.Actor, ActionQueue.Priority.VeryHigh);
             else
+                // in case all mobs are in melee range, but there aren't enough mobs to switch to aoe
                 Hints.ForcedTarget = threat.Actor;
 
-            // fate mobs are immune to provoke
-            if (threat.Actor.FateID == 0)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Provoke), threat.Actor, ActionQueue.Priority.Medium);
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Provoke), threat.Actor, ActionQueue.Priority.Medium);
         }
 
         foreach (var rw in Raidwides)

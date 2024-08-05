@@ -92,10 +92,10 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
 
         PushOGCD(AID.LivingShadow, Player);
 
-        if (Blood > 0)
+        if (Blood > 0 || !Unlocked(TraitID.Blackblood))
             PushOGCD(AID.Delirium, Player);
 
-        if (CD(AID.Delirium) > 0)
+        if (!CanWeave(AID.Delirium))
         {
             if (NumAOETargets > 0)
                 PushOGCD(AID.SaltedEarth, Player);
