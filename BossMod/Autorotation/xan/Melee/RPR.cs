@@ -201,7 +201,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (strategy.BuffsOk())
         {
             // wait for soul slice in opener
-            if (RedGauge > 0)
+            if (CD(AID.SoulSlice) > 0 || CombatTimer > 60)
                 PushOGCD(AID.ArcaneCircle, Player, delay: GCD - 1.6f);
         }
 
