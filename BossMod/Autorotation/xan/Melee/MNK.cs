@@ -128,13 +128,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
-        // minimize priority of these actions
-        if (Chakra < 5 && Unlocked(AID.SteeledMeditation))
-            PushAction(AID.SteeledMeditation, Player, ActionQueue.Priority.Minimal + 1, 0);
+        if (Chakra < 5 && Unlocked(AID.SteeledMeditation) && (!Player.InCombat || primaryTarget == null))
+            PushGCD(AID.SteeledMeditation, Player);
 
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining is > 2 and < 8 && FormShiftLeft == 0)
+            if (CountdownRemaining is > 2 and < 11.8f && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
 
             if (CountdownRemaining < 0.4 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
