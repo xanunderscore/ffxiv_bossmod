@@ -10,6 +10,8 @@ assignees: ''
 **Bug description**
 e.g. "Reaper using Enshroud too early before raid buffs"
 
-**Replay info**
-- [ ] I have a(n anonymized) video recording of this interaction - it's attached to the issue or linked below
-- [ ] I have a replay file and I will DM it to you upon request - alternatively, I don't care about remaining anonymous and will attach it to the issue
+**Replay info** - only one choice is needed
+- [ ] I have a(n anonymized) video recording of this interaction
+- [ ] I have a replay file and I will DM it to you upon request (or just post it here if I don't care about privacy)
+- [ ] I can attach my `/xllog` from when the issue occurred
+- [ ] I have a screenshot of or link to xivanalysis
