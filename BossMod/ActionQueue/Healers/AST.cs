@@ -110,6 +110,7 @@ public enum SID : uint
 
 public sealed class Definitions : IDisposable
 {
+    private readonly ASTConfig _config = Service.Config.Get<ASTConfig>();
     public Definitions(ActionDefinitions d)
     {
         d.RegisterSpell(AID.AstralStasis, castAnimLock: 8.10f); // animLock=8.100s?
@@ -172,6 +173,26 @@ public sealed class Definitions : IDisposable
         d.RegisterChargeIncreaseTrait(AID.EssentialDignity, TraitID.EnhancedEssentialDignity);
         d.RegisterChargeIncreaseTrait(AID.EssentialDignity, TraitID.EnhancedEssentialDignityII);
         d.RegisterChargeIncreaseTrait(AID.CelestialIntersection, TraitID.EnhancedCelestialIntersection);
+
+        d.Spell(AID.EarthlyStar)!.TransformPosition = (bmm, player, target, hints) =>
+        {
+            Vector3? arenaCenter()
+            {
+                if (bmm.ActiveModule?.Arena.Center is WPos p)
+                    return new Vector3(p.X, player.PosRot.Y, p.Z);
+
+                return null;
+            }
+
+            return _config.StarPlacement switch
+            {
+                ASTConfig.Placement.Target => target?.PosRot.XYZ() ?? null,
+                ASTConfig.Placement.ArenaOrTarget => arenaCenter() ?? target?.PosRot.XYZ(),
+                ASTConfig.Placement.Self => player.PosRot.XYZ(),
+                ASTConfig.Placement.ArenaOrSelf => arenaCenter() ?? player.PosRot.XYZ(),
+                _ => null
+            };
+        };
     }
 }
 

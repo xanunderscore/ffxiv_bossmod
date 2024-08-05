@@ -75,7 +75,7 @@ public sealed class Plugin : IDalamudPlugin
         _hints = new();
         _bossmod = new(_ws);
         _hintsBuilder = new(_ws, _bossmod);
-        _amex = new(_ws, _hints);
+        _amex = new(_bossmod, _hints);
         _wsSync = new(_ws, _amex);
         _rotation = new(_rotationDB, _bossmod, _hints);
         _ai = new(_rotation, _amex);
