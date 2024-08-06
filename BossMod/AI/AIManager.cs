@@ -13,8 +13,8 @@ sealed class AIManager : IDisposable
     private readonly RotationModuleManager _autorot;
     private readonly AIController _controller;
     private readonly AIConfig _config;
-    private int MasterSlot => (int)_config.FollowSlot; // non-zero means corresponding player is master
-    private Positional PreferedPositional => _config.PreferedPositional;
+    private int MasterSlot => _config.FollowSlot < -1 ? _config.FollowSlot = -1 : (_config.FollowSlot == 0 ? _config.FollowSlot = PartyState.PlayerSlot : (_config.FollowSlot >= WorldState.Party.WithoutSlot().Count() ? _config.FollowSlot = (WorldState.Party.WithoutSlot().Count() - 1) : _config.FollowSlot)); // non-zero means corresponding player is master
+    private int PreferedPositional => _config.PreferedPositional <= 0 ? _config.PreferedPositional = 0 : (_config.PreferedPositional > 3 ? _config.PreferedPositional = 3 : _config.PreferedPositional);
     private AIBehaviour? _beh;
     private Preset? _aiPreset;
     private readonly UISimpleWindow _ui;
@@ -68,7 +68,7 @@ sealed class AIManager : IDisposable
         ImGui.TextUnformatted($"Navi={_controller.NaviTargetPos} / {_controller.NaviTargetRot}{(_controller.ForceFacing ? " forced" : "")}");
         _beh?.DrawDebug();
 
-        using (var leaderCombo = ImRaii.Combo("Follow", _beh == null ? "<idle>" : (_config.FollowTarget ? "<target>" : WorldState.Party[MasterSlot]?.Name ?? "<unknown>")))
+        using (var leaderCombo = ImRaii.Combo("Follow", _beh == null ? "<idle>" : (MasterSlot >= 0 ? WorldState.Party[MasterSlot]?.Name ?? "<unknown>" : "<target>")))
         {
             if (leaderCombo)
             {
@@ -76,33 +76,31 @@ sealed class AIManager : IDisposable
                 {
                     SwitchToIdle();
                 }
-                if (ImGui.Selectable("<target>", _config.FollowTarget))
+                if (ImGui.Selectable("<target>", MasterSlot == -1))
                 {
-                    _config.FollowSlot = 0;
-                    _config.FollowTarget = true;
-                    SwitchToFollow(0);
+                    _config.FollowSlot = -1;
+                    SwitchToFollow(-1);
                 }
                 foreach (var (i, p) in WorldState.Party.WithSlot(true))
                 {
                     if (ImGui.Selectable(p.Name, MasterSlot == i))
                     {
-                        _config.FollowSlot = (AIConfig.Slot)i;
-                        _config.FollowTarget = false;
+                        _config.FollowSlot = i;
                         SwitchToFollow(i);
                     }
                 }
             }
         }
 
-        using (var positionalCombo = ImRaii.Combo("Positional", $"{PreferedPositional}"))
+        using (var positionalCombo = ImRaii.Combo("Positional", $"{(Positional)PreferedPositional}"))
         {
             if (positionalCombo)
             {
                 for (var i = 0; i < 4; i++)
                 {
-                    if (ImGui.Selectable($"{(Positional)i}", PreferedPositional == (Positional)i))
+                    if (ImGui.Selectable($"{(Positional)i}", PreferedPositional == i))
                     {
-                        _config.PreferedPositional = (Positional)i;
+                        _config.PreferedPositional = i;
                     }
                 }
             }
@@ -160,7 +158,7 @@ sealed class AIManager : IDisposable
     private void SwitchToFollow(int masterSlot)
     {
         SwitchToIdle();
-        _config.FollowSlot = (AIConfig.Slot)masterSlot;
+        _config.FollowSlot = masterSlot;
         _beh = new AIBehaviour(_controller, _autorot, _aiPreset);
     }
 

@@ -50,8 +50,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             AdjustTargetPositional(player, ref target);
         }
 
-        target.PreferredPosition = _config.PreferedPositional;
-        target.PreferTanking = _config.PreferedPositional != Positional.Any;
+        target.PreferredPosition = (Positional)_config.PreferedPositional;
+        target.PreferTanking = (Positional)_config.PreferedPositional != Positional.Any;
         target.PreferredRange = _config.FollowRange;
 
         _followMaster = master != player && (autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null || _config.FollowActiveBM) && (!master.InCombat || _config.FollowInCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100) && (player.InCombat || _config.FollowOOC);
