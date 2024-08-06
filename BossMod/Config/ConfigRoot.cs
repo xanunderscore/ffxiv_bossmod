@@ -127,37 +127,29 @@ public class ConfigRoot
                     foreach (var f in matchingFields)
                         result.Add($"- {f.Name}");
                 }
-                /*else if (args.Count == 2)
+                else if (args.Count == 2)
                 {
                     result.Add("Usage: /vbm cfg <config-type> <field> <value>");
                     result.Add($"Type of {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} is {matchingFields[0].FieldType.Name}");
-                }*/
+                }
                 else
                 {
                     try
                     {
-                        if (args.Count == 2)
-                            result.Add(matchingFields[0].GetValue(matchingNodes[0])?.ToString() ?? $"Failed to get value of '{args[2]}'");
+                        var val = FromConsoleString(args[2], matchingFields[0].FieldType);
+                        if (val == null)
+                        {
+                            result.Add($"Failed to convert '{args[2]}' to {matchingFields[0].FieldType}");
+                        }
                         else
                         {
-                            var val = FromConsoleString(args[2], matchingFields[0].FieldType);
-                            if (val == null)
-                            {
-                                result.Add($"Failed to convert '{args[2]}' to {matchingFields[0].FieldType}");
-                            }
-                            else
-                            {
-                                matchingFields[0].SetValue(matchingNodes[0], val);
-                                matchingNodes[0].Modified.Fire();
-                            }
+                            matchingFields[0].SetValue(matchingNodes[0], val);
+                            matchingNodes[0].Modified.Fire();
                         }
                     }
                     catch (Exception e)
                     {
-                        if (args.Count == 2)
-                            result.Add($"Failed to get value of {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} : {e}");
-                        else
-                            result.Add($"Failed to set {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} to {args[2]}: {e}");
+                        result.Add($"Failed to set {matchingNodes[0].GetType().Name}.{matchingFields[0].Name} to {args[2]}: {e}");
                     }
                 }
             }

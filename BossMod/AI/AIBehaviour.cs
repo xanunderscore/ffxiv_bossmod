@@ -50,11 +50,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             AdjustTargetPositional(player, ref target);
         }
 
-        target.PreferredPosition = _config.PreferedPositional;
-        target.PreferTanking = _config.PreferedPositional != Positional.Any;
-        target.PreferredRange = _config.FollowRange;
-
-        _followMaster = master != player && (autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null || _config.FollowActiveBM) && (!master.InCombat || _config.FollowInCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100) && (player.InCombat || _config.FollowOOC);
+        _followMaster = master != player && autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null && (!master.InCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100);
         _naviDecision = BuildNavigationDecision(player, master, ref target);
 
         bool masterIsMoving = TrackMasterMovement(master);
@@ -74,7 +70,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     // returns null if we're to be idle, otherwise target to attack
     private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
-        if ((!_config.FollowTarget || !master.InCombat) && (!autorot.Hints.PriorityTargets.Any() || !master.InCombat || AIPreset == null))
+        if (!autorot.Hints.PriorityTargets.Any() || !master.InCombat || AIPreset == null)
             return new(); // there are no valid targets to attack, or we're not fighting - remain idle
 
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
