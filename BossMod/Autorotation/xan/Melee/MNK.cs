@@ -4,11 +4,23 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
+    public enum Track { Potion = SharedTrack.Count }
+    public enum PotionStrategy
+    {
+        Manual,
+        PreBuffs,
+        Now
+    }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("xan MNK", "Monk", "xan", RotationModuleQuality.Good, BitMask.Build(Class.MNK, Class.PGL), 100);
 
         def.DefineShared().AddAssociatedActions(AID.RiddleOfFire, AID.RiddleOfWind, AID.Brotherhood);
+        def.Define(Track.Potion).As<PotionStrategy>("Pot")
+            .AddOption(PotionStrategy.Manual, "Do not automatically use")
+            .AddOption(PotionStrategy.PreBuffs, "Use ~4 GCDs before raid buff window")
+            .AddOption(PotionStrategy.Now, "Use ASAP");
 
         return def;
     }
@@ -231,8 +243,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (!Player.InCombat || GCD == 0 || primaryTarget == null)
             return;
 
+        if (strategy.Option(Track.Potion).As<PotionStrategy>() == PotionStrategy.Now)
+            Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionStr, Player, ActionQueue.Priority.ManualOGCD - 1);
+
         if (strategy.BuffsOk())
         {
+            if (strategy.Option(Track.Potion).As<PotionStrategy>() == PotionStrategy.PreBuffs && CanWeave(AID.Brotherhood, 4))
+                Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionStr, Player, ActionQueue.Priority.ManualOGCD - 1, GCD - 0.9f);
+
             QueuePB(strategy);
 
             if (CombatTimer >= 10 || BeastCount == 3)
