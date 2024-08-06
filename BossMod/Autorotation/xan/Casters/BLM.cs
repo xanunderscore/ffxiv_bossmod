@@ -290,20 +290,18 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (Ice < 3 && Unlocked(AID.Blizzard3))
             PushGCD(AID.Blizzard3, primaryTarget);
 
-        if (MP == 10000 && Unlocked(AID.Fire3))
+        if (MP >= 10000 && Unlocked(AID.Fire3))
         {
             var nextGCD = GCD + GCDLength;
 
-            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanWeave(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0 && MP == 10000)
+            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanWeave(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0)
                 TryInstantCast(strategy, primaryTarget, useFirestarter: false);
 
             PushGCD(AID.Fire3, primaryTarget);
         }
         else if (Unlocked(AID.Blizzard4))
             PushGCD(AID.Blizzard4, primaryTarget);
-        else if (Unlocked(AID.Freeze) && NumAOETargets > 0)
-            PushGCD(AID.Freeze, primaryTarget);
-        else if (MP == 10000)
+        else if (MP >= 10000)
         {
             TryInstantOrTranspose(strategy, primaryTarget);
             PushGCD(AID.Fire1, primaryTarget);
@@ -374,6 +372,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (useThunderhead && Thunderhead > GCD)
             Choose(AID.Thunder1, AID.Thunder2, primaryTarget);
+
+        if (Fire > 0 && MP < 1600)
+            PushGCD(AID.Manafont, Player);
 
         if (Element != 0)
             PushGCD(AID.Transpose, Player);
