@@ -100,7 +100,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
             if (NumAOETargets > 0)
                 PushOGCD(AID.SaltedEarth, Player);
 
-            if (NumLineTargets > 0)
+            if (NumLineTargets > 0 && (RaidBuffsLeft > 0 || RaidBuffsIn > 9000))
                 PushOGCD(AID.Shadowbringer, BestLineTarget);
 
             if (NumRangedAOETargets > 2)
