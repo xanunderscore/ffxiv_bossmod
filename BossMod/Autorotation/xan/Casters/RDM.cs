@@ -107,6 +107,8 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
         VerstoneReady = StatusLeft(SID.VerstoneReady);
         Swordplay = StatusStacks(SID.MagickedSwordplay);
         ThornedFlourish = StatusLeft(SID.ThornedFlourish);
+        GrandImpact = StatusLeft(SID.GrandImpactReady);
+        Prefulgence = StatusLeft(SID.PrefulgenceReady);
 
         (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
         (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
