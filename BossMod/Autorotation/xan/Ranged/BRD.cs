@@ -42,6 +42,7 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
     public float RagingStrikes;
     public float BlastArrow;
     public float BattleVoice;
+    public float ResonantArrow;
 
     public (float Min, float Wind, float Poison) TargetDotLeft;
 
@@ -75,6 +76,7 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
         RagingStrikes = StatusLeft(SID.RagingStrikes);
         BlastArrow = StatusLeft(SID.BlastArrowReady);
         BattleVoice = StatusLeft(SID.BattleVoice);
+        ResonantArrow = StatusLeft(SID.ResonantArrowReady);
 
         (BestDotTarget, TargetDotLeft) = SelectDotTarget(strategy, primaryTarget, DotDuration, 2);
 
@@ -117,6 +119,9 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
 
             PushGCD(AID.StraightShot, primaryTarget);
         }
+
+        if (ResonantArrow > GCD)
+            PushGCD(AID.ResonantArrow, BestCircleTarget);
 
         if (NumConeTargets > 1)
             PushGCD(AID.QuickNock, BestConeTarget);

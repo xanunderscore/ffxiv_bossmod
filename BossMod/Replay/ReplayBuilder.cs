@@ -36,6 +36,7 @@ public sealed class ReplayBuilder : IDisposable
             _ws.Actors.Renamed.Subscribe(ActorRenamed),
             _ws.Actors.IsTargetableChanged.Subscribe(ActorTargetable),
             _ws.Actors.IsDeadChanged.Subscribe(ActorDead),
+            _ws.Actors.IsAllyChanged.Subscribe(ActorAlly),
             _ws.Actors.Moved.Subscribe(ActorMoved),
             _ws.Actors.SizeChanged.Subscribe(ActorSize),
             _ws.Actors.HPMPChanged.Subscribe(ActorHPMP),
@@ -217,6 +218,8 @@ public sealed class ReplayBuilder : IDisposable
             p.NameHistory.Add(_ws.CurrentTime, (actor.Name, actor.NameID));
         if (actor.IsTargetable)
             p.TargetableHistory.Add(_ws.CurrentTime, true);
+        if (actor.IsAlly)
+            p.AllyHistory.Add(_ws.CurrentTime, true);
         p.PosRotHistory.Add(_ws.CurrentTime, actor.PosRot);
         p.HPMPHistory.Add(_ws.CurrentTime, actor.HPMP);
         p.MinRadius = Math.Min(p.MinRadius, actor.HitboxRadius);
@@ -244,6 +247,11 @@ public sealed class ReplayBuilder : IDisposable
     private void ActorTargetable(Actor actor)
     {
         _participants[actor.InstanceID].TargetableHistory.Add(_ws.CurrentTime, actor.IsTargetable);
+    }
+
+    private void ActorAlly(Actor actor)
+    {
+        _participants[actor.InstanceID].AllyHistory.Add(_ws.CurrentTime, actor.IsAlly);
     }
 
     private void ActorDead(Actor actor)

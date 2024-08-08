@@ -148,7 +148,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (NumAOETargets > 2)
         {
-            if (Unlocked(AID.Flare))
+            if (Unlocked(TraitID.UmbralHeart))
                 FirePhaseAOE(strategy);
             else
                 FireAOELowLevel(strategy, primaryTarget);
@@ -262,9 +262,13 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (MP >= 3000)
             PushGCD(AID.Fire2, BestAOETarget);
+        else if (MP >= 800)
+            PushGCD(AID.Flare, BestAOETarget);
         else
         {
-            TryInstantOrTranspose(strategy, primaryTarget);
+            if (!Unlocked(TraitID.AspectMastery3))
+                TryInstantOrTranspose(strategy, primaryTarget);
+
             PushGCD(AID.Blizzard2, BestAOETarget);
         }
     }
@@ -336,10 +340,12 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (MP >= 9600)
         {
-            TryInstantOrTranspose(strategy, primaryTarget);
+            if (!Unlocked(TraitID.AspectMastery3))
+                TryInstantOrTranspose(strategy, primaryTarget);
+
             PushGCD(AID.Fire2, BestAOETarget);
         }
-        else if (Ice > 0)
+        else if (Ice == 3)
             PushGCD(AID.Freeze, BestAOETarget);
         else
             PushGCD(AID.Blizzard2, BestAOETarget);
@@ -393,9 +399,6 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (!Unlocked(AID.Fire3))
             return Fire > 0 && MP < 1600 || Ice > 0 && MP > 9000;
-
-        if (!Unlocked(AID.UmbralSoul))
-            return Ice > 0 && MP == 10000;
 
         if (NumAOETargets > 2)
             return Fire > 0 && MP < 800 || Ice > 0 && Hearts > 0 && MP >= 2400;

@@ -3,6 +3,10 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
 {
     private DateTime _pelotonLockout = DateTime.MinValue;
 
+    private readonly Random rand = new();
+    public const float PelotonFast = 1f;
+    public const float PelotonSlow = 3f;
+
     public enum Track { Peloton, Interrupt, SecondWind }
     public static RotationModuleDefinition Definition()
     {
@@ -17,8 +21,8 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
-        if (Player.InCombat)
-            _pelotonLockout = World.CurrentTime;
+        if (Player.InCombat || forceMovementIn > 1000)
+            _pelotonLockout = World.CurrentTime.AddSeconds(rand.NextDouble() * (PelotonSlow - PelotonFast) + PelotonSlow);
 
         // interrupt
         if (strategy.Enabled(Track.Interrupt) && NextChargeIn(ClassShared.AID.HeadGraze) == 0)
@@ -30,7 +34,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         // peloton
         if (strategy.Enabled(Track.Peloton)
-            && (World.CurrentTime - _pelotonLockout).TotalSeconds > 3
+            && World.CurrentTime > _pelotonLockout
             && forceMovementIn == 0
             && !Player.InCombat
             // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;

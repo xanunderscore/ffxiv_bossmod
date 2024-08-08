@@ -109,7 +109,10 @@ class ParticipantInfo : CommonEnumInfo
         {
             var sb = new StringBuilder();
             foreach (var (oid, data) in _data.Where(kv => _oidType?.GetEnumName(kv.Key) == null))
-                sb.AppendLine(EnumMemberString(oid, data));
+            {
+                var (member, val) = EnumMemberString(oid, data);
+                sb.AppendLine($"{member} = {val}");
+            }
             ImGui.SetClipboardText(sb.ToString());
         }
     }
@@ -147,11 +150,11 @@ class ParticipantInfo : CommonEnumInfo
         }
     }
 
-    private static bool IsIgnored(Replay.Participant p) => p.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.Area or ActorType.Treasure or ActorType.DutySupport;
+    private static bool IsIgnored(Replay.Participant p) => p.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.Area or ActorType.Treasure or ActorType.DutySupport || p.WasAlly;
     private string RadiusString(ParticipantData d) => d.MinRadius != d.MaxRadius ? string.Create(CultureInfo.InvariantCulture, $"{d.MinRadius:f3}-{d.MaxRadius:f3}") : string.Create(CultureInfo.InvariantCulture, $"{d.MinRadius:f3}");
     private string GuessName(uint oid, ParticipantData d) => Utils.StringToIdentifier(d.Names.Count > 0 ? d.Names[0].name : $"Actor{oid:X}");
 
-    private string EnumMemberString(uint oid, ParticipantData data, string? forcedName = null)
+    private (string Member, string Value) EnumMemberString(uint oid, ParticipantData data, string? forcedName = null)
     {
         var enumName = forcedName ?? _oidType?.GetEnumName(oid) ?? ("_Gen_" + GuessName(oid, data));
         var spawnStr = data.SpawnedPreFight.Count switch
@@ -168,15 +171,25 @@ class ParticipantInfo : CommonEnumInfo
             1 => data.Types[0] == ActorType.Enemy ? "" : $", {data.Types[0]} type",
             _ => ", mixed types"
         };
-        return $"{enumName} = 0x{oid:X}, // R{RadiusString(data)}, x{spawnStr}{typeStr}";
+        return (enumName, $"0x{oid:X}, // R{RadiusString(data)}, x{spawnStr}{typeStr}");
     }
 
     private StringBuilder AddOIDEnum(StringBuilder sb, uint forcedBossOID = 0)
     {
+        Dictionary<string, string> members = [];
+        foreach (var (oid, data) in _data)
+        {
+            var i = 0;
+            var (member, val) = EnumMemberString(oid, data, oid == forcedBossOID ? "Boss" : null);
+            var tmpKey = member;
+            while (!members.TryAdd(tmpKey, val))
+                tmpKey = $"{member}{++i}";
+        }
+
         sb.AppendLine("public enum OID : uint");
         sb.AppendLine("{");
-        foreach (var (oid, data) in _data)
-            sb.AppendLine($"    {EnumMemberString(oid, data, oid == forcedBossOID ? "Boss" : null)}");
+        foreach (var (key, val) in members)
+            sb.AppendLine($"    {key} = {val}");
         sb.AppendLine("}");
         return sb;
     }

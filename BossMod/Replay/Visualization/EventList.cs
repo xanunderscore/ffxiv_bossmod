@@ -91,7 +91,8 @@ class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB, Replay
         }
 
         bool haveActions = actions.Any();
-        bool actionIsCrap(Replay.Action a) => a.Source.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.DutySupport;
+        bool actionIsCrap(Replay.Action a) => a.Source.Type is ActorType.Player or ActorType.Pet or ActorType.Chocobo or ActorType.DutySupport || a.Source.AllyAt(a.Timestamp);
+
         foreach (var n in _tree.Node("Interesting actions", !haveActions))
         {
             DrawActions(actions.Where(a => !actionIsCrap(a)), tp, aidType);

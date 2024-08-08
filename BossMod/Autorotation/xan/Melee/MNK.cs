@@ -253,7 +253,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
             QueuePB(strategy);
 
-            if (CombatTimer >= 10 || BeastCount == 3)
+            if (CombatTimer >= 10 || BeastCount == 2)
                 PushAction(AID.Brotherhood, Player, ActionQueue.Priority.ManualOGCD + 3, 0);
 
             if (ShouldRoF)
@@ -275,7 +275,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
     }
 
-    private bool ShouldRoF => CanWeave(AID.RiddleOfFire) && (CD(AID.Brotherhood) > 0 || !Unlocked(AID.Brotherhood));
+    private bool ShouldRoF => CanWeave(AID.RiddleOfFire) && !CanWeave(AID.Brotherhood);
 
     private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2);
 
