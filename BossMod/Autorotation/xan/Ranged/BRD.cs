@@ -114,7 +114,8 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
 
         if (HawksEye > GCD || Barrage > GCD)
         {
-            if (NumCircleTargets > 1)
+            var aoeGain = Barrage > GCD ? 3 : 2;
+            if (NumCircleTargets >= aoeGain)
                 PushGCD(AID.WideVolley, BestCircleTarget);
 
             PushGCD(AID.StraightShot, primaryTarget);
@@ -176,8 +177,11 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.PitchPerfect, BestCircleTarget);
 
         // if raging strikes is active, use all charges
-        // if max charges within a GCD-ish, use one
-        if (RagingStrikes > 0 || MaxChargesIn(AID.Bloodletter) < GCDLength || CurrentSong == Song.MagesBallad && CD(AID.Bloodletter) < 15)
+        if (RagingStrikes > 0
+            // if max charges within a GCD-ish, use one
+            || CanWeave(MaxChargesIn(AID.Bloodletter), 0.6f, 1)
+            // if mage's ballad, we might get a cd reset at any moment
+            || CurrentSong == Song.MagesBallad && MaxChargesIn(AID.Bloodletter) < 15)
         {
             if (NumCircleTargets > 1)
                 PushOGCD(AID.RainOfDeath, BestCircleTarget);
