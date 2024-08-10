@@ -46,6 +46,8 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
 
     public (float Min, float Wind, float Poison) TargetDotLeft;
 
+    public float? NextProc => SongTimer is > 3 and < 45 ? SongTimer - SongTimer % 3f : null;
+
     public int NumCircleTargets; // 25/5y circle - shadowbite and a bunch of other stuff
     public int NumConeTargets; // 12y/90(?)deg cone - regular aoe gcds
     public int NumLineTargets; // 25y/4y rect - apex arrow and stuff
@@ -149,6 +151,9 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
         if (SongTimer < 12)
             PushOGCD(AID.WanderersMinuet, Player);
 
+        if (CurrentSong == Song.WanderersMinuet && (Repertoire == 3 || NextProc == null && Repertoire > 0) && NumCircleTargets > 0)
+            PushOGCD(AID.PitchPerfect, BestCircleTarget);
+
         if (SongTimer < 3)
             PushOGCD(AID.MagesBallad, Player);
 
@@ -172,9 +177,6 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
             if (!CanWeave(AID.RagingStrikes))
                 PushOGCD(AID.Barrage, Player);
         }
-
-        if (CurrentSong == Song.WanderersMinuet && (Repertoire == 3 || SongTimer < 5 && Repertoire > 0) && NumCircleTargets > 0)
-            PushOGCD(AID.PitchPerfect, BestCircleTarget);
 
         // if raging strikes is active, use all charges
         if (RagingStrikes > 0
