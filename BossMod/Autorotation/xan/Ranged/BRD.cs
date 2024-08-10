@@ -43,6 +43,7 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
     public float BlastArrow;
     public float BattleVoice;
     public float ResonantArrow;
+    public float RadiantEncore;
 
     public (float Min, float Wind, float Poison) TargetDotLeft;
 
@@ -79,6 +80,7 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
         BlastArrow = StatusLeft(SID.BlastArrowReady);
         BattleVoice = StatusLeft(SID.BattleVoice);
         ResonantArrow = StatusLeft(SID.ResonantArrowReady);
+        RadiantEncore = StatusLeft(SID.RadiantEncoreReady);
 
         (BestDotTarget, TargetDotLeft) = SelectDotTarget(strategy, primaryTarget, DotDuration, 2);
 
@@ -113,6 +115,9 @@ public sealed class BRD(RotationModuleManager manager, Actor player) : Attackxan
 
         if (ShouldApexArrow(strategy))
             PushGCD(AID.ApexArrow, BestLineTarget);
+
+        if (RadiantEncore > GCD)
+            PushGCD(AID.RadiantEncore, BestCircleTarget);
 
         if (HawksEye > GCD || Barrage > GCD)
         {

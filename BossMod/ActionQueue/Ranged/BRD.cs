@@ -104,6 +104,7 @@ public enum SID : uint
     Bind = 13, // applied by Foot Graze to target
     ArmysMuse = 1932, // applied when leaving army's paeon
     ResonantArrowReady = 3862, // applied by Barrage to self
+    RadiantEncoreReady = 3863, // applied by Radiant Finale to self
 }
 
 public sealed class Definitions : IDisposable
