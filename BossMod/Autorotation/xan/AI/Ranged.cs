@@ -1,13 +1,11 @@
-﻿namespace BossMod.Autorotation.xan;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
+
+namespace BossMod.Autorotation.xan;
 public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     private DateTime _pelotonLockout = DateTime.MinValue;
 
-    private readonly Random rand = new();
-    public const float PelotonFast = 1f;
-    public const float PelotonSlow = 3f;
-
-    public enum Track { Peloton, Interrupt, SecondWind }
+    public enum Track { Peloton, Interrupt, SecondWind, LimitBreak }
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("Phys Ranged AI", "Utilities for physical ranged dps - peloton, interrupt, defensive abilities", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.ARC, Class.BRD, Class.MCH, Class.DNC), 100);
@@ -15,14 +13,16 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         def.AbilityTrack(Track.Peloton, "Peloton").AddAssociatedActions(ClassShared.AID.Peloton);
         def.AbilityTrack(Track.Interrupt, "Head Graze").AddAssociatedActions(ClassShared.AID.HeadGraze);
         def.AbilityTrack(Track.SecondWind, "Second Wind").AddAssociatedActions(ClassShared.AID.SecondWind);
+        def.AbilityTrack(Track.LimitBreak, "Limit Break").AddAssociatedActions(ClassShared.AID.Desperado, ClassShared.AID.BigShot);
 
         return def;
     }
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn)
     {
-        if (Player.InCombat || forceMovementIn > 1000)
-            _pelotonLockout = World.CurrentTime.AddSeconds(rand.NextDouble() * (PelotonSlow - PelotonFast) + PelotonSlow);
+        var isMoving = MovementOverride.Instance?.IsMoving() ?? false;
+        if (Player.InCombat || !isMoving)
+            _pelotonLockout = World.CurrentTime.AddSeconds(1.5f);
 
         // interrupt
         if (strategy.Enabled(Track.Interrupt) && NextChargeIn(ClassShared.AID.HeadGraze) == 0)
@@ -35,8 +35,6 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         // peloton
         if (strategy.Enabled(Track.Peloton)
             && World.CurrentTime > _pelotonLockout
-            && forceMovementIn == 0
-            && !Player.InCombat
             // if player is targeting npc (fate npc, vendor, etc) we assume they want to interact with target;
             // peloton animationlock will be annoying and unhelpful here
             // we use TargetManager because most friendly NPCs aren't Actors (or something)
@@ -47,6 +45,46 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         // second wind
         if (strategy.Enabled(Track.SecondWind) && Player.InCombat && HPRatio() <= 0.5)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SecondWind), Player, ActionQueue.Priority.Medium);
+
+        ExecLB(strategy, primaryTarget);
+
+        if (ActionUnlocked(ActionID.MakeSpell(BossMod.BRD.AID.WardensPaean)) && NextChargeIn(BossMod.BRD.AID.WardensPaean) == 0 && ActionDefinitions.FindEsunaTarget(World) is Actor tar)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.BRD.AID.WardensPaean), tar, ActionQueue.Priority.Low);
+    }
+
+    private unsafe void ExecLB(StrategyValues strategy, Actor? primaryTarget)
+    {
+        Actor? lbTarget(float halfWidth) => FindBetterTargetBy(primaryTarget, 30, actor => Hints.NumPriorityTargetsInAOERect(Player.Position, Player.DirectionTo(actor), 30, halfWidth)).Target;
+
+        if (!strategy.Enabled(Track.LimitBreak) || World.Party.WithoutSlot().Count(x => x.Type == ActorType.Player) > 1)
+            return;
+
+        var bars = LimitBreakController.Instance()->BarCount;
+        if (World.Party.LimitBreakLevel != LimitBreakController.Instance()->BarCount)
+            return;
+
+        switch (bars)
+        {
+            case 1:
+                if (lbTarget(2) is Actor a)
+                    Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.BigShot), a, ActionQueue.Priority.VeryHigh);
+                break;
+            case 2:
+                if (lbTarget(2.5f) is Actor b)
+                    Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Desperado), b, ActionQueue.Priority.VeryHigh);
+                break;
+            case 3:
+                var lb3 = Player.Class switch
+                {
+                    Class.ARC or Class.BRD => ClassBRDUtility.IDLimitBreak3,
+                    Class.MCH => ClassMCHUtility.IDLimitBreak3,
+                    Class.DNC => ClassDNCUtility.IDLimitBreak3,
+                    _ => default
+                };
+                if (lbTarget(4) is Actor c && lb3 != default)
+                    Hints.ActionsToExecute.Push(lb3, c, ActionQueue.Priority.VeryHigh);
+                break;
+        }
     }
 
     private bool PelotonWillExpire(Actor actor)

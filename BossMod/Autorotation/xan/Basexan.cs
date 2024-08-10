@@ -18,7 +18,7 @@ public abstract class Castxan<AID, TraitID>(RotationModuleManager manager, Actor
     protected sealed override float GCDLength => SpellGCDLength;
 }
 
-public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor player) : Targetxan(manager, player)
     where AID : struct, Enum where TraitID : Enum
 {
     protected float PelotonLeft { get; private set; }
@@ -99,7 +99,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         }
 
         Vector3 targetPos = default;
-        if (def.ID.ID is (uint)BossMod.BLM.AID.LeyLines or (uint)BossMod.BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse or (uint)BossMod.PCT.AID.ScenicMuse)
+        if (def.ID.ID is (uint)BLM.AID.LeyLines or (uint)BLM.AID.Retrace or (uint)BossMod.PCT.AID.StarryMuse or (uint)BossMod.PCT.AID.ScenicMuse)
             targetPos = Player.PosRot.XYZ();
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, targetPos: targetPos, delay: delay);
@@ -185,26 +185,6 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         };
         var newnewprio = simplify(newprio);
         return (newnewprio > 0 ? newtarget : null, newnewprio);
-    }
-
-    protected (Actor? Target, P Priority) FindBetterTargetBy<P>(Actor? initial, float maxDistanceFromPlayer, Func<Actor, P> prioFunc, Func<AIHints.Enemy, bool>? filterFunc = null) where P : struct, IComparable
-    {
-        var bestTarget = initial;
-        var bestPrio = initial != null ? prioFunc(initial) : default;
-        foreach (var enemy in Hints.PriorityTargets.Where(x =>
-            x.Actor != initial &&
-            Player.DistanceToHitbox(x.Actor) <= maxDistanceFromPlayer
-            && (filterFunc == null || filterFunc(x))
-        ))
-        {
-            var newPrio = prioFunc(enemy.Actor);
-            if (newPrio.CompareTo(bestPrio) > 0)
-            {
-                bestPrio = newPrio;
-                bestTarget = enemy.Actor;
-            }
-        }
-        return (bestTarget, bestPrio);
     }
 
     /// <summary>
@@ -366,6 +346,29 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected uint PredictedHP(Actor actor) => (uint)Math.Clamp(actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID), 0, actor.HPMP.MaxHP);
     protected float PredictedHPRatio(Actor actor) => (float)PredictedHP(actor) / actor.HPMP.MaxHP;
+}
+
+public abstract class Targetxan(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+{
+    protected (Actor? Target, P Priority) FindBetterTargetBy<P>(Actor? initial, float maxDistanceFromPlayer, Func<Actor, P> prioFunc, Func<AIHints.Enemy, bool>? filterFunc = null) where P : struct, IComparable
+    {
+        var bestTarget = initial;
+        var bestPrio = initial != null ? prioFunc(initial) : default;
+        foreach (var enemy in Hints.PriorityTargets.Where(x =>
+            x.Actor != initial &&
+            Player.DistanceToHitbox(x.Actor) <= maxDistanceFromPlayer
+            && (filterFunc == null || filterFunc(x))
+        ))
+        {
+            var newPrio = prioFunc(enemy.Actor);
+            if (newPrio.CompareTo(bestPrio) > 0)
+            {
+                bestPrio = newPrio;
+                bestTarget = enemy.Actor;
+            }
+        }
+        return (bestTarget, bestPrio);
+    }
 }
 
 static class Extendxan

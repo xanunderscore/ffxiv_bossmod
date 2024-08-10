@@ -2,7 +2,7 @@
 
 namespace BossMod.Autorotation.xan;
 
-public abstract class AIBase(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+public abstract class AIBase(RotationModuleManager manager, Actor player) : Targetxan(manager, player)
 {
     internal bool Unlocked<AID>(AID aid) where AID : Enum => ActionUnlocked(ActionID.MakeSpell(aid));
     internal float NextChargeIn<AID>(AID aid) where AID : Enum => NextChargeIn(ActionID.MakeSpell(aid));

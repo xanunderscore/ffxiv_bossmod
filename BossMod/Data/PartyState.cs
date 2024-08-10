@@ -30,6 +30,8 @@ public sealed class PartyState
     public int LimitBreakCur;
     public int LimitBreakMax = 10000;
 
+    public int LimitBreakLevel => LimitBreakMax > 0 ? LimitBreakCur / LimitBreakMax : 0;
+
     public PartyState(ActorState actorState)
     {
         void assign(ulong instanceID, Actor? actor)
