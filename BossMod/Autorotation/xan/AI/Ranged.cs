@@ -4,6 +4,7 @@ namespace BossMod.Autorotation.xan;
 public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     private DateTime _pelotonLockout = DateTime.MinValue;
+    private bool _hadPeloton = false;
 
     public enum Track { Peloton, Interrupt, SecondWind, LimitBreak }
     public static RotationModuleDefinition Definition()
@@ -24,6 +25,15 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         if (Player.InCombat || !isMoving)
             _pelotonLockout = World.CurrentTime.AddSeconds(1.5f);
 
+        var peloton = PelotonDuration(Player);
+        if (peloton == 0 && _hadPeloton)
+        {
+            // the peloton status disappeared, which means we entered combat - there doesn't seem to be any server communication that indicates that peloton disappeared *because* of combat
+            _pelotonLockout = World.CurrentTime.AddSeconds(1.5f);
+        }
+
+        _hadPeloton = peloton > 1;
+
         // interrupt
         if (strategy.Enabled(Track.Interrupt) && NextChargeIn(ClassShared.AID.HeadGraze) == 0)
         {
@@ -39,7 +49,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             // peloton animationlock will be annoying and unhelpful here
             // we use TargetManager because most friendly NPCs aren't Actors (or something)
             && Service.TargetManager.Target == null
-            && PelotonWillExpire(Player))
+            && peloton < 5)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 
         // second wind
@@ -87,18 +97,16 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
         }
     }
 
-    private bool PelotonWillExpire(Actor actor)
+    private bool PelotonWillExpire(Actor actor) => PelotonDuration(actor) < 5;
+
+    private float PelotonDuration(Actor actor)
     {
-        var pending = World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BossMod.BRD.SID.Peloton);
-        if (pending != null)
-            // just applied, should have >30s remaining duration, assume that's fine
-            return false;
+        if (World.PendingEffects.PendingStatus(actor.InstanceID, (uint)BossMod.BRD.SID.Peloton) != null)
+            return 30;
 
-        var status = actor.FindStatus((uint)BossMod.BRD.SID.Peloton);
-        if (status == null)
-            return true;
+        if (actor.FindStatus((uint)BossMod.BRD.SID.Peloton) is not ActorStatus st)
+            return 0;
 
-        var duration = Math.Max((float)(status.Value.ExpireAt - World.CurrentTime).TotalSeconds, 0.0f);
-        return duration < 5;
+        return Math.Max((float)(st.ExpireAt - World.CurrentTime).TotalSeconds, 0);
     }
 }

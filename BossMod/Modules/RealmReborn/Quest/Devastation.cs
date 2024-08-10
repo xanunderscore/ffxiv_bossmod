@@ -136,5 +136,5 @@ class EndOfDays(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 class EndOfDaysAdds(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EndOfDaysAdds), new AOEShapeRect(60, 4));
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 867, NameID = 2143)]
-public class Lahabrea(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20));
+public class Devastation(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20));
 
