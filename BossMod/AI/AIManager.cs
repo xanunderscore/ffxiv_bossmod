@@ -131,6 +131,9 @@ sealed class AIManager : IDisposable
 
     public void SwitchToIdle()
     {
+        if (_autorot.Preset == Behaviour?.AIPreset)
+            _autorot.Preset = null;
+
         Behaviour?.Dispose();
         Behaviour = null;
 
