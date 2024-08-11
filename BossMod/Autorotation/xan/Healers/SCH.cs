@@ -70,20 +70,17 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
         if (NumAOETargets >= needAOETargets)
+        {
+            if (needAOETargets == 1)
+                Hints.RecommendedRangeToTarget = 5f;
+
             PushGCD(AID.ArtOfWar1, Player);
+        }
 
         PushGCD(AID.Ruin1, primaryTarget);
 
         // instant cast - fallback for movement
         PushGCD(AID.Ruin2, primaryTarget);
-    }
-
-    public override AI.Targeting? SelectTargetForAI(StrategyValues strategy, AI.Targeting aiDecision)
-    {
-        if (Unlocked(AID.ArtOfWar1) && !Unlocked(AID.Broil1))
-            aiDecision.PreferredRange = 5f;
-
-        return aiDecision;
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)

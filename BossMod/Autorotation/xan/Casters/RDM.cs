@@ -85,14 +85,6 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
         return base.GetCastTime(aid);
     }
 
-    public override AI.Targeting? SelectTargetForAI(StrategyValues strategy, AI.Targeting aiDecision)
-    {
-        if (Swordplay > 0 || LowestMana >= 50 || InCombo)
-            aiDecision.PreferredRange = 2.9f;
-
-        return aiDecision;
-    }
-
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
@@ -125,6 +117,9 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
 
             return;
         }
+
+        if (Swordplay > 0 || LowestMana >= 50 || InCombo)
+            Hints.RecommendedRangeToTarget = 3f;
 
         OGCD(strategy, primaryTarget);
 

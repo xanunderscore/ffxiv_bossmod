@@ -11,14 +11,12 @@
 // - our queue distinguishes GCD and oGCD actions; since oGCDs can be delayed, effective 'expiration' time for oGCDs is much larger than native 0.5s
 // - trying to queue an oGCD action while it is already queued (double tapping) activates 'emergency mode': all preceeding queued actions are removed and this action is returned even if it would delay GCD
 // - entries from the manual queue are added to the autoqueue every frame with appropriate priorities, and usual logic selects best action to execute
-public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
+public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
 {
     private readonly record struct Entry(ActionID Action, Actor? Target, Vector3 TargetPos, Angle? FacingAngle, ActionDefinition Definition, DateTime ExpireAt)
     {
         public readonly bool Expired(DateTime now) => ExpireAt < now || (Target?.IsDestroyed ?? false);
     }
-
-    private WorldState World => bmm.WorldState;
 
     private readonly ActionTweaksConfig _config = Service.Config.Get<ActionTweaksConfig>();
     private readonly List<Entry> _queue = [];
@@ -26,7 +24,7 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
 
     public void RemoveExpired()
     {
-        if (_emergencyMode && _queue[0].Expired(World.CurrentTime))
+        if (_emergencyMode && _queue[0].Expired(ws.CurrentTime))
         {
             Service.Log($"[MAO] Emergency {_queue[0].Action} expired");
             _emergencyMode = false;
@@ -34,7 +32,7 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
 
         bool checkExpired(Entry e)
         {
-            if (e.Expired(World.CurrentTime))
+            if (e.Expired(ws.CurrentTime))
             {
                 Service.Log($"[MAO] Action {e.Action} @ {e.Target} expired");
                 return true;
@@ -64,7 +62,7 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
         if (!_config.UseManualQueue)
             return false; // we don't use queue at all
 
-        var player = World.Party.Player();
+        var player = ws.Party.Player();
         if (player == null)
             return false; // player is unknown, skip
 
@@ -74,15 +72,15 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
 
         bool isGCD = def.IsGCD;
         float expire = isGCD ? 1.0f : 3.0f;
-        if (def.ReadyIn(World.Client.Cooldowns) > expire)
+        if (def.ReadyIn(ws.Client.Cooldowns) > expire)
             return false; // don't bother trying to queue something that's on cd
 
         if (!ResolveTarget(def, player, targetId, getAreaTarget, allowTargetOverride, out var target, out var targetPos))
             return false; // failed to resolve target
 
-        Angle? angleOverride = def.TransformAngle?.Invoke(World, player, target, hints);
+        Angle? angleOverride = def.TransformAngle?.Invoke(ws, player, target, hints);
 
-        var expireAt = World.CurrentTime.AddSeconds(expire);
+        var expireAt = ws.CurrentTime.AddSeconds(expire);
         var index = _queue.FindIndex(e => e.Definition.MainCooldownGroup == def.MainCooldownGroup); // TODO: what about alt groups?..
         if (index < 0)
         {
@@ -133,12 +131,6 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
         targetPos = default;
         if (def.AllowedTargets.HasFlag(ActionTargets.Area))
         {
-            if (def.TransformPosition?.Invoke(bmm, player, World.Actors.Find(targetId), hints) is Vector3 v)
-            {
-                targetPos = v;
-                return true;
-            }
-
             // ground-targeted actions have special targeting
             var (gtTarget, gtPos) = getAreaTarget();
             if (gtPos != null)
@@ -150,7 +142,7 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
             else if (gtTarget is not 0 and not 0xE0000000)
             {
                 // auto cast at target
-                target = World.Actors.Find(gtTarget);
+                target = ws.Actors.Find(gtTarget);
                 return target != null; // if target isn't found in world, bail
             }
             else
@@ -166,13 +158,13 @@ public sealed class ManualActionQueueTweak(BossModuleManager bmm, AIHints hints)
             return true;
         }
 
-        target = World.Actors.Find(targetId);
+        target = ws.Actors.Find(targetId);
         if (target == null && targetId is not 0 and not 0xE0000000)
             return false; // target is valid, but not found in world, bail... (TODO this shouldn't be happening really)
 
         // custom smart-targeting
         if (allowSmartTarget && _config.SmartTargets && def.SmartTarget != null)
-            target = def.SmartTarget(World, player, target, hints);
+            target = def.SmartTarget(ws, player, target, hints);
 
         // smart-targeting fallback: cast on self is target is not valid
         var targetInvalid = target == null || !def.AllowedTargets.HasFlag(ActionTargets.Hostile) && !target.IsAlly;

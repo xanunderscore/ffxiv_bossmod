@@ -93,8 +93,6 @@ public abstract class RotationModule(RotationModuleManager manager, Actor player
 
     public virtual string DescribeState() => "";
 
-    public virtual AI.Targeting? SelectTargetForAI(StrategyValues strategy, AI.Targeting aiDecision) => null;
-
     public bool ActionUnlocked(ActionID action) => ActionDefinitions.Instance[action]?.IsUnlocked(World, Player) ?? false;
 
     public bool TraitUnlocked(uint id)

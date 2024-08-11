@@ -263,7 +263,6 @@ public sealed class LegacyDRG : LegacyModule
     /*
     private bool UseSpineShatterDive(SpineshatterStrategy strategy)
     {
-        return false;
         switch (strategy)
         {
             case SpineshatterStrategy.Forbid:

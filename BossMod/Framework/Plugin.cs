@@ -171,7 +171,6 @@ public sealed class Plugin : IDalamudPlugin
         var userPreventingCast = _amex.InputOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
         _rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn);
         _ai.Update();
-        _dtr.Update();
         _broadcast.Update();
         _amex.FinishActionGather();
         ExecuteHints();

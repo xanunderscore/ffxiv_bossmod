@@ -116,18 +116,6 @@ public abstract class CommonState(RotationModule module)
     }
     public (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, ulong sourceID, float pendingDuration = 1000) where SID : Enum => StatusDetails(actor, (uint)(object)sid, sourceID, pendingDuration);
 
-    public (float Left, int Stacks) StatusDetails(Actor? actor, uint sid, float pendingDuration = 1000)
-    {
-        if (actor == null)
-            return (0, 0);
-        var pending = Module.World.PendingEffects.PendingStatus(actor.InstanceID, sid);
-        if (pending != null)
-            return (pendingDuration, pending.Value);
-        var status = actor.FindStatus(sid);
-        return status != null ? (StatusDuration(status.Value.ExpireAt), status.Value.Extra & 0xFF) : (0, 0);
-    }
-    public (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, float pendingDuration = 1000) where SID : Enum => StatusDetails(actor, (uint)(object)sid, pendingDuration);
-
     // check whether specified status is a damage buff
     // see https://i.redd.it/xrtgpras94881.png
     // TODO: AST card buffs?, enemy debuffs?, single-target buffs (DRG dragon sight, DNC devilment)
