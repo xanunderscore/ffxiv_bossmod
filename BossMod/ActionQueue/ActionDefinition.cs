@@ -106,6 +106,12 @@ public sealed record class ActionDefinition(ActionID ID)
         return cdg.Total > 0 ? (MaxChargesAtLevel(level) * Cooldown - cdg.Elapsed) : 0;
     }
 
+    public bool IsUnlocked(WorldState ws, Actor player)
+    {
+        var checkLevel = IsRoleAction ? ws.Client.ClassJobLevel(player.Class) : player.Level;
+        return AllowedClasses[(int)player.Class] && checkLevel >= MinLevel && LinkUnlocked(UnlockLink);
+    }
+
     private static bool LinkUnlocked(uint link) => link == 0 || (ActionDefinitions.Instance.UnlockCheck?.Invoke(link) ?? true);
 
     public bool IsUnlocked(WorldState ws, Actor player)
