@@ -110,7 +110,6 @@ public enum SID : uint
 
 public sealed class Definitions : IDisposable
 {
-    private readonly ASTConfig _config = Service.Config.Get<ASTConfig>();
     public Definitions(ActionDefinitions d)
     {
         d.RegisterSpell(AID.AstralStasis, castAnimLock: 8.10f); // animLock=8.100s?

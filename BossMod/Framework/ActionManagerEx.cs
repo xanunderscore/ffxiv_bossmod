@@ -61,12 +61,11 @@ public unsafe sealed class ActionManagerEx : IDisposable
     private readonly HookAddress<PublicContentBozja.Delegates.UseFromHolster> _useBozjaFromHolsterDirectorHook;
     private readonly HookAddress<ActionEffectHandler.Delegates.Receive> _processPacketActionEffectHook;
 
-    public ActionManagerEx(BossModuleManager bmm, AIHints hints)
+    public ActionManagerEx(WorldState ws, AIHints hints)
     {
-        var ws = bmm.WorldState;
         _ws = ws;
         _hints = hints;
-        _manualQueue = new(bmm, hints);
+        _manualQueue = new(_ws, hints);
         _cancelCastTweak = new(ws);
 
         Service.Log($"[AMEx] ActionManager singleton address = 0x{(ulong)_inst:X}");
