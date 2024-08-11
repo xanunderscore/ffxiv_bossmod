@@ -64,6 +64,9 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         if (!CanFitGCD(TargetDotLeft, 1))
             PushGCD(AID.Bio1, BestDotTarget);
 
+        if (RaidBuffsLeft > 0 && !CanFitGCD(RaidBuffsLeft, 1))
+            PushGCD(AID.Bio1, BestDotTarget);
+
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
         if (NumAOETargets >= needAOETargets)
