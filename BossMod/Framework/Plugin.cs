@@ -84,8 +84,6 @@ public sealed class Plugin : IDalamudPlugin
         _ipc = new(_rotation, _amex);
         _dtr = new(_rotation);
 
-        Service.Framework.Update += OnUpdate;
-
         _configUI = new(Service.Config, _ws, _rotationDB);
         _wndBossmod = new(_bossmod);
         _wndBossmodHints = new(_bossmod);
@@ -101,7 +99,6 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         Service.Condition.ConditionChange -= OnConditionChanged;
-        Service.Framework.Update -= OnUpdate;
         _wndDebug.Dispose();
         _wndRotation.Dispose();
         _wndReplay.Dispose();
@@ -118,11 +115,6 @@ public sealed class Plugin : IDalamudPlugin
         _dtr.Dispose();
         ActionDefinitions.Instance.Dispose();
         CommandManager.RemoveHandler("/vbm");
-    }
-
-    private void OnUpdate(IFramework fw)
-    {
-        _dtr.Update();
     }
 
     private void OnCommand(string cmd, string args)
@@ -178,6 +170,7 @@ public sealed class Plugin : IDalamudPlugin
         var userPreventingCast = _amex.InputOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
         _rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn);
         _ai.Update();
+        _dtr.Update();
         _broadcast.Update();
         _amex.FinishActionGather();
         ExecuteHints();
