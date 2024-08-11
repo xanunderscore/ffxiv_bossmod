@@ -125,11 +125,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         });
     }
 
-    private static bool BeingRaised(Actor actor)
-    {
-        // TODO: figure out how transcendent (418) and raise (1140) are different from these two
-        return actor.Statuses.Any(s => s.ID is 148 or 2648);
-    }
+    private static bool BeingRaised(Actor actor) => actor.Statuses.Any(s => s.ID is 148 or 1140);
 
     private void AutoWHM(StrategyValues strategy)
     {
