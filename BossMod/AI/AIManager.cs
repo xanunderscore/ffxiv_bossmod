@@ -86,7 +86,7 @@ sealed class AIManager : IDisposable
                 }
                 foreach (var (i, p) in WorldState.Party.WithSlot(true))
                 {
-                    if (ImGui.Selectable(p.Name, _masterSlot == i))
+                    if (ImGui.Selectable(p.Name, MasterSlot == i))
                     {
                         _config.FollowSlot = (AIConfig.Slot)i;
                         _config.FollowTarget = false;
@@ -127,14 +127,6 @@ sealed class AIManager : IDisposable
                 }
             }
         }
-
-        if (ImGui.Button("Enable"))
-            AIEnable();
-
-        ImGui.SameLine();
-
-        if (ImGui.Button("Disable"))
-            AIDisable();
     }
 
     public void SwitchToIdle()
@@ -207,16 +199,16 @@ sealed class AIManager : IDisposable
         switch (messageData[0])
         {
             case "on":
-                AIEnable();
+                SwitchToFollow((int)_config.FollowSlot);
                 break;
             case "off":
-                AIDisable();
+                SwitchToIdle();
                 break;
             case "toggle":
                 if (Behaviour == null)
                     SwitchToFollow((int)_config.FollowSlot);
                 else
-                    AIDisable();
+                    SwitchToIdle();
                 break;
             case "follow":
                 if (messageData.Length < 2)

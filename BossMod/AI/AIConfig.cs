@@ -3,6 +3,8 @@
 [ConfigDisplay(Name = "AI settings (very experimental!!!)", Order = 6)]
 sealed class AIConfig : ConfigNode
 {
+    public enum Slot { One, Two, Three, Four }
+
     [PropertyDisplay("Enable AI")]
     public bool Enabled = false;
 

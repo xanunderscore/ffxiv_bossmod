@@ -113,13 +113,6 @@ public sealed record class ActionDefinition(ActionID ID)
     }
 
     private static bool LinkUnlocked(uint link) => link == 0 || (ActionDefinitions.Instance.UnlockCheck?.Invoke(link) ?? true);
-
-    public bool IsUnlocked(WorldState ws, Actor player)
-    {
-        var checkLevel = IsRoleAction ? ws.Client.ClassJobLevel(player.Class) : player.Level;
-
-        return AllowedClasses[(int)player.Class] && checkLevel >= MinLevel && (ActionDefinitions.Instance.UnlockCheck?.Invoke(UnlockLink) ?? true);
-    }
 }
 
 // database of all supported player-initiated actions
