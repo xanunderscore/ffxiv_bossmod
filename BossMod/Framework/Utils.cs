@@ -109,7 +109,6 @@ public static partial class Utils
         foreach (var v in rest)
             if (v.CompareTo(first) > 0)
                 first = v;
-
         return first;
     }
 

@@ -314,7 +314,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         var pelo = Player.FindStatus(BossMod.BRD.SID.Peloton);
         PelotonLeft = pelo != null ? StatusDuration(pelo.Value.ExpireAt) : 0;
         SwiftcastLeft = StatusLeft(BossMod.WHM.SID.Swiftcast);
-        TrueNorthLeft = StatusLeft(DRG.SID.TrueNorth);
+        TrueNorthLeft = StatusLeft(BossMod.DRG.SID.TrueNorth);
 
         ForceMovementIn = forceMovementIn;
         AnimationLockDelay = estimatedAnimLockDelay;

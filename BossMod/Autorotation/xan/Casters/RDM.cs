@@ -1,7 +1,8 @@
 ﻿using BossMod.RDM;
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
-namespace BossMod.Autorotation.xan.Casters;
+namespace BossMod.Autorotation.xan;
+
 public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
     public enum Track { Combo = SharedTrack.Count, Dash }
@@ -113,6 +114,9 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
         (BestAOETarget, NumAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
         (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
         (BestConeTarget, NumConeTargets) = SelectTarget(strategy, primaryTarget, 8, (primary, other) => Hints.TargetInAOECone(other, Player.Position, 8, Player.DirectionTo(primary), 60.Degrees()));
+
+        if (Swordplay > 0 || LowestMana >= 50 || InCombo)
+            Hints.RecommendedRangeToTarget = 3;
 
         if (CountdownRemaining > 0)
         {

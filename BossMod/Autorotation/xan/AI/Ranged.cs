@@ -4,7 +4,7 @@ namespace BossMod.Autorotation.xan;
 public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
     private DateTime _pelotonLockout = DateTime.MinValue;
-    private bool _hadPeloton = false;
+    private bool _hadPeloton;
 
     public enum Track { Peloton, Interrupt, SecondWind, LimitBreak }
     public static RotationModuleDefinition Definition()

@@ -1,4 +1,4 @@
-﻿namespace BossMod;
+﻿//namespace BossMod;
 
 // TODO: reconsider all this...
 /*
