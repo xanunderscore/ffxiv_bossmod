@@ -240,6 +240,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
             PushGCD(AID.Thunder2, BestAOETarget);
 
+        if (Fire == 0)
+            PushGCD(AID.Fire2, BestAOETarget);
+
         if (AstralSoul == 6)
             PushGCD(AID.FlareStar, BestAOETarget);
 
