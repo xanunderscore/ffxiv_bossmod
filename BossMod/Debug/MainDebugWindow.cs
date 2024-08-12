@@ -222,7 +222,7 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
 
     private unsafe void DrawMove()
     {
-        var m = MovementOverride.Instance!;
+        var m = amex.Movement;
 
         ImGui.Text($"Requested: {m.IsMoveRequested()}");
         ImGui.Text($"Moving: {m.IsMoving()}");

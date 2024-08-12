@@ -2,6 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 
 namespace BossMod.Autorotation.xan;
+
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
     public enum Track { Potion = SharedTrack.Count, SSS }
@@ -230,6 +231,17 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             case OffensiveStrategy.Automatic:
                 if (!CanFitGCD(DowntimeIn - SSSApplicationDelay, 1))
                     PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
+                break;
+        }
+
+        switch (strategy.Simple(Track.SSS))
+        {
+            case OffensiveStrategy.Force:
+                PushGCD(AID.SixSidedStar, primaryTarget, 500);
+                break;
+            case OffensiveStrategy.Automatic:
+                if (!CanFitGCD(DowntimeIn - SSSApplicationDelay, 1))
+                    PushGCD(AID.SixSidedStar, primaryTarget, 500);
                 break;
         }
     }

@@ -41,7 +41,6 @@ public unsafe sealed class ActionManagerEx : IDisposable
     public Event<ClientActionRequest> ActionRequestExecuted = new();
     public Event<ulong, ActorCastEvent> ActionEffectReceived = new();
 
-    public MovementOverride InputOverride => MovementOverride.Instance!;
     public ActionTweaksConfig Config = Service.Config.Get<ActionTweaksConfig>();
     public ActionQueue.Entry AutoQueue { get; private set; }
     public bool MoveMightInterruptCast { get; private set; } // if true, moving now might cause cast interruption (for current or queued cast)
@@ -55,17 +54,20 @@ public unsafe sealed class ActionManagerEx : IDisposable
     private readonly RestoreRotationTweak _restoreRotTweak = new();
     private readonly CancelCastTweak _cancelCastTweak;
 
+    public MovementOverride Movement { get; }
+
     private readonly HookAddress<ActionManager.Delegates.Update> _updateHook;
     private readonly HookAddress<ActionManager.Delegates.UseAction> _useActionHook;
     private readonly HookAddress<ActionManager.Delegates.UseActionLocation> _useActionLocationHook;
     private readonly HookAddress<PublicContentBozja.Delegates.UseFromHolster> _useBozjaFromHolsterDirectorHook;
     private readonly HookAddress<ActionEffectHandler.Delegates.Receive> _processPacketActionEffectHook;
 
-    public ActionManagerEx(WorldState ws, AIHints hints)
+    public ActionManagerEx(WorldState ws, AIHints hints, MovementOverride movement)
     {
         _ws = ws;
         _hints = hints;
-        _manualQueue = new(_ws, hints);
+        Movement = movement;
+        _manualQueue = new(ws, hints);
         _cancelCastTweak = new(ws);
 
         Service.Log($"[AMEx] ActionManager singleton address = 0x{(ulong)_inst:X}");
@@ -83,7 +85,6 @@ public unsafe sealed class ActionManagerEx : IDisposable
         _useActionLocationHook.Dispose();
         _useActionHook.Dispose();
         _updateHook.Dispose();
-        InputOverride.Dispose();
     }
 
     public void QueueManualActions()
@@ -264,7 +265,7 @@ public unsafe sealed class ActionManagerEx : IDisposable
         }
 
         // note: if we cancel movement and start casting immediately, it will be canceled some time later - instead prefer to delay for one frame
-        if (EffectiveAnimationLock <= 0 && AutoQueue.Action && !IsRecastTimerActive(AutoQueue.Action) && !(blockMovement && InputOverride.IsMoving()))
+        if (EffectiveAnimationLock <= 0 && AutoQueue.Action && !IsRecastTimerActive(AutoQueue.Action) && !(blockMovement && Movement.IsMoving()))
         {
             var actionAdj = NormalizeActionForQueue(AutoQueue.Action);
             var targetID = AutoQueue.Target?.InstanceID ?? 0xE0000000;
@@ -286,7 +287,7 @@ public unsafe sealed class ActionManagerEx : IDisposable
 
         _cooldownTweak.StopAdjustment(); // clear any potential adjustments
 
-        InputOverride.MovementBlocked = blockMovement;
+        Movement.MovementBlocked = blockMovement;
 
         if (_ws.Party.Player()?.CastInfo != null && _cancelCastTweak.ShouldCancel(_ws.CurrentTime, ForceCancelCastNextFrame))
             UIState.Instance()->Hotbar.CancelCast();
@@ -406,7 +407,7 @@ public unsafe sealed class ActionManagerEx : IDisposable
         }
 
         MoveMightInterruptCast = false; // slidecast window start
-        InputOverride.MovementBlocked = false; // unblock input unconditionally on successful cast (I assume there are no instances where we need to immediately start next GCD?)
+        Movement.MovementBlocked = false; // unblock input unconditionally on successful cast (I assume there are no instances where we need to immediately start next GCD?)
 
         // animation lock delay update
         var animLockReduction = _animLockTweak.Apply(header->SourceSequence, prevAnimLock, _inst->AnimationLock, packetAnimLock, header->AnimationLock, out var animLockDelay);
