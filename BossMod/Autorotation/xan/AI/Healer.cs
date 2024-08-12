@@ -57,6 +57,9 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 case Class.WHM:
                     AutoWHM(strategy);
                     break;
+                case Class.AST:
+                    AutoAST(strategy);
+                    break;
             }
     }
 
@@ -137,5 +140,35 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Tetragrammaton), bestSTHealTarget, ActionQueue.Priority.Medium);
         }
+    }
+
+
+    private static (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
+        (AstrologianCard.Arrow, BossMod.AST.AID.TheArrow),
+        (AstrologianCard.Spire, BossMod.AST.AID.TheSpire),
+        (AstrologianCard.Bole, BossMod.AST.AID.TheBole),
+        (AstrologianCard.Ewer, BossMod.AST.AID.TheEwer)
+    ];
+
+    private void AutoAST(StrategyValues strategy)
+    {
+        var gauge = GetGauge<AstrologianGauge>();
+
+        var bestSTHealTarget = World.Party.WithoutSlot(false, true).MinBy(PredictedHPRatio)!;
+        if (PredictedHPRatio(bestSTHealTarget) < 0.3)
+        {
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EssentialDignity), bestSTHealTarget, ActionQueue.Priority.Medium);
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.CelestialIntersection), bestSTHealTarget, ActionQueue.Priority.Medium);
+
+            if (gauge.CurrentArcana == AstrologianCard.Lady)
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.LadyOfCrowns), Player, ActionQueue.Priority.Medium);
+
+            foreach (var (card, action) in SupportCards)
+                if (gauge.CurrentCards.Contains(card))
+                    Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), bestSTHealTarget, ActionQueue.Priority.Medium);
+        }
+
+        if (Player.InCombat)
+            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EarthlyStar), Player, ActionQueue.Priority.Medium, targetPos: Player.PosRot.XYZ());
     }
 }
