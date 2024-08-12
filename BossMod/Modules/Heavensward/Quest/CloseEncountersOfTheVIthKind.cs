@@ -11,7 +11,7 @@ public enum AID : uint
 {
     HandOfTheEmpire = 4000, // Boss->location, 2.0s cast, range 2 circle
     TerminusEstBoss = 4005, // Boss->self, 3.0s cast, range 50 circle
-    TerminusEstAOE = 3825, // _Gen_TerminusEst->self, no cast, range 40+R width 4 rect
+    TerminusEstAOE = 3825, // TerminusEst->self, no cast, range 40+R width 4 rect
 }
 
 class RegulaVanHydrusStates : StateMachineBuilder
@@ -28,7 +28,7 @@ class RegulaVanHydrusStates : StateMachineBuilder
 
 class HandOfTheEmpire(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.HandOfTheEmpire), 2);
 
-class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(0x1E88F5));
+class Voidzone(BossModule module) : Components.PersistentVoidzone(module, 8, m => m.Enemies(OID.Puddle));
 
 class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.TerminusEstAOE))
 {
