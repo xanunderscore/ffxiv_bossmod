@@ -69,9 +69,9 @@ class FireSphere(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     }
 }
 
-class LahabreaStates : StateMachineBuilder
+class DevastationStates : StateMachineBuilder
 {
-    public LahabreaStates(BossModule module) : base(module)
+    public DevastationStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<DeathWall>()

@@ -216,9 +216,9 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
     }
 }
 
-class VishapStates : StateMachineBuilder
+class StepsOfFaithStates : StateMachineBuilder
 {
-    public VishapStates(BossModule module) : base(module)
+    public StepsOfFaithStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<FlameBreath>()
