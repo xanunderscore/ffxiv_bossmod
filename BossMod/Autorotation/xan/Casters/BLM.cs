@@ -187,29 +187,38 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                         TryInstantCast(strategy, primaryTarget);
 
                     PushGCD(AID.Blizzard3, primaryTarget);
+                    return;
                 }
+
                 // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
-                else if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
+                if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
                     PushGCD(AID.Despair, primaryTarget);
+
                 // AF3 will last *at least* another two F4s, ok to cast
                 // TODO in the case where we have one triplecast stack left, this will end up checking (timer > 2.5 + 2.5) instead of (timer > 2.5 + 3.1) - i think it's ok?
-                else if (ElementLeft > NextCastStart + minF4Time * 2)
+                if (ElementLeft > NextCastStart + minF4Time * 2)
                 {
                     if (Polyglot == MaxPolyglot && NextPolyglot < 5)
                         PushGCD(AID.Xenoglossy, primaryTarget);
 
                     PushGCD(AID.Fire4, primaryTarget);
                 }
+
                 // AF3 will last long enough for us to refresh using Paradox
                 // TODO the extra 0.1 is a guesstimate for how long it actually takes instant fire spells to refresh the timer, should look at replays to be sure
-                else if (ElementLeft > NextCastStart + minF4Time + 0.1f && Paradox)
+                if (ElementLeft > NextCastStart + minF4Time + 0.1f && Paradox)
                     PushGCD(AID.Fire4, primaryTarget);
-                else if (Paradox)
+
+                if (Paradox)
                     PushGCD(AID.Paradox, primaryTarget);
-                else if (Firestarter > GCD)
+
+                if (Firestarter > GCD)
                     PushGCD(AID.Fire3, primaryTarget);
-                else
-                    PushGCD(AID.Blizzard3, primaryTarget);
+
+                if (MP >= 1600 && ElementLeft > GetSlidecastEnd(AID.Fire1))
+                    PushGCD(AID.Fire1, primaryTarget);
+
+                PushGCD(AID.Blizzard3, primaryTarget);
             }
         }
         else if (Unlocked(AID.Fire3))
