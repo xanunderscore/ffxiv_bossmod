@@ -191,7 +191,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                 }
 
                 // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
-                if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
+                if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair) && Unlocked(AID.Despair))
                     PushGCD(AID.Despair, primaryTarget);
 
                 // AF3 will last *at least* another two F4s, ok to cast
