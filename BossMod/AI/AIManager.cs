@@ -34,6 +34,9 @@ sealed class AIManager : IDisposable
         };
         Service.ChatGui.ChatMessage += OnChatMessage;
         Service.CommandManager.AddHandler("/vbmai", new Dalamud.Game.Command.CommandInfo(OnCommand) { HelpMessage = "Toggle AI mode" });
+
+        if (_config.LastAIPreset != "")
+            _aiPreset = autorot.Database.Presets.Presets.FirstOrDefault(p => p.Name == _config.LastAIPreset);
     }
 
     public void Dispose()
@@ -127,6 +130,8 @@ sealed class AIManager : IDisposable
                         _aiPreset = p;
                         if (Behaviour != null)
                             Behaviour.AIPreset = p;
+                        _config.LastAIPreset = p.Name;
+                        _config.Modified.Fire();
                     }
                 }
             }

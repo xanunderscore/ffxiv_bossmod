@@ -1,5 +1,7 @@
 ﻿namespace BossMod;
 
+public record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
+
 [ConfigDisplay(Name = "Replay settings", Order = 0)]
 public class ReplayManagementConfig : ConfigNode
 {
@@ -30,4 +32,6 @@ public class ReplayManagementConfig : ConfigNode
 
     [PropertyDisplay("Remember playback position for previously opened replays")]
     public bool RememberReplayTimes;
+
+    public List<ReplayMemory> ReplayHistory = [];
 }

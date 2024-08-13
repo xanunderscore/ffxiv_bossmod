@@ -58,4 +58,6 @@ sealed class AIConfig : ConfigNode
 
     [PropertyDisplay("Broadcast keypresses to other windows")]
     public bool BroadcastToSlaves = false;
+
+    public string LastAIPreset = "";
 }

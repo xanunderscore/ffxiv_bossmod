@@ -3,7 +3,6 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.IO;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,8 +10,6 @@ namespace BossMod;
 
 public sealed class ReplayManager : IDisposable
 {
-    private record struct ReplayMemory(string Path, bool IsOpen, DateTime PlaybackPosition);
-
     private sealed class ReplayEntry : IDisposable
     {
         public string Path;
@@ -23,9 +20,9 @@ public sealed class ReplayManager : IDisposable
         public bool AutoShowWindow;
         public bool Selected;
         public bool Disposed;
-        public DateTime SavedPosition;
+        public DateTime? SavedPosition;
 
-        public ReplayEntry(string path, bool autoShow, DateTime savedPosition = default)
+        public ReplayEntry(string path, bool autoShow, DateTime? savedPosition = null)
         {
             Path = path;
             AutoShowWindow = autoShow;
@@ -48,8 +45,8 @@ public sealed class ReplayManager : IDisposable
             Window ??= new(Replay.Result, rotationDB);
             Window.IsOpen = true;
             Window.BringToFront();
-            if (SavedPosition != default)
-                Window.CurrentTime = SavedPosition;
+            if (SavedPosition != null)
+                Window.CurrentTime = SavedPosition.Value;
         }
     }
 
@@ -77,17 +74,15 @@ public sealed class ReplayManager : IDisposable
     private readonly List<ReplayEntry> _replayEntries = [];
     private readonly List<AnalysisEntry> _analysisEntries = [];
     private readonly RotationDatabase rotationDB;
-    private readonly string replayHistoryFile;
     private int _nextAnalysisId;
     private string _path = "";
     private FileDialog? _fileDialog;
     private string fileDialogStartPath;
 
-    public ReplayManager(RotationDatabase rotationDB, string fileDialogStartPath, string replayHistoryFile)
+    public ReplayManager(RotationDatabase rotationDB, string fileDialogStartPath)
     {
         this.rotationDB = rotationDB;
         this.fileDialogStartPath = fileDialogStartPath;
-        this.replayHistoryFile = replayHistoryFile;
         RestoreHistory();
     }
 
@@ -328,10 +323,8 @@ public sealed class ReplayManager : IDisposable
         if (!cfg.RememberReplays)
             return;
 
-        using var stream = new FileStream(replayHistoryFile, FileMode.Create, FileAccess.Write, FileShare.Read);
-        using var jwriter = Serialization.WriteJson(stream);
-        JsonSerializer.Serialize(jwriter, _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)), Serialization.BuildSerializationOptions());
-        Service.Log($"Replays state saved to {replayHistoryFile}");
+        cfg.ReplayHistory = _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)).ToList();
+        cfg.Modified.Fire();
     }
 
     private void RestoreHistory()
@@ -340,26 +333,7 @@ public sealed class ReplayManager : IDisposable
         if (!cfg.RememberReplays)
             return;
 
-        var saved = new FileInfo(replayHistoryFile);
-        if (!saved.Exists)
-        {
-            Service.Log($"Replay history file {replayHistoryFile} does not exist.");
-            return;
-        }
-
-        try
-        {
-            using var json = Serialization.ReadJson(saved.FullName);
-            var serOptions = Serialization.BuildSerializationOptions();
-            var list = json.Deserialize<List<ReplayMemory>>(serOptions)!;
-
-            foreach (var memory in list)
-                _replayEntries.Add(new(memory.Path, memory.IsOpen, cfg.RememberReplayTimes ? memory.PlaybackPosition : default));
-        }
-        catch (Exception ex)
-        {
-            Service.Log($"Unable to load saved replays from {replayHistoryFile}: {ex}");
-            return;
-        }
+        foreach (var memory in cfg.ReplayHistory)
+            _replayEntries.Add(new(memory.Path, memory.IsOpen, cfg.RememberReplayTimes ? memory.PlaybackPosition : null));
     }
 }
