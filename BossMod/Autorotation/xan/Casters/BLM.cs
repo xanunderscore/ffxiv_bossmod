@@ -22,7 +22,8 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
     public int AstralSoul; // max 6
     public bool Paradox;
 
-    public float Triplecast;
+    public float TriplecastLeft => Triplecast.Left;
+    public (float Left, int Stacks) Triplecast;
     public float Thunderhead;
     public float Firestarter;
     public bool InLeyLines;
@@ -40,7 +41,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
     protected override float GetCastTime(AID aid)
     {
-        if (Triplecast > GCD)
+        if (TriplecastLeft > GCD)
             return 0;
 
         var aspect = ActionDefinitions.Instance.Spell(aid)!.Aspect;
@@ -74,7 +75,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         Paradox = gauge.ParadoxActive;
         AstralSoul = gauge.AstralSoulStacks;
 
-        Triplecast = StatusLeft(SID.Triplecast);
+        Triplecast = Status(SID.Triplecast);
         Thunderhead = StatusLeft(SID.Thunderhead);
         Firestarter = StatusLeft(SID.Firestarter);
         InLeyLines = Player.FindStatus(SID.CircleOfPower) != null;
@@ -205,10 +206,10 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                     PushGCD(AID.Fire4, primaryTarget);
                 }
 
-                // check if AF3 will last long enough for us to refresh using Paradox or F3
+                // check if AF3 will last long enough for us to refresh using Paradox or F3 (or a triplecasted spell)
                 // TODO the extra 0.1 is a guesstimate for how long it actually takes instant fire spells to refresh the timer, should look at replays to be sure
                 var soonestPossibleRefresh = NextCastStart + minF4Time + 0.1f;
-                var haveInstantFire = Paradox || Firestarter > soonestPossibleRefresh;
+                var haveInstantFire = Paradox || Firestarter > soonestPossibleRefresh || Triplecast.Stacks > 1;
 
                 if (ElementLeft > soonestPossibleRefresh && MP >= f4Cost && haveInstantFire)
                     PushGCD(AID.Fire4, primaryTarget);
@@ -316,7 +317,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         {
             var nextGCD = GCD + GCDLength;
 
-            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanWeave(AID.Transpose, 1) && SwiftcastLeft == 0 && Triplecast == 0)
+            if (ElementLeft > nextGCD && Firestarter > nextGCD && CanWeave(AID.Transpose, 1) && SwiftcastLeft == 0 && TriplecastLeft == 0)
                 TryInstantCast(strategy, primaryTarget, useFirestarter: false);
 
             PushGCD(AID.Fire3, primaryTarget);
@@ -406,7 +407,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Transpose, Player);
     }
 
-    private bool ShouldTriplecast(StrategyValues strategy) => Triplecast == 0 && (ShouldUseLeylines(strategy) || InLeyLines);
+    private bool ShouldTriplecast(StrategyValues strategy) => TriplecastLeft == 0 && (ShouldUseLeylines(strategy) || InLeyLines);
 
     private bool ShouldUseLeylines(StrategyValues strategy, int extraGCDs = 0)
         => CanWeave(AID.LeyLines, extraGCDs)
