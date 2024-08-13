@@ -174,6 +174,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (Unlocked(AID.Fire4))
         {
             var minF4Time = MathF.Max(GCDLength, GetCastTime(AID.Fire4) + 0.1f);
+            var f4Cost = Hearts > 0 ? 800 : 1600;
 
             if (Fire == 3)
             {
@@ -191,12 +192,12 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                 }
 
                 // breakpoint at which despair is more damage than f1 despair, because it speeds up next fire phase
-                if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair) && Unlocked(AID.Despair))
+                if (MP <= 2400 && ElementLeft > GetSlidecastEnd(AID.Despair))
                     PushGCD(AID.Despair, primaryTarget);
 
-                // AF3 will last *at least* another two F4s, ok to cast
+                // AF3 will last at least for this F4, plus another one - keep chugging
                 // TODO in the case where we have one triplecast stack left, this will end up checking (timer > 2.5 + 2.5) instead of (timer > 2.5 + 3.1) - i think it's ok?
-                if (ElementLeft > NextCastStart + minF4Time * 2)
+                if (ElementLeft > NextCastStart + minF4Time * 2 && MP >= f4Cost)
                 {
                     if (Polyglot == MaxPolyglot && NextPolyglot < 5)
                         PushGCD(AID.Xenoglossy, primaryTarget);
@@ -204,9 +205,12 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
                     PushGCD(AID.Fire4, primaryTarget);
                 }
 
-                // AF3 will last long enough for us to refresh using Paradox
+                // check if AF3 will last long enough for us to refresh using Paradox or F3
                 // TODO the extra 0.1 is a guesstimate for how long it actually takes instant fire spells to refresh the timer, should look at replays to be sure
-                if (ElementLeft > NextCastStart + minF4Time + 0.1f && Paradox)
+                var soonestPossibleRefresh = NextCastStart + minF4Time + 0.1f;
+                var haveInstantFire = Paradox || Firestarter > soonestPossibleRefresh;
+
+                if (ElementLeft > soonestPossibleRefresh && MP >= f4Cost && haveInstantFire)
                     PushGCD(AID.Fire4, primaryTarget);
 
                 if (Paradox)
@@ -227,9 +231,8 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             // 1. is this a DPS gain 2. does anyone actually care about level 50
             if (MP < 1600)
             {
-                // F3 unlocks from leveling but B3 unlocks from a job quest (CRINGE)
-                if (Unlocked(AID.Blizzard3))
-                    PushGCD(AID.Blizzard3, primaryTarget);
+                // may get skipped - B3 is unlocked via quest, not level
+                PushGCD(AID.Blizzard3, primaryTarget);
 
                 TryInstantOrTranspose(strategy, primaryTarget);
             }
