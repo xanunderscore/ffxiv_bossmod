@@ -423,7 +423,7 @@ public unsafe sealed class ActionManagerEx : IDisposable
         _manualQueue.Pop(action);
         _animLockTweak.RecordRequest(seq, _inst->AnimationLock);
         _restoreRotTweak.Preserve(prevRot, currRot);
-        MoveMightInterruptCast = CastTimeRemaining > 0;
+        MoveMightInterruptCast = CastTimeRemaining > 0 && !CanMoveWhileCasting(action);
 
         var recast = _inst->GetRecastGroupDetail(GetRecastGroup(action));
 
