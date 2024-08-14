@@ -57,15 +57,15 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     }
 
     protected AID NextGCD;
-    protected uint NextGCDPrio;
+    protected int NextGCDPrio;
     protected uint MP;
 
     protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;
 
     protected void PushGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
-        => PushGCD(aid, target, (uint)(object)priority, delay);
+        => PushGCD(aid, target, (int)(object)priority, delay);
 
-    protected void PushGCD(AID aid, Actor? target, uint priority = 1, float delay = 0)
+    protected void PushGCD(AID aid, Actor? target, int priority = 1, float delay = 0)
     {
         if (priority == 0)
             return;
@@ -78,9 +78,9 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     }
 
     protected void PushOGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
-        => PushOGCD(aid, target, (uint)(object)priority, delay);
+        => PushOGCD(aid, target, (int)(object)priority, delay);
 
-    protected void PushOGCD(AID aid, Actor? target, uint priority = 1, float delay = 0)
+    protected void PushOGCD(AID aid, Actor? target, int priority = 1, float delay = 0)
     {
         if (priority == 0)
             return;

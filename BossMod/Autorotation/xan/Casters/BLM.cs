@@ -370,7 +370,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Blizzard2, BestAOETarget);
     }
 
-    private void Choose(AID st, AID aoe, Actor? primaryTarget, uint additionalPrio = 0)
+    private void Choose(AID st, AID aoe, Actor? primaryTarget, int additionalPrio = 0)
     {
         if (NumAOETargets > 2 && Unlocked(aoe))
             PushGCD(aoe, BestAOETarget, additionalPrio + 1);
@@ -389,7 +389,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             Choose(AID.Xenoglossy, AID.Foul, primaryTarget);
 
         if (tp)
-            Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0u);
+            Choose(AID.Thunder1, AID.Thunder2, primaryTarget, TargetThunderLeft < 5 ? 20 : 0);
 
         if (useFirestarter && Firestarter > GCD)
             PushGCD(AID.Fire3, primaryTarget);

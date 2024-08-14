@@ -133,7 +133,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
     }
 
-    public enum GCDPriority : uint
+    public enum GCDPriority
     {
         None = 0,
         Meditate = 50,
@@ -149,7 +149,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     }
 
     // some monk OGCDs will be queued with higher prio than what user presses manually - the rotation is very drift-sensitive and monk has much less time to weave than other classes do
-    public enum OGCDPriority : uint
+    public enum OGCDPriority
     {
         None = 0,
         TrueNorth = 100,
