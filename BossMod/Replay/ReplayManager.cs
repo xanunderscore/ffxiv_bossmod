@@ -323,7 +323,7 @@ public sealed class ReplayManager : IDisposable
         if (!cfg.RememberReplays)
             return;
 
-        cfg.ReplayHistory = _replayEntries.Select(r => new ReplayMemory(r.Path, true, r.Window?.CurrentTime ?? default)).ToList();
+        cfg.ReplayHistory = _replayEntries.Select(r => new ReplayMemory(r.Path, r.Window?.IsOpen ?? true, r.Window?.CurrentTime ?? default)).ToList();
         cfg.Modified.Fire();
     }
 
