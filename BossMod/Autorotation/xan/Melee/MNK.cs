@@ -233,14 +233,15 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             if (CountdownRemaining is > 2 and < 11.8f && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
 
-            if (CountdownRemaining < 0.4 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
+            if (CountdownRemaining < 1 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
 
-            if (Player.DistanceToHitbox(primaryTarget) < 3 && CountdownRemaining < GetApplicationDelay(AID.DragonKick))
-            {
-                Hints.ForcedTarget = null;
-                PushGCD(AID.DragonKick, primaryTarget);
-            }
+            // uncomment/fix once we are able to manually delay starting autoattacks
+            //if (Player.DistanceToHitbox(primaryTarget) < 3 && CountdownRemaining < GetApplicationDelay(AID.DragonKick))
+            //{
+            //    Hints.ForcedTarget = null;
+            //    PushGCD(AID.DragonKick, primaryTarget);
+            //}
 
             return;
         }
