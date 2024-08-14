@@ -252,7 +252,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             if (CountdownRemaining is > 2 and < 11.8f && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
 
-            if (CountdownRemaining < 1 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
+            if (CountdownRemaining < 0.7f && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
 
             // uncomment/fix once we are able to manually delay starting autoattacks
