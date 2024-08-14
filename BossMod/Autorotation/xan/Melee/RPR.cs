@@ -47,7 +47,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
     public enum GCDPriority
     {
-        None = -1,
+        None = 0,
         Soulsow = 1,
         EnhancedHarpe = 100,
         HarvestMoon = 150,

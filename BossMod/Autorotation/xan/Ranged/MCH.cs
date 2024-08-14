@@ -118,7 +118,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (NumAOETargets > 2)
             PushGCD(AID.Bioblaster, BestAOETarget);
 
-        PushGCD(AID.Drill, primaryTarget, priority: CD(AID.Drill) <= GCD ? 20 : 0);
+        PushGCD(AID.Drill, primaryTarget, priority: CD(AID.Drill) <= GCD ? 20 : 1u);
 
         // TODO work out priorities
         if (FMFLeft > GCD && ExcavatorLeft == 0)
@@ -210,8 +210,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             UseRicochet(primaryTarget);
     }
 
-    private void UseGauss(Actor? primaryTarget) => PushOGCD(AID.GaussRound, Unlocked(AID.DoubleCheck) ? BestRangedAOETarget : primaryTarget, -50);
-    private void UseRicochet(Actor? primaryTarget) => PushOGCD(AID.Ricochet, BestRangedAOETarget, -50);
+    private void UseGauss(Actor? primaryTarget) => Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.GaussRound), Unlocked(AID.DoubleCheck) ? BestRangedAOETarget : primaryTarget, ActionQueue.Priority.Low - 50);
+    private void UseRicochet(Actor? primaryTarget) => Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.Ricochet), BestRangedAOETarget, ActionQueue.Priority.Low - 50);
 
     private bool ShouldReassemble(StrategyValues strategy, Actor? primaryTarget)
     {

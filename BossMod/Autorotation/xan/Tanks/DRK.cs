@@ -126,7 +126,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
 
     public enum OGCDPriority
     {
-        None = -1,
+        None = 0,
         Edge = 200,
         SaltAndDarkness = 500,
         Carve = 550,

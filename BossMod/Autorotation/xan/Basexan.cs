@@ -57,20 +57,20 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     }
 
     protected AID NextGCD;
-    protected int NextGCDPrio;
+    protected uint NextGCDPrio;
     protected uint MP;
 
     protected AID ComboLastMove => (AID)(object)World.Client.ComboState.Action;
 
     protected void PushGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
-        => PushGCD(aid, target, (int)(object)priority, delay);
+        => PushGCD(aid, target, (uint)(object)priority, delay);
 
-    protected void PushGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
+    protected void PushGCD(AID aid, Actor? target, uint priority = 1, float delay = 0)
     {
-        if (priority < 0)
+        if (priority == 0)
             return;
 
-        if (PushAction(aid, target, ActionQueue.Priority.High + 100 + priority, delay) && priority > NextGCDPrio)
+        if (PushAction(aid, target, ActionQueue.Priority.High + priority, delay) && priority > NextGCDPrio)
         {
             NextGCD = aid;
             NextGCDPrio = priority;
@@ -78,10 +78,15 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     }
 
     protected void PushOGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
-        => PushOGCD(aid, target, (int)(object)priority, delay);
+        => PushOGCD(aid, target, (uint)(object)priority, delay);
 
-    protected void PushOGCD(AID aid, Actor? target, int priority = 0, float delay = 0)
-        => PushAction(aid, target, ActionQueue.Priority.Low + 100 + priority, delay);
+    protected void PushOGCD(AID aid, Actor? target, uint priority = 1, float delay = 0)
+    {
+        if (priority == 0)
+            return;
+
+        PushAction(aid, target, ActionQueue.Priority.Low + priority, delay);
+    }
 
     protected bool PushAction(AID aid, Actor? target, float priority, float delay)
     {

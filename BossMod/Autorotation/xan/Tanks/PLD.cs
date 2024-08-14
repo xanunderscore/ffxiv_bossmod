@@ -103,7 +103,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
         {
             // fallback - cast holy spirit if we don't have a melee
             if (DivineMight > GCD && MP >= 1000)
-                PushGCD(AID.HolySpirit, primaryTarget, -50);
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(AID.HolySpirit), primaryTarget, ActionQueue.Priority.High - 50);
 
             if (Requiescat.Left > GCD || DivineMight > GCD && FightOrFlight > GCD)
                 PushGCD(AID.HolySpirit, primaryTarget);
