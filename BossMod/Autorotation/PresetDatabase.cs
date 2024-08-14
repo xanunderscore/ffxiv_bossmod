@@ -18,17 +18,7 @@ public sealed class PresetDatabase
         {
             try
             {
-                var cfg = Service.Config.Get<AutorotationConfig>();
-
                 Presets = LoadPresetsFromFile(_dbPath.FullName);
-                if (!cfg.DefaultPresetsImported)
-                {
-                    var ass = Path.Combine(Service.PluginInterface.AssemblyLocation.Directory?.FullName!, "Autorotation\\DefaultPresets.json");
-                    Presets.AddRange(LoadPresetsFromFile(ass));
-
-                    cfg.DefaultPresetsImported = true;
-                    cfg.Modified.Fire();
-                }
             }
             catch (Exception ex)
             {
