@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply }
+    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply, Nadi }
     public enum PotionStrategy
     {
         Manual,
@@ -25,6 +25,18 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         Ranged,
         Force,
         Delay
+    }
+    public enum NadiStrategy
+    {
+        Automatic,
+        [PropertyDisplay("Lunar", 0xFFDB8BCA)]
+        Lunar,
+        [PropertyDisplay("Solar", 0xFF8EE6FA)]
+        Solar,
+        [PropertyDisplay("Lunar (downtime)", 0xFFDB8BCA)]
+        LunarDowntime,
+        [PropertyDisplay("Solar (downtime)", 0xFF8EE6FA)]
+        SolarDowntime,
     }
 
     public static RotationModuleDefinition Definition()
@@ -51,6 +63,13 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(FRStrategy.Force, "Use ASAP")
             .AddOption(FRStrategy.Delay, "Do not use");
 
+        def.Define(Track.Nadi).As<NadiStrategy>("Nadi")
+            .AddOption(NadiStrategy.Automatic, "Automatically choose best nadi (double lunar opener, otherwise alternate)")
+            .AddOption(NadiStrategy.Lunar, "Lunar")
+            .AddOption(NadiStrategy.Solar, "Solar")
+            .AddOption(NadiStrategy.LunarDowntime, "Build lunar nadi if no current target")
+            .AddOption(NadiStrategy.SolarDowntime, "Build solar nadi if no current target");
+
         return def;
     }
 
@@ -64,6 +83,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     public NadiFlags Nadi;
 
     public Form CurrentForm;
+    public Form EffectiveForm;
     public float FormLeft; // 0 if no form, 30 max
 
     public float BlitzLeft; // 20 max
@@ -221,12 +241,11 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         BestRangedTarget = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget).Best;
         (BestLineTarget, NumLineTargets) = SelectTarget(strategy, primaryTarget, 10, IsEnlightenmentTarget);
 
+        EffectiveForm = GetEffectiveForm(strategy);
+
         UpdatePositionals(primaryTarget, NextPositional, TrueNorthLeft > GCD);
 
         Meditate(strategy, primaryTarget);
-
-        if (Chakra < 5 && Unlocked(AID.SteeledMeditation) && (!Player.InCombat || primaryTarget == null))
-            PushGCD(AID.SteeledMeditation, Player);
 
         if (CountdownRemaining > 0)
         {
@@ -287,35 +306,36 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         OGCD(strategy, primaryTarget);
     }
 
-    private Form EffectiveForm
+    private Form GetEffectiveForm(StrategyValues strategy)
     {
-        get
+        if (PerfectBalanceLeft == 0)
+            return CurrentForm;
+
+        var nadi = strategy.Option(Track.Nadi).As<NadiStrategy>();
+
+        // force lunar PB iff we are in opener, have lunar nadi already, and this is our last PB charge, aka double lunar opener
+        // if we have lunar but this is NOT our last charge, it means we came out of downtime with lunar nadi (i.e. dungeon), so solar -> pr is optimal
+        // this condition is unfortunately a little contrived. there are no other general cases in the monk rotation where we want to overwrite a lunar, as it's overall a dps loss
+        // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
+        // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
+        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && NextChargeIn(AID.PerfectBalance) > GCD;
+        var forcedSolar = nadi is NadiStrategy.Solar or NadiStrategy.SolarDowntime
+            || ForcedSolar
+            || HasLunar && !HasSolar && !forcedDoubleLunar;
+
+        var canCoeurl = forcedSolar;
+        var canRaptor = forcedSolar;
+        var canOpo = true;
+
+        foreach (var chak in BeastChakra)
         {
-            if (PerfectBalanceLeft == 0)
-                return CurrentForm;
-
-            // force lunar PB iff we are in opener, have lunar nadi already, and this is our last PB charge, aka double lunar opener
-            // if we have lunar but this is NOT our last charge, it means we came out of downtime with lunar nadi (i.e. dungeon), so solar -> pr is optimal
-            // this condition is unfortunately a little contrived. there are no other general cases in the monk rotation where we want to overwrite a lunar, as it's overall a dps loss
-            // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
-            // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
-            var forceDoubleLunar = CombatTimer < 30 && HasLunar && NextChargeIn(AID.PerfectBalance) > GCD;
-            var forcedSolar = ForcedSolar || HasLunar && !HasSolar && !forceDoubleLunar;
-
-            var canCoeurl = forcedSolar;
-            var canRaptor = forcedSolar;
-            var canOpo = true;
-
-            foreach (var chak in BeastChakra)
-            {
-                canCoeurl &= chak != BeastChakraType.Coeurl;
-                canRaptor &= chak != BeastChakraType.Raptor;
-                if (ForcedSolar)
-                    canOpo &= chak != BeastChakraType.OpoOpo;
-            }
-
-            return canRaptor ? Form.Raptor : canCoeurl ? Form.Coeurl : Form.OpoOpo;
+            canCoeurl &= chak != BeastChakraType.Coeurl;
+            canRaptor &= chak != BeastChakraType.Raptor;
+            if (ForcedSolar)
+                canOpo &= chak != BeastChakraType.OpoOpo;
         }
+
+        return canRaptor ? Form.Raptor : canCoeurl ? Form.Coeurl : Form.OpoOpo;
     }
 
     private void QueuePB(StrategyValues strategy)
