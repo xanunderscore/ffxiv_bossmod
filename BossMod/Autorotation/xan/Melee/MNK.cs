@@ -255,11 +255,15 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             if (CountdownRemaining < 0.7f && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
 
-            // uncomment/fix once we are able to manually delay starting autoattacks
-            //if (Player.DistanceToHitbox(primaryTarget) < 3 && CountdownRemaining < GetApplicationDelay(AID.DragonKick))
+            // facepull precast demolish opener
+            // works with DK opener, but only at 2.0 GCD - 1.94 gives too little time to weave PB
+            //if (Bossmods.ActiveModule?.PrimaryActor is Actor a && Player.DistanceToHitbox(a) <= 3)
             //{
-            //    Hints.ForcedTarget = null;
-            //    PushGCD(AID.DragonKick, primaryTarget);
+            //    if (CountdownRemaining < GetApplicationDelay(AID.Demolish))
+            //        PushGCD(AID.Demolish, a);
+
+            //    if (CountdownRemaining < 0.53f)
+            //        Hints.ForcedTarget = a;
             //}
 
             return;
@@ -380,7 +384,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushOGCD(AID.TrueNorth, Player, OGCDPriority.TrueNorth, ShouldRoF ? 0 : GCD - 0.8f);
         }
 
-        if (Chakra >= 5)
+        if (Chakra >= 5 && !CanWeave(AID.RiddleOfFire))
         {
             if (NumLineTargets >= 3)
                 PushOGCD(AID.HowlingFist, BestLineTarget, OGCDPriority.TFC);
