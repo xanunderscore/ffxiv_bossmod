@@ -35,6 +35,11 @@ public sealed class StrikingDummyRotation(RotationModuleManager manager, Actor p
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
+        var cd = World.Client.CountdownRemaining;
+        var boss = Bossmods.ActiveModule?.PrimaryActor;
+        if (cd > 0 && boss != null && Player.DistanceToHitbox(boss) > 3)
+            Hints.ForcedMovement = Player.DirectionTo(boss).ToVec3();
+
         if (strategy.Option(Track.Test).As<Strategy>() == Strategy.Some && primaryTarget != null)
         {
             Hints.ForcedMovement = (primaryTarget.Position - Player.Position).OrthoL().ToVec3();
