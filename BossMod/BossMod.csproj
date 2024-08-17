@@ -86,8 +86,4 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Modules\Stormblood\Quest\" />
-  </ItemGroup>
 </Project>
