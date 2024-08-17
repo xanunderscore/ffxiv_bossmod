@@ -464,3 +464,18 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         return s > 0 ? (Form.Coeurl, s) : (Form.None, 0);
     }
 }
+
+public sealed class ValigarmexMNK(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
+{
+    public static RotationModuleDefinition Definition()
+    {
+        return new RotationModuleDefinition("EX1-MNK", "EX1 MNK", "xan", RotationModuleQuality.WIP, BitMask.Build(Class.MNK), 100, 1, typeof(Dawntrail.Extreme.Ex1Valigarmanda.Ex1Valigarmanda));
+    }
+
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    {
+        var boss = Bossmods.ActiveModule?.PrimaryActor;
+        if (boss != null && World.Client.CountdownRemaining > 0 && Player.DistanceToHitbox(boss) > 3)
+            Hints.ForcedMovement = Player.DirectionTo(boss).ToVec3();
+    }
+}
