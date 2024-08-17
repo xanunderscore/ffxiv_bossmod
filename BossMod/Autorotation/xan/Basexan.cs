@@ -108,8 +108,13 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
         Vector3 targetPos = default;
 
-        if (def.Range == 0 && def.AllowedTargets.HasFlag(ActionTargets.Area))
-            targetPos = Player.PosRot.XYZ();
+        if (def.AllowedTargets.HasFlag(ActionTargets.Area))
+        {
+            if (def.Range == 0)
+                targetPos = Player.PosRot.XYZ();
+            else if (target != null)
+                targetPos = target.PosRot.XYZ();
+        }
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, priority, delay: delay, targetPos: targetPos);
         return true;
@@ -275,7 +280,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float GetSlidecastTime(AID aid) => MathF.Max(0, GetCastTime(aid) - 0.5f);
     protected float GetSlidecastEnd(AID aid) => NextCastStart + GetSlidecastTime(aid);
 
-    protected bool CanCast(AID aid)
+    protected virtual bool CanCast(AID aid)
     {
         var t = GetSlidecastTime(aid);
         if (t == 0)

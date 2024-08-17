@@ -119,6 +119,9 @@ public sealed class UIRotationWindow : UIWindow
                 case Positional.Rear:
                     Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation + 180.Degrees(), 45.Degrees(), color);
                     break;
+                case Positional.Front:
+                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation, 45.Degrees(), color);
+                    break;
             }
         }
     }

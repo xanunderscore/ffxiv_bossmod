@@ -1,6 +1,4 @@
-﻿using System.Windows.Markup;
-
-namespace BossMod;
+﻿namespace BossMod;
 
 public record struct ClientActionRequest
 (
@@ -51,6 +49,7 @@ public sealed class ClientState
     public readonly Cooldown[] Cooldowns = new Cooldown[NumCooldownGroups];
     public readonly ActionID[] DutyActions = new ActionID[2];
     public readonly byte[] BozjaHolster = new byte[(int)BozjaHolsterID.Count]; // number of copies in holster per item
+    public readonly uint[] BlueMageSpells = new uint[24];
     public readonly short[] ClassJobLevels = new short[NumClassLevels];
     public Fate ActiveFate;
 
@@ -87,6 +86,9 @@ public sealed class ClientState
 
         if (ClassJobLevels.Any(a => a != 0))
             yield return new OpClassJobLevelsChange(ClassJobLevels);
+
+        if (BlueMageSpells.Any(a => a != 0))
+            yield return new OpBlueMageSpellsChange(BlueMageSpells);
     }
 
     public void Tick(float dt)
@@ -267,6 +269,28 @@ public sealed class ClientState
         public override void Write(ReplayRecorder.Output output)
         {
             output.EmitFourCC("CLVL"u8);
+            output.Emit((byte)Values.Length);
+            foreach (var e in Values)
+                output.Emit(e);
+        }
+    }
+
+    public Event<OpBlueMageSpellsChange> BlueMageSpellsChanged = new();
+    public sealed record class OpBlueMageSpellsChange(uint[] Values) : WorldState.Operation
+    {
+        public readonly uint[] Values = Values;
+
+        protected override void Exec(WorldState ws)
+        {
+            Array.Fill(ws.Client.BlueMageSpells, (ushort)0);
+            for (var i = 0; i < Values.Length; i++)
+                ws.Client.BlueMageSpells[i] = Values[i];
+            ws.Client.BlueMageSpellsChanged.Fire(this);
+        }
+
+        public override void Write(ReplayRecorder.Output output)
+        {
+            output.EmitFourCC("BLUS"u8);
             output.Emit((byte)Values.Length);
             foreach (var e in Values)
                 output.Emit(e);

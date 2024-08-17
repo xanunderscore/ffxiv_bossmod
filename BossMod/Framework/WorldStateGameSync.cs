@@ -571,6 +571,13 @@ sealed class WorldStateGameSync : IDisposable
         var levels = uiState->PlayerState.ClassJobLevels;
         if (!MemoryExtensions.SequenceEqual(_ws.Client.ClassJobLevels.AsSpan(), levels))
             _ws.Execute(new ClientState.OpClassJobLevelsChange(levels.ToArray()));
+
+        Span<uint> blueSpells = stackalloc uint[24];
+        blueSpells.Clear();
+        for (var i = 0; i < 24; i++)
+            blueSpells[i] = actionManager->GetActiveBlueMageActionInSlot(i);
+        if (!MemoryExtensions.SequenceEqual(_ws.Client.BlueMageSpells.AsSpan(), blueSpells))
+            _ws.Execute(new ClientState.OpBlueMageSpellsChange(blueSpells.ToArray()));
     }
 
     private ulong SanitizedObjectID(ulong raw) => raw != InvalidEntityId ? raw : 0;

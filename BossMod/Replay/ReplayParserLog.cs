@@ -336,6 +336,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("CLBH"u8)] = ParseClientBozjaHolster,
             [new("CLAF"u8)] = ParseClientActiveFate,
             [new("CLVL"u8)] = ParseClientClassJobLevels,
+            [new("BLUS"u8)] = ParseBlueSpells,
             [new("IPCI"u8)] = ParseNetworkIDScramble,
             [new("IPCS"u8)] = ParseNetworkServerIPC,
         };
@@ -650,6 +651,14 @@ public sealed class ReplayParserLog : IDisposable
         var contents = new short[_input.ReadByte(false)];
         for (int i = 0; i < contents.Length; i++)
             contents[i] = _input.ReadShort();
+        return new(contents);
+    }
+
+    private ClientState.OpBlueMageSpellsChange ParseBlueSpells()
+    {
+        var contents = new uint[_input.ReadByte(false)];
+        for (int i = 0; i < contents.Length; i++)
+            contents[i] = _input.ReadUInt(false);
         return new(contents);
     }
 
