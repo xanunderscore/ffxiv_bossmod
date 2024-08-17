@@ -293,8 +293,8 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected Positional GetCurrentPositional(Actor target) => (Player.Position - target.Position).Normalized().Dot(target.Rotation.ToDirection()) switch
     {
-        < -0.707167f => Positional.Rear,
-        < 0.707167f => Positional.Flank,
+        < -0.7071068f => Positional.Rear,
+        < 0.7071068f => Positional.Flank,
         _ => Positional.Front
     };
 
