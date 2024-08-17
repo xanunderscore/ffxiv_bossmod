@@ -73,17 +73,34 @@ class PartitionShortL(BossModule module) : Components.SelfTargetedAOEs(module, A
 class PartitionLongR(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PartitionLongAOER), new AOEShapeCone(40, 90.Degrees()));
 class PartitionLongL(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.PartitionLongAOEL), new AOEShapeCone(40, 90.Degrees()));
 class HaloOfDestruction(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HaloOfDestructionAOE), new AOEShapeDonut(6, 40));
+
 class Terminate(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TerminateAOE), new AOEShapeRect(40, 5))
 {
     private readonly HaloOfDestruction? _halo = module.FindComponent<HaloOfDestruction>();
+    private static readonly AOEShapeRect _shapeOverlap = new(40, 4);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        // when overlapping with halo, halo always resolves first
-        if (_halo == null || _halo.Casters.Count == 0)
-            base.AddAIHints(slot, actor, assignment, hints);
+        // when overlapping with halo, halo always resolves first - but we still wanna stay closer to the edge
+        foreach (var aoe in ActiveAOEs(slot, actor))
+        {
+            var shape = aoe.Shape;
+            var origin = aoe.Origin;
+            if (_halo?.Casters.Count > 0)
+            {
+                shape = _shapeOverlap;
+                origin.Z += (origin.Z - Module.Center.Z) switch
+                {
+                    <= -10 => -1,
+                    >= +10 => +1,
+                    _ => 0
+                };
+            }
+            hints.AddForbiddenZone(shape, origin, aoe.Rotation, aoe.Activation);
+        }
     }
 }
+
 class Electray(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.Electray), 6)
 {
     private readonly HaloOfDestruction? _halo = module.FindComponent<HaloOfDestruction>();
@@ -95,18 +112,21 @@ class Electray(BossModule module) : Components.SpreadFromCastTargets(module, Act
             base.AddAIHints(slot, actor, assignment, hints);
     }
 }
+
 class Overexposure(BossModule module) : Components.SimpleLineStack(module, 3, 40, ActionID.MakeSpell(AID.OverexposureTargetSelect), ActionID.MakeSpell(AID.OverexposureAOE), 5.1f);
+
 class CompressionAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.CompressionAOE), new AOEShapeCircle(6));
 class CompressionImpact(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.CompressionImpact), 15)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var c in Casters)
-            hints.AddForbiddenZone(ShapeDistance.InvertedCone(c.Position, 10, Angle.FromDirection(Module.Center - c.Position), 30.Degrees()), Module.CastFinishAt(c.CastInfo)); // just a hack...
+            hints.AddForbiddenZone(ShapeDistance.InvertedCone(c.Position, 8, Angle.FromDirection(Module.Center - c.Position), 30.Degrees()), Module.CastFinishAt(c.CastInfo)); // just a hack...
     }
 }
 
 class LightningGenerator(BossModule module) : Components.Adds(module, (uint)OID.LightningGenerator);
+
 class LightOfSalvation(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.LightOfSalvationVisual), new AOEShapeRect(40, 3), false, true)
 {
     private readonly CompressionImpact? _impact = module.FindComponent<CompressionImpact>();
@@ -124,7 +144,9 @@ class LightOfSalvation(BossModule module) : Components.BaitAwayCast(module, Acti
             CurrentBaits.Clear();
     }
 }
+
 class LightOfDevotion(BossModule module) : Components.SimpleLineStack(module, 3, 40, ActionID.MakeSpell(AID.LightOfDevotionTargetSelect), ActionID.MakeSpell(AID.LightOfDevotionAOE), 5.6f);
+
 class EliminationExplosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EliminationExplosion), new AOEShapeRect(25, 4, 25), 4);
 
 class D063EliminatorStates : StateMachineBuilder

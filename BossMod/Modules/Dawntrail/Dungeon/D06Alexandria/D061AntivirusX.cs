@@ -39,6 +39,14 @@ class PathoPurge(BossModule module) : Components.GenericAOEs(module)
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => AOEs.Take(1);
 
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        base.AddAIHints(slot, actor, assignment, hints);
+        // if next is cross and there are donuts after it, we still want to stay closer to it, to simplify getting to the next donut
+        if (AOEs.Count >= 2 && AOEs[0].Shape == _shapeCross && AOEs.Skip(1).Any(aoe => aoe.Shape == _shapeDonut))
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(AOEs[0].Origin, 8), DateTime.MaxValue);
+    }
+
     public override void OnActorCreated(Actor actor)
     {
         AOEShape? shape = (OID)actor.OID switch
@@ -59,12 +67,14 @@ class PathoPurge(BossModule module) : Components.GenericAOEs(module)
             AOEs.RemoveAt(0);
     }
 }
+
 class ImmuneResponseFront(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ImmuneResponseFrontAOE), new AOEShapeCone(40, 60.Degrees())); // TODO: verify angle
+
 class ImmuneResponseBack(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ImmuneResponseBackAOE), new AOEShapeCone(40, 120.Degrees())) // TODO: verify angle
 {
     private readonly PathoPurge? _purge = module.FindComponent<PathoPurge>();
 
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _purge?.AOEs.Count == 5 ? [] : base.ActiveAOEs(slot, actor); // special case to handle overlap
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => _purge?.AOEs.Count is 5 or 2 or 1 ? [] : base.ActiveAOEs(slot, actor); // special case to handle overlap
 }
 
 // for quarantine/disinfection, duty support always stacks at the middle
@@ -76,6 +86,7 @@ class Disinfection(BossModule module) : Components.BaitAwayIcon(module, new AOES
             hints.AddForbiddenZone(ShapeDistance.Circle(Module.Center, 6), b.Activation);
     }
 }
+
 class Quarantine(BossModule module) : Components.UniformStackSpread(module, 6, 0, 3)
 {
     private BitMask _forbidden;
@@ -84,7 +95,7 @@ class Quarantine(BossModule module) : Components.UniformStackSpread(module, 6, 0
     {
         foreach (var s in ActiveStacks)
             if (!s.ForbiddenPlayers[slot])
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center, s.Radius), s.Activation);
+                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(Module.Center, 3), s.Activation); // stack neatly in center
     }
 
     public override void OnEventIcon(Actor actor, uint iconID)
