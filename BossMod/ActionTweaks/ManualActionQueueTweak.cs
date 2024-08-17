@@ -133,7 +133,7 @@ public sealed class ManualActionQueueTweak(WorldState ws, AIHints hints)
         // BTL is a special case - ground targeted action with only one valid target position, which is wherever player leylines happen to be
         if (def.ID.ID == (uint)BLM.AID.BetweenTheLines)
         {
-            var playerLL = ws.Actors.FirstOrDefault(act => act.Type == ActorType.Area && act.OwnerID == player.InstanceID && act.OID == 179);
+            var playerLL = ws.Actors.FirstOrDefault(act => act.OwnerID == player.InstanceID && act.OID == 0x179);
             if (playerLL == null)
                 return false;
 
