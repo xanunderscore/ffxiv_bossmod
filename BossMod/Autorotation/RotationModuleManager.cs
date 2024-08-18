@@ -79,6 +79,10 @@ public sealed class RotationModuleManager : IDisposable
             Hints.ForcedTarget = ResolveTargetOverride(forced.Value);
         }
 
+        // general-purpose rotation modules won't be able to do anything during RP quests - skip them
+        if (Player?.FindStatus(Roleplay.SID.RolePlaying) != null)
+            return;
+
         // auto actions
         var target = Hints.ForcedTarget ?? WorldState.Actors.Find(Player?.TargetID ?? 0);
         foreach (var m in _activeModules)

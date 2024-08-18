@@ -17,7 +17,7 @@ public abstract class RoleMeleeUtility(RotationModuleManager manager, Actor play
         DefineSimpleConfig(def, SharedTrack.SecondWind, "SecondWind", "", 20, ClassShared.AID.SecondWind);
         DefineSimpleConfig(def, SharedTrack.LegSweep, "LegSweep", "Stun", -150, ClassShared.AID.LegSweep, 3);
         DefineSimpleConfig(def, SharedTrack.Bloodbath, "Bloodbath", "", -50, ClassShared.AID.Bloodbath, 20);
-        DefineSimpleConfig(def, SharedTrack.Feint, "Feint", "", 500, ClassShared.AID.Feint, 10);
+        DefineSimpleConfig(def, SharedTrack.Feint, "Feint", "", 500, ClassShared.AID.Feint, 15);
         DefineSimpleConfig(def, SharedTrack.ArmsLength, "ArmsLength", "ArmsL", 300, ClassShared.AID.ArmsLength, 6); // note: secondary effect 15s
     }
 
