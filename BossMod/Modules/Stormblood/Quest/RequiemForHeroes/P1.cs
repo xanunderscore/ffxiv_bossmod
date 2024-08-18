@@ -10,9 +10,7 @@ class ZenosYaeGalvusP1States : StateMachineBuilder
 {
     public ZenosYaeGalvusP1States(BossModule module) : base(module)
     {
-        TrivialPhase()
-            .ActivateOnEnter<Hien>()
-            ;
+        TrivialPhase().ActivateOnEnter<Hien>();
     }
 }
 
@@ -43,6 +41,9 @@ class Hien(BossModule module) : Components.RoleplayModule(module)
                 UseGCD(Roleplay.AID.Kyokufu, primaryTarget);
                 break;
         }
+
+        if (PredictedHP(Player) < 5000)
+            UseOGCD(Roleplay.AID.SecondWind, Player);
 
         UseOGCD(Roleplay.AID.HissatsuGyoten, primaryTarget);
     }
