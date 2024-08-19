@@ -144,6 +144,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.FlintStrike); // animLock=???
         d.RegisterSpell(AID.TornadoKick); // animLock=???
         d.RegisterSpell(AID.RiddleOfEarth);
+        d.RegisterSpell(AID.EarthsReply);
         d.RegisterSpell(AID.RiddleOfFire);
         d.RegisterSpell(AID.Brotherhood);
         d.RegisterSpell(AID.RiddleOfWind);

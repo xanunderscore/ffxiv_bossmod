@@ -5,11 +5,22 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
+    public enum Track { Scathe = SharedTrack.Count }
+    public enum ScatheStrategy
+    {
+        Forbid,
+        Allow
+    }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("xan BLM", "Black Mage", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.BLM, Class.THM), 100);
 
         def.DefineShared().AddAssociatedActions(AID.LeyLines);
+
+        def.Define(Track.Scathe).As<ScatheStrategy>("Scathe")
+            .AddOption(ScatheStrategy.Forbid, "Forbid")
+            .AddOption(ScatheStrategy.Allow, "Allow");
 
         return def;
     }
@@ -144,6 +155,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
             PushGCD(AID.Xenoglossy, primaryTarget);
         }
+
+        if (strategy.Option(Track.Scathe).As<ScatheStrategy>() == ScatheStrategy.Allow && MP >= 800)
+            PushGCD(AID.Scathe, primaryTarget);
     }
 
     private void FirePhase(StrategyValues strategy, Actor? primaryTarget)
