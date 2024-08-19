@@ -2,18 +2,18 @@
 
 public enum AID : uint
 {
-    // Alphinaud, 1st STB appearance
+    // Alphinaud - I forgot the name of this quest and it needs a module
     RuinIII = 11191,
     Physick = 11192,
     TriShackle = 11482,
 
-    // Y'shtola, 1st STB appearance
+    // Y'shtola - Will of the Moon (StB)
     StoneIVSeventhDawn = 13423,
     AeroIISeventhDawn = 13424,
     CureIISeventhDawn = 13425,
     Aetherwell = 13426,
 
-    // Hien, 1st STB appearance
+    // Hien - Requiem for Heroes (StB)
     Kyokufu = 14840,
     Gofu = 19046,
     Yagetsu = 19047,
@@ -28,6 +28,7 @@ public enum SID : uint
 {
     RolePlaying = 1534,
 
+    // Hien
     Ajisai = 1779,
 }
 
