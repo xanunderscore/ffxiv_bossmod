@@ -4,11 +4,24 @@ using FFXIVClientStructs.FFXIV.Client.Game.Gauge;
 namespace BossMod.Autorotation.xan;
 public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<AID, TraitID>(manager, player)
 {
+    public enum Track { Place = SharedTrack.Count }
+    public enum FairyPlacement
+    {
+        Manual,
+        Heel,
+        PlaceArena
+    }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("xan SCH", "Scholar", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.SCH, Class.ACN), 100);
 
         def.DefineShared().AddAssociatedActions(AID.ChainStratagem, AID.Dissipation);
+
+        def.Define(Track.Place).As<FairyPlacement>("FairyPlace", "Fairy placement")
+            .AddOption(FairyPlacement.Manual, "Do not automatically move fairy")
+            .AddOption(FairyPlacement.Heel, "Order fairy to follow player")
+            .AddOption(FairyPlacement.PlaceArena, "Place fairy at current arena center, if one exists");
 
         return def;
     }
@@ -67,15 +80,13 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         if (RaidBuffsLeft > 0 && !CanFitGCD(RaidBuffsLeft, 1))
             PushGCD(AID.Bio1, BestDotTarget);
 
+        if (Unlocked(AID.ArtOfWar1) && !Unlocked(AID.Broil1))
+            Hints.RecommendedRangeToTarget = 4.5f;
+
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
         if (NumAOETargets >= needAOETargets)
-        {
-            if (needAOETargets == 1)
-                Hints.RecommendedRangeToTarget = 5f;
-
             PushGCD(AID.ArtOfWar1, Player);
-        }
 
         PushGCD(AID.Ruin1, primaryTarget);
 

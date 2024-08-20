@@ -275,7 +275,7 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
         {
             // TODO make this configurable - this will summon baha/phoenix and ignore current gems
             // balance says to default to summons if you don't know whether you will lose a usage or not
-            if (CD(AID.Aethercharge) <= GCD)
+            if (CD(AID.Aethercharge) <= GCD && Player.InCombat)
             {
                 var isTargeted = Unlocked(TraitID.AetherchargeMastery);
                 // scarlet flame and wyrmwave are both single target, this is ok

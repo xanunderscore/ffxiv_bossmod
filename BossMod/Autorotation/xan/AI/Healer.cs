@@ -4,7 +4,19 @@ namespace BossMod.Autorotation.xan;
 
 public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
-    public enum Track { Raise, RaiseTarget, Heal }
+    public record struct PartyMemberState
+    {
+        public int Slot;
+        public int PredictedHP;
+        public int PredictedHPMissing;
+        public float AttackerStrength;
+        public float PredictedHPRatio;
+        public bool Esunable;
+    }
+
+    private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
+
+    public enum Track { Raise, RaiseTarget, Heal, Esuna }
     public enum RaiseStrategy
     {
         None,
@@ -44,13 +56,74 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             .AddOption(RaiseTarget.Everyone, "Any dead player");
 
         def.AbilityTrack(Track.Heal, "Heal");
+        def.AbilityTrack(Track.Esuna, "Esuna");
 
         return def;
     }
 
+    private (Actor Target, float HPRatio) BestSTHealTarget
+    {
+        get
+        {
+            var best = PartyMemberStates.MinBy(x => x.PredictedHPRatio);
+            return (World.Party[best.Slot]!, best.PredictedHPRatio);
+        }
+    }
+
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
+        // copied from veyn's HealerActions in EW bossmod - i am a thief
+        BitMask esunas = new();
+        foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
+            esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
+
+        for (var i = 0; i < PartyMemberStates.Length; i++)
+        {
+            var actor = World.Party[i];
+            ref var state = ref PartyMemberStates[i];
+            state.Slot = i;
+            state.Esunable = false;
+            if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
+            {
+                state.PredictedHP = state.PredictedHPMissing = 0;
+                state.PredictedHPRatio = 1;
+            }
+            else
+            {
+                state.PredictedHP = (int)actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID);
+                state.PredictedHPMissing = (int)actor.HPMP.MaxHP - state.PredictedHP;
+                state.PredictedHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
+                var canEsuna = actor.IsTargetable && !esunas[i];
+                foreach (var s in actor.Statuses)
+                    if (!state.Esunable && canEsuna && Utils.StatusIsRemovable(s.ID))
+                        state.Esunable = true;
+            }
+        }
+        foreach (var enemy in Hints.PotentialTargets)
+        {
+            var targetSlot = World.Party.FindSlot(enemy.Actor.TargetID);
+            if (targetSlot >= 0 && targetSlot < PartyMemberStates.Length)
+            {
+                ref var state = ref PartyMemberStates[targetSlot];
+                state.AttackerStrength += enemy.AttackStrength;
+                if (state.PredictedHPRatio < 0.99f)
+                    state.PredictedHPRatio -= enemy.AttackStrength;
+            }
+        }
+
         AutoRaise(strategy);
+
+        if (strategy.Enabled(Track.Esuna))
+        {
+            foreach (var st in PartyMemberStates)
+            {
+                if (st.Esunable)
+                {
+                    UseGCD(BossMod.WHM.AID.Esuna, World.Party[st.Slot]);
+                    break;
+                }
+            }
+        }
 
         if (strategy.Enabled(Track.Heal))
             switch (Player.Class)
@@ -61,8 +134,17 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 case Class.AST:
                     AutoAST(strategy);
                     break;
+                case Class.SCH:
+                    AutoSCH(strategy, primaryTarget);
+                    break;
             }
     }
+
+    private void UseGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
+        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.VeryHigh + extraPriority);
+
+    private void UseOGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
+        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.Medium + extraPriority);
 
     private void AutoRaise(StrategyValues strategy)
     {
@@ -74,7 +156,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         void UseThinAir()
         {
             if (thinair == 0 && Player.Class == Class.WHM)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.ThinAir), Player, ActionQueue.Priority.VeryHigh + 3);
+                UseGCD(BossMod.WHM.AID.ThinAir, Player, extraPriority: 3);
         }
 
         switch (raise)
@@ -97,14 +179,14 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                         Hints.ActionsToExecute.Push(RaiseAction, tar2, ActionQueue.Priority.VeryHigh);
                     }
                     else
-                        Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Swiftcast), Player, ActionQueue.Priority.VeryHigh);
+                        UseGCD(BossMod.WHM.AID.Swiftcast, Player);
                 }
                 break;
             case RaiseStrategy.Slowcast:
                 if (GetRaiseTarget(strategy) is Actor tar3)
                 {
                     UseThinAir();
-                    Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Swiftcast), Player, ActionQueue.Priority.VeryHigh + 2);
+                    UseGCD(BossMod.WHM.AID.Swiftcast, Player, extraPriority: 2);
                     if (swiftcastCD > 8)
                         Hints.ActionsToExecute.Push(RaiseAction, tar3, ActionQueue.Priority.VeryHigh + 1);
                 }
@@ -133,18 +215,20 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private void AutoWHM(StrategyValues strategy)
     {
-        var bestSTHealTarget = World.Party.WithoutSlot(false, true).MinBy(PredictedHPRatio)!;
-        if (PredictedHPRatio(bestSTHealTarget) < 0.25)
-        {
-            if (GetGauge<WhiteMageGauge>().Lily > 0)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.AfflatusSolace), bestSTHealTarget, ActionQueue.Priority.VeryHigh);
+        var gauge = GetGauge<WhiteMageGauge>();
 
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.WHM.AID.Tetragrammaton), bestSTHealTarget, ActionQueue.Priority.Medium);
+        var (bestSTHealTarget, ratio) = BestSTHealTarget;
+        if (ratio < 0.25)
+        {
+            if (gauge.Lily > 0)
+                UseGCD(BossMod.WHM.AID.AfflatusSolace, bestSTHealTarget);
+
+            UseOGCD(BossMod.WHM.AID.Tetragrammaton, bestSTHealTarget);
         }
     }
 
 
-    private static (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
+    private static readonly (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
         (AstrologianCard.Arrow, BossMod.AST.AID.TheArrow),
         (AstrologianCard.Spire, BossMod.AST.AID.TheSpire),
         (AstrologianCard.Bole, BossMod.AST.AID.TheBole),
@@ -155,21 +239,42 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<AstrologianGauge>();
 
-        var bestSTHealTarget = World.Party.WithoutSlot(false, true).MinBy(PredictedHPRatio)!;
-        if (PredictedHPRatio(bestSTHealTarget) < 0.3)
+        var (bestSTHealTarget, ratio) = BestSTHealTarget;
+        if (ratio < 0.3)
         {
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EssentialDignity), bestSTHealTarget, ActionQueue.Priority.Medium);
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.CelestialIntersection), bestSTHealTarget, ActionQueue.Priority.Medium);
+            UseOGCD(BossMod.AST.AID.EssentialDignity, bestSTHealTarget);
+            UseOGCD(BossMod.AST.AID.CelestialIntersection, bestSTHealTarget);
 
             if (gauge.CurrentArcana == AstrologianCard.Lady)
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.LadyOfCrowns), Player, ActionQueue.Priority.Medium);
+                UseOGCD(BossMod.AST.AID.LadyOfCrowns, Player);
 
             foreach (var (card, action) in SupportCards)
                 if (gauge.CurrentCards.Contains(card))
-                    Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), bestSTHealTarget, ActionQueue.Priority.Medium);
+                    UseOGCD(action, bestSTHealTarget);
         }
 
         if (Player.InCombat)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EarthlyStar), Player, ActionQueue.Priority.Medium, targetPos: Player.PosRot.XYZ());
+    }
+
+    private void AutoSCH(StrategyValues strategy, Actor? primaryTarget)
+    {
+        var gauge = GetGauge<ScholarGauge>();
+
+        if (World.Party.WithoutSlot().Count() == 1 && gauge.Aetherflow > 0)
+            UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
+
+        var (bestSTHealTarget, ratio) = BestSTHealTarget;
+        if (ratio < 0.3)
+        {
+            if (!Unlocked(BossMod.SCH.AID.Lustrate))
+            {
+                UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
+                return;
+            }
+
+            if (gauge.Aetherflow > 0)
+                UseOGCD(BossMod.SCH.AID.Lustrate, bestSTHealTarget);
+        }
     }
 }
