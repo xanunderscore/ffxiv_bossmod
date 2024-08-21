@@ -22,6 +22,8 @@ public enum AID : uint
     EarthrisingCast = 30888, // _Gen_Vishap->self, 7.0s cast, range 8 circle
     EarthrisingRepeat = 26412, // _Gen_Vishap->self, no cast, range 8 circle
     SidewiseSlice = 30879, // Boss->self, 8.0s cast, range 50 120-degree cone
+    ScorchingBreath = 29785, // Boss->self, 15.0+5.0s cast, single-target
+
 }
 
 class RipperClaw(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.RipperClaw), new AOEShapeCone(9, 45.Degrees()));
@@ -149,6 +151,21 @@ class Cauterize(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
 
 class Touchdown(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.Touchdown), 10, stopAtWall: true);
 
+class ScorchingBreath(BossModule module) : Components.GenericAOEs(module)
+{
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID == AID.ScorchingBreath)
+            NumCasts++;
+    }
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (NumCasts > 0)
+            yield return new AOEInstance(new AOEShapeRect(100, 10, 100), Module.PrimaryActor.Position, Module.PrimaryActor.Rotation, Module.CastFinishAt(Module.PrimaryActor.CastInfo));
+    }
+}
+
 class ScrollingBounds(BossModule module) : BossComponent(module)
 {
     public static readonly float HalfHeight = 40;
@@ -236,6 +253,7 @@ class StepsOfFaithStates : StateMachineBuilder
             .ActivateOnEnter<EarthrisingAOE>()
             .ActivateOnEnter<Earthrising>()
             .ActivateOnEnter<RipperClaw>()
+            .ActivateOnEnter<ScorchingBreath>()
             ;
     }
 }
