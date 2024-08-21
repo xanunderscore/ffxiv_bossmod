@@ -17,6 +17,7 @@ public enum AID : uint
     TrueAero2 = 25901, // Hermes->self, 2.5s cast, range 40 width 6 rect
     TrueAeroIV2 = 27837, // Karukeion->self, 10.0s cast, range 50 width 10 rect
     TrueAeroII = 25897, // Hermes->player, 5.0s cast, range 6 circle
+    TrueAeroII2 = 25898, // 233C->location, 3.5s cast, range 6 circle
     TrueTornado2 = 25906, // Hermes->location, 2.5s cast, range 4 circle
     TrueBravery = 25907, // Boss->self, 5.0s cast, single-target
 }
@@ -34,8 +35,8 @@ class WindSafe(BossModule module) : Components.GenericAOEs(module)
     private IEnumerable<Actor> Meteors => Module.Enemies(OID.Meteor);
     private readonly List<(Actor source, AOEInstance aoe)> SafeZones = [];
 
-    // TODO this is probably wrong
-    private readonly float SafeZoneWidth = 5;
+    // naively, just the same width as meteor hitbox - seemed accurate during my testing, needs double-check though
+    private readonly float SafeZoneWidth = 2.4f;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => SafeZones.Take(4).Select(x => x.aoe);
 
@@ -105,6 +106,7 @@ class TrueAero(BossModule module) : Components.GenericBaitAway(module, ActionID.
 class TrueAero2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TrueAero2), new AOEShapeRect(40, 3));
 class TrueBravery(BossModule module) : Components.CastInterruptHint(module, ActionID.MakeSpell(AID.TrueBravery));
 class TrueAeroII(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID.TrueAeroII), 6);
+class TrueAeroII2(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TrueAeroII2), 6);
 
 class D043HermesStates : StateMachineBuilder
 {
@@ -122,9 +124,10 @@ class D043HermesStates : StateMachineBuilder
             .ActivateOnEnter<TrueAero2>()
             .ActivateOnEnter<TrueBravery>()
             .ActivateOnEnter<TrueAeroII>()
+            .ActivateOnEnter<TrueAeroII2>()
             ;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "xan", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10399)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "xan", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 787, NameID = 10399)]
 public class D043Hermes(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -50), new ArenaBoundsCircle(20));
