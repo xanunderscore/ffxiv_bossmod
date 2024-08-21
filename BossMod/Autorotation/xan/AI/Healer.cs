@@ -10,7 +10,10 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         public int PredictedHP;
         public int PredictedHPMissing;
         public float AttackerStrength;
+        // predicted ratio including pending HP loss and current attacker strength
         public float PredictedHPRatio;
+        // *actual* ratio including pending HP loss, used mainly just for essential dignity
+        public float PendingHPRatio;
         public bool Esunable;
     }
 
@@ -61,12 +64,12 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         return def;
     }
 
-    private (Actor Target, float HPRatio) BestSTHealTarget
+    private (Actor Target, PartyMemberState State) BestSTHealTarget
     {
         get
         {
             var best = PartyMemberStates.MinBy(x => x.PredictedHPRatio);
-            return (World.Party[best.Slot]!, best.PredictedHPRatio);
+            return (World.Party[best.Slot]!, best);
         }
     }
 
@@ -86,13 +89,13 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
             {
                 state.PredictedHP = state.PredictedHPMissing = 0;
-                state.PredictedHPRatio = 1;
+                state.PredictedHPRatio = state.PendingHPRatio = 1;
             }
             else
             {
                 state.PredictedHP = (int)actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID);
                 state.PredictedHPMissing = (int)actor.HPMP.MaxHP - state.PredictedHP;
-                state.PredictedHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
+                state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
                 var canEsuna = actor.IsTargetable && !esunas[i];
                 foreach (var s in actor.Statuses)
                     if (!state.Esunable && canEsuna && Utils.StatusIsRemovable(s.ID))
@@ -211,14 +214,14 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         });
     }
 
-    private static bool BeingRaised(Actor actor) => actor.Statuses.Any(s => s.ID is 148 or 1140);
+    private static bool BeingRaised(Actor actor) => actor.Statuses.Any(s => s.ID is 148 or 1140 or 2648);
 
     private void AutoWHM(StrategyValues strategy)
     {
         var gauge = GetGauge<WhiteMageGauge>();
 
-        var (bestSTHealTarget, ratio) = BestSTHealTarget;
-        if (ratio < 0.25)
+        var (bestSTHealTarget, state) = BestSTHealTarget;
+        if (state.PredictedHPRatio < 0.25)
         {
             if (gauge.Lily > 0)
                 UseGCD(BossMod.WHM.AID.AfflatusSolace, bestSTHealTarget);
@@ -226,7 +229,6 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             UseOGCD(BossMod.WHM.AID.Tetragrammaton, bestSTHealTarget);
         }
     }
-
 
     private static readonly (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
         (AstrologianCard.Arrow, BossMod.AST.AID.TheArrow),
@@ -239,10 +241,12 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<AstrologianGauge>();
 
-        var (bestSTHealTarget, ratio) = BestSTHealTarget;
-        if (ratio < 0.3)
-        {
+        var (bestSTHealTarget, state) = BestSTHealTarget;
+        if (state.PendingHPRatio < 0.3)
             UseOGCD(BossMod.AST.AID.EssentialDignity, bestSTHealTarget);
+
+        if (state.PredictedHPRatio < 0.3)
+        {
             UseOGCD(BossMod.AST.AID.CelestialIntersection, bestSTHealTarget);
 
             if (gauge.CurrentArcana == AstrologianCard.Lady)
@@ -264,17 +268,14 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         if (World.Party.WithoutSlot().Count() == 1 && gauge.Aetherflow > 0)
             UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
 
-        var (bestSTHealTarget, ratio) = BestSTHealTarget;
-        if (ratio < 0.3)
+        var (bestSTHealTarget, state) = BestSTHealTarget;
+        if (state.PredictedHPRatio < 0.3)
         {
-            if (!Unlocked(BossMod.SCH.AID.Lustrate))
-            {
-                UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
-                return;
-            }
-
-            if (gauge.Aetherflow > 0)
+            var canLustrate = gauge.Aetherflow > 0 && Unlocked(BossMod.SCH.AID.Lustrate);
+            if (canLustrate)
                 UseOGCD(BossMod.SCH.AID.Lustrate, bestSTHealTarget);
+            else
+                UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
         }
     }
 }
