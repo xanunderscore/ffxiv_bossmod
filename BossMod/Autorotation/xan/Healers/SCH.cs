@@ -8,8 +8,8 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
     public enum FairyPlacement
     {
         Manual,
-        Heel,
-        PlaceArena
+        AutoHeel,
+        FullAuto,
     }
 
     public static RotationModuleDefinition Definition()
@@ -20,8 +20,8 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
 
         def.Define(Track.Place).As<FairyPlacement>("FairyPlace", "Fairy placement")
             .AddOption(FairyPlacement.Manual, "Do not automatically move fairy")
-            .AddOption(FairyPlacement.Heel, "Order fairy to follow player")
-            .AddOption(FairyPlacement.PlaceArena, "Place fairy at current arena center, if one exists");
+            .AddOption(FairyPlacement.AutoHeel, "Automatically order fairy to follow player when combat ends")
+            .AddOption(FairyPlacement.FullAuto, "Automatically place fairy at arena center (if one exists) - order fairy to follow when out of combat");
 
         return def;
     }
@@ -76,22 +76,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
 
         OGCD(strategy, primaryTarget);
 
-        if (Eos != null)
-        {
-            switch (strategy.Option(Track.Place).As<FairyPlacement>())
-            {
-                case FairyPlacement.Manual:
-                    break;
-                case FairyPlacement.Heel:
-                    if (FairyOrder != PetOrder.Follow)
-                        Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
-                    break;
-                case FairyPlacement.PlaceArena:
-                    if (FairyOrder != PetOrder.Place)
-                        Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 3), null, ActionQueue.Priority.High, targetPos: Player.PosRot.XYZ() + new Vector3(20, 0, 0));
-                    break;
-            }
-        }
+        OrderFairy(strategy);
 
         if (primaryTarget == null)
             return;
@@ -148,6 +133,30 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (MP <= 7000)
             PushOGCD(AID.LucidDreaming, Player);
+    }
+
+    private void OrderFairy(StrategyValues strategy)
+    {
+        void autoheel()
+        {
+            if (FairyOrder != PetOrder.Follow && !Player.InCombat)
+                Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
+        }
+
+        var strat = strategy.Option(Track.Place).As<FairyPlacement>();
+
+        switch (strat)
+        {
+            case FairyPlacement.Manual:
+                return;
+            case FairyPlacement.AutoHeel:
+                autoheel();
+                return;
+            case FairyPlacement.FullAuto:
+                autoheel();
+                // TODO when we have place support
+                return;
+        }
     }
 
     static readonly SID[] DotStatus = [SID.Bio1, SID.Bio2, SID.Biolysis];

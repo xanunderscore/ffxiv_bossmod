@@ -235,6 +235,10 @@ public sealed unsafe class ActionManagerEx : IDisposable
             var holsterIndex = state != null ? state->HolsterActions.IndexOf((byte)action.ID) : -1;
             return holsterIndex >= 0 && PublicContentBozja.GetInstance()->UseFromHolster((uint)holsterIndex, action.Type == ActionType.BozjaHolsterSlot1 ? 1u : 0);
         }
+        else if (action.Type is ActionType.PetAction && action.ID != 3)
+        {
+            return _inst->UseAction(CSActionType.PetAction, action.ID, targetId);
+        }
         else
         {
             // real action type, just execute our UAL hook
