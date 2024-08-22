@@ -14,7 +14,8 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         public float PredictedHPRatio;
         // *actual* ratio including pending HP loss, used mainly just for essential dignity
         public float PendingHPRatio;
-        public bool Esunable;
+        // remaining time on cleansable status, to avoid casting it on a target that will lose the status by the time we finish
+        public float EsunableStatusRemaining;
     }
 
     private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
@@ -85,7 +86,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             var actor = World.Party[i];
             ref var state = ref PartyMemberStates[i];
             state.Slot = i;
-            state.Esunable = false;
+            state.EsunableStatusRemaining = 0;
             if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
             {
                 state.PredictedHP = state.PredictedHPMissing = 0;
@@ -98,8 +99,8 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
                 var canEsuna = actor.IsTargetable && !esunas[i];
                 foreach (var s in actor.Statuses)
-                    if (!state.Esunable && canEsuna && Utils.StatusIsRemovable(s.ID))
-                        state.Esunable = true;
+                    if (canEsuna && Utils.StatusIsRemovable(s.ID))
+                        state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
             }
         }
         foreach (var enemy in Hints.PotentialTargets)
@@ -120,7 +121,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         {
             foreach (var st in PartyMemberStates)
             {
-                if (st.Esunable)
+                if (st.EsunableStatusRemaining > GCD + 2f)
                 {
                     UseGCD(BossMod.WHM.AID.Esuna, World.Party[st.Slot]);
                     break;
