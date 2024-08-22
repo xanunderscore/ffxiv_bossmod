@@ -578,6 +578,11 @@ sealed class WorldStateGameSync : IDisposable
             blueSpells[i] = actionManager->GetActiveBlueMageActionInSlot(i);
         if (!MemoryExtensions.SequenceEqual(_ws.Client.BlueMageSpells.AsSpan(), blueSpells))
             _ws.Execute(new ClientState.OpBlueMageSpellsChange(blueSpells.ToArray()));
+
+        var petinfo = uiState->Buddy.PetInfo;
+        var pet = new ClientState.Pet(petinfo.Pet->EntityId, petinfo.Order, petinfo.Stance);
+        if (pet != _ws.Client.ActivePet)
+            _ws.Execute(new ClientState.OpActivePetChange(pet));
     }
 
     private ulong SanitizedObjectID(ulong raw) => raw != InvalidEntityId ? raw : 0;

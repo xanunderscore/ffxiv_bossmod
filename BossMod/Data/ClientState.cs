@@ -37,6 +37,8 @@ public sealed class ClientState
     public record struct Gauge(ulong Low, ulong High);
     public record struct Stats(int SkillSpeed, int SpellSpeed, int Haste);
 
+    public record struct Pet(uint InstanceID, byte Order, byte Stance);
+
     public const int NumCooldownGroups = 82;
     public const int NumClassLevels = 32; // see ClassJob.ExpArrayIndex
 
@@ -52,6 +54,7 @@ public sealed class ClientState
     public readonly uint[] BlueMageSpells = new uint[24];
     public readonly short[] ClassJobLevels = new short[NumClassLevels];
     public Fate ActiveFate;
+    public Pet ActivePet;
 
     public int ClassJobLevel(Class c)
     {
@@ -89,6 +92,9 @@ public sealed class ClientState
 
         if (BlueMageSpells.Any(a => a != 0))
             yield return new OpBlueMageSpellsChange(BlueMageSpells);
+
+        if (ActivePet.InstanceID != 0)
+            yield return new OpActivePetChange(ActivePet);
     }
 
     public void Tick(float dt)
@@ -294,6 +300,21 @@ public sealed class ClientState
             output.Emit((byte)Values.Length);
             foreach (var e in Values)
                 output.Emit(e);
+        }
+    }
+
+    public Event<OpActivePetChange> ActivePetChanged = new();
+    public sealed record class OpActivePetChange(Pet Value) : WorldState.Operation
+    {
+        protected override void Exec(WorldState ws)
+        {
+            ws.Client.ActivePet = Value;
+            ws.Client.ActivePetChanged.Fire(this);
+        }
+
+        public override void Write(ReplayRecorder.Output output)
+        {
+            output.EmitFourCC("PETS"u8).Emit(Value.InstanceID).Emit(Value.Order).Emit(Value.Stance);
         }
     }
 }

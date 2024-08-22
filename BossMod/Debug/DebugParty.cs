@@ -15,6 +15,17 @@ class DebugParty
         var ui = UIState.Instance();
         ImGui.TextUnformatted($"Num members: {gm->MemberCount}, alliance={(!gm->IsAlliance ? "no" : gm->IsSmallGroupAlliance ? "small-group" : "yes")}, has-helpers={ui->Buddy.DutyHelperInfo.HasHelpers}");
 
+        var pet = ui->Buddy.PetInfo;
+        var petpet = pet.Pet;
+
+        if (petpet != null)
+        {
+            ImGui.TextUnformatted($"Pet ID: {petpet->EntityId:X2}");
+            ImGui.TextUnformatted($"Pet HP: {petpet->CurrentHealth}");
+            ImGui.TextUnformatted($"Pet order: {pet.Order}");
+            ImGui.TextUnformatted($"Pet stance: {pet.Stance}");
+        }
+
         ImGui.BeginTable("party-custom", 7, ImGuiTableFlags.Resizable);
         ImGui.TableSetupColumn("Index");
         ImGui.TableSetupColumn("ContentId");

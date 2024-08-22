@@ -337,6 +337,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("CLAF"u8)] = ParseClientActiveFate,
             [new("CLVL"u8)] = ParseClientClassJobLevels,
             [new("BLUS"u8)] = ParseBlueSpells,
+            [new("PETS"u8)] = ParsePet,
             [new("IPCI"u8)] = ParseNetworkIDScramble,
             [new("IPCS"u8)] = ParseNetworkServerIPC,
         };
@@ -661,6 +662,8 @@ public sealed class ReplayParserLog : IDisposable
             contents[i] = _input.ReadUInt(false);
         return new(contents);
     }
+
+    private ClientState.OpActivePetChange ParsePet() => new(new(_input.ReadUInt(false), _input.ReadByte(false), _input.ReadByte(false)));
 
     private NetworkState.OpIDScramble ParseNetworkIDScramble() => new(_input.ReadUInt(false));
     private NetworkState.OpServerIPC ParseNetworkServerIPC() => new(new((Network.ServerIPC.PacketID)_input.ReadInt(), _input.ReadUShort(false), _input.ReadUInt(false), _input.ReadUInt(true), new(_input.ReadLong()), _input.ReadBytes()));

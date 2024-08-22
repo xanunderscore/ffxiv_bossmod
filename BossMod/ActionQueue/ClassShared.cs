@@ -110,6 +110,9 @@ public sealed class Definitions : IDisposable
         // Misc
         d.RegisterSpell(AID.Resurrection);
 
+        d.RegisterSpell(new ActionID(ActionType.PetAction, 2), false, instantAnimLock: 0, castAnimLock: 0);
+        d.RegisterSpell(new ActionID(ActionType.PetAction, 3), false, instantAnimLock: 0, castAnimLock: 0);
+
         Customize(d);
     }
 
@@ -120,6 +123,9 @@ public sealed class Definitions : IDisposable
         d.Spell(AID.Interject)!.ForbidExecute = (_, _, target, _) => !(target?.CastInfo?.Interruptible ?? false); // don't use interject if target is not casting interruptible spell
         d.Spell(AID.Reprisal)!.ForbidExecute = (_, player, _, hints) => !hints.PotentialTargets.Any(e => e.Actor.Position.InCircle(player.Position, 5 + e.Actor.HitboxRadius)); // don't use reprisal if no one would be hit; TODO: consider checking only target?..
         d.Spell(AID.Shirk)!.SmartTarget = ActionDefinitions.SmartTargetCoTank;
+
+        d[new ActionID(ActionType.PetAction, 2)]!.Range = 0;
+        d[new ActionID(ActionType.PetAction, 3)]!.Range = 30;
 
         //d.Spell(AID.Repose)!.EffectDuration = 30;
 

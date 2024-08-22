@@ -36,6 +36,15 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
     public int NumAOETargets;
     public int NumRangedAOETargets;
 
+    public enum PetOrder
+    {
+        None = 0,
+        Follow = 2,
+        Place = 3
+    }
+
+    public PetOrder FairyOrder;
+
     private Actor? Eos;
     private Actor? BestDotTarget;
     private Actor? BestRangedAOETarget;
@@ -50,7 +59,11 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         SeraphTimer = gauge.SeraphTimer * 0.001f;
         FairyGone = gauge.DismissedFairy > 0;
 
-        Eos = World.Actors.FirstOrDefault(x => x.Type == ActorType.Pet && x.OwnerID == Player.InstanceID);
+        var pet = World.Client.ActivePet;
+
+        Eos = pet.InstanceID == 0xE0000000 ? null : World.Actors.Find(pet.InstanceID);
+
+        FairyOrder = (PetOrder)pet.Order;
 
         ImpactImminent = StatusLeft(SID.ImpactImminent);
 
@@ -62,6 +75,23 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.SummonEos, Player);
 
         OGCD(strategy, primaryTarget);
+
+        if (Eos != null)
+        {
+            switch (strategy.Option(Track.Place).As<FairyPlacement>())
+            {
+                case FairyPlacement.Manual:
+                    break;
+                case FairyPlacement.Heel:
+                    if (FairyOrder != PetOrder.Follow)
+                        Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
+                    break;
+                case FairyPlacement.PlaceArena:
+                    if (FairyOrder != PetOrder.Place)
+                        Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 3), null, ActionQueue.Priority.High, targetPos: Player.PosRot.XYZ() + new Vector3(20, 0, 0));
+                    break;
+            }
+        }
 
         if (primaryTarget == null)
             return;
