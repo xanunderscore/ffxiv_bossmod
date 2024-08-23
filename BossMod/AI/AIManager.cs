@@ -101,7 +101,8 @@ sealed class AIManager : IDisposable
         _aiPreset = p;
         if (Behaviour != null)
             Behaviour.AIPreset = p;
-        _config.LastAIPreset = p.Name;
+        if (p != null)
+            _config.LastAIPreset = p.Name;
         _config.Modified.Fire();
     }
 
