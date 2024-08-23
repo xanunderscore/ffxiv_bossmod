@@ -139,7 +139,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
     {
         void autoheel()
         {
-            if (FairyOrder != PetOrder.Follow && !Player.InCombat)
+            if (FairyOrder != PetOrder.Follow && !Player.InCombat && CountdownRemaining == null)
                 Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
         }
 
