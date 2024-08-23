@@ -176,10 +176,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         TFC = 150,
         Potion = 200,
         RiddleOfWind = 300,
-        ManualOGCD = 1901, // included for reference, not used here - actual value is 1901 + Low (2000) + 100 (in base class) = 4001
-        RiddleOfFire = 1910,
-        Brotherhood = 1915,
-        PerfectBalance = 1920
+        ManualOGCD = 2001, // included for reference, not used here - actual value is 2001 + Low (2000) = 4001
+        RiddleOfFire = 2002,
+        Brotherhood = 2003,
+        PerfectBalance = 2004
     }
 
     private float GetApplicationDelay(AID action) => action switch
