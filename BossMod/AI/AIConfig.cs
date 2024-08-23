@@ -62,8 +62,5 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Broadcast keypresses to other windows")]
     public bool BroadcastToSlaves = false;
 
-    [PropertyDisplay("Prevent actions from targeting forbidden targets")]
-    public bool ForbidCastForbidden = true;
-
     public string LastAIPreset = "";
 }
