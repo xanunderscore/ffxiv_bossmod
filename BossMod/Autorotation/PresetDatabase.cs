@@ -11,9 +11,12 @@ public sealed class PresetDatabase
 
     private readonly FileInfo _dbPath;
 
-    public PresetDatabase(string rootPath)
+    public PresetDatabase(string rootPath, FileInfo? defaultPresets)
     {
         _dbPath = new(rootPath + ".db.json");
+        if (!_dbPath.Exists && (defaultPresets?.Exists ?? false))
+            defaultPresets.CopyTo(_dbPath.FullName);
+
         if (_dbPath.Exists)
         {
             try
