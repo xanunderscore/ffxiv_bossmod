@@ -62,6 +62,15 @@ public sealed class ClientState
         return index >= 0 && index < ClassJobLevels.Length ? ClassJobLevels[index] : -1;
     }
 
+    public unsafe T GetGauge<T>() where T : unmanaged
+    {
+        T res = default;
+        ((ulong*)&res)[1] = GaugePayload.Low;
+        if (sizeof(T) > 16)
+            ((ulong*)&res)[2] = GaugePayload.High;
+        return res;
+    }
+
     public IEnumerable<WorldState.Operation> CompareToInitial()
     {
         if (CountdownRemaining != null)
