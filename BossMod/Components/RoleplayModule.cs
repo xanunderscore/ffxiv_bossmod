@@ -18,11 +18,11 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
         Execute(WorldState.Actors.Find(actor.TargetID) ?? Module.PrimaryActor);
     }
 
-    protected void UseGCD(Roleplay.AID action, Actor? target)
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High);
+    protected void UseGCD(Roleplay.AID action, Actor? target, Vector3 targetPos = default)
+        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High, targetPos: targetPos);
 
-    protected void UseOGCD(Roleplay.AID action, Actor? target)
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.Low);
+    protected void UseOGCD(Roleplay.AID action, Actor? target, Vector3 targetPos = default)
+        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.Low, targetPos: targetPos);
 
     protected float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - WorldState.CurrentTime).TotalSeconds, 0.0f);
 
