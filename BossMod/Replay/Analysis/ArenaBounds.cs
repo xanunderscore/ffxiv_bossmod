@@ -1,4 +1,7 @@
-﻿namespace BossMod.ReplayAnalysis;
+﻿using ImGuiNET;
+using System.Threading.Tasks;
+
+namespace BossMod.ReplayAnalysis;
 
 class ArenaBounds
 {
@@ -42,6 +45,27 @@ class ArenaBounds
                     }
                 }
             }
+        }
+    }
+
+    public void DrawContextMenu()
+    {
+        if (ImGui.MenuItem("Generate complex arena bounds from player movement"))
+        {
+            Task.Run(() =>
+            {
+                var playerPoints = _points.Where(p => p.Item2.OID == 0).Select(x => new WDir(x.Item4.XZ())).ToList();
+                Service.Log($"generating concave hull from {playerPoints.Count} points");
+                var points = ConcaveHull.GenerateConcaveHull(playerPoints, epsilon: 1.5f);
+                var generatedText = $"List<WDir> complexArenaBounds = [";
+                foreach (var p in points)
+                {
+                    generatedText += $"\n  new WDir({p.X:F2}f, {p.Z:F2}f),";
+                }
+                generatedText += "\n];";
+                Service.Log($"{generatedText}");
+                Service.Log($"({points.Count} points)");
+            });
         }
     }
 

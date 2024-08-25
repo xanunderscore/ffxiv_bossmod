@@ -103,7 +103,7 @@ sealed class AnalysisManager : IDisposable
             foreach (var n in tree.Node("EnvControl info", false, 0xffffffff))
                 _envControlInfo.Get().Draw(tree);
 
-            foreach (var n in tree.Node("Arena bounds"))
+            foreach (var n in tree.Node("Arena bounds", false, 0xffffffff, () => _arenaBounds.Get().DrawContextMenu()))
                 _arenaBounds.Get().Draw(tree);
 
             if (_teaSpecific != null)
