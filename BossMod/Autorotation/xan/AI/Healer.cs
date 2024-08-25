@@ -16,6 +16,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         public float PendingHPRatio;
         // remaining time on cleansable status, to avoid casting it on a target that will lose the status by the time we finish
         public float EsunableStatusRemaining;
+        public float InvulnRemaining;
     }
 
     private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
@@ -69,7 +70,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         get
         {
-            var best = PartyMemberStates.MinBy(x => x.PredictedHPRatio);
+            var best = PartyMemberStates.Where(x => x.InvulnRemaining < 1.5f).MinBy(x => x.PredictedHPRatio);
             return (World.Party[best.Slot]!, best);
         }
     }
@@ -99,8 +100,17 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
                 var canEsuna = actor.IsTargetable && !esunas[i];
                 foreach (var s in actor.Statuses)
+                {
                     if (canEsuna && Utils.StatusIsRemovable(s.ID))
                         state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
+
+                    // 82 = hallowed ground
+                    // 409 = holmgang
+                    // 810/811 = LD/walking dead
+                    // 1836 = bolide
+                    if (s.ID is 82 or 409 or 810 or 811 or 1836)
+                        state.InvulnRemaining = StatusDuration(s.ExpireAt);
+                }
             }
         }
         foreach (var enemy in Hints.PotentialTargets)
