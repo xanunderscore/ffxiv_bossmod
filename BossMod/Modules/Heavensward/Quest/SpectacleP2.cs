@@ -1,5 +1,4 @@
-﻿
-namespace BossMod.Heavensward.Quest.SpectacleP2;
+﻿namespace BossMod.Heavensward.Quest.SpectacleP2;
 
 public enum OID : uint
 {

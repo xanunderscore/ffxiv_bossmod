@@ -1,5 +1,4 @@
-﻿
-namespace BossMod.Modules.Stormblood.Quest.RequiemForHeroesP2;
+﻿namespace BossMod.Modules.Stormblood.Quest.RequiemForHeroesP2;
 
 public enum OID : uint
 {
