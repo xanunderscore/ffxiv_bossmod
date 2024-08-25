@@ -2,6 +2,12 @@
 
 public enum AID : uint
 {
+    // magitek reaper in Fly Free, My Pretty
+    MagitekCannon = 7619, // range 30 radius 6 ground targeted aoe
+    PhotonStream = 7620, // range 10 width 4 rect aoe
+    DiffractiveMagitekCannon = 7621, // range 30 radius 10 ground targeted aoe
+    HighPoweredMagitekCannon = 7622, // range 42 width 8 rect aoe
+
     // Alphinaud - I forgot the name of this quest and it needs a module
     RuinIII = 11191,
     Physick = 11192,
@@ -36,6 +42,11 @@ public sealed class Definitions : IDisposable
 {
     public Definitions(ActionDefinitions d)
     {
+        d.RegisterSpell(AID.MagitekCannon);
+        d.RegisterSpell(AID.PhotonStream);
+        d.RegisterSpell(AID.DiffractiveMagitekCannon);
+        d.RegisterSpell(AID.HighPoweredMagitekCannon);
+
         d.RegisterSpell(AID.RuinIII);
         d.RegisterSpell(AID.Physick);
         d.RegisterSpell(AID.TriShackle);

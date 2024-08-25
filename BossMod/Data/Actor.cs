@@ -103,6 +103,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
     public ActorTetherInfo Tether;
     public ActorStatus[] Statuses = new ActorStatus[60]; // empty slots have ID=0
     public bool AggroPlayer; // determines whether a given actor shows in the player's UI enemy list
+    public uint MountId; // ID of current mount, 0 if not mounted
 
     public Role Role => Class.GetRole();
     public WPos Position => new(PosRot.X, PosRot.Z);

@@ -257,6 +257,7 @@ sealed class WorldStateGameSync : IDisposable
         var modelState = chr != null ? new ActorModelState(chr->Timeline.ModelState, chr->Timeline.AnimationState[0], chr->Timeline.AnimationState[1]) : default;
         var eventState = obj->EventState;
         var radius = obj->GetRadius();
+        var mountId = chr != null ? chr->Mount.MountId : 0;
 
         if (act == null)
         {
@@ -299,8 +300,11 @@ sealed class WorldStateGameSync : IDisposable
             _ws.Execute(new ActorState.OpTarget(act.InstanceID, target));
 
         var hasAggro = _playerEnmity.IndexOf(act.InstanceID) >= 0;
-        if (hasAggro != act.AggroPlayer)
+        if (act.AggroPlayer != hasAggro)
             _ws.Execute(new ActorState.OpAggroPlayer(act.InstanceID, hasAggro));
+
+        if (act.MountId != mountId)
+            _ws.Execute(new ActorState.OpMount(act.InstanceID, (uint)mountId));
 
         DispatchActorEvents(act.InstanceID);
 

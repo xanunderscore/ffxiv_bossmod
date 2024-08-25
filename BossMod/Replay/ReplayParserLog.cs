@@ -320,6 +320,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("PATE"u8)] = ParseActorPlayActionTimelineEvent,
             [new("NYEL"u8)] = ParseActorEventNpcYell,
             [new("NENP"u8)] = ParseActorAggroPlayer,
+            [new("MNTD"u8)] = ParseActorMount,
             [new("PAR "u8)] = ParsePartyModify,
             [new("PAR+"u8)] = ParsePartyModify, // legacy (up to v3)
             [new("PAR-"u8)] = ParsePartyLeave, // legacy (up to v3)
@@ -587,6 +588,8 @@ public sealed class ReplayParserLog : IDisposable
     private ActorState.OpPlayActionTimelineEvent ParseActorPlayActionTimelineEvent() => new(_input.ReadActorID(), _input.ReadUShort(true));
     private ActorState.OpEventNpcYell ParseActorEventNpcYell() => new(_input.ReadActorID(), _input.ReadUShort(false));
     private ActorState.OpAggroPlayer ParseActorAggroPlayer() => new(_input.ReadActorID(), _input.ReadBool());
+
+    private ActorState.OpMount ParseActorMount() => new(_input.ReadActorID(), _input.ReadUInt(false));
     private PartyState.OpModify ParsePartyModify() => new(_input.ReadInt(), new(_input.ReadULong(true), _input.ReadULong(true), _version >= 15 && _input.ReadBool(), _version < 15 ? "" : _input.ReadString()));
     private PartyState.OpModify ParsePartyLeave() => new(_input.ReadInt(), new(0, 0, false, ""));
     private PartyState.OpLimitBreakChange ParsePartyLimitBreak() => new(_input.ReadInt(), _input.ReadInt());
