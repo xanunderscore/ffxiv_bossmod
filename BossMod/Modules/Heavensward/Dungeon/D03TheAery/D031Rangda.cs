@@ -1,5 +1,4 @@
-﻿
-namespace BossMod.Heavensward.Dungeon.D03TheAery.D031Rangda;
+﻿namespace BossMod.Heavensward.Dungeon.D03TheAery.D031Rangda;
 
 public enum OID : uint
 {
