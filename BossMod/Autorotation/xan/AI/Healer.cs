@@ -16,7 +16,9 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         public float PendingHPRatio;
         // remaining time on cleansable status, to avoid casting it on a target that will lose the status by the time we finish
         public float EsunableStatusRemaining;
-        public float InvulnRemaining;
+        // tank invulns go here, but also statuses like Excog that give burst heal below a certain HP threshold
+        // no point in spam healing a tank in an area with high mob density (like Sirensong Sea pull after second boss) until their excog falls off
+        public float NoHealStatusRemaining;
     }
 
     private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
@@ -70,10 +72,20 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         get
         {
-            var best = PartyMemberStates.Where(x => x.InvulnRemaining < 1.5f).MinBy(x => x.PredictedHPRatio);
+            var best = PartyMemberStates.Where(x => x.NoHealStatusRemaining < 1.5f).MinBy(x => x.PredictedHPRatio);
             return (World.Party[best.Slot]!, best);
         }
     }
+
+    private static readonly uint[] NoHealStatuses = [
+        82, // Hallowed Ground
+        409, // Holmgang
+        810, // Living Dead
+        811, // Walking Dead
+        1220, // Excogitation
+        1836, // Superbolide
+        2685, // Catharsis of Corundum
+    ];
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
@@ -88,6 +100,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             ref var state = ref PartyMemberStates[i];
             state.Slot = i;
             state.EsunableStatusRemaining = 0;
+            state.NoHealStatusRemaining = 0;
             if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
             {
                 state.PredictedHP = state.PredictedHPMissing = 0;
@@ -104,12 +117,8 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     if (canEsuna && Utils.StatusIsRemovable(s.ID))
                         state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
 
-                    // 82 = hallowed ground
-                    // 409 = holmgang
-                    // 810/811 = LD/walking dead
-                    // 1836 = bolide
-                    if (s.ID is 82 or 409 or 810 or 811 or 1836)
-                        state.InvulnRemaining = StatusDuration(s.ExpireAt);
+                    if (NoHealStatuses.Contains(s.ID))
+                        state.NoHealStatusRemaining = StatusDuration(s.ExpireAt);
                 }
             }
         }
@@ -284,7 +293,10 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         {
             var canLustrate = gauge.Aetherflow > 0 && Unlocked(BossMod.SCH.AID.Lustrate);
             if (canLustrate)
+            {
+                UseOGCD(BossMod.SCH.AID.Excogitation, bestSTHealTarget);
                 UseOGCD(BossMod.SCH.AID.Lustrate, bestSTHealTarget);
+            }
             else
                 UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
         }
