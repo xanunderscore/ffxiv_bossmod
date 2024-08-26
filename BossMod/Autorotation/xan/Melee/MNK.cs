@@ -430,10 +430,11 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (WindsReplyLeft <= GCD || PerfectBalanceLeft > GCD || BlitzLeft > GCD)
             return;
 
+        // always queue with low prio, this lets us fallback to winds reply when out of range for melee GCDs
         var prio = GCDPriority.WindRanged;
 
-        // use early during buffs, or use now if about to expire
-        if (FireLeft > GCD || !CanFitGCD(WindsReplyLeft, 1))
+        // if riddle of fire is about to expire, or if the WR buff itself is about to expire, use ASAP
+        if (FireLeft > GCD && !CanFitGCD(FireLeft, 1) || !CanFitGCD(WindsReplyLeft, 1))
             prio = GCDPriority.WindsReply;
 
         PushGCD(AID.WindsReply, BestLineTarget, prio);
