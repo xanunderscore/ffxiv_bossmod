@@ -1,4 +1,6 @@
 ﻿using ImGuiNET;
+using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BossMod.ReplayAnalysis;
@@ -54,17 +56,26 @@ class ArenaBounds
         {
             Task.Run(() =>
             {
-                var playerPoints = _points.Where(p => p.Item2.OID == 0).Select(x => new WDir(x.Item4.XZ())).ToList();
-                Service.Log($"generating concave hull from {playerPoints.Count} points");
-                var points = ConcaveHull.GenerateConcaveHull(playerPoints, epsilon: 1.5f);
-                var generatedText = $"List<WDir> complexArenaBounds = [";
+                // Get player points
+                var playerPoints = _points.Where(p => p.Item2.OID == 0).Select(x => new WPos(x.Item4.XZ())).ToList();
+
+                // Generate the concave hull
+                var points = ConcaveHull.GenerateConcaveHull(playerPoints, 2, 0.5f);
+                var center = ConcaveHull.CalculateCentroid(points);
+                // Generate code for the polygon points
+                var sb = new StringBuilder("private static readonly List<WDir> vertices = [");
                 foreach (var p in points)
                 {
-                    generatedText += $"\n  new WDir({p.X:F2}f, {p.Z:F2}f),";
+                    sb.Append($"\n  new WDir({(p.X - center.X).ToString("F2", CultureInfo.InvariantCulture)}f, {(p.Z - center.Z).ToString("F2", CultureInfo.InvariantCulture)}f),");
                 }
-                generatedText += "\n];";
-                Service.Log($"{generatedText}");
-                Service.Log($"({points.Count} points)");
+                sb.Append("\n];");
+
+                // Calculate the centroid of the polygon
+
+                sb.Append($"\n// Centroid of the polygon is at: ({center.X.ToString("F2", CultureInfo.InvariantCulture)}f, {center.Z.ToString("F2", CultureInfo.InvariantCulture)}f)");
+
+                // Copy the generated text and centroid to clipboard
+                ImGui.SetClipboardText(sb.ToString());
             });
         }
     }
