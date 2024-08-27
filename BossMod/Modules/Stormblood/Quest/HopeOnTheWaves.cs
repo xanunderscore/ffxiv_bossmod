@@ -63,7 +63,7 @@ class EncounterStates : StateMachineBuilder
                 Module.Arena.Center = new(472.40f, 751.06f);
                 Module.Arena.Bounds = Encounter.BoundsP2;
             })
-            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? false;
+            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
     }
 }
 
