@@ -170,7 +170,7 @@ public sealed class Plugin : IDalamudPlugin
         _bossmod.Update();
         _hintsBuilder.Update(_hints, PartyState.PlayerSlot);
         _amex.QueueManualActions();
-        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
+        var userPreventingCast = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
         _rotation.Update(_amex.AnimationLockDelayEstimate, userPreventingCast ? 0 : _ai.ForceMovementIn, _movementOverride.IsMoving());
         _ai.Update();
         _broadcast.Update();
