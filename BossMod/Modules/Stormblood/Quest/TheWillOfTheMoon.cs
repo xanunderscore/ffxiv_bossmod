@@ -1,11 +1,13 @@
 ﻿using RPID = BossMod.Roleplay.AID;
 
-namespace BossMod.Modules.Stormblood.Quest.TheWillOfTheMoonP2;
+namespace BossMod.Modules.Stormblood.Quest;
 
 public enum OID : uint
 {
-    Boss = 0x24A1,
+    Boss = 0x24A0,
+    Magnai = 0x24A1,
     Helper = 0x233C,
+    KhunShavar = 0x252F, // R1.820, x0 (spawn during fight)
     Hien = 0x24A3,
     Daidukul = 0x24A2, // R0.500, x1
     TheScaleOfTheFather = 0x2532, // R1.000, x0 (spawn during fight)
@@ -13,12 +15,30 @@ public enum OID : uint
 
 public enum AID : uint
 {
+    DispellingWind = 13223, // Boss->self, 3.0s cast, range 40+R width 8 rect
+    Epigraph = 13225, // 252D->self, 3.0s cast, range 45+R width 8 rect
+    WhisperOfLivesPast = 13226, // 252E->self, 3.5s cast, range -12 donut
+    AncientBlizzard = 13227, // 252F->self, 3.0s cast, range 40+R 45-degree cone
+    Tornado = 13228, // 252F->location, 5.0s cast, range 6 circle
+    Epigraph2 = 13222, // 2530->self, 3.0s cast, range 45+R width 8 rect
     FlatlandFury = 13244, // 2532->self, 17.0s cast, range 10 circle
     FlatlandFuryEnrage = 13329, // 249F->self, 25.0s cast, range 10 circle
     ViolentEarth = 13236, // 233C->location, 3.0s cast, range 6 circle
     WindChisel = 13518, // 233C->self, 2.0s cast, range 34+R 20-degree cone
     TranquilAnnihilation = 13233, // _Gen_DaidukulTheMirthful->24A3, 15.0s cast, single-target
 }
+
+public enum SID : uint
+{
+    Invincibility = 775, // none->Boss, extra=0x0
+}
+
+class DispellingWind(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DispellingWind), new AOEShapeRect(40, 4));
+class Epigraph(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Epigraph), new AOEShapeRect(45, 4));
+class Whisper(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WhisperOfLivesPast), new AOEShapeDonut(6, 12));
+class Blizzard(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AncientBlizzard), new AOEShapeCone(40, 22.5f.Degrees()));
+class Tornado(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.Tornado), 6);
+class Epigraph1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Epigraph2), new AOEShapeRect(45, 4));
 
 public class FlatlandFury(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.FlatlandFury), new AOEShapeCircle(10))
 {
@@ -50,21 +70,6 @@ public class ViolentEarth(BossModule module) : Components.LocationTargetedAOEs(m
 public class WindChisel(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WindChisel), new AOEShapeCone(34, 10.Degrees()));
 
 public class Scales(BossModule module) : Components.Adds(module, (uint)OID.TheScaleOfTheFather);
-
-class MagnaiTheOlderStates : StateMachineBuilder
-{
-    public MagnaiTheOlderStates(BossModule module) : base(module)
-    {
-        TrivialPhase()
-            .ActivateOnEnter<YshtolaAI>()
-            .ActivateOnEnter<Scales>()
-            .ActivateOnEnter<FlatlandFury>()
-            .ActivateOnEnter<FlatlandFuryEnrage>()
-            .ActivateOnEnter<ViolentEarth>()
-            .ActivateOnEnter<WindChisel>()
-            ;
-    }
-}
 
 class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
 {
@@ -113,5 +118,48 @@ class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 609, NameID = 6153)]
-public class MagnaiTheOlder(WorldState ws, Actor primary) : BossModule(ws, primary, new(-186.5f, 550.5f), new ArenaBoundsCircle(20));
+class P1Hints(BossModule module) : BossComponent(module)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var e in hints.PotentialTargets)
+        {
+            if (e.Actor.FindStatus(SID.Invincibility) != null)
+                e.Priority = -1;
+
+            // they do very little damage and sadu will raise them after a short delay, no point in attacking
+            if ((OID)e.Actor.OID == OID.KhunShavar)
+                e.Priority = -1;
+        }
+    }
+}
+
+class WotMStates : StateMachineBuilder
+{
+    public WotMStates(BossModule module) : base(module)
+    {
+        TrivialPhase()
+            .ActivateOnEnter<P1Hints>()
+            .ActivateOnEnter<DispellingWind>()
+            .ActivateOnEnter<Epigraph>()
+            .ActivateOnEnter<Whisper>()
+            .ActivateOnEnter<Blizzard>()
+            .ActivateOnEnter<Tornado>()
+            .ActivateOnEnter<Epigraph1>();
+        TrivialPhase(1)
+            .ActivateOnEnter<YshtolaAI>()
+            .ActivateOnEnter<Scales>()
+            .ActivateOnEnter<FlatlandFury>()
+            .ActivateOnEnter<FlatlandFuryEnrage>()
+            .ActivateOnEnter<ViolentEarth>()
+            .ActivateOnEnter<WindChisel>()
+            .OnEnter(() =>
+            {
+                Module.Arena.Center = new(-186.5f, 550.5f);
+            })
+            .Raw.Update = () => !Module.Enemies(OID.Magnai).Any();
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 609, NameID = 6152)]
+public class WotM(WorldState ws, Actor primary) : BossModule(ws, primary, new(-223, 519), new ArenaBoundsCircle(20));
