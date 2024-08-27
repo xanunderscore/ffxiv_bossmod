@@ -20,16 +20,9 @@ public enum AID : uint
     _Spell_BlizzardIII = 10874, // Boss->location, 3.0s cast, range 5 circle
 }
 
+class BlizzardVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7));
 class Kasaya(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Kasaya), new AOEShapeCone(7.6f, 60.Degrees()));
 class WaterIII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Spell_WaterIII), 8);
-class WaterIIIStack(BossModule module) : Components.StackWithIcon(module, 62, ActionID.MakeSpell(AID._Spell_WaterIII1), 6, 5.1f)
-{
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action == StackAction)
-            Stacks.Clear();
-    }
-}
 
 class BlizzardIII(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(5), 26, ActionID.MakeSpell(AID._Spell_BlizzardIII), 3.1f, true)
 {
@@ -73,8 +66,8 @@ class SlickshellCaptainStates : StateMachineBuilder
             .ActivateOnEnter<Allies>()
             .ActivateOnEnter<WaterIII>()
             .ActivateOnEnter<Kasaya>()
-            .ActivateOnEnter<WaterIIIStack>()
             .ActivateOnEnter<BlizzardIII>()
+            .ActivateOnEnter<BlizzardVoidzone>()
             .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
     }
 }
