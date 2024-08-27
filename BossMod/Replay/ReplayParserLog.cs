@@ -301,6 +301,7 @@ public sealed class ReplayParserLog : IDisposable
             [new("DIE-"u8)] = () => ParseActorDead(false),
             [new("COM+"u8)] = () => ParseActorCombat(true),
             [new("COM-"u8)] = () => ParseActorCombat(false),
+            [new("NENP"u8)] = ParseActorAggroPlayer,
             [new("MDLS"u8)] = ParseActorModelState,
             [new("EVTS"u8)] = ParseActorEventState,
             [new("TARG"u8)] = ParseActorTarget,
@@ -529,6 +530,7 @@ public sealed class ReplayParserLog : IDisposable
     private ActorState.OpAlly ParseActorAlly() => new(_input.ReadActorID(), _input.ReadBool());
     private ActorState.OpDead ParseActorDead(bool dead) => new(_input.ReadActorID(), dead);
     private ActorState.OpCombat ParseActorCombat(bool value) => new(_input.ReadActorID(), value);
+    private ActorState.OpAggroPlayer ParseActorAggroPlayer() => new(_input.ReadActorID(), _input.ReadBool());
     private ActorState.OpModelState ParseActorModelState()
         => new(_input.ReadActorID(), new(_input.ReadByte(false), _input.CanRead() ? _input.ReadByte(false) : (byte)0, _input.CanRead() ? _input.ReadByte(false) : (byte)0));
     private ActorState.OpEventState ParseActorEventState() => new(_input.ReadActorID(), _input.ReadByte(false));
@@ -587,7 +589,6 @@ public sealed class ReplayParserLog : IDisposable
     private ActorState.OpEventObjectAnimation ParseActorEventObjectAnimation() => new(_input.ReadActorID(), _input.ReadUShort(true), _input.ReadUShort(true));
     private ActorState.OpPlayActionTimelineEvent ParseActorPlayActionTimelineEvent() => new(_input.ReadActorID(), _input.ReadUShort(true));
     private ActorState.OpEventNpcYell ParseActorEventNpcYell() => new(_input.ReadActorID(), _input.ReadUShort(false));
-    private ActorState.OpAggroPlayer ParseActorAggroPlayer() => new(_input.ReadActorID(), _input.ReadBool());
 
     private ActorState.OpMount ParseActorMount() => new(_input.ReadActorID(), _input.ReadUInt(false));
     private PartyState.OpModify ParsePartyModify() => new(_input.ReadInt(), new(_input.ReadULong(true), _input.ReadULong(true), _version >= 15 && _input.ReadBool(), _version < 15 ? "" : _input.ReadString()));

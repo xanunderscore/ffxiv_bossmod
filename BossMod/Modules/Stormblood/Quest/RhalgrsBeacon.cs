@@ -1,5 +1,4 @@
-﻿
-namespace BossMod.Stormblood.Quest.RhalgrsBeacon;
+﻿namespace BossMod.Stormblood.Quest.RhalgrsBeacon;
 
 public enum OID : uint
 {
@@ -24,10 +23,6 @@ public enum AID : uint
     _Weaponskill_DiffractiveLaser = 8340, // 1BC7->self, 2.5s cast, range 18+R 60-degree cone
     _Weaponskill_ChoppingBlock = 8345, // Boss->self, 3.0s cast, single-target
     _Weaponskill_ChoppingBlock1 = 8346, // 1A57->location, 3.0s cast, range 5 circle
-}
-
-class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TerminusEst))
-{
 }
 
 class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID._Weaponskill_Gunblade), stopAtWall: true)
