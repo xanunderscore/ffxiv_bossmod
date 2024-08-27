@@ -136,7 +136,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, null, 0, new(), Positional.Any);
 
         var adjRange = targeting.PreferredRange + player.HitboxRadius + targeting.Target.Actor.HitboxRadius;
-        if (targeting.PreferTanking)
+        if (targeting.Target.DesiredPosition != targeting.Target.Actor.Position)
         {
             // see whether we need to move target
             // TODO: think more about keeping uptime while tanking, this is tricky...
