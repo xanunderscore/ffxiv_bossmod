@@ -53,6 +53,10 @@ public enum AID : uint
 
     // Misc
     Resurrection = 173, // L12 SMN/SCH, 8.0s cast, GCD, range 30, single-target, targets=party/alliance/friendly
+
+    // Duty actions
+    DeflectSmall = 10006,
+    DeflectLarge = 18863,
 }
 
 public sealed class Definitions : IDisposable
@@ -112,6 +116,10 @@ public sealed class Definitions : IDisposable
 
         d.RegisterSpell(new ActionID(ActionType.PetAction, 2), false, instantAnimLock: 0, castAnimLock: 0);
         d.RegisterSpell(new ActionID(ActionType.PetAction, 3), false, instantAnimLock: 0, castAnimLock: 0);
+
+        // Duty actions
+        d.RegisterSpell(AID.DeflectSmall);
+        d.RegisterSpell(AID.DeflectLarge);
 
         Customize(d);
     }

@@ -127,9 +127,11 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
     public ActorStatus? FindStatus<SID>(SID sid) where SID : Enum => FindStatus((uint)(object)sid);
     public ActorStatus? FindStatus<SID>(SID sid, ulong source) where SID : Enum => FindStatus((uint)(object)sid, source);
 
-    public WDir DirectionTo(Actor other) => (other.Position - Position).Normalized();
+    public WDir DirectionTo(Actor other) => DirectionTo(other.Position);
+    public WDir DirectionTo(WPos other) => (other - Position).Normalized();
 
-    public float DistanceToHitbox(Actor? other) => other == null ? float.MaxValue : (other.Position - Position).Length() - other.HitboxRadius - HitboxRadius;
+    public float DistanceToHitbox(Actor? other) => other == null ? float.MaxValue : DistanceToHitbox(other.Position, other.HitboxRadius);
+    public float DistanceToHitbox(WPos other, float otherHitboxRadius) => (other - Position).Length() - otherHitboxRadius - HitboxRadius;
 
     public override string ToString() => $"{OID:X} '{Name}' <{InstanceID:X}>";
 }
