@@ -31,7 +31,7 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
             return;
 
         // not enough time to slidecast; skip
-        if (def.CastTime > 0 && Hints.CastTimeRemaining < def.CastTime - 0.5f)
+        if (def.CastTime > 0 && Module.MaxCastTime < def.CastTime - 0.5f)
             return;
 
         Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);

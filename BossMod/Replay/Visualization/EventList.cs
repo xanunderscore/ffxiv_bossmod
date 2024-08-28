@@ -81,7 +81,7 @@ class EventList(Replay r, Action<DateTime> scrollTo, PlanDatabase planDB, Replay
             }
         }
 
-        var boss = filter?.ParticipantsByOID[filter.OID].Find(p => p.InstanceID == filter.InstanceID);
+        var boss = (filter?.ParticipantsByOID.GetValueOrDefault(filter.OID) ?? []).Find(p => p.InstanceID == filter?.InstanceID);
         if (boss != null)
         {
             foreach (var n in _tree.Node("Boss casts", boss.Casts.Count == 0))

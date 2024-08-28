@@ -26,6 +26,13 @@ public enum AID : uint
     Ajisai = 14841,
     HissatsuGyoten = 14842,
     SecondWind = 15375,
+
+    // Nyelbert - Nyelbert's Lament (ShB)
+    RonkanFire3 = 16574,
+    RonkanBlizzard3 = 16575,
+    RonkanThunder3 = 16576,
+    RonkanFlare = 16577,
+    FallingStar = 16578
 }
 
 public enum TraitID : uint { }
@@ -36,6 +43,9 @@ public enum SID : uint
 
     // Hien
     Ajisai = 1779,
+
+    // Nyelbert
+    Electrocution = 271,
 }
 
 public sealed class Definitions : IDisposable
@@ -62,6 +72,12 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Ajisai);
         d.RegisterSpell(AID.HissatsuGyoten);
         d.RegisterSpell(AID.SecondWind);
+
+        d.RegisterSpell(AID.RonkanFire3);
+        d.RegisterSpell(AID.RonkanBlizzard3);
+        d.RegisterSpell(AID.RonkanThunder3);
+        d.RegisterSpell(AID.RonkanFlare);
+        d.RegisterSpell(AID.FallingStar);
     }
 
     public void Dispose() { }

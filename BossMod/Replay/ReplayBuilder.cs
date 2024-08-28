@@ -112,7 +112,7 @@ public sealed class ReplayBuilder : IDisposable
 
     private void FinishFrame()
     {
-        _mgr.Update();
+        _mgr.Update(float.MaxValue);
         foreach (var m in _modules.Values)
         {
             if (m.Module.StateMachine?.ActiveState != m.ActiveState)

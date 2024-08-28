@@ -36,6 +36,7 @@ public sealed class BossModuleManager : IDisposable
         _subsciptions = new
         (
             WorldState.Actors.Added.Subscribe(ActorAdded),
+            WorldState.CurrentZoneChanged.ExecuteAndSubscribe(ZoneChanged, new WorldState.OpZoneChange(ws.CurrentZone, ws.CurrentCFCID)),
             Config.Modified.ExecuteAndSubscribe(ConfigChanged)
         );
 
@@ -54,7 +55,7 @@ public sealed class BossModuleManager : IDisposable
         RaidCooldowns.Dispose();
     }
 
-    public void Update()
+    public void Update(float maxCastTime)
     {
         // update all loaded modules, handle activation/deactivation
         int bestPriority = 0;
@@ -69,7 +70,7 @@ public sealed class BossModuleManager : IDisposable
             try
             {
                 if (allowUpdate)
-                    m.Update();
+                    m.Update(maxCastTime);
                 isActive = m.StateMachine.ActiveState != null;
             }
             catch (Exception ex)
@@ -153,6 +154,16 @@ public sealed class BossModuleManager : IDisposable
         {
             LoadModule(m);
         }
+    }
+
+    private void ZoneChanged(WorldState.OpZoneChange opZoneChange)
+    {
+        if (_loadedModules.Any(l => l.Info?.GroupID == opZoneChange.CFCID))
+            return;
+
+        var m = ModuleRegistry.CreateModuleForCFCID(WorldState, opZoneChange.CFCID, Config.MinMaturity);
+        if (m != null)
+            LoadModule(m);
     }
 
     private void ConfigChanged()

@@ -44,7 +44,7 @@ class ReplayDetailsWindow : UIWindow
         _rmm = new(rotationDB, _mgr, _hints);
         _curTime = _first = data.Ops[0].Timestamp;
         _last = data.Ops[^1].Timestamp;
-        _player.AdvanceTo(_first, _mgr.Update);
+        _player.AdvanceTo(_first, () => _mgr.Update(float.MaxValue));
         _config = new(Service.Config, _player.WorldState, null);
         _events = new(data, MoveTo, rotationDB.Plans, this);
         _analysis = new([data]);
@@ -461,7 +461,7 @@ class ReplayDetailsWindow : UIWindow
             _hintsBuilder = new(_player.WorldState, _mgr);
             _rmm = new(_rotationDB, _mgr, _hints);
         }
-        _player.AdvanceTo(t, _mgr.Update);
+        _player.AdvanceTo(t, () => _mgr.Update(float.MaxValue));
         _curTime = t;
         ResetPF();
     }

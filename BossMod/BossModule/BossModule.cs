@@ -17,6 +17,8 @@ public abstract class BossModule : IDisposable
 
     public Event<BossModule, BossComponent?, string> Error = new();
 
+    public float MaxCastTime { get; private set; }
+
     public PartyState Raid => WorldState.Party;
     public WPos Center => Arena.Center;
     public ArenaBounds Bounds => Arena.Bounds;
@@ -81,7 +83,9 @@ public abstract class BossModule : IDisposable
         PrimaryActor = primary;
         WindowConfig = Service.Config.Get<BossModuleConfig>();
         Arena = new(WindowConfig, center, bounds);
-        Info = ModuleRegistry.FindByOID(primary.OID);
+        Info = primary.OID == BossModuleInfo.PrimaryActorNone
+            ? ModuleRegistry.FindByCFCID(ws.CurrentCFCID)
+            : ModuleRegistry.FindByOID(primary.OID);
         StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
 
         _subscriptions = new
@@ -123,8 +127,10 @@ public abstract class BossModule : IDisposable
         _subscriptions.Dispose();
     }
 
-    public void Update()
+    public void Update(float maxCastTime)
     {
+        MaxCastTime = maxCastTime;
+
         if (StateMachine.ActivePhaseIndex < 0 && CheckPull())
             StateMachine.Start(WorldState.CurrentTime);
 

@@ -79,6 +79,8 @@ public static class BossModuleInfo
         Expansion.Dawntrail => "DT",
         _ => e.ToString()
     };
+
+    public const uint PrimaryActorNone = 0xDEADBEEF;
 }
 
 // attribute that allows customizing boss module's metadata; it is optional, each field has some defaults that are fine in most cases
