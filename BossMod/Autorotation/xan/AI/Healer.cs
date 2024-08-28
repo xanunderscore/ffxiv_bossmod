@@ -164,10 +164,14 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     }
 
     private void UseGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.VeryHigh + extraPriority);
+        => UseGCD(ActionID.MakeSpell(action), target, extraPriority);
+    private void UseGCD(ActionID action, Actor? target, int extraPriority = 0)
+        => Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High + 500 + extraPriority);
 
     private void UseOGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.Medium + extraPriority);
+        => UseOGCD(ActionID.MakeSpell(action), target, extraPriority);
+    private void UseOGCD(ActionID action, Actor? target, int extraPriority = 0)
+        => Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.Medium + extraPriority);
 
     private void AutoRaise(StrategyValues strategy)
     {
@@ -190,7 +194,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 if (swiftcast == 0 && GetRaiseTarget(strategy) is Actor tar)
                 {
                     UseThinAir();
-                    Hints.ActionsToExecute.Push(RaiseAction, tar, ActionQueue.Priority.VeryHigh);
+                    UseGCD(RaiseAction, tar);
                 }
                 break;
             case RaiseStrategy.Swiftcast:
@@ -199,7 +203,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     if (swiftcast > GCD)
                     {
                         UseThinAir();
-                        Hints.ActionsToExecute.Push(RaiseAction, tar2, ActionQueue.Priority.VeryHigh);
+                        UseGCD(RaiseAction, tar2);
                     }
                     else
                         UseGCD(BossMod.WHM.AID.Swiftcast, Player);
@@ -211,7 +215,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     UseThinAir();
                     UseGCD(BossMod.WHM.AID.Swiftcast, Player, extraPriority: 2);
                     if (swiftcastCD > 8)
-                        Hints.ActionsToExecute.Push(RaiseAction, tar3, ActionQueue.Priority.VeryHigh + 1);
+                        UseGCD(RaiseAction, tar3, extraPriority: 1);
                 }
                 break;
         }
