@@ -162,9 +162,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         Basic = 300,
         AOE = 400,
         SSS = 500,
+        Blitz = 600,
         FiresReply = 700,
         WindsReply = 800,
-        Blitz = 900,
+        PR = 900,
         MeditateForce = 950,
     }
 
@@ -270,7 +271,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
 
         if (NumBlitzTargets > 0)
-            PushGCD(currentBlitz, BestBlitzTarget, GCDPriority.Blitz);
+            PushGCD(currentBlitz, BestBlitzTarget, currentBlitz == AID.PhantomRush ? GCDPriority.PR : GCDPriority.Blitz);
 
         FiresReply(strategy);
         WindsReply();
@@ -316,6 +317,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return CurrentForm;
 
         var nadi = strategy.Option(Track.Nadi).As<NadiStrategy>();
+
+        // TODO throw away all this crap and fix odd lunar PB (it should not be used before rof)
 
         // force lunar PB iff we are in opener, have lunar nadi already, and this is our last PB charge, aka double lunar opener
         // if we have lunar but this is NOT our last charge, it means we came out of downtime with lunar nadi (i.e. dungeon), so solar -> pr is optimal
@@ -427,7 +430,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void WindsReply()
     {
-        if (WindsReplyLeft <= GCD || PerfectBalanceLeft > GCD || BlitzLeft > GCD)
+        if (WindsReplyLeft <= GCD)
             return;
 
         // always queue with low prio, this lets us fallback to winds reply when out of range for melee GCDs
