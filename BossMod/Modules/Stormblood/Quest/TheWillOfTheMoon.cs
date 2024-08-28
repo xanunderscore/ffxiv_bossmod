@@ -48,12 +48,7 @@ public class FlatlandFury(BossModule module) : Components.SelfTargetedAOEs(modul
         if (ActiveCasters.Count() == 9)
             hints.ForcedTarget = ActiveCasters.MinBy(actor.DistanceToHitbox);
         else
-        {
-            if (ActiveCasters.Any())
-                hints.ForcedTarget = Module.PrimaryActor;
-
             base.AddAIHints(slot, actor, assignment, hints);
-        }
     }
 }
 
@@ -73,7 +68,7 @@ public class Scales(BossModule module) : Components.Adds(module, (uint)OID.TheSc
 
 class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
 {
-    private Actor Magnai => Module.PrimaryActor;
+    private Actor Magnai => Module.Enemies(OID.Magnai)[0];
     private Actor Hien => Module.WorldState.Actors.First(x => (OID)x.OID == OID.Hien);
     private Actor Daidukul => Module.WorldState.Actors.First(x => (OID)x.OID == OID.Daidukul);
 
@@ -124,12 +119,25 @@ class P1Hints(BossModule module) : BossComponent(module)
     {
         foreach (var e in hints.PotentialTargets)
         {
+            e.Priority = 1;
+
             if (e.Actor.FindStatus(SID.Invincibility) != null)
-                e.Priority = -1;
+                e.Priority = 0;
 
             // they do very little damage and sadu will raise them after a short delay, no point in attacking
             if ((OID)e.Actor.OID == OID.KhunShavar)
-                e.Priority = -1;
+                e.Priority = 0;
+        }
+    }
+}
+
+class P2Hints(BossModule module) : BossComponent(module)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var e in hints.PotentialTargets)
+        {
+            e.Priority = e.Actor.OID == (uint)OID.Magnai ? 1 : 0;
         }
     }
 }
@@ -145,8 +153,10 @@ class WotMStates : StateMachineBuilder
             .ActivateOnEnter<Whisper>()
             .ActivateOnEnter<Blizzard>()
             .ActivateOnEnter<Tornado>()
-            .ActivateOnEnter<Epigraph1>();
+            .ActivateOnEnter<Epigraph1>()
+            .Raw.Update = () => Module.Enemies(OID.Magnai).Any();
         TrivialPhase(1)
+            .ActivateOnEnter<P2Hints>()
             .ActivateOnEnter<YshtolaAI>()
             .ActivateOnEnter<Scales>()
             .ActivateOnEnter<FlatlandFury>()
@@ -157,9 +167,18 @@ class WotMStates : StateMachineBuilder
             {
                 Module.Arena.Center = new(-186.5f, 550.5f);
             })
-            .Raw.Update = () => !Module.Enemies(OID.Magnai).Any();
+            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 609, NameID = 6152)]
-public class WotM(WorldState ws, Actor primary) : BossModule(ws, primary, new(-223, 519), new ArenaBoundsCircle(20));
+public class WotM(WorldState ws, Actor primary) : BossModule(ws, primary, new(-223, 519), new ArenaBoundsCircle(20))
+{
+    protected override bool CheckPull() => true;
+
+    protected override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        foreach (var e in WorldState.Actors.Where(e => !e.IsAlly && !e.IsDeadOrDestroyed))
+            Arena.Actor(e, ArenaColor.Enemy);
+    }
+}
