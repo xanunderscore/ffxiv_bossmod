@@ -97,6 +97,11 @@ public sealed class AIHints
             if (actor.FateID > 0 && actor.FateID != allowedFateID)
                 continue;
 
+            // target is dying; skip it so that AI retargets, but ensure that it's not marked as a forbidden target
+            var predictedHP = ws.PendingEffects.PendingHPDifference(actor.InstanceID);
+            if (actor.HPMP.CurHP + predictedHP <= 0)
+                continue;
+
             // enemies attacking party members can be attacked
             var allowedAttack = actor.InCombat && ws.Party.FindSlot(actor.TargetID) >= 0;
             // enemies in our enmity list can also be attacked, regardless of who they are targeting (since they are keeping us in combat)

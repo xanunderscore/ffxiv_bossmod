@@ -37,7 +37,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         if (_config.FocusTargetMaster)
             FocusMaster(master);
 
-        _afkMode = !master.InCombat && (WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 10;
+        _afkMode = master != player && !master.InCombat && (WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 10;
         bool forbidActions = _config.ForbidActions || _afkMode || autorot.Preset != null && autorot.Preset != AIPreset;
 
         Targeting target = new();
