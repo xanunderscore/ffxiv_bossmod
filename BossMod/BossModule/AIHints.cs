@@ -97,9 +97,12 @@ public sealed class AIHints
             if (actor.FateID > 0 && actor.FateID != allowedFateID)
                 continue;
 
+            // enemies attacking party members can be attacked
             var allowedAttack = actor.InCombat && ws.Party.FindSlot(actor.TargetID) >= 0;
             // enemies in our enmity list can also be attacked, regardless of who they are targeting (since they are keeping us in combat)
             allowedAttack |= actor.AggroPlayer;
+            // all fate mobs can be attacked if we are level synced (non synced mobs are skipped above)
+            allowedAttack |= actor.FateID > 0;
 
             PotentialTargets.Add(new(actor, playerIsDefaultTank)
             {
