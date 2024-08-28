@@ -85,7 +85,7 @@ class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
             if (Player.DistanceToHitbox(Hien) > 25)
                 Hints.ForcedMovement = Player.DirectionTo(Hien).ToVec3();
 
-            UseGCD(RPID.CureIISeventhDawn, Hien);
+            UseAction(RPID.CureIISeventhDawn, Hien);
         }
 
         if (_safeZone != null && (_safeZone.Value - Player.Position).Length() > 2)
@@ -93,12 +93,12 @@ class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
 
         var aero = StatusDetails(Magnai, WHM.SID.Aero2, Player.InstanceID);
         if (aero.Left < 4.6f)
-            UseGCD(RPID.AeroIISeventhDawn, Magnai);
+            UseAction(RPID.AeroIISeventhDawn, Magnai);
 
-        UseGCD(RPID.StoneIVSeventhDawn, primaryTarget);
+        UseAction(RPID.StoneIVSeventhDawn, primaryTarget);
 
         if (Player.HPMP.CurMP < 5000)
-            UseOGCD(RPID.Aetherwell, Player);
+            UseAction(RPID.Aetherwell, Player);
     }
 
     public override void OnActorEAnim(Actor actor, uint state)

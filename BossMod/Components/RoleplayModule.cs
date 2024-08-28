@@ -6,6 +6,8 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
     protected AIHints Hints => _hints!;
     protected Actor Player => _player!;
 
+    protected uint MP;
+
     protected Roleplay.AID ComboAction => (Roleplay.AID)WorldState.Client.ComboState.Action;
 
     public abstract void Execute(Actor? primaryTarget);
@@ -15,14 +17,25 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
         _hints = hints;
         _player = actor;
 
-        Execute(WorldState.Actors.Find(actor.TargetID) ?? Module.PrimaryActor);
+        MP = (uint)Math.Max(actor.HPMP.CurMP + Module.WorldState.PendingEffects.PendingMPDifference(actor.InstanceID), 0);
+
+        Execute(WorldState.Actors.Find(actor.TargetID));
     }
 
-    protected void UseGCD(Roleplay.AID action, Actor? target, Vector3 targetPos = default)
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High, targetPos: targetPos);
+    protected void UseAction(Roleplay.AID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default)
+    {
+        var act = ActionID.MakeSpell(action);
+        var def = ActionDefinitions.Instance[act];
 
-    protected void UseOGCD(Roleplay.AID action, Actor? target, Vector3 targetPos = default)
-        => Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.Low, targetPos: targetPos);
+        if (def == null)
+            return;
+
+        // not enough time to slidecast; skip
+        if (def.CastTime > 0 && Hints.CastTimeRemaining < def.CastTime - 0.5f)
+            return;
+
+        Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);
+    }
 
     protected float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - WorldState.CurrentTime).TotalSeconds, 0.0f);
 

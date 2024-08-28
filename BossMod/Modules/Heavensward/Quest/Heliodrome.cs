@@ -59,9 +59,9 @@ class ReaperAI(BossModule module) : Components.RoleplayModule(module)
         if (primaryTarget != null && Player.MountId == 103)
         {
             if ((OID)primaryTarget.OID == OID.ImperialColossus)
-                UseGCD(Roleplay.AID.DiffractiveMagitekCannon, primaryTarget, targetPos: primaryTarget.PosRot.XYZ());
+                UseAction(Roleplay.AID.DiffractiveMagitekCannon, primaryTarget, targetPos: primaryTarget.PosRot.XYZ());
 
-            UseGCD(Roleplay.AID.MagitekCannon, primaryTarget, targetPos: primaryTarget.PosRot.XYZ());
+            UseAction(Roleplay.AID.MagitekCannon, primaryTarget, targetPos: primaryTarget.PosRot.XYZ());
         }
     }
 }

@@ -28,23 +28,23 @@ class Hien(BossModule module) : Components.RoleplayModule(module)
         switch (ComboAction)
         {
             case Roleplay.AID.Gofu:
-                UseGCD(Roleplay.AID.Yagetsu, primaryTarget);
+                UseAction(Roleplay.AID.Yagetsu, primaryTarget);
                 break;
 
             case Roleplay.AID.Kyokufu:
-                UseGCD(Roleplay.AID.Gofu, primaryTarget);
+                UseAction(Roleplay.AID.Gofu, primaryTarget);
                 break;
 
             default:
                 if (ajisai.Left < 5)
-                    UseGCD(Roleplay.AID.Ajisai, primaryTarget);
-                UseGCD(Roleplay.AID.Kyokufu, primaryTarget);
+                    UseAction(Roleplay.AID.Ajisai, primaryTarget);
+                UseAction(Roleplay.AID.Kyokufu, primaryTarget);
                 break;
         }
 
         if (PredictedHP(Player) < 5000)
-            UseOGCD(Roleplay.AID.SecondWind, Player);
+            UseAction(Roleplay.AID.SecondWind, Player, -10);
 
-        UseOGCD(Roleplay.AID.HissatsuGyoten, primaryTarget);
+        UseAction(Roleplay.AID.HissatsuGyoten, primaryTarget, -10);
     }
 }

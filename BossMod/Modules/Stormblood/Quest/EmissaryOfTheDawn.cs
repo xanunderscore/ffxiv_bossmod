@@ -44,7 +44,7 @@ class AlphiAI(BossModule module) : Components.RoleplayModule(module)
     public override void Execute(Actor? primaryTarget)
     {
         if (primaryTarget != null)
-            UseGCD(Roleplay.AID.RuinIII, primaryTarget);
+            UseAction(Roleplay.AID.RuinIII, primaryTarget);
     }
 }
 
