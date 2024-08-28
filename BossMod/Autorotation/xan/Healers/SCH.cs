@@ -119,7 +119,8 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
             //if (Eos != null)
             //    PushOGCD(AID.Dissipation, Player);
 
-            PushOGCD(AID.ChainStratagem, primaryTarget);
+            if (RaidBuffsLeft > 15)
+                PushOGCD(AID.ChainStratagem, primaryTarget);
         }
 
         if (Aetherflow == 0)
