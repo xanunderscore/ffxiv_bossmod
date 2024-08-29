@@ -5,7 +5,7 @@ public class Chains(BossModule module, uint tetherID, ActionID aid = default) : 
 {
     public uint TID { get; init; } = tetherID;
     public bool TethersAssigned { get; private set; }
-    private readonly Actor?[] _partner = new Actor?[PartyState.MaxAllianceSize];
+    protected readonly Actor?[] _partner = new Actor?[PartyState.MaxAllianceSize];
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
