@@ -93,12 +93,7 @@ class NyelbertAI : Components.RoleplayModule
 
     public override void Execute(Actor? primaryTarget)
     {
-        if (primaryTarget == null)
-            return;
-
-        var numAOETargets = Hints.NumPriorityTargetsInAOECircle(primaryTarget.Position, 5);
-
-        if (Player.DistanceToHitbox(primaryTarget) > 25)
+        if (primaryTarget == null || Player.DistanceToHitbox(primaryTarget) > 25)
             return;
 
         if (WorldState.Party.LimitBreakCur == 10000)
@@ -108,6 +103,8 @@ class NyelbertAI : Components.RoleplayModule
                 UseAction(Roleplay.AID.FallingStar, null, 10, primaryTarget.PosRot.XYZ());
         }
 
+        var numAOETargets = Hints.NumPriorityTargetsInAOECircle(primaryTarget.Position, 5);
+
         if (MP < 800)
             UseAction(Roleplay.AID.RonkanBlizzard3, primaryTarget);
         else if (MP < 1800)
@@ -116,9 +113,12 @@ class NyelbertAI : Components.RoleplayModule
             UseAction(Roleplay.AID.RonkanFlare, primaryTarget);
         else
         {
-            var dotRemaining = StatusDetails(primaryTarget, Roleplay.SID.Electrocution, Player.InstanceID).Left;
-            if (dotRemaining < 5 && primaryTarget.OID is 0x2975 or 0x2977)
-                UseAction(Roleplay.AID.RonkanThunder3, primaryTarget);
+            if (primaryTarget.OID is 0x2975 or 0x2977)
+            {
+                var dotRemaining = StatusDetails(primaryTarget, Roleplay.SID.Electrocution, Player.InstanceID).Left;
+                if (dotRemaining < 5)
+                    UseAction(Roleplay.AID.RonkanThunder3, primaryTarget);
+            }
 
             UseAction(Roleplay.AID.RonkanFire3, primaryTarget);
         }
