@@ -85,6 +85,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         1220, // Excogitation
         1836, // Superbolide
         2685, // Catharsis of Corundum
+        (uint)WAR.SID.BloodwhettingDefenseLong
     ];
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
@@ -302,7 +303,10 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 UseOGCD(BossMod.SCH.AID.Lustrate, bestSTHealTarget);
             }
             else
+            {
+                UseGCD(BossMod.SCH.AID.Adloquium, bestSTHealTarget);
                 UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
+            }
         }
     }
 }

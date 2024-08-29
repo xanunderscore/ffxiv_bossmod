@@ -20,7 +20,6 @@ public enum AID : uint
     _Weaponskill_Wrath = 16425, // 295E->self, no cast, range 100 circle
     _Weaponskill_CoiledLevin = 16424, // 295E->self, 3.0s cast, single-target
     _Weaponskill_CoiledLevin1 = 16428, // 233C->self, 7.0s cast, range 6 circle
-
     _Weaponskill_UnbridledWrath = 16426, // 295E->self, no cast, range 100 circle
     _Ability_HiddenCurrent = 16403, // Boss->location, no cast, ???
     _Ability_VeilOfGukumatz = 16423, // 2998->self, no cast, single-target
