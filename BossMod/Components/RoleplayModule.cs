@@ -22,10 +22,9 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
         Execute(WorldState.Actors.Find(actor.TargetID));
     }
 
-    protected void UseAction(Roleplay.AID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default)
+    protected void UseAction(ActionID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default)
     {
-        var act = ActionID.MakeSpell(action);
-        var def = ActionDefinitions.Instance[act];
+        var def = ActionDefinitions.Instance[action];
 
         if (def == null)
             return;
@@ -34,8 +33,9 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
         if (def.CastTime > 0 && Module.MaxCastTime < def.CastTime - 0.5f)
             return;
 
-        Hints.ActionsToExecute.Push(ActionID.MakeSpell(action), target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);
+        Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);
     }
+    protected void UseAction(Roleplay.AID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default) => UseAction(ActionID.MakeSpell(action), target, additionalPriority, targetPos);
 
     protected float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - WorldState.CurrentTime).TotalSeconds, 0.0f);
 

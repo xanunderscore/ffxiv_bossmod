@@ -32,7 +32,20 @@ public enum AID : uint
     RonkanBlizzard3 = 16575,
     RonkanThunder3 = 16576,
     RonkanFlare = 16577,
-    FallingStar = 16578
+    FallingStar = 16578,
+
+    // Thancred - Coming Clean (ShB)
+    KeenEdge = 16434,
+    BrutalShell = 16418,
+    SolidBarrel = 16435,
+    RoughDivide = 16804,
+    Nebula = 17839,
+    SoothingPotion = 16436,
+    Smackdown = 17901,
+    ShiningBlade = 16437,
+    PerfectDeception = 16438,
+    SouldeepInvisibility = 17291,
+    LeapOfFaith = 16439,
 }
 
 public enum TraitID : uint { }
@@ -46,6 +59,9 @@ public enum SID : uint
 
     // Nyelbert
     Electrocution = 271,
+
+    PerfectDeception = 1906,
+    SouldeepInvisibility = 1956,
 }
 
 public sealed class Definitions : IDisposable
@@ -78,6 +94,16 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RonkanThunder3);
         d.RegisterSpell(AID.RonkanFlare);
         d.RegisterSpell(AID.FallingStar);
+
+        d.RegisterSpell(AID.KeenEdge);
+        d.RegisterSpell(AID.BrutalShell);
+        d.RegisterSpell(AID.SolidBarrel);
+        d.RegisterSpell(AID.RoughDivide);
+        d.RegisterSpell(AID.Nebula);
+        d.RegisterSpell(AID.SoothingPotion);
+        d.RegisterSpell(AID.Smackdown);
+        d.RegisterSpell(AID.PerfectDeception);
+        d.RegisterSpell(AID.ShiningBlade);
     }
 
     public void Dispose() { }
