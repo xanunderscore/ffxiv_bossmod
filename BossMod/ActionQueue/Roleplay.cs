@@ -46,6 +46,12 @@ public enum AID : uint
     PerfectDeception = 16438,
     SouldeepInvisibility = 17291,
     LeapOfFaith = 16439,
+
+    // Estinien - VOVDOC (ShB)
+    DoomSpike = 18772,
+    SonicThrust = 18773,
+    CoerthanTorment = 18774,
+    SkydragonDive = 18775,
 }
 
 public enum TraitID : uint { }
@@ -104,6 +110,11 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Smackdown);
         d.RegisterSpell(AID.PerfectDeception);
         d.RegisterSpell(AID.ShiningBlade);
+
+        d.RegisterSpell(AID.DoomSpike);
+        d.RegisterSpell(AID.SonicThrust);
+        d.RegisterSpell(AID.CoerthanTorment);
+        d.RegisterSpell(AID.SkydragonDive, instantAnimLock: 0.8f);
     }
 
     public void Dispose() { }
