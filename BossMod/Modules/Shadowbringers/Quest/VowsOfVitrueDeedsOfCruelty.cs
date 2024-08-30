@@ -12,6 +12,17 @@ public enum OID : uint
 
 public enum AID : uint
 {
+    _Spell_Aero = 969, // 2C8F->player, 1.0s cast, single-target
+    _AutoAttack_ = 18767, // 2C93->2C89, no cast, single-target
+    _Weaponskill_GrandStrike = 9614, // 2C94->self, 2.5s cast, range 45+R width 4 rect
+    _Ability_ = 18853, // 2C96->location, no cast, single-target
+    _Ability_1 = 18854, // 2C97->location, no cast, single-target
+    _Weaponskill_Crossbones = 18797, // 2C96->self, no cast, single-target
+    _Weaponskill_TheOrder = 18798, // TerminusEstVisual->self, 3.0s cast, range 40+R width 4 rect
+    _Weaponskill_AngrySalamander = 18799, // 2C97->self, 3.0s cast, range 45+R width 6 rect
+    _Weaponskill_GrandSword = 9426, // 2C94->self, 3.0s cast, range 15+R 120-degree cone
+    _Weaponskill_MagitekRay = 9422, // 2C91->self, 3.0s cast, range 40+R width 6 rect
+
     LoadData = 18786, // Boss->self, 3.0s cast, single-target
     AutoAttack = 870, // Boss/LembusPraetorianus->player, no cast, single-target
     MagitekRayRightArm = 18783, // Boss->self, 3.2s cast, range 45+R width 8 rect
@@ -32,6 +43,12 @@ public enum AID : uint
     MagitekRayBit = 18791, // MagitekBit->self, 6.0s cast, range 50+R width 2 rect
     SelfDetonate = 18792, // MagitekBit->self, 7.0s cast, range 40+R circle, enrage if bits are not killed before cast
 }
+
+class MagitekRayTrash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_MagitekRay), new AOEShapeRect(42.1f, 3));
+class GrandStrike(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_GrandStrike), new AOEShapeRect(48.2f, 2));
+class TheOrder(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TheOrder), new AOEShapeRect(41, 2));
+class AngrySalamanderTrash(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AngrySalamander), new AOEShapeRect(45.6f, 3));
+class GrandSword(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_GrandSword), new AOEShapeCone(18.2f, 60.Degrees()));
 
 class MagitekRayRightArm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayRightArm), new AOEShapeRect(45, 4));
 class MagitekRayLeftArm(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayLeftArm), new AOEShapeRect(45, 4));
@@ -71,11 +88,99 @@ class MetalCutter(BossModule module) : Components.SelfTargetedAOEs(module, Actio
 class MagitekRayBits(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MagitekRayBit), new AOEShapeRect(50, 1));
 class AtomicRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AtomicRay), new AOEShapeCircle(10));
 class SelfDetonate(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID.SelfDetonate), "Enrage if bits are not killed before cast");
+
+class EstinienP1(BossModule module) : Components.RoleplayModule(module)
+{
+    public override void Execute(Actor? primaryTarget)
+    {
+        Hints.RecommendedRangeToTarget = 10;
+
+        if (primaryTarget == null)
+            return;
+
+        var combo = WorldState.Client.ComboState.Action;
+
+        if (combo == 18773)
+            UseAction(Roleplay.AID.CoerthanTorment, primaryTarget);
+        if (combo == 18772)
+            UseAction(Roleplay.AID.SonicThrust, primaryTarget);
+        UseAction(Roleplay.AID.DoomSpike, primaryTarget);
+
+        if (Player.HPMP.CurHP * 2 < Player.HPMP.MaxHP)
+            UseAction(Roleplay.AID.AquaVitae, Player, -100);
+
+        UseAction(Roleplay.AID.SkydragonDive, primaryTarget, -100);
+    }
+}
+
+class P1Bounds(BossModule module) : BossComponent(module)
+{
+    private bool Hallway = true;
+
+    public override void Update()
+    {
+        if (Hallway && Raid.Player()?.PosRot.Y < -5)
+            Transition();
+
+        if (Hallway)
+            Arena.Center = new(Raid.Player()?.Position.X ?? 0, 400);
+        else
+            Arena.Center = Raid.Player()?.Position ?? Arena.Center;
+    }
+
+    private void Transition()
+    {
+        Hallway = false;
+        Arena.Bounds = new ArenaBoundsCircle(20);
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (Hallway && hints.PotentialTargets.Count == 0)
+            hints.ForcedMovement = new(1, 0, 0);
+    }
+}
+
+class EstinienP2(BossModule module) : Components.RoleplayModule(module)
+{
+    public override void Execute(Actor? primaryTarget)
+    {
+        Hints.RecommendedRangeToTarget = 3;
+
+        if (primaryTarget == null)
+            return;
+
+        if (Module.Enemies(OID.SigniferPraetorianus).Any(x => x.IsTargetable && !x.IsDead))
+            UseAction(Roleplay.AID.HorridRoar, Player);
+
+        if (WorldState.Party.LimitBreakCur == 10000)
+            UseAction(Roleplay.AID.DragonshadowDive, primaryTarget, 100);
+
+        var dotRemaining = StatusDetails(primaryTarget, Roleplay.SID.StabWound, Player.InstanceID).Left;
+        if (dotRemaining < 2.3f)
+            UseAction(Roleplay.AID.Drachenlance, primaryTarget);
+
+        UseAction(Roleplay.AID.AlaMorn, primaryTarget);
+        UseAction(Roleplay.AID.Stardiver, primaryTarget, -100);
+    }
+}
+
 class VowsOfVirtueDeedsOfCrueltyStates : StateMachineBuilder
 {
     public VowsOfVirtueDeedsOfCrueltyStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<EstinienP1>()
+            .ActivateOnEnter<P1Bounds>()
+            .ActivateOnEnter<GrandStrike>()
+            .ActivateOnEnter<TheOrder>()
+            .ActivateOnEnter<AngrySalamanderTrash>()
+            .ActivateOnEnter<GrandSword>()
+            .ActivateOnEnter<FireII>()
+            .ActivateOnEnter<MagitekRayTrash>()
+            .Raw.Update = () => Module.Enemies(OID.Boss).Any(x => x.IsTargetable);
+        TrivialPhase(1)
+            .ActivateOnEnter<EstinienP2>()
             .ActivateOnEnter<MagitekRayRightArm>()
             .ActivateOnEnter<MagitekRayLeftArm>()
             .ActivateOnEnter<AngrySalamander>()
@@ -86,9 +191,23 @@ class VowsOfVirtueDeedsOfCrueltyStates : StateMachineBuilder
             .ActivateOnEnter<MetalCutter>()
             .ActivateOnEnter<MagitekRayBits>()
             .ActivateOnEnter<AtomicRay>()
-            .ActivateOnEnter<SelfDetonate>();
+            .ActivateOnEnter<SelfDetonate>()
+            .OnEnter(() =>
+            {
+                Module.Arena.Bounds = new ArenaBoundsSquare(20);
+                Module.Arena.Center = new(240, 230);
+            })
+            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "croizat", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69218, NameID = 9189)]
-public class VowsOfVirtueDeedsOfCruelty(WorldState ws, Actor primary) : BossModule(ws, primary, new(240, 230), new ArenaBoundsSquare(20));
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "croizat", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 702, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
+public class VowsOfVirtueDeedsOfCruelty(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsRect(20, 14))
+{
+    protected override bool CheckPull() => true;
+
+    protected override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+    }
+}

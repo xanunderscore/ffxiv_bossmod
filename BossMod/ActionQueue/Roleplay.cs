@@ -52,6 +52,13 @@ public enum AID : uint
     SonicThrust = 18773,
     CoerthanTorment = 18774,
     SkydragonDive = 18775,
+    AquaVitae = 19218,
+    // quest part 2
+    AlaMorn = 18776,
+    Drachenlance = 18777,
+    HorridRoar = 18778,
+    Stardiver = 18780,
+    DragonshadowDive = 18781
 }
 
 public enum TraitID : uint { }
@@ -66,8 +73,12 @@ public enum SID : uint
     // Nyelbert
     Electrocution = 271,
 
+    // thancred
     PerfectDeception = 1906,
     SouldeepInvisibility = 1956,
+
+    // estinien P2
+    StabWound = 1466
 }
 
 public sealed class Definitions : IDisposable
@@ -115,6 +126,12 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.SonicThrust);
         d.RegisterSpell(AID.CoerthanTorment);
         d.RegisterSpell(AID.SkydragonDive, instantAnimLock: 0.8f);
+        d.RegisterSpell(AID.AquaVitae, instantAnimLock: 1.1f);
+        d.RegisterSpell(AID.AlaMorn);
+        d.RegisterSpell(AID.Drachenlance);
+        d.RegisterSpell(AID.HorridRoar);
+        d.RegisterSpell(AID.Stardiver, instantAnimLock: 1.5f);
+        d.RegisterSpell(AID.DragonshadowDive);
     }
 
     public void Dispose() { }
