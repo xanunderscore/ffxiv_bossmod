@@ -398,6 +398,11 @@ static class Extendxan
 {
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineShared(this RotationModuleDefinition def)
     {
+        return def.DefineSharedTA().DefineSimple(SharedTrack.Buffs, "Buffs");
+    }
+
+    public static RotationModuleDefinition DefineSharedTA(this RotationModuleDefinition def)
+    {
         def.Define(SharedTrack.Targeting).As<Targeting>("Targeting")
             .AddOption(xan.Targeting.Manual, "Manual", "Use player's current target for all actions")
             .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
@@ -410,7 +415,7 @@ static class Extendxan
             .AddOption(AOEStrategy.ForceAOE, "ForceAOE", "Always use AOE actions, even on one target")
             .AddOption(AOEStrategy.ForceST, "ForceST", "Forbid any action that can hit multiple targets");
 
-        return def.DefineSimple(SharedTrack.Buffs, "Buffs");
+        return def;
     }
 
     public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
