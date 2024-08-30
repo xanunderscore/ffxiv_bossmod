@@ -98,8 +98,9 @@ public sealed class AIHints
                 continue;
 
             // target is dying; skip it so that AI retargets, but ensure that it's not marked as a forbidden target
+            // skip this check on striking dummies as they die constantly
             var predictedHP = ws.PendingEffects.PendingHPDifference(actor.InstanceID);
-            if (actor.HPMP.CurHP + predictedHP <= 0)
+            if (actor.HPMP.CurHP + predictedHP <= 0 && actor.OID != 0x23B)
                 continue;
 
             // enemies attacking party members can be attacked
