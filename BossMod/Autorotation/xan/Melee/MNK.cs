@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply, Nadi, RoW }
+    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply, Nadi, RoW, PB }
     public enum PotionStrategy
     {
         Manual,
@@ -39,6 +39,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         SolarDowntime,
     }
     public enum RoWStrategy
+    {
+        Automatic,
+        Force,
+        Delay
+    }
+    public enum PBStrategy
     {
         Automatic,
         Force,
@@ -79,7 +85,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         def.Define(Track.RoW).As<RoWStrategy>("RoW")
             .AddOption(RoWStrategy.Automatic, "Use on cooldown, unless buff would be interrupted by downtime")
             .AddOption(RoWStrategy.Force, "Use ASAP")
-            .AddOption(RoWStrategy.Delay, "Do not use");
+            .AddOption(RoWStrategy.Delay, "Do not use")
+            .AddAssociatedActions(AID.RiddleOfWind);
+
+        def.Define(Track.PB).As<PBStrategy>("PB")
+            .AddOption(PBStrategy.Automatic, "Use after opo-opo action before or during Riddle of Fire window")
+            .AddOption(PBStrategy.Force, "Use ASAP")
+            .AddOption(PBStrategy.Delay, "Do not use")
+            .AddAssociatedActions(AID.PerfectBalance);
 
         return def;
     }
@@ -358,10 +371,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void QueuePB(StrategyValues strategy)
     {
-        if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply)
+        var pbstrat = strategy.Option(Track.PB).As<PBStrategy>();
+
+        if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == PBStrategy.Delay)
             return;
 
-        if (!Unlocked(AID.RiddleOfFire))
+        if (pbstrat == PBStrategy.Force || !Unlocked(AID.RiddleOfFire))
         {
             PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
             return;
