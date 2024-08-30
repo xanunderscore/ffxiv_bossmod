@@ -32,9 +32,9 @@ class Step1(BossModule module) : BossComponent(module)
             hints.InteractWithTarget = PopularisEvent;
     }
 
-    public override void OnDirectorUpdate(uint directorID, uint updateID, uint[] updateParams)
+    public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
     {
-        if (updateID == 0x80000001 && updateParams[0] == 0x00000027)
+        if (updateID == 0x80000001 && param1 == 0x00000027)
             Complete = true;
     }
 }
