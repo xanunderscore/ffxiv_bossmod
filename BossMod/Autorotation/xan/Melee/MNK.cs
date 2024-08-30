@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply, Nadi }
+    public enum Track { Potion = SharedTrack.Count, SSS, Meditation, FiresReply, Nadi, RoW }
     public enum PotionStrategy
     {
         Manual,
@@ -38,6 +38,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         [PropertyDisplay("Solar (downtime)", 0xFF8EE6FA)]
         SolarDowntime,
     }
+    public enum RoWStrategy
+    {
+        Automatic,
+        Force,
+        Delay
+    }
 
     public static RotationModuleDefinition Definition()
     {
@@ -69,6 +75,11 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(NadiStrategy.Solar, "Solar")
             .AddOption(NadiStrategy.LunarDowntime, "Build lunar nadi if no current target")
             .AddOption(NadiStrategy.SolarDowntime, "Build solar nadi if no current target");
+
+        def.Define(Track.RoW).As<RoWStrategy>("RoW")
+            .AddOption(RoWStrategy.Automatic, "Use on cooldown, unless buff would be interrupted by downtime")
+            .AddOption(RoWStrategy.Force, "Use ASAP")
+            .AddOption(RoWStrategy.Delay, "Do not use");
 
         return def;
     }
@@ -350,6 +361,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply)
             return;
 
+        if (!Unlocked(AID.RiddleOfFire))
+        {
+            PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
+            return;
+        }
+
         // prevent odd window double blitz
         // TODO figure out the actual mathematical equation that differentiates odd windows, this is stupid
         if (BrotherhoodLeft == 0 && CD(AID.PerfectBalance) > 30)
@@ -380,7 +397,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             if (ShouldRoF)
                 PushOGCD(AID.RiddleOfFire, Player, OGCDPriority.RiddleOfFire, GCD - EarliestRoF(AnimationLockDelay));
 
-            if (!CanWeave(AID.RiddleOfFire))
+            if (ShouldRoW(strategy))
                 PushOGCD(AID.RiddleOfWind, Player, OGCDPriority.RiddleOfWind);
 
             if (NextPositionalImminent && !NextPositionalCorrect)
@@ -449,6 +466,13 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     private void Potion() => Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionStr, Player, ActionQueue.Priority.Low + 100 + (float)OGCDPriority.Potion);
 
     private bool ShouldRoF => CanWeave(AID.RiddleOfFire) && !CanWeave(AID.Brotherhood);
+
+    private bool ShouldRoW(StrategyValues strategy) => strategy.Option(Track.RoW).As<RoWStrategy>() switch
+    {
+        RoWStrategy.Automatic => !CanWeave(AID.RiddleOfFire) && DowntimeIn > World.Client.AnimationLock + 15,
+        RoWStrategy.Force => true,
+        _ => false
+    };
 
     private bool IsEnlightenmentTarget(Actor primary, Actor other) => Hints.TargetInAOERect(other, Player.Position, Player.DirectionTo(primary), 10, 2);
 
