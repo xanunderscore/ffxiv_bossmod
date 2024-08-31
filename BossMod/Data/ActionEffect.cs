@@ -98,6 +98,36 @@ public enum KnockbackDirection
 public enum ActionResourceType
 {
     WARGauge = 0x34,
+
+    SummonGeneric = 0x9D,
+
+    SCHAetherflow = 0xC3,
+
+    SMNBahamutUnk = 0xCA, // appears on baha only
+
+    DRKBlood = 0xD6,
+    DRKDarkArts = 0xF9,
+    DRKDarkside = 0xFA, // may be wrong?
+
+    DNCFeather = 0xEB,
+    DNCEsprit = 0xEC,
+
+    GNBCartridge = 0xED, // bloodfest/solid barrel
+
+    RPRSoul = 0x100,
+    RPRShroud = 0x101, // gibbet/gallows (red gauge)
+    RPRVoidShroud = 0x103, // void/cross reaping (spends Lemure Shroud, blue gems in gauge)
+    RPRLemureShroud = 0x104,
+
+    SMNTranceUnk = 0x109, // baha/phoenix?
+    SMNArcanum = 0x10A, // primal summons
+
+    PCTPalette = 0x134,
+    PCTWhitePaint = 0x135,
+    PCTMotif = 0x137,
+    PCTMuse = 0x138,
+
+    ASTDraw = 0x140,
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -343,7 +373,7 @@ public static class ActionEffectParser
                 return (ActionResourceType)eff.Value switch
                 {
                     ActionResourceType.WARGauge => eff.Param1 != 0 || eff.Param2 != 0 || eff.Param3 != 0 || eff.Param4 != 0 ? "non-zero params" : "",
-                    _ => $"unknown value {eff.Value}",
+                    _ => Enum.IsDefined(typeof(ActionResourceType), (int)eff.Value) ? ((ActionResourceType)eff.Value).ToString() : $"unknown value {eff.Value}",
                 };
             default:
                 return $"unknown type";
