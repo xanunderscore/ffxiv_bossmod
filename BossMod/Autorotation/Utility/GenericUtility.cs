@@ -32,9 +32,9 @@ public abstract class GenericUtility(RotationModuleManager manager, Actor player
             .AddOption(LBOption.LB12, "LB12", "Use LB1/2 if available, but not LB3", 0, effectLB1, allowedTargets, defaultPriority: ActionQueue.Priority.VeryHigh);
     }
 
-    protected void ExecuteSimple<AID>(in StrategyValues.OptionRef opt, AID aid, Actor? target) where AID : Enum
+    protected void ExecuteSimple<AID>(in StrategyValues.OptionRef opt, AID aid, Actor? target, bool allowAction = true) where AID : Enum
     {
-        if (opt.As<SimpleOption>() == SimpleOption.Use)
+        if (opt.As<SimpleOption>() == SimpleOption.Use && allowAction)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), ResolveTargetOverride(opt.Value) ?? target, opt.Priority(), opt.Value.ExpireIn);
     }
 

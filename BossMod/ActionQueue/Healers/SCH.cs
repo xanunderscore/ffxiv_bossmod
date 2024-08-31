@@ -100,6 +100,7 @@ public enum SID : uint
     Galvanize = 297, // applied by Adloquium to target, shield
     LucidDreaming = 1204, // applied by Lucid Dreaming to self
     Swiftcast = 167, // applied by Swiftcast to self
+    Dissipation = 791, // applied by Dissipation to self
     Sleep = 3, // applied by Repose to target
     BanefulImpaction = 3883, // applied by Baneful Impaction to target
     ImpactImminent = 3882, // applied by Chain Stratagem to self

@@ -49,6 +49,8 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
     private Actor? BestDotTarget;
     private Actor? BestRangedAOETarget;
 
+    private DateTime _summonWait;
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
@@ -71,7 +73,11 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
         NumAOETargets = NumMeleeAOETargets(strategy);
 
-        if (Eos == null && !FairyGone)
+        // annoying hack to work around delay between no-pet status ending and pet actor reappearing
+        if (Eos != null || FairyGone)
+            _summonWait = World.CurrentTime.AddSeconds(1);
+
+        if (Eos == null && !FairyGone && World.CurrentTime > _summonWait)
             PushGCD(AID.SummonEos, Player);
 
         OGCD(strategy, primaryTarget);
