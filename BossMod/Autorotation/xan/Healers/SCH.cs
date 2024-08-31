@@ -144,6 +144,9 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
 
     private void OrderFairy(StrategyValues strategy)
     {
+        if (Eos == null)
+            return;
+
         void autoheel()
         {
             if (FairyOrder != PetOrder.Follow && !Player.InCombat && CountdownRemaining == null)
