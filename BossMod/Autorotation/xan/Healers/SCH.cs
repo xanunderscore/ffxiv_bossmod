@@ -150,6 +150,15 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
                 Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
         }
 
+        void autoplace()
+        {
+            if (FairyOrder != PetOrder.Place && (Player.InCombat || CountdownRemaining > 0))
+            {
+                if (Bossmods.ActiveModule?.Arena.Center is WPos p)
+                    Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 3), null, ActionQueue.Priority.High, targetPos: new(p.X, Player.PosRot.Y, p.Z));
+            }
+        }
+
         var strat = strategy.Option(Track.Place).As<FairyPlacement>();
 
         switch (strat)
@@ -161,7 +170,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
                 return;
             case FairyPlacement.FullAuto:
                 autoheel();
-                // TODO when we have place support
+                autoplace();
                 return;
         }
     }

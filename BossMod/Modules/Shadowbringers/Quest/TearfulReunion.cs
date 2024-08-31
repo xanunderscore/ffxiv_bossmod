@@ -49,14 +49,7 @@ class SanctifiedBlizzardII(BossModule module) : Components.SelfTargetedAOEs(modu
 class SanctifiedFireIII(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Spell_SanctifiedFireIII1), 6);
 class SanctifiedBlizzardIII(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Spell_SanctifiedBlizzardIII), new AOEShapeCone(40.5f, 22.5f.Degrees()));
 class Hollow(BossModule module) : Components.PersistentVoidzone(module, 4, m => m.Enemies(OID._Gen_Hollow));
-class HollowTether(BossModule module) : Components.Chains(module, 1)
-{
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (_partner[slot] is Actor a)
-            hints.AddForbiddenZone(new AOEShapeCircle(5), a.Position);
-    }
-}
+class HollowTether(BossModule module) : Components.Chains(module, 1, chainLength: 5);
 class SanctifiedFireIV(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Spell_SanctifiedFireIV1), 10);
 class SanctifiedFlare(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Spell_SanctifiedFlare), 6, 1)
 {
