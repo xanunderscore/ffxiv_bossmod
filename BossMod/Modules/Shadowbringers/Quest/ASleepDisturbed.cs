@@ -49,11 +49,55 @@ class BurningBeamPlayer(BossModule module) : Components.BaitAwayTethers(module, 
 class SoundOfHeat(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheSoundOfHeat), new AOEShapeCone(60, 30.Degrees()));
 class DeceitOfPain(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.TheDeceitOfPain), 14);
 class BalmOfDisgrace(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.TheBalmOfDisgrace), new AOEShapeCircle(12));
+
+class PuzzleSolver(BossModule module) : BossComponent(module)
+{
+    enum Target : uint
+    {
+        None = 0xFFFFFF,
+        OpoStatue = 0x1EAF81,
+        WolfStatue = 0x1EAF7E,
+        SerpentStatue = 0x1EAF7F
+    }
+
+    private Actor Yshtola => Module.Enemies(0x2D3D)[0];
+    private Actor Almet => Module.Enemies(0x2D3E)[0];
+    private Actor Uimet => Module.Enemies(0x2D3F)[0];
+    private Actor Cymet => Module.Enemies(0x2D40)[0];
+
+    private static readonly int[] MatchingCards = Enumerable.Range(0x1EAF8C, 6).ToArray();
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (Yshtola.IsTargetable)
+            return;
+
+        if (WorldState.Actors.FirstOrDefault(x => Array.IndexOf(MatchingCards, (int)x.OID) >= 0 && x.IsTargetable) is Actor a)
+        {
+            hints.InteractWithTarget = a;
+            return;
+        }
+
+        Target target;
+        if (Almet.IsTargetable)
+            target = Target.None;
+        else if (Cymet.IsTargetable)
+            target = Target.SerpentStatue;
+        else if (Uimet.IsTargetable)
+            target = Target.WolfStatue;
+        else
+            target = Target.OpoStatue;
+
+        hints.InteractWithTarget = Module.Enemies(target).FirstOrDefault(x => x.IsTargetable);
+    }
+}
+
 class ASleepDisturbedStates : StateMachineBuilder
 {
     public ASleepDisturbedStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<PuzzleSolver>()
             .ActivateOnEnter<TouchOfShadow>()
             .ActivateOnEnter<MarrowOfFlame>()
             .ActivateOnEnter<GraceOfCalamity>()
@@ -66,4 +110,7 @@ class ASleepDisturbedStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "croizat", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69301, NameID = 9296)]
-public class ASleepDisturbed(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsSquare(20));
+public class ASleepDisturbed(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsSquare(20))
+{
+    protected override bool CheckPull() => true;
+}
