@@ -90,7 +90,7 @@ public sealed class AIHints
     {
         bool playerInFate = ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
         var allowedFateID = playerInFate ? ws.Client.ActiveFate.ID : 0;
-        foreach (var actor in ws.Actors.Where(a => a.Type == ActorType.Enemy && a.IsTargetable && !a.IsAlly && !a.IsDead))
+        foreach (var actor in ws.Actors.Where(a => a.Type is ActorType.Enemy or ActorType.Part && a.IsTargetable && !a.IsAlly && !a.IsDead))
         {
             // fate mob in fate we are NOT a part of, skip entirely. it's okay to "attack" these (i.e., they won't be added as forbidden targets) because we can't even hit them
             // (though aggro'd mobs will continue attacking us after we unsync, but who really cares)
@@ -100,7 +100,7 @@ public sealed class AIHints
             // target is dying; skip it so that AI retargets, but ensure that it's not marked as a forbidden target
             // skip this check on striking dummies as they die constantly
             var predictedHP = ws.PendingEffects.PendingHPDifference(actor.InstanceID);
-            if (actor.HPMP.CurHP + predictedHP <= 0 && actor.OID != 0x23B)
+            if (actor.HPMP.CurHP + predictedHP <= 0 && actor.OID is not (0x23B or 0x2DE0))
                 continue;
 
             // enemies attacking party members can be attacked

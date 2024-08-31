@@ -134,6 +134,9 @@ public static class ModuleRegistry
                 sortOrder = (int)primaryOID;
             }
 
+            if (primaryOID == BossModuleInfo.PrimaryActorNone)
+                primaryOID += groupID;
+
             return new Info(module, statesType)
             {
                 ConfigType = configType,
@@ -179,7 +182,7 @@ public static class ModuleRegistry
             if (!_modulesByOID.TryAdd(info.PrimaryActorOID, info))
                 Service.Log($"Two boss modules have same primary actor OID: {t.Name} and {_modulesByOID[info.PrimaryActorOID].ModuleType.Name}");
 
-            if (info.PrimaryActorOID == BossModuleInfo.PrimaryActorNone)
+            if (info.PrimaryActorOID >= BossModuleInfo.PrimaryActorNone)
             {
                 if (info.GroupType != BossModuleInfo.GroupType.CFC)
                 {
@@ -209,7 +212,7 @@ public static class ModuleRegistry
     public static BossModule? CreateModuleForCFCID(WorldState ws, uint cfcId, BossModuleInfo.Maturity minMaturity)
     {
         var info = FindByCFCID(cfcId);
-        return info?.Maturity >= minMaturity ? CreateModule(info, ws, new(BossModuleInfo.PrimaryActorNone, BossModuleInfo.PrimaryActorNone, -1, "", 0, ActorType.None, Class.None, 0, new(), targetable: false)) : null;
+        return info?.Maturity >= minMaturity ? CreateModule(info, ws, new(info.PrimaryActorOID, info.PrimaryActorOID, -1, "", 0, ActorType.None, Class.None, 0, new(), targetable: false)) : null;
     }
 
     // TODO: this is a hack...
