@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FiresReply, Nadi, RoF, RoW, PB, BH }
+    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FiresReply, Nadi, RoF, RoW, PB, BH, TC, Blitz }
     public enum PotionStrategy
     {
         Manual,
@@ -47,7 +47,21 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     public enum PBStrategy
     {
         Automatic,
+        ForceOpo,
         Force,
+        Delay
+    }
+    public enum TCStrategy
+    {
+        None,
+        GapClose
+    }
+    public enum BlitzStrategy
+    {
+        Automatic,
+        RoF,
+        Multi,
+        MultiRoF,
         Delay
     }
 
@@ -86,8 +100,25 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         def.DefineSimple(Track.RoF, "RoF").AddAssociatedActions(AID.RiddleOfFire);
         def.DefineSimple(Track.RoW, "RoW").AddAssociatedActions(AID.RiddleOfWind);
-        def.DefineSimple(Track.PB, "PB").AddAssociatedActions(AID.PerfectBalance);
+        def.Define(Track.PB).As<PBStrategy>("PB")
+            .AddOption(PBStrategy.Automatic, "Automatically use after Opo before or during Riddle of Fire")
+            .AddOption(PBStrategy.ForceOpo, "Use ASAP after next Opo")
+            .AddOption(PBStrategy.Force, "Use ASAP")
+            .AddOption(PBStrategy.Delay, "Do not use")
+            .AddAssociatedActions(AID.PerfectBalance);
         def.DefineSimple(Track.BH, "BH").AddAssociatedActions(AID.Brotherhood);
+        def.Define(Track.TC).As<TCStrategy>("TC")
+            .AddOption(TCStrategy.None, "Do not use")
+            .AddOption(TCStrategy.GapClose, "Use if outside melee range")
+            .AddAssociatedActions(AID.Thunderclap);
+
+        def.Define(Track.Blitz).As<BlitzStrategy>("Blitz")
+            .AddOption(BlitzStrategy.Automatic, "Use ASAP")
+            .AddOption(BlitzStrategy.RoF, "Hold blitz until Riddle of Fire is active")
+            .AddOption(BlitzStrategy.Multi, "Hold blitz until at least two targets will be hit")
+            .AddOption(BlitzStrategy.MultiRoF, "Hold blitz until Riddle of Fire and 2+ targets")
+            .AddOption(BlitzStrategy.Delay, "Do not use")
+            .AddAssociatedActions(AID.ElixirField, AID.FlintStrike, AID.TornadoKick, AID.ElixirBurst, AID.RisingPhoenix, AID.PhantomRush);
 
         return def;
     }
@@ -289,9 +320,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        if (NumBlitzTargets > 0)
-            PushGCD(currentBlitz, BestBlitzTarget, currentBlitz == AID.PhantomRush ? GCDPriority.PR : GCDPriority.Blitz);
-
+        UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
         WindsReply();
 
@@ -403,7 +432,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         QueuePB(strategy);
 
-        if (bhUse == OffensiveStrategy.Automatic && (CombatTimer >= 10 || BeastCount == 2))
+        if (bhUse == OffensiveStrategy.Automatic && (CombatTimer >= 10 || BeastCount == 2) && DowntimeIn > World.Client.AnimationLock + 20)
             PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
 
         var useRof = ShouldRoF(strategy);
@@ -424,6 +453,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
             PushOGCD(AID.SteelPeak, primaryTarget, OGCDPriority.TFC);
         }
+
+        if (strategy.Option(Track.TC).As<TCStrategy>() == TCStrategy.GapClose && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
+            PushOGCD(AID.Thunderclap, primaryTarget, OGCDPriority.TrueNorth);
     }
 
     private void Meditate(StrategyValues strategy, Actor? primaryTarget)
@@ -440,6 +472,22 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         };
 
         PushGCD(AID.SteeledMeditation, Player, prio);
+    }
+
+    private void UseBlitz(StrategyValues strategy, AID currentBlitz)
+    {
+        var should = NumBlitzTargets > 0;
+        should &= strategy.Option(Track.Blitz).As<BlitzStrategy>() switch
+        {
+            BlitzStrategy.Automatic => true,
+            BlitzStrategy.RoF => FireLeft > GCD,
+            BlitzStrategy.Multi => NumBlitzTargets > 1,
+            BlitzStrategy.MultiRoF => FireLeft > GCD && NumBlitzTargets > 1,
+            _ => false
+        };
+
+        if (should)
+            PushGCD(currentBlitz, BestBlitzTarget, currentBlitz is AID.TornadoKick or AID.PhantomRush ? GCDPriority.PR : GCDPriority.Blitz);
     }
 
     private void FiresReply(StrategyValues strategy)
@@ -485,7 +533,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         return strategy.Simple(Track.RoF) switch
         {
-            OffensiveStrategy.Automatic => extraGCDs > 0 || !CanWeave(AID.Brotherhood),
+            OffensiveStrategy.Automatic => !CanWeave(AID.Brotherhood) && DowntimeIn > World.Client.AnimationLock + 20,
             OffensiveStrategy.Force => true,
             _ => false
         };

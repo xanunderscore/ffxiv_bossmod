@@ -290,7 +290,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<ScholarGauge>();
 
-        if (World.Party.WithoutSlot().Count() == 1 && gauge.Aetherflow > 0)
+        if (World.Party.WithoutSlot().Count() == 1 && gauge.Aetherflow > 0 && primaryTarget != null)
             UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
 
         var (bestSTHealTarget, state) = BestSTHealTarget;
