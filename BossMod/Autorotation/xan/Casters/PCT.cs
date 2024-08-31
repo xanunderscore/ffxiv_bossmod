@@ -118,13 +118,13 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         if (Player.InCombat && primaryTarget != null)
         {
             if (ShouldWeapon(strategy))
-                PushOGCD(AID.SteelMuse, Player);
+                PushOGCD(AID.StrikingMuse, Player);
 
             if (CanvasFlags.HasFlag(CanvasFlags.Pom))
                 PushOGCD(AID.PomMuse, BestAOETarget);
 
             if (ShouldLandscape(strategy))
-                PushOGCD(AID.StarryMuse, Player);
+                PushOGCD(AID.StarryMuse, Player, 2);
 
             if (ShouldSubtract(strategy))
                 PushOGCD(AID.SubtractivePalette, Player);
@@ -253,7 +253,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         if (CombatTimer < 10 && !CanvasFlags.HasFlag(CanvasFlags.Wing))
             return false;
 
-        return Landscape && CanWeave(AID.ScenicMuse, gcdsAhead);
+        return Landscape && CanWeave(AID.StarryMuse, gcdsAhead);
     }
 
     private bool ShouldSubtract(StrategyValues strategy, int gcdsAhead = 0)
