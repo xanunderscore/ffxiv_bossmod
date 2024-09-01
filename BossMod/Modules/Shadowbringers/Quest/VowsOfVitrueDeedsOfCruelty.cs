@@ -98,11 +98,9 @@ class EstinienP1(BossModule module) : Components.RoleplayModule(module)
         if (primaryTarget == null)
             return;
 
-        var combo = WorldState.Client.ComboState.Action;
-
-        if (combo == 18773)
+        if (ComboAction == Roleplay.AID.SonicThrust)
             UseAction(Roleplay.AID.CoerthanTorment, primaryTarget);
-        if (combo == 18772)
+        if (ComboAction == Roleplay.AID.DoomSpike)
             UseAction(Roleplay.AID.SonicThrust, primaryTarget);
         UseAction(Roleplay.AID.DoomSpike, primaryTarget);
 
