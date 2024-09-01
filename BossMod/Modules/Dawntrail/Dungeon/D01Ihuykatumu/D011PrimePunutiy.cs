@@ -112,7 +112,7 @@ class Bury(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class Decay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Decay), new AOEShapeDonut(5, 40))
+class Decay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Decay), new AOEShapeDonut(6, 40))
 {
     private readonly IReadOnlyList<Actor> _flytrap = module.Enemies(OID.IhuykatumuFlytrap);
 
