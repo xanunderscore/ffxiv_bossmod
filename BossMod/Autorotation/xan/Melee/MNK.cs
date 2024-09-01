@@ -351,7 +351,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
             case OffensiveStrategy.Automatic:
-                if (!CanFitGCD(DowntimeIn - GetApplicationDelay(AID.SixSidedStar), 1))
+                if (DowntimeIn > 0 && !CanFitGCD(DowntimeIn - GetApplicationDelay(AID.SixSidedStar), 1))
                     PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
         }
@@ -395,12 +395,21 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void QueuePB(StrategyValues strategy)
     {
-        var pbstrat = strategy.Simple(Track.PB);
+        var pbstrat = strategy.Option(Track.PB).As<PBStrategy>();
 
-        if (CurrentForm != Form.Raptor || BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == OffensiveStrategy.Delay)
+        if (BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == PBStrategy.Delay)
             return;
 
-        if (pbstrat == OffensiveStrategy.Force || !Unlocked(AID.RiddleOfFire))
+        if (pbstrat == PBStrategy.Force)
+        {
+            PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
+            return;
+        }
+
+        if (CurrentForm != Form.Raptor)
+            return;
+
+        if (pbstrat == PBStrategy.ForceOpo || !Unlocked(AID.RiddleOfFire))
         {
             PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
             return;
@@ -533,7 +542,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         return strategy.Simple(Track.RoF) switch
         {
-            OffensiveStrategy.Automatic => !CanWeave(AID.Brotherhood) && DowntimeIn > World.Client.AnimationLock + 20,
+            OffensiveStrategy.Automatic => (extraGCDs > 0 || !CanWeave(AID.Brotherhood)) && DowntimeIn > World.Client.AnimationLock + 20,
             OffensiveStrategy.Force => true,
             _ => false
         };
