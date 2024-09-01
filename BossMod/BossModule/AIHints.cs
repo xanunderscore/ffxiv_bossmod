@@ -43,7 +43,7 @@ public sealed class AIHints
     public Actor? ForcedTarget;
 
     // this should be somewhere else xd
-    public bool ForceClearTarget;
+    public bool ClearTarget;
 
     // low-level forced movement - if set, character will move in specified direction (ignoring casts, uptime, forbidden zones, etc), or stay in place if set to default
     public Vector3? ForcedMovement;
@@ -85,7 +85,7 @@ public sealed class AIHints
         Bounds = DefaultBounds;
         PotentialTargets.Clear();
         ForcedTarget = null;
-        ForceClearTarget = false;
+        ClearTarget = false;
         ForcedMovement = null;
         InteractWithTarget = null;
         ForbiddenZones.Clear();

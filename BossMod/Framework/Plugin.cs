@@ -209,7 +209,7 @@ public sealed class Plugin : IDalamudPlugin
                 Service.Log($"[ExecHints] Unexpected new target: expected {_hints.ForcedTarget.InstanceID:X} at #{_hints.ForcedTarget.SpawnIndex}, but found {obj->EntityId:X}");
             FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->Target = obj;
         }
-        else if (_hints.ForceClearTarget)
+        else if (_hints.ClearTarget)
             FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance()->Target = null;
         foreach (var s in _hints.StatusesToCancel)
         {
