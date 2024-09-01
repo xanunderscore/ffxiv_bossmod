@@ -24,6 +24,11 @@ public sealed class AIHints
         public bool StayAtLongRange; // if set, players with ranged attacks don't bother coming closer than max range (TODO: reconsider)
     }
 
+    public class Position(Func<WPos, float> distance)
+    {
+        public Func<WPos, float> Distance = distance;
+    }
+
     public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30);
 
     public WPos Center;
@@ -37,6 +42,9 @@ public sealed class AIHints
     // this should be set only if either explicitly planned by user or by ai, otherwise it will be annoying to user
     public Actor? ForcedTarget;
 
+    // this should be somewhere else xd
+    public bool ForceClearTarget;
+
     // low-level forced movement - if set, character will move in specified direction (ignoring casts, uptime, forbidden zones, etc), or stay in place if set to default
     public Vector3? ForcedMovement;
 
@@ -49,6 +57,9 @@ public sealed class AIHints
 
     // positioning: next positional hint (TODO: reconsider, maybe it should be a list prioritized by in-gcds, and imminent should be in-gcds instead? or maybe it should be property of an enemy? do we need correct?)
     public (Actor? Target, Positional Pos, bool Imminent, bool Correct) RecommendedPositional;
+
+    // generalization of Positional and RangeToTarget (Positional is still used to draw hints in world)
+    public Position? DesiredPosition;
 
     // positioning: recommended range to target (TODO: reconsider?)
     public float RecommendedRangeToTarget;
@@ -74,6 +85,7 @@ public sealed class AIHints
         Bounds = DefaultBounds;
         PotentialTargets.Clear();
         ForcedTarget = null;
+        ForceClearTarget = false;
         ForcedMovement = null;
         InteractWithTarget = null;
         ForbiddenZones.Clear();

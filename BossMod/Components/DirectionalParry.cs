@@ -22,8 +22,21 @@ public class DirectionalParry(BossModule module, uint actorOID) : Adds(module, a
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        var target = Actors.FirstOrDefault(w => w.InstanceID == actor.TargetID);
-        if (target != null && _actorStates.TryGetValue(actor.TargetID, out var targetState))
+        if (WorldState.Actors.Find(actor.TargetID) is Actor target && IsAttackForbidden(actor, target))
+            hints.Add("Attack target from unshielded side!");
+    }
+
+    // TODO: try to pathfind to safe quadrant?
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var enemy in hints.PotentialTargets)
+            if (IsAttackForbidden(actor, enemy.Actor))
+                enemy.Priority = -1;
+    }
+
+    private bool IsAttackForbidden(Actor actor, Actor target)
+    {
+        if (_actorStates.TryGetValue(target.InstanceID, out var targetState))
         {
             var forbiddenSides = ActiveSides(targetState) | ImminentSides(targetState);
             var attackDir = (actor.Position - target.Position).Normalized();
@@ -34,11 +47,9 @@ public class DirectionalParry(BossModule module, uint actorOID) : Adds(module, a
                 < -0.7071067f => forbiddenSides.HasFlag(Side.Back),
                 _ => forbiddenSides.HasFlag(attackDir.Dot(facing.OrthoL()) > 0 ? Side.Left : Side.Right)
             };
-            if (attackingFromForbidden)
-            {
-                hints.Add("Attack target from unshielded side!");
-            }
+            return attackingFromForbidden;
         }
+        return false;
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)

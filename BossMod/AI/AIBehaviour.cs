@@ -46,6 +46,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             target = SelectPrimaryTarget(player, master);
             if (target.Target != null || TargetIsForbidden(player.TargetID))
                 autorot.Hints.ForcedTarget ??= target.Target?.Actor;
+            if (TargetIsForbidden(player.TargetID) && target.Target == null)
+                autorot.Hints.ForceClearTarget = true;
             AdjustTargetPositional(player, ref target);
         }
 
@@ -84,6 +86,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         // if current target is not among valid targets, clear it - this opens way for future target selection heuristics
         var targetId = autorot.Hints.ForcedTarget?.InstanceID ?? player.TargetID;
         var target = autorot.Hints.PriorityTargets.FirstOrDefault(e => e.Actor.InstanceID == targetId);
+        if (autorot.Hints.ForcedTarget is Actor t)
+            target ??= new AIHints.Enemy(t, false);
 
         // if we don't have a valid target yet, use some heuristics to select some 'ok' target to attack
         // try assisting master, otherwise (if player is own master, or if master has no valid target) just select closest valid target
