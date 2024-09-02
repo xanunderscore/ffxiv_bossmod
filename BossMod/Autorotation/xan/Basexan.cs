@@ -65,7 +65,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected void PushGCD<P>(AID aid, Actor? target, P priority, float delay = 0) where P : Enum
         => PushGCD(aid, target, (int)(object)priority, delay);
 
-    protected void PushGCD(AID aid, Actor? target, int priority = 1, float delay = 0)
+    protected void PushGCD(AID aid, Actor? target, int priority = 2, float delay = 0)
     {
         if (priority == 0)
             return;
