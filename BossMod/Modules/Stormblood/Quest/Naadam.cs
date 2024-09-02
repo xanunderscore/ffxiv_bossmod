@@ -21,6 +21,7 @@ public enum OID : uint
     _Gen_DotharliHunter3 = 0x1DDA, // R0.500, x0 (spawn during fight)
     _Gen_OroniriHunter = 0x1DD9, // R0.500, x0 (spawn during fight)
     _Gen_StellarChuluu = 0x1B3F, // R1.800, x0 (spawn during fight)
+    _Gen_StellarChuluu1 = 0x1B40, // R1.800, x0 (spawn during fight)
     _Gen_DomanHoplomachus = 0x1B3C, // R0.500, x0 (spawn during fight)
     _Gen_DomanSignifer = 0x1B3E, // R0.500, x0 (spawn during fight)
     _Gen_DomanLaquierius = 0x1B3D, // R0.500, x0 (spawn during fight)
@@ -31,7 +32,33 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    Holmgang = 8391
+    Holmgang = 8391,
+    _AutoAttack_Attack = 873, // _Gen_BuduganHunter->player/1B2D, no cast, single-target
+    _Spell_Stone = 970, // _Gen_BuduganShaman->1B49, 1.0s cast, single-target
+    _Weaponskill_TrueThrust = 722, // Boss/_Gen_DotharliHunter/_Gen_DotharliHunter1/_Gen_OroniriHunter/_Gen_DotharliHunter3->player/1B2E/1B48/_Gen_BuduganWarrior/1B2B/1B2C, no cast, single-target
+    _AutoAttack_Attack1 = 871, // Boss/_Gen_DotharliHunter/_Gen_DotharliHunter1/_Gen_OroniriHunter/_Gen_DotharliHunter3->player/1B2E/1B48/_Gen_BuduganWarrior/1B2B/1B2C, no cast, single-target
+    _AutoAttack_Attack2 = 870, // _Gen_BuduganWarrior/_Gen_DotharliWarrior/_Gen_OroniriBrother/_Gen_BuduganWarrior1/_Gen_OroniriWarrior/_Gen_MagnaiTheOlder->player/1B2B/1B2C/_Gen_DotharliSpiritcaller/_Gen_OroniriBrother/_Gen_DotharliWarrior/_Gen_DotharliHunter/1B2D/1B2E/_Gen_StellarChuluu/_Gen_SaduHeavensflame, no cast, single-target
+    _Weaponskill_HeavyShot = 8185, // _Gen_BuduganHunter->player/1B2D, no cast, single-target
+    _Weaponskill_HeavySwing = 8186, // _Gen_BuduganWarrior/_Gen_DotharliWarrior/_Gen_BuduganWarrior1/_Gen_MagnaiTheOlder->player/1B2C/1B2B/_Gen_DotharliSpiritcaller/_Gen_OroniriBrother/_Gen_DotharliHunter/1B2D/1B2E/_Gen_StellarChuluu, no cast, single-target
+    _Weaponskill_FastBlade = 717, // _Gen_OroniriBrother/_Gen_OroniriWarrior->player/_Gen_DotharliWarrior, no cast, single-target
+    _Spell_Fire = 966, // _Gen_DotharliSpiritcaller->player/_Gen_BuduganWarrior, 1.0s cast, single-target
+    _Weaponskill_Tomahawk = 8390, // _Gen_MagnaiTheOlder->1B2E, no cast, single-target
+    _Spell_Fire1 = 9123, // _Gen_SaduHeavensflame->_Gen_MagnaiTheOlder, no cast, single-target
+    _Spell_Fire2 = 9120, // _Gen_StellarChuluu->player, 1.0s cast, single-target
+    _Weaponskill_BrokenRidge = 8395, // _Gen_MagnaiTheOlder->self, 5.0s cast, range 50 circle
+    _Weaponskill_ViolentEarth = 8388, // _Gen_MagnaiTheOlder->self, 1.5s cast, single-target
+    _Spell_ViolentEarth = 8389, // _Gen_MagnaiTheOlder1->location, 3.0s cast, range 6 circle
+    _Weaponskill_ViolentEarth1 = 8533, // _Gen_MagnaiTheOlder->self, no cast, single-target
+    _Spell_DispellingWind = 8394, // _Gen_SaduHeavensflame->self, 3.0s cast, range 40+R width 8 rect
+    _Weaponskill_FallingDusk = 8392, // _Gen_SaduHeavensflame->location, 60.0s cast, range 25 circle
+    _Weaponskill_Epigraph = 8339, // 1A58->self, 3.0s cast, range 45+R width 8 rect
+
+    _AutoAttack_Attack3 = 872, // _Gen_Grynewaht->player, no cast, single-target
+    _Weaponskill_AugmentedShatter = 8494, // _Gen_Grynewaht->player, no cast, single-target
+    _Weaponskill_MagitekCannon = 9121, // _Gen_ArmoredWeapon->1DBE, no cast, single-target
+    _Weaponskill_DiffractiveLaser = 9122, // _Gen_ArmoredWeapon->location, 3.0s cast, range 5 circle
+    _Weaponskill_AugmentedSuffering = 8492, // _Gen_Grynewaht->self, 3.5s cast, range 6+R circle
+    _Weaponskill_AugmentedUprising = 8493, // _Gen_Grynewaht->self, 3.0s cast, range 8+R 120-degree cone
 }
 
 public enum SID : uint
@@ -39,36 +66,18 @@ public enum SID : uint
     EarthenAccord = 778
 }
 
-class NaadamStates : StateMachineBuilder
-{
-    public NaadamStates(BossModule module) : base(module)
-    {
-        SimplePhase(0, P1, "GoToOvoo")
-            .Raw.Update = () => Module.FindComponent<Holmgang>()?.NumCasts > 0;
-        SimplePhase(1, P2, "Defend");
-    }
+class DiffractiveLaser(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_DiffractiveLaser), 5);
+class AugmentedSuffering(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AugmentedSuffering), new AOEShapeCircle(6.5f));
+class AugmentedUprising(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AugmentedUprising), new AOEShapeCone(8.5f, 60.Degrees()));
 
-    private void P1(uint id)
-    {
-        SimpleState(id + 0xFF0000, 1800, "Duty timer")
-            .ActivateOnEnter<P1Bounds>()
-            .ActivateOnEnter<Enemies>()
-            .ActivateOnEnter<DrawOvoo>()
-            .ActivateOnEnter<Holmgang>()
-            ;
-    }
-
-    private void P2(uint id)
-    {
-        SimpleState(id + 0xFF0000, 1800, "Duty timer")
-            .ActivateOnEnter<OvooUser>()
-            .OnEnter(() => Module.Arena.Center = new(354, 296.5f));
-    }
-}
+class ViolentEarth(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Spell_ViolentEarth), 6);
+class DispellingWind(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Spell_DispellingWind), new AOEShapeRect(40.5f, 4));
+class Epigraph(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Epigraph), new AOEShapeRect(45, 4));
 
 class DrawOvoo : BossComponent
 {
     private Actor? Ovoo => WorldState.Actors.FirstOrDefault(o => o.OID == 0x1EA4E1);
+
     public DrawOvoo(BossModule module) : base(module)
     {
         KeepOnPhaseChange = true;
@@ -76,43 +85,48 @@ class DrawOvoo : BossComponent
 
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actor(Ovoo, ArenaColor.Vulnerable, true);
+        Arena.Actor(Ovoo, ArenaColor.Object, true);
     }
 }
 
-class OvooUser(BossModule module) : BossComponent(module)
+class ActivateOvoo(BossModule module) : BossComponent(module)
 {
-    private Actor? Actor => WorldState.Actors.FirstOrDefault(a => a.FindStatus(SID.EarthenAccord) != null && !a.IsAlly);
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Actor != null)
-            Arena.AddCircle(Actor.Position, 1.5f, ArenaColor.Danger);
+        var dest = new WPos(354, 296.5f);
+        if (actor.MountId == 117)
+        {
+            if ((actor.Position - dest).Length() > 10)
+                hints.ForcedMovement = actor.DirectionTo(dest).ToVec3();
+            else
+                hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralDismount, null, ActionQueue.Priority.High);
+        }
+
+        var beingAttacked = false;
+
+        foreach (var e in hints.PotentialTargets)
+        {
+            if (e.Actor.TargetID == actor.InstanceID)
+                beingAttacked = true;
+            else
+                e.Priority = -1;
+        }
+
+        var ovoo = WorldState.Actors.FirstOrDefault(x => x.OID == 0x1EA4E1);
+        if (!beingAttacked && (ovoo?.IsTargetable ?? false))
+            hints.InteractWithTarget = ovoo;
     }
 }
 
-class Holmgang(BossModule module) : Components.CastCounter(module, ActionID.MakeSpell(AID.Holmgang));
-
-class Enemies : BossComponent
+class ProtectOvoo(BossModule module) : BossComponent(module)
 {
-    public Enemies(BossModule module) : base(module)
-    {
-        KeepOnPhaseChange = true;
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var act in WorldState.Actors.Where(x => !x.IsAlly && x.IsTargetable))
-            Arena.Actor(act, act.OID == (uint)OID._Gen_StellarChuluu ? ArenaColor.Object : ArenaColor.Enemy);
-    }
-
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var e in hints.PotentialTargets)
         {
             if (e.Actor.FindStatus(SID.EarthenAccord) != null)
-                e.Priority = 1;
-            else if ((OID)e.Actor.OID == OID._Gen_StellarChuluu)
+                e.Priority = 5;
+            else if (e.Actor.OID == (uint)OID._Gen_StellarChuluu)
                 e.Priority = 1;
             else
                 e.Priority = 0;
@@ -120,14 +134,90 @@ class Enemies : BossComponent
     }
 }
 
+class DrawEnemies : BossComponent
+{
+    public DrawEnemies(BossModule module) : base(module)
+    {
+        KeepOnPhaseChange = true;
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        foreach (var act in WorldState.Actors.Where(x => !x.IsAlly))
+            Arena.Actor(act, act.OID == (uint)OID._Gen_StellarChuluu ? ArenaColor.Object : ArenaColor.Enemy);
+    }
+}
+
 class P1Bounds(BossModule module) : BossComponent(module)
 {
     public override void Update()
     {
-        Arena.Center = Raid.Player()!.Position;
+        Arena.Center = Raid.Player()?.Position ?? Arena.Center;
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var dest = new WPos(354, 296.5f);
+
+        if (actor.Position.Z < -20)
+            hints.ForcedMovement = (-16.Degrees()).ToDirection().ToVec3();
+        else if ((actor.Position - dest).Length() > 10)
+            hints.ForcedMovement = actor.DirectionTo(dest).ToVec3();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 246, NameID = 6160)]
-public class Naadam(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20));
+class ProtectSadu(BossModule module) : BossComponent(module)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        var chuluu = WorldState.Actors.Where(x => (OID)x.OID == OID._Gen_StellarChuluu1).Select(x => x.InstanceID).ToList();
+
+        foreach (var e in hints.PriorityTargets)
+        {
+            if (chuluu.Contains(e.Actor.TargetID))
+                e.Priority = 5;
+            else if ((OID)e.Actor.OID == OID._Gen_Grynewaht)
+                e.Priority = 1;
+            else
+                e.Priority = 0;
+        }
+    }
+}
+
+class NaadamStates : StateMachineBuilder
+{
+    public NaadamStates(BossModule module) : base(module)
+    {
+        bool DutyEnd() => module.WorldState.CurrentCFCID != 246;
+
+        TrivialPhase()
+            .ActivateOnEnter<P1Bounds>()
+            .ActivateOnEnter<DrawEnemies>()
+            .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID.Ovoo && x.IsTargetable) || DutyEnd();
+        TrivialPhase(1)
+            .ActivateOnEnter<ActivateOvoo>()
+            .ActivateOnEnter<DrawOvoo>()
+            .OnEnter(() => Module.Arena.Center = new(354, 296.5f))
+            .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID._Gen_MagnaiTheOlder && x.IsTargetable) || DutyEnd();
+        TrivialPhase(2)
+            .ActivateOnEnter<ProtectOvoo>()
+            .ActivateOnEnter<ActivateOvoo>()
+            .ActivateOnEnter<ViolentEarth>()
+            .ActivateOnEnter<DispellingWind>()
+            .ActivateOnEnter<Epigraph>()
+            .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID._Gen_Grynewaht && x.IsTargetable) || DutyEnd();
+        TrivialPhase(3)
+            .ActivateOnEnter<DiffractiveLaser>()
+            .ActivateOnEnter<AugmentedSuffering>()
+            .ActivateOnEnter<AugmentedUprising>()
+            .ActivateOnEnter<ProtectSadu>()
+            .Raw.Update = DutyEnd;
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 246, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
+public class Naadam(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
+{
+    protected override bool CheckPull() => true;
+}
 

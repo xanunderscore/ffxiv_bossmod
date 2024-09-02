@@ -269,6 +269,12 @@ public sealed unsafe class ActionManagerEx : IDisposable
                 return _useActionHook.Original(_inst, CSActionType.PetAction, action.ID, targetId, 0, ActionManager.UseActionMode.None, 0, null);
             }
         }
+        else if (action.Type == ActionType.General)
+        {
+            // TODO: are there any general actions that require (or even work with) UAL?
+            // 23 Dismount does not, haven't tested others
+            return _useActionHook.Original(_inst, CSActionType.GeneralAction, action.ID, targetId, 0, ActionManager.UseActionMode.None, 0, null);
+        }
         else
         {
             // real action type, just execute our UAL hook

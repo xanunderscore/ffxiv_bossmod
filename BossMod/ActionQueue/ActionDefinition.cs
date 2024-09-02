@@ -156,8 +156,15 @@ public sealed class ActionDefinitions : IDisposable
     // special general actions that we support
     public static readonly ActionID IDGeneralLimitBreak = new(ActionType.General, 3);
     public static readonly ActionID IDGeneralSprint = new(ActionType.General, 4);
+    public static readonly ActionID IDGeneralDismount = new(ActionType.General, 23);
     public static readonly ActionID IDGeneralDuty1 = new(ActionType.General, 26);
     public static readonly ActionID IDGeneralDuty2 = new(ActionType.General, 27);
+
+    // pet actions
+    public static readonly ActionID IDPetAway = new(ActionType.PetAction, 1);
+    public static readonly ActionID IDPetHeel = new(ActionType.PetAction, 2);
+    public static readonly ActionID IDPetPlace = new(ActionType.PetAction, 3);
+    public static readonly ActionID IDPetStay = new(ActionType.PetAction, 4);
 
     public static readonly ActionDefinitions Instance = new();
 
@@ -356,7 +363,7 @@ public sealed class ActionDefinitions : IDisposable
     public void RegisterSpell<AID>(AID aid, bool isPhysRanged = false, float instantAnimLock = 0.6f, float castAnimLock = 0.1f) where AID : Enum
         => RegisterSpell(ActionID.MakeSpell(aid), isPhysRanged, instantAnimLock, castAnimLock);
 
-    private void Register(ActionID aid, ActionDefinition definition) => _definitions.Add(aid, definition);
+    public void Register(ActionID aid, ActionDefinition definition) => _definitions.Add(aid, definition);
 
     private void RegisterPotion(ActionID aid)
     {
