@@ -21,10 +21,21 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         return def;
     }
 
-    public KaeshiAction Kaeshi;
+    public enum Kaeshi
+    {
+        None,
+        Goken,
+        Setsugekka,
+        TendoGoken,
+        TendoSetsugekka
+    }
+
     public byte Kenki;
     public byte Meditation;
     public SenFlags Sen;
+    public (float Left, Kaeshi Action) KaeshiAction;
+
+    public bool KaeshiNamikiri;
 
     public float FugetsuLeft; // damage buff, max 40s
     public float FukaLeft; // haste buff, max 40s
@@ -66,12 +77,31 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool HaveFugetsu => FugetsuLeft > GCD + GetCastTime(AID.Higanbana);
 
+    private (float Left, Kaeshi Action) GetKaeshiAction()
+    {
+        var goken = StatusLeft(SID.KaeshiGoken);
+        if (goken > 0)
+            return (goken, Kaeshi.Goken);
+        var sets = StatusLeft(SID.KaeshiSetsugekka);
+        if (sets > 0)
+            return (sets, Kaeshi.Setsugekka);
+        var tgoken = StatusLeft(SID.TendoKaeshiGoken);
+        if (tgoken > 0)
+            return (tgoken, Kaeshi.TendoGoken);
+        var tsets = StatusLeft(SID.TendoKaeshiSetsugekka);
+        if (tsets > 0)
+            return (tsets, Kaeshi.TendoSetsugekka);
+        return (0, Kaeshi.None);
+    }
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
 
         var gauge = GetGauge<SamuraiGauge>();
-        Kaeshi = gauge.Kaeshi;
+        // other kaeshi are distinguished by status ID now
+        KaeshiAction = GetKaeshiAction();
+        KaeshiNamikiri = gauge.Kaeshi == FFXIVClientStructs.FFXIV.Client.Game.Gauge.KaeshiAction.Namikiri;
         Kenki = gauge.Kenki;
         Meditation = gauge.MeditationStacks;
         Sen = gauge.SenFlags;
@@ -80,7 +110,6 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         FukaLeft = StatusLeft(SID.Fuka);
         MeikyoLeft = StatusLeft(SID.MeikyoShisui);
         OgiLeft = StatusLeft(SID.OgiNamikiriReady);
-        TsubameLeft = StatusLeft(SID.TsubameGaeshiReady);
         EnhancedEnpi = StatusLeft(SID.EnhancedEnpi);
         Zanshin = StatusLeft(SID.ZanshinReady);
         Tendo = StatusLeft(SID.Tendo);
@@ -228,25 +257,27 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
 
     private void UseKaeshi(Actor? primaryTarget)
     {
-        switch (Kaeshi)
-        {
-            case KaeshiAction.Goken:
-                PushGCD(AID.KaeshiGoken, Player);
-                break;
-            case KaeshiAction.Setsugekka:
-                PushGCD(AID.KaeshiSetsugekka, primaryTarget);
-                break;
-            case KaeshiAction.Namikiri:
-                PushGCD(AID.KaeshiNamikiri, BestOgiTarget);
-                break;
-            case (KaeshiAction)5:
-                PushGCD(AID.TendoKaeshiGoken, Player);
-                break;
-            case (KaeshiAction)6:
-                PushGCD(AID.TendoKaeshiSetsugekka, primaryTarget);
-                break;
-        }
+        // namikiri combo is broken by other gcds, other followups are not
+        if (KaeshiNamikiri)
+            PushGCD(AID.KaeshiNamikiri, BestOgiTarget);
+
+        var (left, action) = KaeshiAction;
+        if (action == Kaeshi.None)
+            return;
+        var (aid, target, numStickers) = KaeshiToAID(primaryTarget, action);
+
+        if (RaidBuffsLeft > GCD || !CanFitGCD(left, 1) || NumStickers >= numStickers)
+            PushGCD(aid, target);
     }
+
+    private (AID, Actor?, int) KaeshiToAID(Actor? primaryTarget, Kaeshi k) => k switch
+    {
+        Kaeshi.Setsugekka => (AID.KaeshiSetsugekka, primaryTarget, 3),
+        Kaeshi.TendoSetsugekka => (AID.TendoKaeshiSetsugekka, primaryTarget, 3),
+        Kaeshi.Goken => (AID.KaeshiGoken, Player, 2),
+        Kaeshi.TendoGoken => (AID.TendoKaeshiGoken, Player, 2),
+        _ => (default, null, int.MaxValue)
+    };
 
     private void UseIaijutsu(Actor? primaryTarget)
     {
@@ -266,7 +297,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
     private void EmergencyMeikyo(StrategyValues strategy)
     {
         // special case for if we got thrust into combat with no prep
-        if (NumStickers == 0 && MeikyoLeft == 0 && !HaveFugetsu && CombatTimer < 5)
+        if (MeikyoLeft == 0 && !HaveFugetsu && CombatTimer < 5)
             PushGCD(AID.MeikyoShisui, Player);
     }
 
@@ -336,7 +367,13 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.HissatsuShinten, primaryTarget);
         }
 
-        if (Kaeshi == 0 && MeikyoLeft == 0 && Tendo == 0 && (NumStickers == 3 || CombatTimer < 30 || NumTenkaTargets > 2))
+        Meikyo(strategy);
+    }
+
+    private void Meikyo(StrategyValues strategy)
+    {
+        // TODO: DT requires early meikyo in even windows, resulting in double meikyo at 6m
+        if (KaeshiAction.Left == 0 && MeikyoLeft == 0 && Tendo == 0)
             PushOGCD(AID.MeikyoShisui, Player);
     }
 
