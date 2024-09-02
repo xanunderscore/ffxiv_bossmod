@@ -37,6 +37,8 @@ public sealed class RotationModuleManager : IDisposable
     public DateTime CombatStart { get; private set; } // default value when player is not in combat, otherwise timestamp when player entered combat
     public (DateTime Time, ActorCastEvent? Data) LastCast { get; private set; }
 
+    private static bool IsRoleplayStatus(ActorStatus st) => (Roleplay.SID)st.ID is Roleplay.SID.RolePlaying or Roleplay.SID.BorrowedFlesh;
+
     public RotationModuleManager(RotationDatabase db, BossModuleManager bmm, AIHints hints, int playerSlot = PartyState.PlayerSlot)
     {
         Database = db;
@@ -51,8 +53,8 @@ public sealed class RotationModuleManager : IDisposable
             WorldState.Actors.InCombatChanged.Subscribe(OnCombatChanged),
             WorldState.Actors.IsDeadChanged.Subscribe(OnDeadChanged),
             WorldState.Actors.CastEvent.Subscribe(OnCastEvent),
-            WorldState.Actors.StatusGain.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && a.Statuses[idx].ID == (uint)Roleplay.SID.RolePlaying)),
-            WorldState.Actors.StatusLose.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && a.Statuses[idx].ID == (uint)Roleplay.SID.RolePlaying)),
+            WorldState.Actors.StatusGain.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsRoleplayStatus(a.Statuses[idx]))),
+            WorldState.Actors.StatusLose.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsRoleplayStatus(a.Statuses[idx]))),
             WorldState.Actors.MountChanged.Subscribe(a => DirtyActiveModules(PlayerInstanceId == a.InstanceID)),
             WorldState.Party.Modified.Subscribe(op => DirtyActiveModules(op.Slot == PlayerSlot)),
             WorldState.Client.ActionRequested.Subscribe(OnActionRequested),
@@ -132,7 +134,7 @@ public sealed class RotationModuleManager : IDisposable
         var player = Player;
         if (player != null)
         {
-            var isRPMode = player.Statuses.Any(s => s.ID == (uint)Roleplay.SID.RolePlaying);
+            var isRPMode = player.Statuses.Any(IsRoleplayStatus);
             foreach (var m in types)
             {
                 if (!RotationModuleRegistry.Modules.TryGetValue(m, out var def))
@@ -224,33 +226,6 @@ public sealed class RotationModuleManager : IDisposable
 #if DEBUG
             Service.Log($"[RMM] Cast #{cast.SourceSequence} {cast.Action} @ {cast.MainTargetID:X} [{string.Join(" --- ", _activeModules?.Select(m => m.Module.DescribeState()) ?? [])}]");
 #endif
-        }
-    }
-
-    private void OnStatusGain(Actor actor, int statusID)
-    {
-        if (actor.InstanceID == Player?.InstanceID && statusID == (uint)Roleplay.SID.RolePlaying)
-        {
-            DirtyActiveModules(!_isRP);
-            _isRP = true;
-        }
-    }
-
-    private void OnStatusLose(Actor actor, int statusID)
-    {
-        if (actor.InstanceID == Player?.InstanceID && statusID == (uint)Roleplay.SID.RolePlaying)
-        {
-            DirtyActiveModules(_isRP);
-            _isRP = false;
-        }
-    }
-
-    private void OnMounted(Actor actor, uint mountID)
-    {
-        if (actor.InstanceID == Player?.InstanceID)
-        {
-            DirtyActiveModules(_mountId != mountID);
-            _mountId = mountID;
         }
     }
 }

@@ -96,7 +96,12 @@ public enum AID : uint
     ThunderIV = 21884,
     CureII = 21886,
     MedicaII = 21888,
-    Break = 21921
+    Break = 21921,
+
+    // Thancred - Frosty Reception
+    KeenEdgeFR = 27427,
+    BrutalShellFR = 27428,
+    SolidBarrelFR = 27429
 }
 
 public enum TraitID : uint { }
@@ -104,6 +109,7 @@ public enum TraitID : uint { }
 public enum SID : uint
 {
     RolePlaying = 1534,
+    BorrowedFlesh = 2760,
 
     // Hien
     Ajisai = 1779,
@@ -124,6 +130,9 @@ public enum SID : uint
     // graha
     ThunderIV = 1210,
     Break = 2573,
+
+    // thancred - Frosty Reception
+    SwiftDeception = 2957
 }
 
 public sealed class Definitions : IDisposable
@@ -212,6 +221,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.CureII);
         d.RegisterSpell(AID.MedicaII);
         d.RegisterSpell(AID.Break);
+
+        d.RegisterSpell(AID.KeenEdgeFR);
+        d.RegisterSpell(AID.BrutalShellFR);
+        d.RegisterSpell(AID.SolidBarrelFR);
     }
 
     public void Dispose() { }

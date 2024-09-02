@@ -150,7 +150,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         void autoheel()
         {
             if (FairyOrder != PetOrder.Follow && !Player.InCombat && CountdownRemaining == null)
-                Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.High);
+                Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 2), null, ActionQueue.Priority.VeryHigh);
         }
 
         void autoplace()
@@ -158,7 +158,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
             if (FairyOrder != PetOrder.Place && (Player.InCombat || CountdownRemaining > 0))
             {
                 if (Bossmods.ActiveModule?.Arena.Center is WPos p)
-                    Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 3), null, ActionQueue.Priority.High, targetPos: new(p.X, Player.PosRot.Y, p.Z));
+                    Hints.ActionsToExecute.Push(new ActionID(ActionType.PetAction, 3), null, ActionQueue.Priority.VeryHigh, targetPos: new(p.X, Player.PosRot.Y, p.Z));
             }
         }
 
