@@ -156,7 +156,6 @@ public sealed class ActionDefinitions : IDisposable
     // special general actions that we support
     public static readonly ActionID IDGeneralLimitBreak = new(ActionType.General, 3);
     public static readonly ActionID IDGeneralSprint = new(ActionType.General, 4);
-    public static readonly ActionID IDGeneralDismount = new(ActionType.General, 23);
     public static readonly ActionID IDGeneralDuty1 = new(ActionType.General, 26);
     public static readonly ActionID IDGeneralDuty2 = new(ActionType.General, 27);
 

@@ -143,9 +143,6 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.DeflectSmall);
         d.RegisterSpell(AID.DeflectLarge);
 
-        // General actions
-        d.Register(ActionDefinitions.IDGeneralDismount, new ActionDefinition(ActionDefinitions.IDGeneralDismount));
-
         Customize(d);
     }
 

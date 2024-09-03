@@ -99,7 +99,7 @@ class ActivateOvoo(BossModule module) : BossComponent(module)
             if ((actor.Position - dest).Length() > 10)
                 hints.ForcedMovement = actor.DirectionTo(dest).ToVec3();
             else
-                hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralDismount, null, ActionQueue.Priority.High);
+                hints.Dismount = true;
         }
 
         var beingAttacked = false;

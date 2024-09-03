@@ -75,10 +75,14 @@ public sealed class AIHints
     // buffs to be canceled asap
     public List<(uint statusId, ulong sourceId)> StatusesToCancel = [];
 
+    // dismount
+    public bool Dismount = false;
+
     // clear all stored data
     public void Clear()
     {
         Center = default;
+        Dismount = false;
         Bounds = DefaultBounds;
         PotentialTargets.Clear();
         ForcedTarget = null;
