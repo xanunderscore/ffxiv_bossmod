@@ -14,9 +14,6 @@ public sealed class RotationModuleManager : IDisposable
         }
     }
 
-    private uint _mountId;
-    private bool _isRP;
-
     public readonly AutorotationConfig Config = Service.Config.Get<AutorotationConfig>();
     public readonly RotationDatabase Database;
     public readonly BossModuleManager Bossmods;

@@ -418,12 +418,12 @@ static class Extendxan
         return def;
     }
 
-    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name, int minLevel = 1) where Index : Enum
     {
         return def.Define(track).As<OffensiveStrategy>(name)
-            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use when optimal")
-            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use")
-            .AddOption(OffensiveStrategy.Force, "Force", "Use ASAP");
+            .AddOption(OffensiveStrategy.Automatic, "Auto", "Use when optimal", minLevel: minLevel)
+            .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use", minLevel: minLevel)
+            .AddOption(OffensiveStrategy.Force, "Force", "Use ASAP", minLevel: minLevel);
     }
 
     public static AOEStrategy AOE(this StrategyValues strategy) => strategy.Option(SharedTrack.AOE).As<AOEStrategy>();

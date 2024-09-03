@@ -75,7 +75,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(PotionStrategy.PreBuffs, "Use ~4 GCDs before raid buff window")
             .AddOption(PotionStrategy.Now, "Use ASAP");
 
-        def.DefineSimple(Track.SSS, "SixSidedStar").AddAssociatedActions(AID.SixSidedStar);
+        def.DefineSimple(Track.SSS, "SixSidedStar", minLevel: 80).AddAssociatedActions(AID.SixSidedStar);
 
         def.Define(Track.Meditation).As<MeditationStrategy>("Meditate")
             .AddOption(MeditationStrategy.Safe, "Use out of combat, during countdown, or if no enemies are targetable")
@@ -85,39 +85,39 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddAssociatedActions(AID.SteeledMeditation);
 
         def.Define(Track.FiresReply).As<FRStrategy>("FiresReply")
-            .AddOption(FRStrategy.Automatic, "Use after Opo GCD")
-            .AddOption(FRStrategy.Ranged, "Use when out of melee range, or if about to expire")
-            .AddOption(FRStrategy.Force, "Use ASAP")
-            .AddOption(FRStrategy.Delay, "Do not use")
+            .AddOption(FRStrategy.Automatic, "Use after Opo GCD", minLevel: 100)
+            .AddOption(FRStrategy.Ranged, "Use when out of melee range, or if about to expire", minLevel: 100)
+            .AddOption(FRStrategy.Force, "Use ASAP", minLevel: 100)
+            .AddOption(FRStrategy.Delay, "Do not use", minLevel: 100)
             .AddAssociatedActions(AID.FiresReply);
 
         def.Define(Track.Nadi).As<NadiStrategy>("Nadi")
-            .AddOption(NadiStrategy.Automatic, "Automatically choose best nadi (double lunar opener, otherwise alternate)")
-            .AddOption(NadiStrategy.Lunar, "Lunar")
-            .AddOption(NadiStrategy.Solar, "Solar")
-            .AddOption(NadiStrategy.LunarDowntime, "Build lunar nadi if no current target")
-            .AddOption(NadiStrategy.SolarDowntime, "Build solar nadi if no current target");
+            .AddOption(NadiStrategy.Automatic, "Automatically choose best nadi (double lunar opener, otherwise alternate)", minLevel: 60)
+            .AddOption(NadiStrategy.Lunar, "Lunar", minLevel: 60)
+            .AddOption(NadiStrategy.Solar, "Solar", minLevel: 60)
+            .AddOption(NadiStrategy.LunarDowntime, "Build lunar nadi if no current target", minLevel: 60)
+            .AddOption(NadiStrategy.SolarDowntime, "Build solar nadi if no current target", minLevel: 60);
 
-        def.DefineSimple(Track.RoF, "RoF").AddAssociatedActions(AID.RiddleOfFire);
-        def.DefineSimple(Track.RoW, "RoW").AddAssociatedActions(AID.RiddleOfWind);
+        def.DefineSimple(Track.RoF, "RoF", minLevel: 68).AddAssociatedActions(AID.RiddleOfFire);
+        def.DefineSimple(Track.RoW, "RoW", minLevel: 72).AddAssociatedActions(AID.RiddleOfWind);
         def.Define(Track.PB).As<PBStrategy>("PB")
-            .AddOption(PBStrategy.Automatic, "Automatically use after Opo before or during Riddle of Fire")
-            .AddOption(PBStrategy.ForceOpo, "Use ASAP after next Opo")
-            .AddOption(PBStrategy.Force, "Use ASAP")
-            .AddOption(PBStrategy.Delay, "Do not use")
+            .AddOption(PBStrategy.Automatic, "Automatically use after Opo before or during Riddle of Fire", minLevel: 50)
+            .AddOption(PBStrategy.ForceOpo, "Use ASAP after next Opo", minLevel: 50)
+            .AddOption(PBStrategy.Force, "Use ASAP", minLevel: 50)
+            .AddOption(PBStrategy.Delay, "Do not use", minLevel: 50)
             .AddAssociatedActions(AID.PerfectBalance);
-        def.DefineSimple(Track.BH, "BH").AddAssociatedActions(AID.Brotherhood);
+        def.DefineSimple(Track.BH, "BH", minLevel: 70).AddAssociatedActions(AID.Brotherhood);
         def.Define(Track.TC).As<TCStrategy>("TC")
-            .AddOption(TCStrategy.None, "Do not use")
-            .AddOption(TCStrategy.GapClose, "Use if outside melee range")
+            .AddOption(TCStrategy.None, "Do not use", minLevel: 35)
+            .AddOption(TCStrategy.GapClose, "Use if outside melee range", minLevel: 35)
             .AddAssociatedActions(AID.Thunderclap);
 
         def.Define(Track.Blitz).As<BlitzStrategy>("Blitz")
-            .AddOption(BlitzStrategy.Automatic, "Use ASAP")
-            .AddOption(BlitzStrategy.RoF, "Hold blitz until Riddle of Fire is active")
-            .AddOption(BlitzStrategy.Multi, "Hold blitz until at least two targets will be hit")
-            .AddOption(BlitzStrategy.MultiRoF, "Hold blitz until Riddle of Fire and 2+ targets")
-            .AddOption(BlitzStrategy.Delay, "Do not use")
+            .AddOption(BlitzStrategy.Automatic, "Use ASAP", minLevel: 60)
+            .AddOption(BlitzStrategy.RoF, "Hold blitz until Riddle of Fire is active", minLevel: 60)
+            .AddOption(BlitzStrategy.Multi, "Hold blitz until at least two targets will be hit", minLevel: 60)
+            .AddOption(BlitzStrategy.MultiRoF, "Hold blitz until Riddle of Fire and 2+ targets", minLevel: 60)
+            .AddOption(BlitzStrategy.Delay, "Do not use", minLevel: 60)
             .AddAssociatedActions(AID.ElixirField, AID.FlintStrike, AID.TornadoKick, AID.ElixirBurst, AID.RisingPhoenix, AID.PhantomRush);
 
         return def;
