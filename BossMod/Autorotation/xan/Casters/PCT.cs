@@ -167,15 +167,15 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         {
             if (Subtractive > 0)
                 PushGCD(AID.BlizzardIIInCyan, BestAOETarget, GCDPriority.Standard);
-
-            PushGCD(AID.FireIIInRed, BestAOETarget, GCDPriority.Standard);
+            else
+                PushGCD(AID.FireIIInRed, BestAOETarget, GCDPriority.Standard);
         }
         else
         {
             if (Subtractive > 0)
                 PushGCD(AID.BlizzardInCyan, primaryTarget, GCDPriority.Standard);
-
-            PushGCD(AID.FireInRed, primaryTarget, GCDPriority.Standard);
+            else
+                PushGCD(AID.FireInRed, primaryTarget, GCDPriority.Standard);
         }
     }
 
@@ -213,8 +213,8 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         if (RaidBuffsLeft > GCD)
             prio = GCDPriority.Standard;
 
-        // worst case scenario, use stacks with less than 4 seconds remaining, in case we need to hardcast 3 motifs
-        if (HammerTime.Left < GCD + 4 * HammerTime.Stacks)
+        // worst case scenario, give at least 8 extra seconds of leeway in case we want to cast both other motifs
+        if (HammerTime.Left < GCD + GCDLength + (4 * HammerTime.Stacks - 1))
             prio = GCDPriority.Standard;
 
         PushGCD(AID.HammerStamp, BestAOETarget, prio);
