@@ -120,6 +120,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
             if (CountdownRemaining <= GetCastTime(AID.RainbowDrip))
                 PushGCD(AID.RainbowDrip, primaryTarget, GCDPriority.Standard);
 
+            if (CountdownRemaining <= GetCastTime(AID.FireInRed))
+                PushGCD(AID.FireInRed, primaryTarget, GCDPriority.Standard);
+
             return;
         }
 
