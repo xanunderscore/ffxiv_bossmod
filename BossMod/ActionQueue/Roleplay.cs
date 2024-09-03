@@ -61,21 +61,21 @@ public enum AID : uint
     DragonshadowDive = 18781,
 
     // Alisaie - DUD
-    Verfire = 20529,
-    Veraero = 20530,
-    Verstone = 20531,
-    Verflare = 20532,
-    CorpsACorps = 24917,
-    EnchantedRiposte = 24918,
-    EnchantedZwerchhau = 24919,
-    EnchantedRedoublement = 24920,
-    Displacement = 21496,
-    Verholy = 21923,
-    Scorch = 24831,
-    CrimsonSavior = 20533,
-    Fleche = 21494,
-    ContreSixte = 21495,
-    Vercure = 21497,
+    ShbVerfire = 20529,
+    ShbVeraero = 20530,
+    ShbVerstone = 20531,
+    ShbVerflare = 20532,
+    ShbCorpsACorps = 24917,
+    ShbEnchantedRiposte = 24918,
+    ShbEnchantedZwerchhau = 24919,
+    ShbEnchantedRedoublement = 24920,
+    ShbDisplacement = 21496,
+    ShbVerholy = 21923,
+    ShbScorch = 24831,
+    ShbCrimsonSavior = 20533,
+    ShbFleche = 21494,
+    ShbContreSixte = 21495,
+    ShbVercure = 21497,
 
     // Urianger - DUD
     MaleficIII = 21498,
@@ -101,7 +101,35 @@ public enum AID : uint
     // Thancred - Frosty Reception
     KeenEdgeFR = 27427,
     BrutalShellFR = 27428,
-    SolidBarrelFR = 27429
+    SolidBarrelFR = 27429,
+
+    // Alphinaud - As the Heavens Burn
+    Diagnosis = 26224,
+    Prognosis = 27043,
+    LeveilleurDiagnosis = 27042,
+    LeveilleurDruochole = 27044,
+    DosisIII = 27045,
+    LeveilleurDosisIII = 28439,
+    LeveilleurToxikon = 27047,
+
+    // Alisaie - As the Heavens Burn
+    EWVerfire = 27048,
+    EWVeraero = 27049,
+    EWVerstone = 27050,
+    EWVerthunder = 27051,
+    EWVerflare = 27052,
+    EWCrimsonSavior = 27053,
+    EWCorpsACorps = 27054,
+    EWEnchantedRiposte = 27055,
+    EWEnchantedZwerchhau = 27056,
+    EWEnchantedRedoublement = 27057,
+    EWEngagement = 27058,
+    EWVerholy = 27059,
+    EWScorch = 24898,
+    EWContreSixte = 27060,
+    EWVercure = 27061,
+    EWEmbolden = 26225,
+    VermilionPledge = 27062,
 }
 
 public enum TraitID : uint { }
@@ -132,7 +160,9 @@ public enum SID : uint
     Break = 2573,
 
     // thancred - Frosty Reception
-    SwiftDeception = 2957
+    SwiftDeception = 2957,
+
+    LeveilleurDosisIII = 2650,
 }
 
 public sealed class Definitions : IDisposable
@@ -187,21 +217,21 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Stardiver, instantAnimLock: 1.5f);
         d.RegisterSpell(AID.DragonshadowDive);
 
-        d.RegisterSpell(AID.Verfire);
-        d.RegisterSpell(AID.Veraero);
-        d.RegisterSpell(AID.Verstone);
-        d.RegisterSpell(AID.Verflare);
-        d.RegisterSpell(AID.CorpsACorps);
-        d.RegisterSpell(AID.EnchantedRiposte);
-        d.RegisterSpell(AID.EnchantedZwerchhau);
-        d.RegisterSpell(AID.EnchantedRedoublement);
-        d.RegisterSpell(AID.Displacement);
-        d.RegisterSpell(AID.Verholy);
-        d.RegisterSpell(AID.Scorch);
-        d.RegisterSpell(AID.CrimsonSavior);
-        d.RegisterSpell(AID.Fleche);
-        d.RegisterSpell(AID.ContreSixte);
-        d.RegisterSpell(AID.Vercure);
+        d.RegisterSpell(AID.ShbVerfire);
+        d.RegisterSpell(AID.ShbVeraero);
+        d.RegisterSpell(AID.ShbVerstone);
+        d.RegisterSpell(AID.ShbVerflare);
+        d.RegisterSpell(AID.ShbCorpsACorps);
+        d.RegisterSpell(AID.ShbEnchantedRiposte);
+        d.RegisterSpell(AID.ShbEnchantedZwerchhau);
+        d.RegisterSpell(AID.ShbEnchantedRedoublement);
+        d.RegisterSpell(AID.ShbDisplacement);
+        d.RegisterSpell(AID.ShbVerholy);
+        d.RegisterSpell(AID.ShbScorch);
+        d.RegisterSpell(AID.ShbCrimsonSavior);
+        d.RegisterSpell(AID.ShbFleche);
+        d.RegisterSpell(AID.ShbContreSixte);
+        d.RegisterSpell(AID.ShbVercure);
 
         d.RegisterSpell(AID.MaleficIII);
         d.RegisterSpell(AID.Benefic);
@@ -225,6 +255,32 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.KeenEdgeFR);
         d.RegisterSpell(AID.BrutalShellFR);
         d.RegisterSpell(AID.SolidBarrelFR);
+
+        d.RegisterSpell(AID.Diagnosis);
+        d.RegisterSpell(AID.Prognosis);
+        d.RegisterSpell(AID.LeveilleurDiagnosis);
+        d.RegisterSpell(AID.LeveilleurDruochole);
+        d.RegisterSpell(AID.DosisIII);
+        d.RegisterSpell(AID.LeveilleurDosisIII);
+        d.RegisterSpell(AID.LeveilleurToxikon);
+
+        d.RegisterSpell(AID.EWVerfire);
+        d.RegisterSpell(AID.EWVeraero);
+        d.RegisterSpell(AID.EWVerstone);
+        d.RegisterSpell(AID.EWVerthunder);
+        d.RegisterSpell(AID.EWVerflare);
+        d.RegisterSpell(AID.EWCrimsonSavior);
+        d.RegisterSpell(AID.EWCorpsACorps);
+        d.RegisterSpell(AID.EWEnchantedRiposte);
+        d.RegisterSpell(AID.EWEnchantedZwerchhau);
+        d.RegisterSpell(AID.EWEnchantedRedoublement);
+        d.RegisterSpell(AID.EWEngagement);
+        d.RegisterSpell(AID.EWVerholy);
+        d.RegisterSpell(AID.EWScorch);
+        d.RegisterSpell(AID.EWContreSixte);
+        d.RegisterSpell(AID.EWVercure);
+        d.RegisterSpell(AID.EWEmbolden);
+        d.RegisterSpell(AID.VermilionPledge);
     }
 
     public void Dispose() { }

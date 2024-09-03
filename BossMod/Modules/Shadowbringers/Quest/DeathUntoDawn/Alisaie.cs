@@ -13,45 +13,45 @@ class AlisaieAI(BossModule module) : Components.RoleplayModule(module)
 
         switch (ComboAction)
         {
-            case RID.Verfire:
-                UseAction(RID.Veraero, primaryTarget);
+            case RID.ShbVerfire:
+                UseAction(RID.ShbVeraero, primaryTarget);
                 break;
-            case RID.Veraero:
-                UseAction(RID.Verstone, primaryTarget);
+            case RID.ShbVeraero:
+                UseAction(RID.ShbVerstone, primaryTarget);
                 break;
-            case RID.Verstone:
-                UseAction(RID.Verflare, primaryTarget);
+            case RID.ShbVerstone:
+                UseAction(RID.ShbVerflare, primaryTarget);
                 break;
-            case RID.CorpsACorps:
+            case RID.ShbCorpsACorps:
                 Hints.RecommendedRangeToTarget = 3;
-                UseAction(RID.EnchantedRiposte, primaryTarget);
+                UseAction(RID.ShbEnchantedRiposte, primaryTarget);
                 break;
-            case RID.EnchantedRiposte:
+            case RID.ShbEnchantedRiposte:
                 Hints.RecommendedRangeToTarget = 3;
-                UseAction(RID.EnchantedZwerchhau, primaryTarget);
+                UseAction(RID.ShbEnchantedZwerchhau, primaryTarget);
                 break;
-            case RID.EnchantedZwerchhau:
+            case RID.ShbEnchantedZwerchhau:
                 Hints.RecommendedRangeToTarget = 3;
-                UseAction(RID.EnchantedRedoublement, primaryTarget);
+                UseAction(RID.ShbEnchantedRedoublement, primaryTarget);
                 break;
-            case RID.EnchantedRedoublement:
+            case RID.ShbEnchantedRedoublement:
                 Hints.RecommendedRangeToTarget = 3;
-                UseAction(RID.Displacement, primaryTarget);
+                UseAction(RID.ShbDisplacement, primaryTarget);
                 break;
-            case RID.Displacement:
-                UseAction(RID.Verholy, primaryTarget);
+            case RID.ShbDisplacement:
+                UseAction(RID.ShbVerholy, primaryTarget);
                 break;
-            case RID.Verholy:
-                UseAction(RID.Scorch, primaryTarget);
+            case RID.ShbVerholy:
+                UseAction(RID.ShbScorch, primaryTarget);
                 break;
             default:
-                UseAction(RID.CorpsACorps, primaryTarget);
-                UseAction(RID.Verfire, primaryTarget);
+                UseAction(RID.ShbCorpsACorps, primaryTarget);
+                UseAction(RID.ShbVerfire, primaryTarget);
                 break;
         }
 
-        UseAction(RID.Fleche, primaryTarget);
-        UseAction(RID.ContreSixte, primaryTarget);
+        UseAction(RID.ShbFleche, primaryTarget);
+        UseAction(RID.ShbContreSixte, primaryTarget);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
