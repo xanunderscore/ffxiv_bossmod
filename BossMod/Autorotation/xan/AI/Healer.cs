@@ -19,9 +19,22 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         // tank invulns go here, but also statuses like Excog that give burst heal below a certain HP threshold
         // no point in spam healing a tank in an area with high mob density (like Sirensong Sea pull after second boss) until their excog falls off
         public float NoHealStatusRemaining;
+        // Doom (1769 and possibly other statuses) is only removed once a player reaches full HP, must be healed asap
+        public float DoomRemaining;
     }
 
+    public record PartyHealthState
+    {
+        public int LowestHPSlot;
+        public int Count;
+        public float Avg;
+        public float StdDev;
+    }
+
+    public const float AOEBreakpointHPVariance = 0.25f;
+
     private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
+    private PartyHealthState PartyHealth = new();
 
     public enum Track { Raise, RaiseTarget, Heal, Esuna }
     public enum RaiseStrategy
@@ -68,13 +81,20 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         return def;
     }
 
-    private (Actor Target, PartyMemberState State) BestSTHealTarget
+    private (Actor Target, PartyMemberState State)? BestSTHealTarget => PartyHealth.StdDev > AOEBreakpointHPVariance ? (World.Party[PartyHealth.LowestHPSlot]!, PartyMemberStates[PartyHealth.LowestHPSlot]) : null;
+
+    private PartyHealthState CalcPartyHealthInArea(WPos center, float radius) => CalculatePartyHealthState(act => act.Position.InCircle(center, radius));
+    private bool ShouldHealInArea(WPos center, float radius, float hpThreshold)
     {
-        get
-        {
-            var best = PartyMemberStates.Where(x => x.NoHealStatusRemaining < 1.5f).MinBy(x => x.PredictedHPRatio);
-            return (World.Party[best.Slot]!, best);
-        }
+        var st = CalcPartyHealthInArea(center, radius);
+        Service.Log($"party health in radius {radius}: {st}");
+        return st.Count > 1 && st.StdDev <= AOEBreakpointHPVariance && st.Avg <= hpThreshold;
+    }
+
+    private void HealSingle(Action<Actor, PartyMemberState> healFun)
+    {
+        if (BestSTHealTarget is (var a, var b))
+            healFun(a, b);
     }
 
     private static readonly uint[] NoHealStatuses = [
@@ -120,6 +140,9 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
                     if (NoHealStatuses.Contains(s.ID))
                         state.NoHealStatusRemaining = StatusDuration(s.ExpireAt);
+
+                    if (s.ID == 1769)
+                        state.DoomRemaining = StatusDuration(s.ExpireAt);
                 }
             }
         }
@@ -134,6 +157,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     state.PredictedHPRatio -= enemy.AttackStrength;
             }
         }
+        PartyHealth = CalculatePartyHealthState(_ => true);
 
         AutoRaise(strategy);
 
@@ -162,6 +186,46 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     AutoSCH(strategy, primaryTarget);
                     break;
             }
+    }
+
+    private PartyHealthState CalculatePartyHealthState(Func<Actor, bool> filter)
+    {
+        int count = 0;
+        float mean = 0;
+        float m2 = 0;
+        float min = float.MaxValue;
+        int minSlot = -1;
+
+        foreach (var p in PartyMemberStates)
+        {
+            var act = World.Party[p.Slot];
+            if (act == null || !filter(act))
+                continue;
+
+            if (p.NoHealStatusRemaining > 1.5f && p.DoomRemaining == 0)
+                continue;
+
+            var pred = p.DoomRemaining > 0 ? 0 : p.PredictedHPRatio;
+            if (pred < min)
+            {
+                min = pred;
+                minSlot = p.Slot;
+            }
+            count++;
+            var delta = pred - mean;
+            mean += delta / count;
+            var delta2 = pred - mean;
+            m2 += delta * delta2;
+        }
+
+        var variance = m2 / count;
+        return new PartyHealthState()
+        {
+            LowestHPSlot = minSlot,
+            Avg = mean,
+            StdDev = MathF.Sqrt(variance),
+            Count = count
+        };
     }
 
     private void UseGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
@@ -245,14 +309,16 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<WhiteMageGauge>();
 
-        var (bestSTHealTarget, state) = BestSTHealTarget;
-        if (state.PredictedHPRatio < 0.25)
+        HealSingle((target, state) =>
         {
-            if (gauge.Lily > 0)
-                UseGCD(BossMod.WHM.AID.AfflatusSolace, bestSTHealTarget);
+            if (state.PredictedHPRatio < 0.25)
+            {
+                if (gauge.Lily > 0)
+                    UseGCD(BossMod.WHM.AID.AfflatusSolace, target);
 
-            UseOGCD(BossMod.WHM.AID.Tetragrammaton, bestSTHealTarget);
-        }
+                UseOGCD(BossMod.WHM.AID.Tetragrammaton, target);
+            }
+        });
     }
 
     private static readonly (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
@@ -266,21 +332,23 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<AstrologianGauge>();
 
-        var (bestSTHealTarget, state) = BestSTHealTarget;
-        if (state.PendingHPRatio < 0.3)
-            UseOGCD(BossMod.AST.AID.EssentialDignity, bestSTHealTarget);
-
-        if (state.PredictedHPRatio < 0.3)
+        HealSingle((target, state) =>
         {
-            UseOGCD(BossMod.AST.AID.CelestialIntersection, bestSTHealTarget);
+            if (state.PendingHPRatio < 0.3)
+                UseOGCD(BossMod.AST.AID.EssentialDignity, target);
 
-            if (gauge.CurrentArcana == AstrologianCard.Lady)
-                UseOGCD(BossMod.AST.AID.LadyOfCrowns, Player);
+            if (state.PredictedHPRatio < 0.3)
+            {
+                UseOGCD(BossMod.AST.AID.CelestialIntersection, target);
 
-            foreach (var (card, action) in SupportCards)
-                if (gauge.CurrentCards.Contains(card))
-                    UseOGCD(action, bestSTHealTarget);
-        }
+                if (gauge.CurrentArcana == AstrologianCard.Lady)
+                    UseOGCD(BossMod.AST.AID.LadyOfCrowns, Player);
+
+                foreach (var (card, action) in SupportCards)
+                    if (gauge.CurrentCards.Contains(card))
+                        UseOGCD(action, target);
+            }
+        });
 
         if (Player.InCombat)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EarthlyStar), Player, ActionQueue.Priority.Medium, targetPos: Player.PosRot.XYZ());
@@ -290,23 +358,43 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<ScholarGauge>();
 
-        if (World.Party.WithoutSlot().Count() == 1 && gauge.Aetherflow > 0 && primaryTarget != null)
+        var pet = World.Client.ActivePet.InstanceID == 0xE0000000 ? null : World.Actors.Find(World.Client.ActivePet.InstanceID);
+        var haveSeraph = gauge.SeraphTimer > 0;
+        var haveEos = !haveSeraph;
+
+        var aetherflow = gauge.Aetherflow > 0;
+
+        if (World.Party.WithoutSlot().Count() == 1 && aetherflow && primaryTarget != null)
             UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
 
-        var (bestSTHealTarget, state) = BestSTHealTarget;
-        if (state.PredictedHPRatio < 0.3)
+        if (aetherflow && ShouldHealInArea(Player.Position, 15, 0.5f))
+            UseOGCD(BossMod.SCH.AID.Indomitability, Player);
+
+        if (pet != null)
         {
-            var canLustrate = gauge.Aetherflow > 0 && Unlocked(BossMod.SCH.AID.Lustrate);
-            if (canLustrate)
-            {
-                UseOGCD(BossMod.SCH.AID.Excogitation, bestSTHealTarget);
-                UseOGCD(BossMod.SCH.AID.Lustrate, bestSTHealTarget);
-            }
-            else
-            {
-                UseGCD(BossMod.SCH.AID.Adloquium, bestSTHealTarget);
-                UseGCD(BossMod.SCH.AID.Physick, bestSTHealTarget);
-            }
+            if (haveEos && ShouldHealInArea(pet.Position, 20, 0.5f))
+                UseOGCD(BossMod.SCH.AID.FeyBlessing, Player);
+
+            if (ShouldHealInArea(pet.Position, 15, 0.8f))
+                UseOGCD(BossMod.SCH.AID.WhisperingDawn, Player);
         }
+
+        HealSingle((target, state) =>
+        {
+            if (state.PredictedHPRatio < 0.3)
+            {
+                var canLustrate = gauge.Aetherflow > 0 && Unlocked(BossMod.SCH.AID.Lustrate);
+                if (canLustrate)
+                {
+                    UseOGCD(BossMod.SCH.AID.Excogitation, target);
+                    UseOGCD(BossMod.SCH.AID.Lustrate, target);
+                }
+                else
+                {
+                    UseGCD(BossMod.SCH.AID.Adloquium, target);
+                    UseGCD(BossMod.SCH.AID.Physick, target);
+                }
+            }
+        });
     }
 }

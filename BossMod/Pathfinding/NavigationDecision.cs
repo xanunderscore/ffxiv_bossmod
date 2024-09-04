@@ -39,7 +39,7 @@ public struct NavigationDecision
     public int MapGoal;
     public Decision DecisionType;
 
-    public const float DefaultForbiddenZoneCushion = 0.15f; // 0.7071068f;
+    public const float DefaultForbiddenZoneCushion = 0.7071068f;
 
     public static NavigationDecision Build(Context ctx, WorldState ws, AIHints hints, Actor player, WPos? targetPos, float targetRadius, Angle targetRot, Positional positional, float playerSpeed = 6, float forbiddenZoneCushion = DefaultForbiddenZoneCushion)
     {

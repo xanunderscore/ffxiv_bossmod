@@ -4,7 +4,7 @@
 public class BossModuleConfig : ConfigNode
 {
     // boss module settings
-    [PropertyDisplay("Enable boss modules")]
+    [PropertyDisplay("Show radar")]
     public bool Enable = true;
 
     [PropertyDisplay("Minimal maturity for the module to be loaded", tooltip: "Some modules will have the \"WIP\" status and will not automatically load unless you change this")]
