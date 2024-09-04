@@ -130,6 +130,16 @@ public enum AID : uint
     EWVercure = 27061,
     EWEmbolden = 26225,
     VermilionPledge = 27062,
+
+    // Zero
+    Slice = 31786,
+    WaxingSlice = 31787,
+    InfernalSlice = 31788,
+    SpinningScythe = 31789,
+    NightmareScythe = 31790,
+    Communio = 31794,
+    Engravement = 31785,
+    Bloodbath = 33013,
 }
 
 public enum TraitID : uint { }
@@ -281,6 +291,15 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.EWVercure);
         d.RegisterSpell(AID.EWEmbolden);
         d.RegisterSpell(AID.VermilionPledge);
+
+        d.RegisterSpell(AID.Slice);
+        d.RegisterSpell(AID.WaxingSlice);
+        d.RegisterSpell(AID.InfernalSlice);
+        d.RegisterSpell(AID.SpinningScythe);
+        d.RegisterSpell(AID.NightmareScythe);
+        d.RegisterSpell(AID.Communio);
+        d.RegisterSpell(AID.Engravement);
+        d.RegisterSpell(AID.Bloodbath);
     }
 
     public void Dispose() { }

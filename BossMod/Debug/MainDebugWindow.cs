@@ -35,7 +35,7 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
     {
         var playerCID = UIState.Instance()->PlayerState.ContentId;
         var player = Service.ClientState.LocalPlayer;
-        ImGui.TextUnformatted($"Current zone: {ws.CurrentZone}, player=0x{(ulong)Utils.GameObjectInternal(player):X}, playerCID={playerCID:X}, pos = {Utils.Vec3String(player?.Position ?? new Vector3())}");
+        ImGui.TextUnformatted($"Current zone: {ws.CurrentZone} (CFC: {ws.CurrentCFCID}), player=0x{(ulong)Utils.GameObjectInternal(player):X}, playerCID={playerCID:X}, pos = {Utils.Vec3String(player?.Position ?? new Vector3())}");
         ImGui.TextUnformatted($"ID scramble: {Network.IDScramble.Delta} = {*Network.IDScramble.OffsetAdjusted} - {*Network.IDScramble.OffsetBaseFixed} - {*Network.IDScramble.OffsetBaseChanging}");
         ImGui.TextUnformatted($"Player mode: {Utils.CharacterInternal(player)->Mode}");
 
