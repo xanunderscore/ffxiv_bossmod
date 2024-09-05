@@ -68,6 +68,14 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         Standard = 500,
     }
 
+    private float GetApplicationDelay(AID action) => action switch
+    {
+        AID.RainbowDrip => 1.24f,
+        AID.ClawedMuse => 0.98f,
+        AID.FangedMuse => 1.16f,
+        _ => 0
+    };
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
@@ -126,6 +134,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
             return;
         }
 
+        if (!Player.InCombat && primaryTarget != null && Paint == 0)
+            PushGCD(AID.RainbowDrip, primaryTarget, GCDPriority.Standard);
+
         if (Player.InCombat && primaryTarget != null)
         {
             if (ShouldWeapon(strategy))
@@ -151,6 +162,14 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
 
             if (Player.HPMP.CurMP <= 7000)
                 PushOGCD(AID.LucidDreaming, Player);
+        }
+
+        if (DowntimeIn > 0 && !CanFitGCD(DowntimeIn - GetApplicationDelay(AID.RainbowDrip), 1))
+        {
+            PushOGCD(AID.Swiftcast, Player, 50);
+
+            if (SwiftcastLeft > GCD)
+                PushGCD(AID.RainbowDrip, primaryTarget, GCDPriority.Standard);
         }
 
         if (Starstruck > GCD)
