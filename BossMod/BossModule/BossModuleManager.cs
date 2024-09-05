@@ -36,7 +36,6 @@ public sealed class BossModuleManager : IDisposable
         _subsciptions = new
         (
             WorldState.Actors.Added.Subscribe(ActorAdded),
-            WorldState.CurrentZoneChanged.ExecuteAndSubscribe(ZoneChanged, new WorldState.OpZoneChange(ws.CurrentZone, ws.CurrentCFCID)),
             Config.Modified.ExecuteAndSubscribe(ConfigChanged)
         );
 
@@ -154,16 +153,6 @@ public sealed class BossModuleManager : IDisposable
         {
             LoadModule(m);
         }
-    }
-
-    private void ZoneChanged(WorldState.OpZoneChange opZoneChange)
-    {
-        if (_loadedModules.Any(l => l.Info?.GroupID == opZoneChange.CFCID))
-            return;
-
-        var m = ModuleRegistry.CreateModuleForCFCID(WorldState, opZoneChange.CFCID, Config.MinMaturity);
-        if (m != null)
-            LoadModule(m);
     }
 
     private void ConfigChanged()

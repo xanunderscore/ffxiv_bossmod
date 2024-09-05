@@ -83,9 +83,7 @@ public abstract class BossModule : IDisposable
         PrimaryActor = primary;
         WindowConfig = Service.Config.Get<BossModuleConfig>();
         Arena = new(WindowConfig, center, bounds);
-        Info = primary.OID >= BossModuleInfo.PrimaryActorNone
-            ? ModuleRegistry.FindByCFCID(primary.OID - BossModuleInfo.PrimaryActorNone)
-            : ModuleRegistry.FindByOID(primary.OID);
+        Info = ModuleRegistry.FindByOID(primary.OID);
         StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
 
         _subscriptions = new

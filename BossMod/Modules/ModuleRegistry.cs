@@ -134,9 +134,6 @@ public static class ModuleRegistry
                 sortOrder = (int)primaryOID;
             }
 
-            if (primaryOID == BossModuleInfo.PrimaryActorNone)
-                primaryOID += groupID;
-
             return new Info(module, statesType)
             {
                 ConfigType = configType,
@@ -169,7 +166,6 @@ public static class ModuleRegistry
 
     private static readonly Dictionary<uint, Info> _modulesByOID = []; // [primary-actor-oid] = module info
     private static readonly Dictionary<Type, Info> _modulesByType = []; // [module-type] = module info
-    private static readonly Dictionary<uint, Info> _modulesByCfcId = []; // [cfc ID] = module info
 
     static ModuleRegistry()
     {
@@ -181,17 +177,6 @@ public static class ModuleRegistry
             _modulesByType[t] = info;
             if (!_modulesByOID.TryAdd(info.PrimaryActorOID, info))
                 Service.Log($"Two boss modules have same primary actor OID: {t.Name} and {_modulesByOID[info.PrimaryActorOID].ModuleType.Name}");
-
-            if (info.PrimaryActorOID >= BossModuleInfo.PrimaryActorNone)
-            {
-                if (info.GroupType != BossModuleInfo.GroupType.CFC)
-                {
-                    Service.Log($"Boss module {t.Name} using placeholder Primary Actor but is not marked as type = CFC");
-                    continue;
-                }
-                if (!_modulesByCfcId.TryAdd(info.GroupID, info))
-                    Service.Log($"Two boss modules have same CFC ID and no primary actor: {t.Name} and {_modulesByCfcId[info.GroupID].ModuleType.Name}");
-            }
         }
     }
 
@@ -199,7 +184,6 @@ public static class ModuleRegistry
 
     public static Info? FindByOID(uint oid) => _modulesByOID.GetValueOrDefault(oid);
     public static Info? FindByType(Type type) => _modulesByType.GetValueOrDefault(type);
-    public static Info? FindByCFCID(uint cfcId) => _modulesByCfcId.GetValueOrDefault(cfcId);
 
     public static BossModule? CreateModule(Info? info, WorldState ws, Actor primary) => info?.ModuleFactory(ws, primary);
 
@@ -207,12 +191,6 @@ public static class ModuleRegistry
     {
         var info = primary.Type is ActorType.Enemy or ActorType.EventObj ? FindByOID(primary.OID) : null;
         return info?.Maturity >= minMaturity ? CreateModule(info, ws, primary) : null;
-    }
-
-    public static BossModule? CreateModuleForCFCID(WorldState ws, uint cfcId, BossModuleInfo.Maturity minMaturity)
-    {
-        var info = FindByCFCID(cfcId);
-        return info?.Maturity >= minMaturity ? CreateModule(info, ws, new(info.PrimaryActorOID, info.PrimaryActorOID, -1, "", 0, ActorType.None, Class.None, 0, new(), targetable: false)) : null;
     }
 
     // TODO: this is a hack...
