@@ -47,6 +47,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             // peloton animationlock will be annoying and unhelpful here
             // we use TargetManager because most friendly NPCs aren't Actors (or something)
             && Service.TargetManager.Target == null
+            && Player.MountId == 0
             && peloton < 5)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Peloton), Player, ActionQueue.Priority.Minimal);
 

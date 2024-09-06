@@ -42,6 +42,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     public bool CanFitGCD(float duration, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < duration;
 
+    [Obsolete("Use MaxChargesIn instead")]
     protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
 
     public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0, float extraFixedDelay = 0)
