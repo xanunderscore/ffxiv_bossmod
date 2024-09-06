@@ -172,7 +172,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             PushOGCD(AID.Hypercharge, Player);
     }
 
-    private float NextToolCharge => MathF.Min(NextChargeIn(AID.Drill), MathF.Min(NextChargeIn(AID.ChainSaw), NextChargeIn(AID.AirAnchor)));
+    private float NextToolCharge => MathF.Min(ReadyIn(AID.Drill), MathF.Min(ReadyIn(AID.ChainSaw), ReadyIn(AID.AirAnchor)));
     private float NextToolCap => MathF.Min(MaxChargesIn(AID.Drill), MathF.Min(MaxChargesIn(AID.ChainSaw), MaxChargesIn(AID.AirAnchor)));
 
     private float MaxGaussCD => MaxChargesIn(AID.GaussRound);
@@ -180,8 +180,8 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
 
     private void UseCharges(StrategyValues strategy, Actor? primaryTarget)
     {
-        var gaussRoundCD = NextChargeIn(AID.GaussRound);
-        var ricochetCD = NextChargeIn(AID.Ricochet);
+        var gaussRoundCD = ReadyIn(AID.GaussRound);
+        var ricochetCD = ReadyIn(AID.Ricochet);
 
         var canGauss = Unlocked(AID.GaussRound) && CanWeave(gaussRoundCD, 0.6f);
         var canRicochet = Unlocked(AID.Ricochet) && CanWeave(ricochetCD, 0.6f);
@@ -252,7 +252,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
 
         // avoid delaying wildfire
         // TODO figure out how long we actually need to wait to ensure enough heat
-        if (CD(AID.Wildfire) < 20 && !ShouldWildfire(strategy))
+        if (ReadyIn(AID.Wildfire) < 20 && !ShouldWildfire(strategy))
             return false;
 
         // we can't early weave if the overheat window will contain a regular GCD, because then it will expire before last HB
@@ -281,7 +281,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (!Unlocked(AID.BarrelStabilizer) || !CanWeave(AID.BarrelStabilizer) || !strategy.BuffsOk())
             return false;
 
-        return CD(AID.Drill) > 0;
+        return OnCooldown(AID.Drill);
     }
 
     private PositionCheck IsConeAOETarget => (playerTarget, targetToTest) => Hints.TargetInAOECone(targetToTest, Player.Position, 12, Player.DirectionTo(playerTarget), 60.Degrees());

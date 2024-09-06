@@ -168,7 +168,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         // manually check CD since queue will be delayed in certain circumstances otherwise
-        if (RedGauge <= 50 && NextChargeIn(AID.SoulSlice) <= GCD)
+        if (RedGauge <= 50 && ReadyIn(AID.SoulSlice) <= GCD)
         {
             if (NumConeTargets > 2)
                 PushGCD(AID.SoulScythe, BestConeTarget, GCDPriority.SoulSlice);
@@ -201,7 +201,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (strategy.BuffsOk())
         {
             // wait for soul slice in opener
-            if (CD(AID.SoulSlice) > 0 || CombatTimer > 60)
+            if (OnCooldown(AID.SoulSlice) || CombatTimer > 60)
                 PushOGCD(AID.ArcaneCircle, Player, delay: GCD - 1.6f);
         }
 
@@ -211,7 +211,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         if (SoulReaver > 0 || Executioner > 0)
             return;
 
-        if (Oblatio > 0 && (RaidBuffsLeft > 0 || CD(AID.ArcaneCircle) > EnshroudLeft))
+        if (Oblatio > 0 && (RaidBuffsLeft > 0 || ReadyIn(AID.ArcaneCircle) > EnshroudLeft))
             PushOGCD(AID.Sacrificium, BestRangedAOETarget);
 
         if (PurpleSouls > 1)
@@ -235,7 +235,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             if (!CanFitGCD(timer, CanWeave(AID.Gluttony) ? 2 : 1))
                 PushGCD(action, target, GCDPriority.DDExpiring);
 
-            if (timer < 30 && CanWeave(AID.ArcaneCircle, 1) && CD(AID.SoulSlice) > 0)
+            if (timer < 30 && CanWeave(AID.ArcaneCircle, 1) && OnCooldown(AID.SoulSlice))
                 PushGCD(action, target, GCDPriority.DDExtend);
         }
 
@@ -261,7 +261,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             return true;
 
         // TODO tweak deadline, i need a simulator or something
-        return CD(AID.ArcaneCircle) > 65;
+        return ReadyIn(AID.ArcaneCircle) > 65;
     }
 
     private void UseSoul(StrategyValues strategy, Actor? primaryTarget)

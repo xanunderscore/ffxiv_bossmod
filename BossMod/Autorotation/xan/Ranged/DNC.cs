@@ -101,7 +101,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         if (Unlocked(AID.ClosedPosition)
             && strategy.Option(Track.Partner).As<PartnerStrategy>() == PartnerStrategy.Automatic
             && StatusLeft(SID.ClosedPosition) == 0
-            && CD(AID.ClosedPosition) == 0
+            && ReadyIn(AID.ClosedPosition) == 0
             && !IsDancing
             && FindDancePartner() is Actor partner)
             PushGCD(AID.ClosedPosition, partner);
@@ -177,13 +177,13 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         }
 
         // TODO: this priority is now incorrect
-        if (FlourishingFinishLeft > GCD && CD(AID.Devilment) > 0 && NumDanceTargets > 0)
+        if (FlourishingFinishLeft > GCD && OnCooldown(AID.Devilment) && NumDanceTargets > 0)
             PushGCD(AID.Tillana, Player);
 
         if (TechFinishLeft > GCD && ShouldSaberDance(strategy, 50))
             PushGCD(AID.SaberDance, BestRangedAOETarget);
 
-        if (TechFinishLeft == 0 && shouldStdStep && (CD(AID.TechnicalStep) > GCD + 5 || !Unlocked(AID.TechnicalStep)))
+        if (TechFinishLeft == 0 && shouldStdStep && ReadyIn(AID.TechnicalStep) > GCD + 5)
             PushGCD(AID.StandardStep, Player);
 
         if (canFlow)
@@ -221,10 +221,10 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         if (TechFinishLeft > GCD)
             PushOGCD(AID.Devilment, Player);
 
-        if (CD(AID.Devilment) > 55)
+        if (ReadyIn(AID.Devilment) > 55)
             PushOGCD(AID.Flourish, Player);
 
-        if ((TechFinishLeft == 0 || CD(AID.Devilment) > 0) && ThreefoldLeft > World.Client.AnimationLock && NumRangedAOETargets > 0)
+        if ((TechFinishLeft == 0 || OnCooldown(AID.Devilment)) && ThreefoldLeft > World.Client.AnimationLock && NumRangedAOETargets > 0)
             PushOGCD(AID.FanDanceIII, BestRangedAOETarget);
 
         var canF1 = ShouldSpendFeathers(strategy);
@@ -233,7 +233,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         if (Feathers == 4 && canF1)
             PushOGCD(f1ToUse, primaryTarget);
 
-        if (CD(AID.Devilment) > 0 && FourfoldLeft > World.Client.AnimationLock && NumFan4Targets > 0)
+        if (OnCooldown(AID.Devilment) && FourfoldLeft > World.Client.AnimationLock && NumFan4Targets > 0)
             PushOGCD(AID.FanDanceIV, BestFan4Target);
 
         if (canF1)
@@ -242,7 +242,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool ShouldStdStep(StrategyValues strategy)
     {
-        if (!Unlocked(AID.StandardStep) || CD(AID.StandardStep) > GCD)
+        if (!Unlocked(AID.StandardStep) || ReadyIn(AID.StandardStep) > GCD)
             return false;
 
         return NumDanceTargets > 0 &&

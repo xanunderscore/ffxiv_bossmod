@@ -51,7 +51,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining > 0)
             return;
 
-        if (CD(AID.NoMercy) > 20 && Ammo > 0)
+        if (ReadyIn(AID.NoMercy) > 20 && Ammo > 0)
             PushGCD(AID.GnashingFang, primaryTarget);
 
         if (NumAOETargets > 0 && Ammo >= 2 && NoMercy > GCD)
@@ -76,7 +76,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
                 return;
         }
 
-        if (Reign > GCD && CD(AID.GnashingFang) > 0 && CD(AID.DoubleDown) > 0 && SonicBreak == 0)
+        if (Reign > GCD && OnCooldown(AID.GnashingFang) && OnCooldown(AID.DoubleDown) && SonicBreak == 0)
             PushGCD(AID.ReignOfBeasts, BestReignTarget);
 
         if (NumAOETargets > 1 && Unlocked(AID.DemonSlice))
@@ -122,7 +122,9 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
             return false;
 
         if (NoMercy > GCD)
-            return CD(AID.DoubleDown) > NoMercy || Ammo == MaxAmmo || (Ammo == 1 && CD(AID.DoubleDown) < NoMercy);
+            return ReadyIn(AID.DoubleDown) > NoMercy
+                || Ammo == MaxAmmo
+                || Ammo == 1 && ReadyIn(AID.DoubleDown) < NoMercy;
 
         return ComboLastMove is AID.BrutalShell or AID.DemonSlice && Ammo == MaxAmmo;
     }
@@ -140,7 +142,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
 
         UseNoMercy(strategy);
 
-        var usedNM = CD(AID.NoMercy) > 20;
+        var usedNM = ReadyIn(AID.NoMercy) > 20;
 
         if (usedNM)
         {

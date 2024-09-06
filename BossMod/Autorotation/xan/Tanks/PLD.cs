@@ -144,7 +144,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
         if (BladeOfHonorReady > 0)
             PushOGCD(AID.BladeOfHonor, BestRangedTarget);
 
-        if (CD(AID.FightOrFlight) > 40)
+        if (ReadyIn(AID.FightOrFlight) > 40)
         {
             if (Unlocked(AID.Imperator))
                 PushOGCD(AID.Imperator, BestRangedTarget);
@@ -152,7 +152,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
                 PushOGCD(AID.Requiescat, primaryTarget);
         }
 
-        if (FightOrFlight > 0 || CD(AID.FightOrFlight) > 15)
+        if (FightOrFlight > 0 || ReadyIn(AID.FightOrFlight) > 15)
         {
             PushOGCD(AID.SpiritsWithin, primaryTarget);
 

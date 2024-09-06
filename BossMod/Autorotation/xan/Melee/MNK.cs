@@ -187,7 +187,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     public bool UseAOE => NumAOETargets >= AOEBreakpoint;
 
     public int BuffedGCDsLeft => FireLeft > GCD ? (int)MathF.Floor((FireLeft - GCD) / AttackGCDLength) + 1 : 0;
-    public int PBGCDsLeft => PerfectBalance.Stacks + (NextChargeIn(AID.PerfectBalance) <= GCD ? 3 : 0);
+    public int PBGCDsLeft => PerfectBalance.Stacks + (ReadyIn(AID.PerfectBalance) <= GCD ? 3 : 0);
 
     private (Positional, bool) NextPositional
     {
@@ -373,7 +373,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         // this condition is unfortunately a little contrived. there are no other general cases in the monk rotation where we want to overwrite a lunar, as it's overall a dps loss
         // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
         // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
-        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && NextChargeIn(AID.PerfectBalance) > GCD;
+        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && ReadyIn(AID.PerfectBalance) > GCD;
         var forcedSolar = nadi is NadiStrategy.Solar or NadiStrategy.SolarDowntime
             || ForcedSolar
             || HasLunar && !HasSolar && !forcedDoubleLunar;
@@ -417,7 +417,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         // prevent odd window double blitz
         // TODO figure out the actual mathematical equation that differentiates odd windows, this is stupid
-        if (BrotherhoodLeft == 0 && CD(AID.PerfectBalance) > 30)
+        if (BrotherhoodLeft == 0 && MaxChargesIn(AID.PerfectBalance) > 30)
             return;
 
         if (ShouldRoF(strategy, 3) || CanFitGCD(FireLeft, 3))

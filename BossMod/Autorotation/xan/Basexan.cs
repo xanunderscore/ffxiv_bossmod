@@ -35,18 +35,18 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float AttackGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SkillSpeed, World.Client.PlayerStats.Haste, Player.Level);
     protected float SpellGCDLength => ActionSpeed.GCDRounded(World.Client.PlayerStats.SpellSpeed, World.Client.PlayerStats.Haste, Player.Level);
 
-    protected float NextChargeIn(AID action) => Unlocked(action) ? ActionDefinitions.Instance.Spell(action)!.ReadyIn(World.Client.Cooldowns, World.Client.DutyActions) : float.MaxValue;
+    protected float ReadyIn(AID action) => Unlocked(action) ? ActionDefinitions.Instance.Spell(action)!.ReadyIn(World.Client.Cooldowns, World.Client.DutyActions) : float.MaxValue;
     protected float MaxChargesIn(AID action) => Unlocked(action) ? ActionDefinitions.Instance.Spell(action)!.ChargeCapIn(World.Client.Cooldowns, World.Client.DutyActions, Player.Level) : float.MaxValue;
 
     protected abstract float GCDLength { get; }
 
     public bool CanFitGCD(float duration, int extraGCDs = 0) => GCD + GCDLength * extraGCDs < duration;
 
-    [Obsolete("Use MaxChargesIn instead")]
-    protected float CD(AID aid) => World.Client.Cooldowns[ActionDefinitions.Instance.Spell(aid)!.MainCooldownGroup].Remaining;
+    protected bool OnCooldown(AID aid) => MaxChargesIn(aid) > 0;
 
     public bool CanWeave(float cooldown, float actionLock, int extraGCDs = 0, float extraFixedDelay = 0)
         => MathF.Max(cooldown, World.Client.AnimationLock) + actionLock + AnimationLockDelay <= GCD + GCDLength * extraGCDs + extraFixedDelay;
+
     public bool CanWeave(AID aid, int extraGCDs = 0, float extraFixedDelay = 0)
     {
         // TODO is this actually helpful?
@@ -54,7 +54,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
             return false;
 
         var def = ActionDefinitions.Instance[ActionID.MakeSpell(aid)]!;
-        return CanWeave(CD(aid), def.InstantAnimLock, extraGCDs, extraFixedDelay);
+        return CanWeave(ReadyIn(aid), def.InstantAnimLock, extraGCDs, extraFixedDelay);
     }
 
     protected AID NextGCD;

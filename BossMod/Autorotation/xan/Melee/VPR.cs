@@ -272,7 +272,7 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Attackxan
         return Offering == 100 && ComboLastMove is AID.HuntersSting or AID.SwiftskinsSting or AID.HuntersBite or AID.SwiftskinsBite;
     }
 
-    private bool ShouldVice(StrategyValues strategy) => Swiftscaled > GCD && DreadCombo == 0 && NextChargeIn(AID.Vicewinder) <= GCD;
+    private bool ShouldVice(StrategyValues strategy) => Swiftscaled > GCD && DreadCombo == 0 && ReadyIn(AID.Vicewinder) <= GCD;
 
     private bool ShouldCoil(StrategyValues strategy) => Coil > 1 && Swiftscaled > GCD && DreadCombo == 0;
 

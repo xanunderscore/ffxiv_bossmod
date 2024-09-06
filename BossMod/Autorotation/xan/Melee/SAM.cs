@@ -359,7 +359,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (Meditation == 3)
             PushOGCD(AID.Shoha, BestLineTarget);
 
-        if (Kenki >= 25 && CD(AID.HissatsuGuren) > 10 && Zanshin == 0)
+        if (Kenki >= 25 && ReadyIn(AID.HissatsuGuren) > 10 && Zanshin == 0)
         {
             if (NumAOECircleTargets > 2)
                 PushOGCD(AID.HissatsuKyuten, Player);

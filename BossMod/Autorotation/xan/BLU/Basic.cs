@@ -40,13 +40,13 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
             Hints.RecommendedPositional = (primaryTarget, Positional.Front, false, true);
         }
 
-        if (numSurpTargets > 0 && (CD(AID.Surpanakha) == 0 || surp > 0 && CD(AID.Surpanakha) < 90))
+        if (numSurpTargets > 0 && (MaxChargesIn(AID.Surpanakha) == 0 || surp > 0 && ReadyIn(AID.Surpanakha) <= 1))
         {
             PushGCD(AID.Surpanakha, Player);
             return;
         }
 
-        if (NextChargeIn(AID.TheRoseOfDestruction) <= GCD)
+        if (ReadyIn(AID.TheRoseOfDestruction) <= GCD)
             PushGCD(AID.TheRoseOfDestruction, primaryTarget);
 
         PushGCD(AID.GoblinPunch, primaryTarget);

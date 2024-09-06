@@ -49,7 +49,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
     private Actor? BestRangedAOETarget;
 
     // these aren't the same cdgroup :(
-    public float AssassinateCD => CD(Unlocked(AID.DreamWithinADream) ? AID.DreamWithinADream : AID.Assassinate);
+    public float AssassinateCD => ReadyIn(Unlocked(AID.DreamWithinADream) ? AID.DreamWithinADream : AID.Assassinate);
 
     private ReadOnlyCollection<int> Mudras => Array.AsReadOnly([Mudra.Param & 3, (Mudra.Param >> 2) & 3, (Mudra.Param >> 4) & 3]);
 
@@ -146,7 +146,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             if (strategy.Option(Track.ForkedRaiju).As<RaijuStrategy>() == RaijuStrategy.Automatic && Player.DistanceToHitbox(primaryTarget) is > 3 and <= 20)
                 PushGCD(AID.ForkedRaiju, primaryTarget);
 
-            if (CD(AID.TenChiJin) > 0)
+            if (OnCooldown(AID.TenChiJin))
                 PushGCD(AID.FleetingRaiju, primaryTarget);
         }
 
@@ -155,7 +155,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         // TODO save charges for trick
         if (Unlocked(AID.Raiton))
         {
-            if (CD(AID.TrickAttack) < 15 && ShadowWalker == 0)
+            if (ReadyIn(AID.TrickAttack) < 15 && ShadowWalker == 0)
             {
                 if (useAOE)
                     UseMudra(AID.Huton, BestRangedAOETarget);
@@ -163,7 +163,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
                     UseMudra(AID.Suiton, primaryTarget);
             }
 
-            if (CD(AID.Kassatsu) > 0 && AssassinateCD > Kassatsu && CD(AID.TrickAttack) > Kassatsu)
+            if (OnCooldown(AID.Kassatsu) && AssassinateCD > Kassatsu && ReadyIn(AID.TrickAttack) > Kassatsu)
             {
                 if (useAOE)
                     // this will get auto transformed to goka mekkyaku
@@ -241,7 +241,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             return (AID.None, null);
 
         // no charges remaining and no kassatsu = we can't use it
-        if (Mudra.Param == 0 && CD(AID.Ten1) - 20 > GCD && Kassatsu == 0)
+        if (Mudra.Param == 0 && ReadyIn(AID.Ten1) > GCD && Kassatsu == 0)
             return (AID.None, null);
 
         // do nothing if start condition failed - since this could be something like checking ninjutsu CD, we skip it otherwise
@@ -315,19 +315,19 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             if (strategy.Option(Track.Hide).As<HideStrategy>() == HideStrategy.Automatic
                 && Mudra.Left == 0
                 && GCD == 0
-                && CD(AID.Ten1) > 0)
+                && OnCooldown(AID.Ten1))
                 PushOGCD(AID.Hide, Player);
 
             return;
         }
 
-        if (ShadowWalker > 0 && CD(AID.TrickAttack) > ShadowWalker)
+        if (ShadowWalker > 0 && ReadyIn(AID.TrickAttack) > ShadowWalker)
             PushOGCD(AID.Meisui, Player);
 
         if (TenriJindo > 0)
             PushOGCD(AID.TenriJindo, BestRangedAOETarget);
 
-        if (CD(AID.TrickAttack) < 5)
+        if (ReadyIn(AID.TrickAttack) < 5)
             PushOGCD(AID.Kassatsu, Player);
 
         var buffsOk = strategy.BuffsOk();
@@ -337,18 +337,18 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             if (!Unlocked(TraitID.Shukiho) || Ninki >= 10)
                 PushOGCD(AID.Mug, primaryTarget);
 
-            if (CD(AID.Ten1) - 20 > GCD && Mudra.Left == 0 && Kassatsu == 0 && ShadowWalker == 0 && ForceMovementIn > GCD + 2)
+            if (ReadyIn(AID.Ten1) > GCD && Mudra.Left == 0 && Kassatsu == 0 && ShadowWalker == 0 && ForceMovementIn > GCD + 2)
                 PushOGCD(AID.TenChiJin, Player);
 
             if (Ninki >= 50)
                 PushOGCD(AID.Bunshin, Player);
         }
 
-        if (Hidden && (CD(AID.Mug) > 0 || !buffsOk))
+        if (Hidden && (OnCooldown(AID.Mug) || !buffsOk))
             // late weave trick during 2min windows with mug/dokumori active; otherwise use on cooldown
             PushOGCD(AID.TrickAttack, primaryTarget, delay: TargetMugLeft == 0 ? 0 : GCD - 0.8f);
 
-        if (CD(AID.TrickAttack) > 10)
+        if (ReadyIn(AID.TrickAttack) > 10)
             PushOGCD(Unlocked(AID.DreamWithinADream) ? AID.DreamWithinADream : AID.Assassinate, primaryTarget);
 
         if (ShouldBhava(strategy))

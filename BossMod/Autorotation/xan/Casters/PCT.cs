@@ -58,7 +58,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
     private Actor? BestAOETarget;
     private Actor? BestLineTarget;
 
-    private bool WingPlanned => PomOnly && !Creature && CD(AID.LivingMuse) - 80 < GCD + 4;
+    private bool WingPlanned => PomOnly && !Creature && CanWeave(AID.LivingMuse, 0, extraFixedDelay: 4);
 
     public enum GCDPriority : int
     {
@@ -268,7 +268,8 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
     private bool ShouldWeapon(StrategyValues strategy)
     {
         // ensure muse alignment
-        return Weapon && (!Unlocked(AID.StarryMuse) || CD(AID.StarryMuse) is < 10 or > 60);
+        // ReadyIn will return float.max if not unlocked so no additional check needed
+        return Weapon && ReadyIn(AID.StarryMuse) is < 10 or > 60;
     }
 
     private bool ShouldCreature(StrategyValues strategy)
@@ -281,7 +282,8 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
     private bool ShouldMog(StrategyValues strategy)
     {
         // ensure muse alignment - moogle takes two 40s charges to rebuild
-        return Moogle && (!Unlocked(AID.StarryMuse) || RaidBuffsLeft > 0 || CD(AID.StarryMuse) > 80);
+        // TODO fix this for madeen, i think we swap between mog/madeen every 2min?
+        return Moogle && (RaidBuffsLeft > 0 || ReadyIn(AID.StarryMuse) > 80);
     }
 
     private bool ShouldLandscape(StrategyValues strategy, int gcdsAhead = 0)
@@ -297,8 +299,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
 
     private bool ShouldSubtract(StrategyValues strategy, int gcdsAhead = 0)
     {
-        if (!Unlocked(AID.SubtractivePalette)
-            || !CanWeave(AID.SubtractivePalette, gcdsAhead)
+        if (!CanWeave(AID.SubtractivePalette, gcdsAhead)
             || Subtractive > 0
             || ShouldLandscape(strategy, gcdsAhead)
             || Palette < 50 && SpectrumLeft == 0)

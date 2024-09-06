@@ -164,7 +164,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         // delay all damaging ogcds until we've used lance charge
         // first one (jump) unlocks at level 30, same as lance charge, so we don't need extra checks
         // TODO check if this is actually a good idea
-        if (CD(AID.LanceCharge) == 0)
+        if (CanWeave(AID.LanceCharge))
             return;
 
         if (LanceCharge > GCD && ShouldLifeSurge())

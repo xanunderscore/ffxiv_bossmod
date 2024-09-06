@@ -116,10 +116,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
             }
         }
 
-        if (CD(AID.Pneuma) <= GCD && NumPneumaTargets > 1)
+        if (ReadyIn(AID.Pneuma) <= GCD && NumPneumaTargets > 1)
             PushGCD(AID.Pneuma, BestPneumaTarget);
 
-        if (NumPhlegmaTargets > 2 && CD(AID.Phlegma) - 40 <= GCD || CD(AID.Phlegma) <= GCD)
+        if (MaxChargesIn(AID.Phlegma) <= GCD || NumPhlegmaTargets > 2 && ReadyIn(AID.Phlegma) <= GCD)
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
 
         if (NumAOETargets > 1)
@@ -133,7 +133,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         PushGCD(AID.Dosis, primaryTarget);
 
         // fallbacks for forced movement
-        if (CD(AID.Phlegma) - 40 <= GCD && NumPhlegmaTargets > 0)
+        if (ReadyIn(AID.Phlegma) <= GCD && NumPhlegmaTargets > 0)
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
         if (NumRangedAOETargets > 0 && Sting > 0)
             PushGCD(AID.Toxikon, BestRangedAOETarget);

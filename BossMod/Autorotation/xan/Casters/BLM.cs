@@ -112,7 +112,7 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (primaryTarget == null)
         {
-            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && CD(AID.Transpose) == 0)
+            if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && ReadyIn(AID.Transpose) == 0)
                 PushOGCD(AID.Transpose, Player);
 
             if (Unlocked(AID.UmbralSoul) && Ice > 0 && (Ice < 3 || Hearts < MaxHearts || ElementLeft < 14))
