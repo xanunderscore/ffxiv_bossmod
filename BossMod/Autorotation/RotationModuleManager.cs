@@ -52,7 +52,6 @@ public sealed class RotationModuleManager : IDisposable
             WorldState.Actors.CastEvent.Subscribe(OnCastEvent),
             WorldState.Actors.StatusGain.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsRoleplayStatus(a.Statuses[idx]))),
             WorldState.Actors.StatusLose.Subscribe((a, idx) => DirtyActiveModules(PlayerInstanceId == a.InstanceID && IsRoleplayStatus(a.Statuses[idx]))),
-            WorldState.Actors.MountChanged.Subscribe(a => DirtyActiveModules(PlayerInstanceId == a.InstanceID)),
             WorldState.Party.Modified.Subscribe(op => DirtyActiveModules(op.Slot == PlayerSlot)),
             WorldState.Client.ActionRequested.Subscribe(OnActionRequested),
             WorldState.Client.CountdownChanged.Subscribe(OnCountdownChanged),
@@ -137,8 +136,6 @@ public sealed class RotationModuleManager : IDisposable
                 if (!RotationModuleRegistry.Modules.TryGetValue(m, out var def))
                     continue;
                 if (!def.Definition.Classes[(int)player.Class] || player.Level < def.Definition.MinLevel || player.Level > def.Definition.MaxLevel)
-                    continue;
-                if (!def.Definition.CanUseWhileMounted && player.MountId > 0)
                     continue;
                 if (!def.Definition.CanUseWhileRoleplaying && isRPMode)
                     continue;
