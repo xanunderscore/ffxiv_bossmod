@@ -130,7 +130,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        if (ShouldTechStep(strategy))
+        if (ShouldTechStep(strategy) && ReadyIn(AID.TechnicalStep) <= GCD)
             PushGCD(AID.TechnicalStep, Player);
 
         var shouldStdStep = ShouldStdStep(strategy);
@@ -242,7 +242,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool ShouldStdStep(StrategyValues strategy)
     {
-        if (!Unlocked(AID.StandardStep) || ReadyIn(AID.StandardStep) > GCD)
+        if (ReadyIn(AID.StandardStep) > GCD)
             return false;
 
         return NumDanceTargets > 0 &&
