@@ -26,7 +26,7 @@ public sealed class AIHintsBuilder : IDisposable
 
     public void Dispose() => _subscriptions.Dispose();
 
-    public void Update(AIHints hints, int playerSlot)
+    public void Update(AIHints hints, int playerSlot, float maxCastTime)
     {
         hints.Clear();
         var player = _ws.Party[playerSlot];
@@ -37,7 +37,7 @@ public sealed class AIHintsBuilder : IDisposable
             hints.FillPotentialTargets(_ws, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot().Any(p => p != player && p.Role == Role.Tank));
             hints.RecommendedRangeToTarget = player.Role is Role.Melee or Role.Tank ? 3 : 25;
             if (activeModule != null)
-                activeModule.CalculateAIHints(playerSlot, player, playerAssignment, hints);
+                activeModule.CalculateAIHints(playerSlot, player, playerAssignment, hints, maxCastTime);
             else
                 CalculateAutoHints(hints, player);
         }

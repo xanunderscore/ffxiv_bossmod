@@ -3,6 +3,7 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
 {
     private AIHints? _hints;
     private Actor? _player;
+    private float _castTime;
     protected AIHints Hints => _hints!;
     protected Actor Player => _player!;
 
@@ -12,10 +13,11 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
 
     public abstract void Execute(Actor? primaryTarget);
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints, float maxCastTime)
     {
         _hints = hints;
         _player = actor;
+        _castTime = maxCastTime;
 
         MP = (uint)Math.Max(actor.HPMP.CurMP + Module.WorldState.PendingEffects.PendingMPDifference(actor.InstanceID), 0);
 
@@ -30,7 +32,7 @@ public abstract class RoleplayModule(BossModule module) : BossComponent(module)
             return;
 
         // not enough time to slidecast; skip
-        if (def.CastTime > 0 && Module.MaxCastTime < def.CastTime - 0.5f)
+        if (def.CastTime > 0 && _castTime < def.CastTime - 0.5f)
             return;
 
         Hints.ActionsToExecute.Push(action, target, ActionQueue.Priority.High + additionalPriority, targetPos: targetPos);

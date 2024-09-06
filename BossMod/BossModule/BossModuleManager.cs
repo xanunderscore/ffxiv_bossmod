@@ -54,7 +54,7 @@ public sealed class BossModuleManager : IDisposable
         RaidCooldowns.Dispose();
     }
 
-    public void Update(float maxCastTime)
+    public void Update()
     {
         // update all loaded modules, handle activation/deactivation
         int bestPriority = 0;
@@ -69,7 +69,7 @@ public sealed class BossModuleManager : IDisposable
             try
             {
                 if (allowUpdate)
-                    m.Update(maxCastTime);
+                    m.Update();
                 isActive = m.StateMachine.ActiveState != null;
             }
             catch (Exception ex)

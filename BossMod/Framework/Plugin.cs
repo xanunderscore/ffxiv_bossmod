@@ -172,8 +172,8 @@ public sealed class Plugin : IDalamudPlugin
         _dtr.Update();
         Camera.Instance?.Update();
         _wsSync.Update(_prevUpdateTime);
-        _bossmod.Update(maxCastTime);
-        _hintsBuilder.Update(_hints, PartyState.PlayerSlot);
+        _bossmod.Update();
+        _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
         _amex.QueueManualActions();
         _rotation.Update(_amex.AnimationLockDelayEstimate, maxCastTime, _movementOverride.IsMoving());
         _ai.Update();

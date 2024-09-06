@@ -17,8 +17,6 @@ public abstract class BossModule : IDisposable
 
     public Event<BossModule, BossComponent?, string> Error = new();
 
-    public float MaxCastTime { get; private set; }
-
     public PartyState Raid => WorldState.Party;
     public WPos Center => Arena.Center;
     public ArenaBounds Bounds => Arena.Bounds;
@@ -125,10 +123,8 @@ public abstract class BossModule : IDisposable
         _subscriptions.Dispose();
     }
 
-    public void Update(float maxCastTime)
+    public void Update()
     {
-        MaxCastTime = maxCastTime;
-
         if (StateMachine.ActivePhaseIndex < 0 && CheckPull())
             StateMachine.Start(WorldState.CurrentTime);
 
@@ -221,13 +217,13 @@ public abstract class BossModule : IDisposable
         return hints;
     }
 
-    public void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    public void CalculateAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints, float maxCastTime)
     {
         hints.Center = Center;
         hints.Bounds = Bounds;
         foreach (var comp in _components)
-            comp.AddAIHints(slot, actor, assignment, hints);
-        CalculateModuleAIHints(slot, actor, assignment, hints);
+            comp.AddAIHints(slot, actor, assignment, hints, maxCastTime);
+        CalculateModuleAIHints(slot, actor, assignment, hints, maxCastTime);
         if (!WindowConfig.AllowAutomaticActions)
             hints.ActionsToExecute.Clear();
     }
@@ -252,6 +248,10 @@ public abstract class BossModule : IDisposable
     protected virtual void DrawArenaBackground(int pcSlot, Actor pc) { } // before modules background
     protected virtual void DrawArenaForeground(int pcSlot, Actor pc) { } // after border, before modules foreground
     protected virtual void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
+    protected virtual void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints, float maxCastTime)
+    {
+        CalculateModuleAIHints(slot, actor, assignment, hints);
+    }
 
     // called at the very end to draw important enemies, default implementation draws primary actor
     protected virtual void DrawEnemies(int pcSlot, Actor pc)

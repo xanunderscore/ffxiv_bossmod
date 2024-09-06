@@ -44,7 +44,7 @@ class ReplayDetailsWindow : UIWindow
         _rmm = new(rotationDB, _mgr, _hints);
         _curTime = _first = data.Ops[0].Timestamp;
         _last = data.Ops[^1].Timestamp;
-        _player.AdvanceTo(_first, () => _mgr.Update(float.MaxValue));
+        _player.AdvanceTo(_first, _mgr.Update);
         _config = new(Service.Config, _player.WorldState, null, null);
         _events = new(data, MoveTo, rotationDB.Plans, this);
         _analysis = new([data]);
@@ -85,7 +85,7 @@ class ReplayDetailsWindow : UIWindow
             ImGui.Checkbox("Override", ref _azimuthOverride);
             if (_mgr.ActiveModule != null)
             {
-                _hintsBuilder.Update(_hints, _povSlot);
+                _hintsBuilder.Update(_hints, _povSlot, float.MaxValue);
                 _rmm.Update(0, float.MaxValue, false);
 
                 var drawTimerPre = DateTime.Now;
@@ -461,7 +461,7 @@ class ReplayDetailsWindow : UIWindow
             _hintsBuilder = new(_player.WorldState, _mgr);
             _rmm = new(_rotationDB, _mgr, _hints);
         }
-        _player.AdvanceTo(t, () => _mgr.Update(float.MaxValue));
+        _player.AdvanceTo(t, _mgr.Update);
         _curTime = t;
         ResetPF();
     }
