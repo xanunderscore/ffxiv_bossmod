@@ -110,15 +110,17 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (ExcavatorLeft > GCD)
             PushGCD(AID.Excavator, BestRangedAOETarget);
 
-        if (Unlocked(AID.AirAnchor))
+        if (ReadyIn(AID.AirAnchor) <= GCD)
             PushGCD(AID.AirAnchor, primaryTarget, priority: 20);
 
-        PushGCD(AID.ChainSaw, BestChainsawTarget, 10);
+        if (ReadyIn(AID.ChainSaw) <= GCD)
+            PushGCD(AID.ChainSaw, BestChainsawTarget, 10);
 
-        if (NumAOETargets > 2)
+        if (ReadyIn(AID.Bioblaster) <= GCD && NumAOETargets > 2)
             PushGCD(AID.Bioblaster, BestAOETarget);
 
-        PushGCD(AID.Drill, primaryTarget, priority: MaxChargesIn(AID.Drill) <= GCD ? 20 : 2);
+        if (ReadyIn(AID.Drill) <= GCD)
+            PushGCD(AID.Drill, primaryTarget, priority: MaxChargesIn(AID.Drill) <= GCD ? 20 : 2);
 
         // TODO work out priorities
         if (FMFLeft > GCD && ExcavatorLeft == 0)
@@ -128,7 +130,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             PushGCD(AID.Scattergun, BestAOETarget);
 
         // different cdgroup?
-        if (!Unlocked(AID.AirAnchor))
+        if (!Unlocked(AID.AirAnchor) && ReadyIn(AID.HotShot) <= GCD)
             PushGCD(AID.HotShot, primaryTarget);
 
         if (NumAOETargets > 2 && Unlocked(AID.SpreadShot))
