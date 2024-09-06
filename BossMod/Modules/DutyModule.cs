@@ -5,7 +5,7 @@ public abstract class DutyModule(WorldState ws, Actor primary, WPos center, Aren
     protected override bool CheckPull() => true;
     protected override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly && x.InCombat), ArenaColor.Enemy);
         Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
     }
 }

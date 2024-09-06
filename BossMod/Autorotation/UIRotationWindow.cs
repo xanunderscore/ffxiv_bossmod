@@ -118,17 +118,18 @@ public sealed class UIRotationWindow : UIWindow
         if (_config.ShowPositionals && pos.Target != null && !pos.Target.Omnidirectional)
         {
             var color = PositionalColor(pos.Imminent, pos.Correct);
+            var radius = pos.Target.HitboxRadius + 3;
             switch (pos.Pos)
             {
                 case Positional.Flank:
-                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation + 90.Degrees(), 45.Degrees(), color);
-                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation - 90.Degrees(), 45.Degrees(), color);
+                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), radius, pos.Target.Rotation + 90.Degrees(), 45.Degrees(), color, 0.001f);
+                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), radius, pos.Target.Rotation - 90.Degrees(), 45.Degrees(), color, 0.001f);
                     break;
                 case Positional.Rear:
-                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation + 180.Degrees(), 45.Degrees(), color);
+                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), radius, pos.Target.Rotation + 180.Degrees(), 45.Degrees(), color, 0.001f);
                     break;
                 case Positional.Front:
-                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), pos.Target.HitboxRadius + 3, pos.Target.Rotation, 45.Degrees(), color);
+                    Camera.Instance?.DrawWorldCone(pos.Target.PosRot.XYZ(), radius, pos.Target.Rotation, 45.Degrees(), color, 0.001f);
                     break;
             }
         }

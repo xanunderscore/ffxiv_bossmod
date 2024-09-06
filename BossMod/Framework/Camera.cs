@@ -2,7 +2,6 @@
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using ImGuiNET;
-using System.Runtime.InteropServices;
 
 namespace BossMod;
 
@@ -83,9 +82,9 @@ class Camera
         _worldDrawLines.Add((p1screen, p2screen, color));
     }
 
-    public void DrawWorldCone(Vector3 center, float radius, Angle direction, Angle halfWidth, uint color)
+    public void DrawWorldCone(Vector3 center, float radius, Angle direction, Angle halfWidth, uint color, float precision = 0.1f)
     {
-        int numSegments = CurveApprox.CalculateCircleSegments(radius, halfWidth, 0.1f);
+        int numSegments = CurveApprox.CalculateCircleSegments(radius, halfWidth, precision);
         var delta = halfWidth / numSegments;
 
         var prev = center + radius * (direction - delta * numSegments).ToDirection().ToVec3();
