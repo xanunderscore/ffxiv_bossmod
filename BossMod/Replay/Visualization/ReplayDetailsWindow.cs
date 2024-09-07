@@ -83,9 +83,9 @@ class ReplayDetailsWindow : UIWindow
             ImGui.DragFloat("Camera azimuth", ref _azimuth, 1, -180, 180);
             ImGui.SameLine();
             ImGui.Checkbox("Override", ref _azimuthOverride);
+            _hintsBuilder.Update(_hints, _povSlot, float.MaxValue);
             if (_mgr.ActiveModule != null)
             {
-                _hintsBuilder.Update(_hints, _povSlot, float.MaxValue);
                 _rmm.Update(0, float.MaxValue, false);
 
                 var drawTimerPre = DateTime.Now;
@@ -425,9 +425,7 @@ class ReplayDetailsWindow : UIWindow
     {
         if (!ImGui.CollapsingHeader("AI hints"))
             return;
-        if (_mgr.ActiveModule == null)
-            return;
-        var player = _mgr.ActiveModule.Raid[_povSlot];
+        var player = _player.WorldState.Party[_povSlot];
         if (player == null)
             return;
 
