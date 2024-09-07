@@ -116,7 +116,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
             pos = *obj->LayoutInstance->GetTranslationImpl();
 
         var distanceBetweenHitboxes = ((Vector3)pos - player.PosRot.XYZ()).XZ().Length() - obj->HitboxRadius - player.HitboxRadius;
-        return distanceBetweenHitboxes < maxDist;
+        return distanceBetweenHitboxes <= maxDist;
     }
 
     private unsafe void ExecuteInteract(DateTime now, Actor target)
