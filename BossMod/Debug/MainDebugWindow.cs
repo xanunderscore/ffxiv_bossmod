@@ -77,10 +77,6 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         {
             DrawGauge();
         }
-        if (ImGui.CollapsingHeader("Movement"))
-        {
-            DrawMove();
-        }
         if (ImGui.CollapsingHeader("EnvControl"))
         {
             _debugEnvControl.Draw();
@@ -225,16 +221,6 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         ImGui.Text($"{gauge.Low:X16} {gauge.High:X16}");
     }
 
-    private unsafe void DrawMove()
-    {
-        var m = amex.Movement;
-
-        ImGui.Text($"Requested: {m.IsMoveRequested()}");
-        ImGui.Text($"Moving: {m.IsMoving()}");
-        ImGui.Text($"Blocked: {m.MovementBlocked}");
-        ImGui.Text($"Unblocked: {m.IsForceUnblocked()}");
-    }
-
     private unsafe void DrawCooldowns()
     {
         var showAll = false;
@@ -250,9 +236,10 @@ class MainDebugWindow(WorldState ws, RotationModuleManager autorot, ActionManage
         var cursorPos = amex.GetWorldPosUnderCursor();
         ImGui.TextUnformatted($"World pos under cursor: {(cursorPos == null ? "n/a" : Utils.Vec3String(cursorPos.Value))}");
 
-        var selfPos = Service.ClientState.LocalPlayer?.Position ?? new();
+        var player = Service.ClientState.LocalPlayer;
+        var selfPos = player?.Position ?? new();
         var targPos = Service.ClientState.LocalPlayer?.TargetObject?.Position ?? new();
-        var angle = Angle.FromDirection(new((targPos - selfPos).XZ()));
+        var angle = player?.Rotation.Radians() ?? default; //Angle.FromDirection(new((targPos - selfPos).XZ()));
         var ts = FFXIVClientStructs.FFXIV.Client.Game.Control.TargetSystem.Instance();
         DrawTarget("Target", ts->Target, selfPos, angle);
         DrawTarget("Soft target", ts->SoftTarget, selfPos, angle);
