@@ -82,8 +82,11 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         if (hints.Dismount && player.MountId > 0)
             ExecuteDismount(now);
 
-        if (hints.InteractWithTarget is Actor tar && player.DistanceToHitbox(tar) <= 3)
+        if (hints.InteractWithTarget is Actor tar && WithinInteractRange(player, tar))
+        {
+            hints.ForcedMovement = new();
             ExecuteInteract(now, tar);
+        }
     }
 
     private unsafe void ExecuteDismount(DateTime now)
@@ -92,6 +95,28 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
             return;
         FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->UseAction(FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction, 23);
         _nextDismount = now.AddMilliseconds(100);
+    }
+
+    private unsafe bool WithinInteractRange(Actor player, Actor target)
+    {
+        var obj = GameObjectManager.Instance()->Objects.IndexSorted[target.SpawnIndex].Value;
+        if (obj == null || obj->GetGameObjectId() != target.InstanceID)
+            return false;
+
+        var maxDist = target.Type switch
+        {
+            ActorType.Aetheryte => 8.5f,
+            ActorType.EventObj => (obj->LayoutId & 1) == 1 ? 2.0999999f : 3.5999999f,
+            ActorType.GatheringPoint => 3,
+            _ => 25f
+        };
+
+        var pos = obj->Position;
+        if (obj->LayoutInstance != null)
+            pos = *obj->LayoutInstance->GetTranslationImpl();
+
+        var distanceBetweenHitboxes = ((Vector3)pos - player.PosRot.XYZ()).XZ().Length() - obj->HitboxRadius - player.HitboxRadius;
+        return distanceBetweenHitboxes < maxDist;
     }
 
     private unsafe void ExecuteInteract(DateTime now, Actor target)
