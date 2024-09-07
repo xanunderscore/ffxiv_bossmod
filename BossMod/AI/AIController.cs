@@ -103,6 +103,8 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         if (obj == null || obj->GetGameObjectId() != target.InstanceID)
             return false;
 
+        var maxDeltaH = 5;
+
         var maxDist = target.Type switch
         {
             ActorType.Aetheryte => 8.5f,
@@ -114,6 +116,9 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         var pos = obj->Position;
         if (obj->LayoutInstance != null)
             pos = *obj->LayoutInstance->GetTranslationImpl();
+
+        if (MathF.Abs(pos.Y - player.PosRot.Y) > maxDeltaH)
+            return false;
 
         var distanceBetweenHitboxes = ((Vector3)pos - player.PosRot.XYZ()).XZ().Length() - obj->HitboxRadius - player.HitboxRadius;
         return distanceBetweenHitboxes <= maxDist;
