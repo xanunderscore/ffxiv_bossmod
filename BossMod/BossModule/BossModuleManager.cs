@@ -148,6 +148,12 @@ public sealed class BossModuleManager : IDisposable
 
     private void ActorAdded(Actor actor)
     {
+        // modules for solo duties are activated upon creation of some npc/eventobj which is unique to that duty
+        // some duties are in very large zones, so it is possible for the original "primary actor" to be removed from obj table / destroyed when the player moves far enough away - for these modules, the condition for deactivation is generally CFCID changing
+        // so if we see an actor creation event, but this actor is already the primary actor of some active module, just ignore it
+        if (_loadedModules.Any(m => m.PrimaryActor.InstanceID == actor.InstanceID))
+            return;
+
         var m = ModuleRegistry.CreateModuleForActor(WorldState, actor, Config.MinMaturity);
         if (m != null)
         {
