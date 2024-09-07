@@ -57,7 +57,7 @@ class SerGrinnauxTheBullStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 396, NameID = 3850)]
-public class SerGrinnauxTheBull(WorldState ws, Actor primary) : DutyModule(ws, primary, new(0, 2), B)
+public class SerGrinnauxTheBull(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 2), B)
 {
     public static ArenaBoundsCustom NewBounds()
     {

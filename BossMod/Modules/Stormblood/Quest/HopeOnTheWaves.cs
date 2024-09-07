@@ -126,6 +126,7 @@ class BoundsP1(BossModule module) : BossComponent(module)
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 472, NameID = 6200)]
 public class Encounter(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
+    /*
     public override DutyObjective? GetNextObjective()
     {
         if (FindComponent<P1Barrier>()?.Transition ?? false)
@@ -133,6 +134,7 @@ public class Encounter(WorldState ws, Actor primary) : BossModule(ws, primary, n
 
         return null;
     }
+    */
 
     private static readonly List<WDir> vertices = [
   new WDir(14.43f, -26.75f),
