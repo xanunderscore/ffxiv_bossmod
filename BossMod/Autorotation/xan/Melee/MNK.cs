@@ -193,10 +193,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     {
         get
         {
-            if (UseAOE)
+            if (UseAOE || !Unlocked(AID.SnapPunch))
                 return (Positional.Any, false);
 
-            var pos = CoeurlStacks > 0 ? Positional.Flank : Positional.Rear;
+            var pos = Unlocked(AID.Demolish) && CoeurlStacks == 0 ? Positional.Rear : Positional.Flank;
             var imm = EffectiveForm == Form.Coeurl && NextGCD is not AID.WindsReply and not AID.FiresReply;
 
             return (pos, imm);
@@ -469,7 +469,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void Meditate(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (Chakra >= 5 || !Unlocked(AID.SteeledMeditation))
+        if (Chakra >= 5 || !Unlocked(AID.SteeledMeditation) || Player.MountId > 0)
             return;
 
         var prio = strategy.Option(Track.Meditation).As<MeditationStrategy>() switch

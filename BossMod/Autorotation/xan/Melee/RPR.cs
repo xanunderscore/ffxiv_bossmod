@@ -117,7 +117,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         if (Soulsow)
             PushGCD(AID.HarvestMoon, BestRangedAOETarget, GCDPriority.HarvestMoon);
-        else if (!Player.InCombat)
+        else if (!Player.InCombat && Player.MountId == 0)
             PushGCD(AID.SoulSow, Player, GCDPriority.Soulsow);
 
         if (CountdownRemaining > 0)

@@ -203,6 +203,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
 
     private bool IsMotifOk(StrategyValues strategy)
     {
+        if (Player.MountId > 0)
+            return false;
+
         if (!Player.InCombat)
             return true;
 

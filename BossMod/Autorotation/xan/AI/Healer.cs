@@ -110,6 +110,9 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
+        if (Player.MountId > 0)
+            return;
+
         // copied from veyn's HealerActions in EW bossmod - i am a thief
         BitMask esunas = new();
         foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
