@@ -1,5 +1,41 @@
 ﻿namespace BossMod.QuestBattle.Heavensward;
 
+class Free(WorldState ws) : QuestObjective(ws, "Free Emmanellain", [
+    new Waypoint(657.58f, -65.54f, -123.75f)
+])
+{
+    public override void AddAIHints(Actor player, AIHints hints)
+    {
+        if (!player.InCombat)
+            hints.InteractWithOID(World, 0x1E9ACE);
+    }
+
+    public override void OnActorModelStateChanged(Actor actor)
+    {
+        Completed |= actor.OID == 0x1003 && actor.ModelState.ModelState == 0;
+    }
+}
+
+class Escort(WorldState ws) : QuestObjective(ws, "Escort Emmanellain to safety", [])
+{
+    public override void AddAIHints(Actor player, AIHints hints)
+    {
+        Service.Log($"calculating auto hints, current center is {hints.Center}");
+
+        var emmanellain = World.Actors.FirstOrDefault(i => i.OID == 0x1003);
+        if (emmanellain != null)
+        {
+            hints.AddForbiddenZone(new AOEShapeDonut(15, 100), emmanellain.Position);
+            foreach (var h in hints.PotentialTargets)
+                if (h.Actor.TargetID == emmanellain.InstanceID)
+                    h.Priority = 0;
+        }
+    }
+}
+
+[Quest(BossModuleInfo.Maturity.WIP, 395)]
+public sealed class Emmanellain(WorldState ws) : QuestBattle(ws, [new Free(ws), new Escort(ws)]);
+
 /*
 [Quest(BossModuleInfo.Maturity.WIP, 395)]
 internal class ASeriesOfUnfortunateEvents(WorldState ws) : SimpleQuestBattle(ws, Navigation)

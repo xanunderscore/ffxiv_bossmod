@@ -1,12 +1,13 @@
 ﻿using Dalamud.Plugin.Ipc;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace BossMod.QuestBattle;
 public sealed class QuestBattleDirector : IDisposable
 {
     public readonly WorldState World;
-    private readonly BossModuleManager Bossmods;
     private readonly EventSubscriptions _subscriptions;
+    private readonly QuestBattleConfig _config;
 
     public List<Vector3> CurrentWaypoints { get; private set; } = [];
     public QuestBattle? CurrentModule { get; private set; }
@@ -24,12 +25,13 @@ public sealed class QuestBattleDirector : IDisposable
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
         World = ws;
-        Bossmods = bmm;
+        _config = Service.Config.Get<QuestBattleConfig>();
 
         _subscriptions = new(
             ws.CurrentZoneChanged.Subscribe(OnZoneChange),
             ObjectiveChanged.Subscribe(OnNavigationChange),
             ObjectiveCleared.Subscribe(OnNavigationClear),
+            _config.Modified.Subscribe(OnConfigChange),
 
             ws.Actors.StatusGain.Subscribe((a, i) =>
             {
@@ -115,7 +117,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            var paused = hints.PriorityTargets.Any(x => (x.Actor.Position - player.Position).Length() <= 25) && objective.PauseNavigationDuringCombat();
+            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.PauseNavigationDuringCombat();
             Camera.Instance?.DrawWorldLine(playerPos, nextwp, paused ? 0x80ffffff : ArenaColor.Safe);
             if (!paused)
             {
@@ -127,6 +129,9 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void Dash(Actor player, Vector3 destination, AIHints hints)
     {
+        if (!_config.UseDash)
+            return;
+
         var moveDist = destination.Length();
         var moveAngle = Angle.FromDirection(new WDir(destination.XZ()));
 
@@ -135,6 +140,10 @@ public sealed class QuestBattleDirector : IDisposable
             case Class.PCT:
                 if (moveDist >= 15)
                     hints.ActionsToExecute.Push(ActionID.MakeSpell(PCT.AID.Smudge), null, ActionQueue.Priority.Low, facingAngle: moveAngle);
+                break;
+            case Class.DRG:
+                if (moveDist >= 15)
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(DRG.AID.ElusiveJump), null, ActionQueue.Priority.Low, facingAngle: Angle.FromDirection(-moveAngle.ToDirection()));
                 break;
         }
     }
@@ -204,11 +213,40 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void OnZoneChange(WorldState.OpZoneChange change)
     {
+        SetMoveSpeedFactor(1);
         var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID);
         CurrentObjective = null;
         CurrentModule?.Dispose();
         CurrentModule = newHandler;
         if (newHandler != null)
+        {
+            SetMoveSpeedFactor(5);
             QuestActivated.Fire(newHandler);
+        }
+    }
+
+    private void OnConfigChange()
+    {
+        if (_config.Speedhack && CurrentModule != null)
+            SetMoveSpeedFactor(5);
+        else if (!_config.Speedhack)
+            SetMoveSpeedFactor(1);
+    }
+
+    private void SetMoveSpeedFactor(float f)
+    {
+        if (!_config.Speedhack)
+            return;
+
+        var speedBase = f * 6;
+        Service.SigScanner.TryScanText("F3 0F 59 05 ?? ?? ?? ?? F3 0F 59 05 ?? ?? ?? ?? F3 0F 58 05 ?? ?? ?? ?? 44 0F 28 C8", out var address);
+        address = address + 4 + Marshal.ReadInt32(address + 4) + 4;
+        Dalamud.SafeMemory.Write(address + 20, speedBase);
+        SetMoveControlData(speedBase);
+    }
+
+    private unsafe void SetMoveControlData(float speed)
+    {
+        Dalamud.SafeMemory.Write(((delegate* unmanaged[Stdcall]<byte, nint>)Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 85 C0 74 AE 83 FD 05"))(1) + 8, speed);
     }
 }

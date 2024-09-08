@@ -14,7 +14,7 @@ public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> 
 
     public QuestObjective(WorldState ws, string name, Waypoint conn) : this(ws, name, [conn]) { }
 
-    public override string ToString() => $"{Name} {Utils.Vec3String(Connections.Last()!.Position)}";
+    public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
     public virtual bool PauseNavigationDuringCombat() => true;
 

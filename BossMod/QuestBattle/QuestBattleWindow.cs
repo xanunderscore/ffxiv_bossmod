@@ -7,6 +7,7 @@ namespace BossMod.QuestBattle;
 public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowID, false, new(300, 200), ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse)
 {
     private readonly QuestBattleDirector _director = director;
+    private readonly QuestBattleConfig _config = Service.Config.Get<QuestBattleConfig>();
     private const string _windowID = "vbm Quest###Quest module";
     private WorldState World => _director.World;
 
@@ -77,6 +78,11 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
+
+        if (ImGui.Checkbox("Use dash abilities for movement", ref _config.UseDash))
+            _config.Modified.Fire();
+        if (ImGui.Checkbox("Use speedhack in duties", ref _config.Speedhack))
+            _config.Modified.Fire();
     }
 
     private void DrawObjectives(QuestBattle sqb)
@@ -90,7 +96,8 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
             if (highlight)
             {
                 ImGui.SameLine();
-                ImGui.TextUnformatted(Utils.Vec3String(n.Connections.Last()!.Position));
+                if (n.Connections.Count > 0)
+                    ImGui.TextUnformatted(Utils.Vec3String(n.Connections.Last().Position));
             }
         }
         if (ImGui.Button("Skip step"))
