@@ -1,4 +1,6 @@
-﻿namespace BossMod.QuestBattle.Heavensward.ASeriesOfUnfortunateEvents;
+﻿using Lumina.Excel.GeneratedSheets;
+
+namespace BossMod.QuestBattle.Heavensward.ASeriesOfUnfortunateEvents;
 
 class Free(WorldState ws) : QuestObjective(ws, "Free Emmanellain", [
     new Waypoint(657.58f, -65.54f, -123.75f)
@@ -36,4 +38,12 @@ class Escort(WorldState ws) : QuestObjective(ws, "Escort Emmanellain to safety",
 }
 
 [Quest(BossModuleInfo.Maturity.WIP, 395)]
-public sealed class Emmanellain(WorldState ws) : QuestBattle(ws, [new Free(ws), new Escort(ws)]);
+public sealed class Emmanellain(WorldState ws) : QuestBattle(ws, [
+    new QuestObjective(ws)
+        .OnModelState(m => {
+            this.Completed |= m.OID == 0x1003 && m.ModelState.ModelState == 0;
+        })
+        .Named("Free Emmanellain")
+        .WithConnection(new Vector3(657.58f, -65.54f, -123.75f))
+        .WithInteract(0x1E9ACE)
+]);

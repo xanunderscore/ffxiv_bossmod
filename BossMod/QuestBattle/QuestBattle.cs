@@ -2,35 +2,88 @@
 
 namespace BossMod.QuestBattle;
 
-public record struct Waypoint(Vector3 Position, bool Pathfind = true)
-{
-    public Waypoint(float X, float Y, float Z) : this(new(X, Y, Z), true) { }
-}
+public record struct Waypoint(Vector3 Position, bool Pathfind = true);
 
-public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> connections, bool combatPausesNavigation = true, bool combatCancelsNavigation = false)
+public class QuestObjective(WorldState ws)
 {
     public readonly WorldState World = ws;
-    public string Name = name;
-    public List<Waypoint> Connections = connections;
+    public string Name { get; protected set; } = "";
+    public readonly List<Waypoint> Connections = [];
     public bool Completed;
 
-    public QuestObjective(WorldState ws, string name, Waypoint conn) : this(ws, name, [conn]) { }
+    public QuestObjective Named(string name)
+    {
+        Name = name;
+        return this;
+    }
+
+    public QuestObjective WithConnection(Vector3 conn) => WithConnection(new Waypoint(conn));
+    public QuestObjective WithConnection(Waypoint conn)
+    {
+        Connections.Add(conn);
+        return this;
+    }
+
+    public QuestObjective WithConnections(params Vector3[] connections)
+    {
+        Connections.AddRange(connections.Select(c => new Waypoint(c)));
+        return this;
+    }
+    public QuestObjective WithConnections(params Waypoint[] connections)
+    {
+        Connections.AddRange(connections);
+        return this;
+    }
+
+    public QuestObjective WithPauseOnCombat(bool pause = true)
+    {
+        ShouldPauseNavigationInCombat = pause;
+        return this;
+    }
+
+    public QuestObjective WithStopOnCombat(bool stop = false)
+    {
+        ShouldCancelNavigation = stop;
+        return this;
+    }
+
+    public QuestObjective WithHints(AddAIHintsDelegate addHints)
+    {
+        AddAIHints += addHints;
+        return this;
+    }
+
+    public QuestObjective WithInteract(uint targetOid, bool allowInCombat = false)
+    {
+        AddAIHints += (player, hints) =>
+        {
+            if (!player.InCombat || allowInCombat)
+                hints.InteractWithOID(World, targetOid);
+        };
+        return this;
+    }
+
+    public QuestObjective OnModelState(ActorModelStateChangedDelegate fun)
+    {
+        OnActorModelStateChanged += fun;
+        return this;
+    }
+
+    public delegate void AddAIHintsDelegate(Actor actor, AIHints hints);
+    public AddAIHintsDelegate AddAIHints = delegate { };
+    public delegate void ActorModelStateChangedDelegate(Actor actor);
+    public ActorModelStateChangedDelegate OnActorModelStateChanged = delegate { };
 
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
-    public bool ShouldPauseNavigationInCombat { get; protected set; } = combatPausesNavigation;
+    public bool ShouldPauseNavigationInCombat { get; protected set; } = true;
+    public bool ShouldStopNavigationInCombat { get; protected set; } = false;
     public bool ShouldCancelNavigation { get; protected set; }
 
     public virtual void Update() { }
     public virtual void OnNavigationComplete() { }
-    public virtual void AddAIHints(Actor player, AIHints hints) { }
-    public virtual void OnActorCombatChanged(Actor actor)
-    {
-        if (actor.OID == 0 && actor.InCombat && combatCancelsNavigation)
-            ShouldCancelNavigation = true;
-    }
+    public virtual void OnActorCombatChanged(Actor actor) { }
     public virtual void OnActorEventStateChanged(Actor actor) { }
-    public virtual void OnActorModelStateChanged(Actor actor) { }
     public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
     public virtual void OnStatusGain(Actor actor, ActorStatus status) { }
     public virtual void OnActorCreated(Actor actor) { }
