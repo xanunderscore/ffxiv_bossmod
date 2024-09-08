@@ -45,7 +45,7 @@ public sealed class AIHintsBuilder : IDisposable
             else
             {
                 CalculateAutoHints(hints, player);
-                _qb.CurrentModule?.CalculateAIHints(player, hints);
+                _qb.CurrentModule?.AddAIHints(player, hints);
             }
         }
         hints.Normalize();

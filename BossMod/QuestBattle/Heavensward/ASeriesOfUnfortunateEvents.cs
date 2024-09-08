@@ -1,10 +1,11 @@
 ﻿namespace BossMod.QuestBattle.Heavensward;
 
+/*
 [Quest(BossModuleInfo.Maturity.WIP, 395)]
-internal class ASeriesOfUnfortunateEvents(WorldState ws) : SimpleQuestBattle(ws, Steps)
+internal class ASeriesOfUnfortunateEvents(WorldState ws) : SimpleQuestBattle(ws, Navigation)
 {
-    public static readonly List<QuestNavigation> Steps = [
-        new("Free Emmanellain", false, new(657.58f, -65.54f, -123.75f))
+    public static readonly List<QuestObjective> Navigation = [
+        new("Free Emmanellain", new Waypoint(657.58f, -65.54f, -123.75f), false)
     ];
 
     public override void CalculateAIHints(Actor player, AIHints hints)
@@ -34,3 +35,4 @@ internal class ASeriesOfUnfortunateEvents(WorldState ws) : SimpleQuestBattle(ws,
             Advance(0);
     }
 }
+*/

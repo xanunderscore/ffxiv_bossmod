@@ -181,9 +181,9 @@ public sealed class Plugin : IDalamudPlugin
         _wsSync.Update(_prevUpdateTime);
         _bossmod.Update();
         _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
-        _qb.Update(_hints);
         _amex.QueueManualActions();
         _rotation.Update(_amex.AnimationLockDelayEstimate, maxCastTime, _movementOverride.IsMoving());
+        _qb.Update(_hints);
         _ai.Update();
         _broadcast.Update();
         _amex.FinishActionGather();

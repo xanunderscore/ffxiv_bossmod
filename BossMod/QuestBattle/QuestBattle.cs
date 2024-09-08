@@ -1,30 +1,43 @@
 ﻿namespace BossMod.QuestBattle;
 
-public record struct QuestNavigation
+public record struct Waypoint(Vector3 Position, bool Pathfind = true)
 {
-    public string Name;
-    public List<Vector3> Connections;
-    public bool PauseForCombat = true;
+    public Waypoint(float X, float Y, float Z) : this(new(X, Y, Z), true) { }
+}
 
-    public QuestNavigation(string name, Vector3 dest, params Vector3[] rest) : this(name, true, dest, rest) { }
+public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> connections)
+{
+    public readonly WorldState World = ws;
+    public string Name = name;
+    public List<Waypoint> Connections = connections;
+    public bool Completed;
 
-    public QuestNavigation(string name, bool pauseForCombat, Vector3 dest, params Vector3[] rest)
-    {
-        var items = rest.ToList();
-        items.Insert(0, dest);
+    public QuestObjective(WorldState ws, string name, Waypoint conn) : this(ws, name, [conn]) { }
 
-        Name = name;
-        Connections = items;
-        PauseForCombat = pauseForCombat;
-    }
+    public override string ToString() => $"{Name} {Utils.Vec3String(Connections.Last()!.Position)}";
 
-    public override readonly string ToString() => $"{Name} {Utils.Vec3String(Connections.Last()!)}";
+    public virtual bool PauseNavigationDuringCombat() => true;
+
+    public virtual void Update() { }
+    public virtual void OnNavigationComplete() { }
+    public virtual void AddAIHints(Actor player, AIHints hints) { }
+    public virtual void OnActorEventStateChanged(Actor actor) { }
+    public virtual void OnActorModelStateChanged(Actor actor) { }
+    public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
+    public virtual void OnStatusGain(Actor actor, ActorStatus status) { }
+    public virtual void OnActorCreated(Actor actor) { }
+    public virtual void OnActorDestroyed(Actor actor) { }
+    public virtual void OnActorKilled(Actor actor) { }
 }
 
 public abstract class QuestBattle : IDisposable
 {
     public readonly WorldState World;
     private readonly EventSubscriptions _subscriptions;
+
+    public readonly List<QuestObjective> Objectives = [];
+    public int CurrentObjectiveIndex { get; private set; } = 0;
+    public QuestObjective? CurrentObjective => CurrentObjectiveIndex >= 0 && CurrentObjectiveIndex < Objectives.Count ? Objectives[CurrentObjectiveIndex] : null;
 
     public void Dispose()
     {
@@ -36,41 +49,39 @@ public abstract class QuestBattle : IDisposable
         _subscriptions.Dispose();
     }
 
-    protected QuestBattle(WorldState ws)
+    protected QuestBattle(WorldState ws, List<QuestObjective> objectives)
     {
         World = ws;
+        Objectives = objectives;
 
         _subscriptions = new(
-            ws.Actors.EventStateChanged.Subscribe(OnActorEventStateChanged),
-            ws.Actors.StatusLose.Subscribe((act, ix) => OnStatusLose(act, act.Statuses[ix])),
-            ws.Actors.StatusGain.Subscribe((act, ix) => OnStatusGain(act, act.Statuses[ix])),
-            ws.Actors.ModelStateChanged.Subscribe(OnActorModelStateChanged)
+            ws.Actors.EventStateChanged.Subscribe(act => CurrentObjective?.OnActorEventStateChanged(act)),
+            ws.Actors.StatusLose.Subscribe((act, ix) => CurrentObjective?.OnStatusLose(act, act.Statuses[ix])),
+            ws.Actors.StatusGain.Subscribe((act, ix) => CurrentObjective?.OnStatusGain(act, act.Statuses[ix])),
+            ws.Actors.ModelStateChanged.Subscribe(act => CurrentObjective?.OnActorModelStateChanged(act)),
+            ws.Actors.Added.Subscribe(act => CurrentObjective?.OnActorCreated(act)),
+            ws.Actors.Removed.Subscribe(act => CurrentObjective?.OnActorDestroyed(act)),
+            ws.Actors.IsDeadChanged.Subscribe(act =>
+            {
+                if (act.IsDead)
+                    CurrentObjective?.OnActorKilled(act);
+            })
         );
     }
 
-    public virtual QuestNavigation? GetNextDestination() => null;
-    public virtual void Update() { }
-    public virtual void OnNavigationComplete(QuestNavigation obj) { }
-    public virtual void CalculateAIHints(Actor player, AIHints hints) { }
-    public virtual void OnActorEventStateChanged(Actor actor) { }
-    public virtual void OnActorModelStateChanged(Actor actor) { }
-    public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
-    public virtual void OnStatusGain(Actor actor, ActorStatus status) { }
-}
-
-public abstract class SimpleQuestBattle(WorldState ws, List<QuestNavigation> objectives) : QuestBattle(ws)
-{
-    public int CurrentStep { get; private set; }
-
-    public void Advance(int currentStep)
+    public void Update()
     {
-        if (CurrentStep == currentStep)
-            CurrentStep++;
-        else
-            Service.Log($"called Advance({currentStep}), but current step number is {CurrentStep}");
+        CurrentObjective?.Update();
+        if (CurrentObjective?.Completed ?? false)
+            CurrentObjectiveIndex++;
     }
-
-    public void Advance() => Advance(CurrentStep);
-
-    public override sealed QuestNavigation? GetNextDestination() => CurrentStep >= 0 && CurrentStep < objectives.Count ? objectives[CurrentStep] : null;
+    public void OnNavigationComplete()
+    {
+        CurrentObjective?.OnNavigationComplete();
+    }
+    public void AddAIHints(Actor player, AIHints hints)
+    {
+        CurrentObjective?.AddAIHints(player, hints);
+    }
+    public void Advance() => CurrentObjectiveIndex++;
 }

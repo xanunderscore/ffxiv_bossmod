@@ -139,6 +139,19 @@ public sealed class AIHints
         }
     }
 
+    public void PrioritizeTargetsByOID(uint oid, int priority = 0) => PrioritizeTargetsByOID([oid], priority);
+
+    public void PrioritizeTargetsByOID(uint[] oids, int priority = 0)
+    {
+        foreach (var h in PotentialTargets)
+            if (oids.Contains(h.Actor.OID))
+                h.Priority = Math.Max(priority, h.Priority);
+    }
+    public void InteractWithOID(WorldState ws, uint oid)
+    {
+        InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);
+    }
+
     public void AddForbiddenZone(Func<WPos, float> shapeDistance, DateTime activation = new()) => ForbiddenZones.Add((shapeDistance, activation));
     public void AddForbiddenZone(AOEShape shape, WPos origin, Angle rot = new(), DateTime activation = new()) => ForbiddenZones.Add((shape.Distance(origin, rot), activation));
 

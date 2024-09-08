@@ -1,4 +1,6 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Interface.Colors;
+using Dalamud.Interface.Utility.Raii;
+using ImGuiNET;
 using System.Runtime.InteropServices;
 
 namespace BossMod.QuestBattle;
@@ -35,12 +37,9 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
         ImGui.Spacing();
 
         if (_director.CurrentModule is QuestBattle qb)
-            ImGui.Text($"Module: {qb.GetType().Name}");
-
-        if (_director.CurrentNavigation is QuestNavigation obj)
         {
-            ImGui.Text($"Objective: {obj.Name}");
-            ImGui.Text($"Destination: {Utils.Vec3String(obj.Connections.Last()!)}");
+            ImGui.Text($"Module: {qb.GetType().Name}");
+            DrawObjectives(qb);
 
             ImGui.Spacing();
             ImGui.Separator();
@@ -54,24 +53,47 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
             ImGui.SameLine();
             if (ImGui.Button("Copy vec"))
             {
-                var x = player.PosRot.X; var y = player.PosRot.Y; var z = player.PosRot.Z;
+                var x = player.PosRot.X;
+                var y = player.PosRot.Y;
+                var z = player.PosRot.Z;
                 ImGui.SetClipboardText($"new Vector3({x:F2}f, {y:F2}f, {z:F2}f)");
             }
             ImGui.SameLine();
             if (ImGui.Button("Copy moveto"))
             {
-                var x = player.PosRot.X; var y = player.PosRot.Y; var z = player.PosRot.Z;
+                var x = player.PosRot.X;
+                var y = player.PosRot.Y;
+                var z = player.PosRot.Z;
                 ImGui.SetClipboardText($"/vnav moveto {x:F2} {y:F2} {z:F2}");
             }
             if (World.Actors.Find(player.TargetID) is Actor tar)
             {
                 ImGui.TextUnformatted($"Target: {tar.Name} ({tar.Type}; {tar.OID:X}) (hb={tar.HitboxRadius})");
                 ImGui.TextUnformatted($"Distance: {player.DistanceToHitbox(tar)}");
+                ImGui.TextUnformatted($"Angle: {player.AngleTo(tar)}");
             }
         }
 
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
+    }
+
+    private void DrawObjectives(QuestBattle sqb)
+    {
+        for (var i = 0; i < sqb.Objectives.Count; i++)
+        {
+            var n = sqb.Objectives[i];
+            var highlight = n == _director.CurrentObjective;
+            using var c = ImRaii.PushColor(ImGuiCol.Text, highlight ? ImGuiColors.DalamudWhite : ImGuiColors.DalamudGrey);
+            ImGui.TextUnformatted($"#{i} {n.Name}");
+            if (highlight)
+            {
+                ImGui.SameLine();
+                ImGui.TextUnformatted(Utils.Vec3String(n.Connections.Last()!.Position));
+            }
+        }
+        if (ImGui.Button("Skip step"))
+            sqb.Advance();
     }
 }

@@ -52,12 +52,12 @@ class SerGrinnauxTheBullStates : StateMachineBuilder
             .ActivateOnEnter<Rive>()
             .ActivateOnEnter<Heartstopper>()
             .ActivateOnEnter<Chain>()
-            .Raw.Update = () => module.WorldState.CurrentCFCID != 396;
+            .Raw.Update = () => module.PrimaryActor.IsDeadOrDestroyed && module.Enemies(OID._Gen_SerPaulecrainColdfire).All(x => x.IsDeadOrDestroyed);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 396, NameID = 3850)]
-public class SerGrinnauxTheBull(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 2), B)
+public class SerGrinnauxTheBull(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 2), FunnyBounds)
 {
     public static ArenaBoundsCustom NewBounds()
     {
@@ -67,5 +67,10 @@ public class SerGrinnauxTheBull(WorldState ws, Actor primary) : BossModule(ws, p
         return new(16, new(arc.Concat(arc2).Select(a => a.ToWDir())));
     }
 
-    public static readonly ArenaBoundsCustom B = NewBounds();
+    public static readonly ArenaBoundsCustom FunnyBounds = NewBounds();
+
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+    }
 }
