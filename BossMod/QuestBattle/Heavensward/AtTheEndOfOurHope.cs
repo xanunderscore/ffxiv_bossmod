@@ -1,12 +1,16 @@
-﻿namespace BossMod.QuestBattle.Heavensward;
+﻿namespace BossMod.QuestBattle.Heavensward.AtTheEndOfOurHope;
 
-class Mills(WorldState ws) : QuestObjective(ws, "Gorgagne Mills", [
+class Mills : QuestObjective
+{
+    public Mills(WorldState ws) : base(ws, "Gorgagne Mills", [
     new Waypoint(455.42f, 164.31f, -542.78f),
     // basement
     new Waypoint(456.10f, 157.41f, -554.90f)
 ])
-{
-    public override bool ShouldPauseNavigationInCombat() => false;
+    {
+        ShouldPauseNavigationInCombat = true;
+    }
+
 
     public override void AddAIHints(Actor player, AIHints hints)
     {

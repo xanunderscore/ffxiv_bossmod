@@ -1,6 +1,6 @@
-﻿namespace BossMod.QuestBattle.Heavensward;
+﻿namespace BossMod.QuestBattle.Heavensward.KeepingTheFlameAlive;
 
-public enum OID : uint
+enum OID : uint
 {
     HummingAtomizer = 0xF88,
     IronCell = 0xF89,
@@ -21,10 +21,8 @@ class TriggerCutscene(WorldState ws) : QuestObjective(ws, "Trigger cutscene", [
 }
 
 // this step requires a separate waypoint because the cell's actual position vs its translated position are off by over 2y, making it impossible to attack for melee AI
-class OpenCell(WorldState ws) : QuestObjective(ws, "Open cell", new Waypoint(-44.18f, -10.72f, -120.78f))
+class OpenCell(WorldState ws) : QuestObjective(ws, "Open cell", [new(-44.18f, -10.72f, -120.78f)], combatPausesNavigation: false)
 {
-    public override bool ShouldPauseNavigationInCombat() => false;
-
     public override void OnActorKilled(Actor actor)
     {
         Completed |= actor.OID == (uint)OID.IronCell;
@@ -52,10 +50,7 @@ class DestroyGenerator(WorldState ws) : QuestObjective(ws, "Destroy generator", 
 }
 class FindKey(WorldState ws) : QuestObjective(ws, "Find key", new Waypoint(117.31f, -3.71f, 36.29f))
 {
-    private bool CancelNav;
     private static readonly uint[] CrystalBraves = [0xF70, 0xF71, 0xF72];
-
-    public override bool ShouldCancelNavigation() => CancelNav;
 
     public override void OnActorDestroyed(Actor actor)
     {
@@ -64,7 +59,7 @@ class FindKey(WorldState ws) : QuestObjective(ws, "Find key", new Waypoint(117.3
 
     public override void OnActorCombatChanged(Actor actor)
     {
-        CancelNav |= CrystalBraves.Contains(actor.OID);
+        ShouldCancelNavigation |= CrystalBraves.Contains(actor.OID);
     }
 
     public override void AddAIHints(Actor player, AIHints hints)

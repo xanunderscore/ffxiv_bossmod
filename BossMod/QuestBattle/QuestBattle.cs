@@ -1,11 +1,13 @@
-﻿namespace BossMod.QuestBattle;
+﻿using Dalamud.Game.ClientState.Conditions;
+
+namespace BossMod.QuestBattle;
 
 public record struct Waypoint(Vector3 Position, bool Pathfind = true)
 {
     public Waypoint(float X, float Y, float Z) : this(new(X, Y, Z), true) { }
 }
 
-public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> connections)
+public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> connections, bool combatPausesNavigation = true, bool combatCancelsNavigation = false)
 {
     public readonly WorldState World = ws;
     public string Name = name;
@@ -16,13 +18,17 @@ public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> 
 
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
-    public virtual bool ShouldPauseNavigationInCombat() => true;
-    public virtual bool ShouldCancelNavigation() => false;
+    public bool ShouldPauseNavigationInCombat { get; protected set; } = combatPausesNavigation;
+    public bool ShouldCancelNavigation { get; protected set; }
 
     public virtual void Update() { }
     public virtual void OnNavigationComplete() { }
     public virtual void AddAIHints(Actor player, AIHints hints) { }
-    public virtual void OnActorCombatChanged(Actor actor) { }
+    public virtual void OnActorCombatChanged(Actor actor)
+    {
+        if (actor.OID == 0 && actor.InCombat && combatCancelsNavigation)
+            ShouldCancelNavigation = true;
+    }
     public virtual void OnActorEventStateChanged(Actor actor) { }
     public virtual void OnActorModelStateChanged(Actor actor) { }
     public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
@@ -30,6 +36,7 @@ public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> 
     public virtual void OnActorCreated(Actor actor) { }
     public virtual void OnActorDestroyed(Actor actor) { }
     public virtual void OnActorKilled(Actor actor) { }
+    public virtual void OnConditionChange(ConditionFlag flag, bool value) { }
 }
 
 public abstract class QuestBattle : IDisposable
@@ -54,6 +61,7 @@ public abstract class QuestBattle : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         _subscriptions.Dispose();
+        Service.Condition.ConditionChange -= OnConditionChange;
     }
 
     protected QuestBattle(WorldState ws, List<QuestObjective> objectives)
@@ -75,6 +83,7 @@ public abstract class QuestBattle : IDisposable
                     CurrentObjective?.OnActorKilled(act);
             })
         );
+        Service.Condition.ConditionChange += OnConditionChange;
     }
 
     public void Update()
@@ -94,4 +103,5 @@ public abstract class QuestBattle : IDisposable
         CurrentObjective?.AddAIHints(player, hints);
     }
     public void Advance() => CurrentObjectiveIndex++;
+    public void OnConditionChange(ConditionFlag flag, bool value) => CurrentObjective?.OnConditionChange(flag, value);
 }

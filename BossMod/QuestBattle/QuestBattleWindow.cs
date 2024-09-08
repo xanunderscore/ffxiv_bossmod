@@ -79,6 +79,8 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
         ImGui.Separator();
         ImGui.Spacing();
 
+        ImGui.Checkbox("Pause duty execution", ref _director.Paused);
+
         if (ImGui.Checkbox("Use dash abilities for movement", ref _config.UseDash))
             _config.Modified.Fire();
         if (ImGui.Checkbox("Use speedhack in duties", ref _config.Speedhack))

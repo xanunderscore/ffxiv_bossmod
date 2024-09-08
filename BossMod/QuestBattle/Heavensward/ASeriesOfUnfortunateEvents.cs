@@ -1,4 +1,4 @@
-﻿namespace BossMod.QuestBattle.Heavensward;
+﻿namespace BossMod.QuestBattle.Heavensward.ASeriesOfUnfortunateEvents;
 
 class Free(WorldState ws) : QuestObjective(ws, "Free Emmanellain", [
     new Waypoint(657.58f, -65.54f, -123.75f)

@@ -13,7 +13,8 @@ public sealed class QuestBattleDirector : IDisposable
     public QuestBattle? CurrentModule { get; private set; }
     public QuestObjective? CurrentObjective { get; private set; }
 
-    public bool Paused;
+    public bool Paused = false;
+    public bool WaitCommence = false;
 
     public Event<QuestBattle> QuestActivated = new();
     public Event<QuestObjective> ObjectiveChanged = new();
@@ -31,6 +32,8 @@ public sealed class QuestBattleDirector : IDisposable
 
         _subscriptions = new(
             ws.CurrentZoneChanged.Subscribe(OnZoneChange),
+            ws.Actors.Added.Subscribe(OnActorAdded),
+            ws.Actors.EventStateChanged.Subscribe(OnActorEventState),
             ObjectiveChanged.Subscribe(OnNavigationChange),
             ObjectiveCleared.Subscribe(OnNavigationClear),
             _config.Modified.Subscribe(OnConfigChange),
@@ -74,7 +77,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     public void Update(AIHints hints)
     {
-        if (Paused)
+        if (Paused || WaitCommence)
             return;
 
         var player = World.Party.Player();
@@ -109,7 +112,7 @@ public sealed class QuestBattleDirector : IDisposable
         if (CurrentWaypoints.Count == 0)
             return;
 
-        if (objective.ShouldCancelNavigation())
+        if (objective.ShouldCancelNavigation)
         {
             CurrentWaypoints.Clear();
             return;
@@ -128,7 +131,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.ShouldPauseNavigationInCombat();
+            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.ShouldPauseNavigationInCombat;
             Camera.Instance?.DrawWorldLine(playerPos, nextwp, paused ? 0x80ffffff : ArenaColor.Safe);
             if (!paused)
             {
@@ -235,6 +238,18 @@ public sealed class QuestBattleDirector : IDisposable
                 SetMoveSpeedFactor(5);
             QuestActivated.Fire(newHandler);
         }
+    }
+
+    private void OnActorAdded(Actor actor)
+    {
+        if (actor.OID == 0x1E8536)
+            WaitCommence = true;
+    }
+
+    private void OnActorEventState(Actor actor)
+    {
+        if (actor.OID == 0x1E8536 && actor.EventState == 7)
+            WaitCommence = false;
     }
 
     private void OnConfigChange()
