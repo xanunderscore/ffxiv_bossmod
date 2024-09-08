@@ -69,7 +69,7 @@ class Skydrive(BossModule module) : Components.SelfTargetedAOEs(module, ActionID
 
 class SkyHighDrive(BossModule module) : Components.GenericRotatingAOE(module)
 {
-    Angle angle = default;
+    Angle angle;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

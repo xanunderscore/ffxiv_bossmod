@@ -63,7 +63,7 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         PushOGCD(AID.JKick, primaryTarget);
     }
 
-    private Mimicry CurrentMimic()
+    public Mimicry CurrentMimic()
     {
         foreach (var st in Player.Statuses)
         {

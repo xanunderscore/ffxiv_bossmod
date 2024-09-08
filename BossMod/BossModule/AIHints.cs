@@ -84,7 +84,7 @@ public sealed class AIHints
     public List<(uint statusId, ulong sourceId)> StatusesToCancel = [];
 
     // dismount
-    public bool Dismount = false;
+    public bool Dismount;
 
     // clear all stored data
     public void Clear()

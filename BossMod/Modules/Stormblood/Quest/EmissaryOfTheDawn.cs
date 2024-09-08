@@ -11,7 +11,7 @@ public enum OID : uint
 
 class Step1(BossModule module) : BossComponent(module)
 {
-    public bool Complete = false;
+    public bool Complete;
     public Actor? Wreckage => Module.Enemies(0x234C).FirstOrDefault();
     public WPos WreckagePosition = new(-6.3f, 5.75f);
     public Actor? Popularis => Module.Enemies(0x2344).FirstOrDefault();

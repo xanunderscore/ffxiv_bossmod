@@ -48,7 +48,7 @@ class FluidFlare(BossModule module) : Components.SelfTargetedAOEs(module, Action
 
 class FireSphere(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Burst))
 {
-    private DateTime? _predictedCast = null;
+    private DateTime? _predictedCast;
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
         if ((AID)spell.Action.ID == AID.FiresphereSummon)
@@ -97,8 +97,8 @@ class AncientFire(BossModule module) : Components.RaidwideCast(module, ActionID.
 
 class DeathWall(BossModule module) : BossComponent(module)
 {
-    private bool _active = false;
-    private bool _completed = false;
+    private bool _active;
+    private bool _completed;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

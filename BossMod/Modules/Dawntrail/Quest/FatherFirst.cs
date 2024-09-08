@@ -178,7 +178,7 @@ class BrawlEnder(BossModule module) : Components.Knockback(module, ActionID.Make
 {
     private DateTime? Activation;
     private Angle? FixedDirection;
-    public int NumKBs = 0;
+    public int NumKBs;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {

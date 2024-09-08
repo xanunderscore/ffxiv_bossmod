@@ -6,13 +6,10 @@ class UriangerAI(BossModule module) : Components.RoleplayModule(module)
 {
     public const ushort StatusParam = 158;
 
-    private Actor Confluence => Module.Enemies(0x2E2E)[0];
     private Actor Thancred => Module.Enemies(0x31EB)[0];
     private Actor Yshtola => Module.Enemies(0x31EC)[0];
     private Actor? LunarOdin => Module.Enemies(0x3200).FirstOrDefault(x => x.IsTargetable);
     private Actor? Fetters => Module.Enemies(0x3218).FirstOrDefault(x => x.IsTargetable);
-
-    private long ActorHP(Actor p) => Math.Max(0, p.HPMP.CurHP + WorldState.PendingEffects.PendingHPDifference(p.InstanceID));
 
     private float HeliosLeft(Actor p) => p.IsTargetable ? StatusDetails(p, 836, Player.InstanceID).Left : float.MaxValue;
 

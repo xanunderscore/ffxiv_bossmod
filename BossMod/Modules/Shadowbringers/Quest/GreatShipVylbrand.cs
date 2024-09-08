@@ -67,7 +67,7 @@ class Uplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShap
 
 class BombTether : Components.BaitAwayTethers
 {
-    private DateTime? Activation = null;
+    private DateTime? Activation;
 
     public BombTether(BossModule module) : base(module, new AOEShapeCircle(6), 97)
     {

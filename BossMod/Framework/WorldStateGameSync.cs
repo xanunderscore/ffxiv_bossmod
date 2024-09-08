@@ -301,10 +301,10 @@ sealed class WorldStateGameSync : IDisposable
             _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
 
         if (act.MountId != mountId)
-            _ws.Execute(new ActorState.OpMount(act.InstanceID, (uint)mountId));
+            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
 
         if (act.MountId != mountId)
-            _ws.Execute(new ActorState.OpMount(act.InstanceID, (uint)mountId));
+            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
 
 
         DispatchActorEvents(act.InstanceID);

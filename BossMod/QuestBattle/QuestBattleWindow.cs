@@ -9,19 +9,26 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
     private WorldState World => _director.World;
 
     private delegate void AbandonDuty(bool a1);
-    private readonly AbandonDuty abandonDuty = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
+    private readonly AbandonDuty abandonDutyHook = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
 
     public override void PreOpenCheck()
     {
-        IsOpen = true; //  _director.CurrentModule != null;
+        IsOpen = World.CurrentCFCID != 0;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _director.Dispose();
+        base.Dispose(disposing);
     }
 
     public override void Draw()
     {
         if (ImGui.Button("Leave duty"))
-            abandonDuty.Invoke(false);
+            abandonDutyHook.Invoke(false);
         ImGui.SameLine();
-        UIMisc.HelpMarker("Attempt to leave duty by directly sending the \"abandon duty\" packet. May bypass the out-of-combat restriction. Only works in some duties.");
+        UIMisc.HelpMarker("Attempt to leave duty by directly sending the \"abandon duty\" packet, which may be able to bypass the out-of-combat restriction. Only works in some duties.");
 
         ImGui.Spacing();
         ImGui.Separator();

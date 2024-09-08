@@ -36,7 +36,7 @@ public abstract class QuestBattle : IDisposable
         _subscriptions.Dispose();
     }
 
-    public QuestBattle(WorldState ws)
+    protected QuestBattle(WorldState ws)
     {
         World = ws;
 
@@ -60,7 +60,7 @@ public abstract class QuestBattle : IDisposable
 
 public abstract class SimpleQuestBattle(WorldState ws, List<QuestNavigation> objectives) : QuestBattle(ws)
 {
-    public int CurrentStep { get; private set; } = 0;
+    public int CurrentStep { get; private set; }
 
     public void Advance(int currentStep)
     {

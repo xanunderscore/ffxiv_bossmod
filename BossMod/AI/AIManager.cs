@@ -3,6 +3,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using ImGuiNET;
 
@@ -54,7 +55,7 @@ sealed class AIManager : IDisposable
         Service.ChatGui.ChatMessage += OnChatMessage;
         Service.CommandManager.AddHandler("/vbmai", new Dalamud.Game.Command.CommandInfo(OnCommand) { HelpMessage = "Toggle AI mode" });
 
-        if (_config.LastAIPreset != "")
+        if (!_config.LastAIPreset.IsNullOrEmpty())
             _aiPreset = autorot.Database.Presets.Presets.FirstOrDefault(p => p.Name == _config.LastAIPreset);
     }
 

@@ -69,7 +69,7 @@ class EncounterStates : StateMachineBuilder
 
 class P1Barrier(BossModule module) : BossComponent(module)
 {
-    public bool Transition = false;
+    public bool Transition;
 
     public override void OnActorEState(Actor actor, ushort state)
     {

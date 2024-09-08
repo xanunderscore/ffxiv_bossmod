@@ -63,7 +63,7 @@ class BodySlam(BossModule module) : Components.KnockbackFromCastTarget(module, A
 
 class FlameBreath(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FlameBreathChannel))
 {
-    private AOEInstance? _aoe = null;
+    private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
@@ -86,7 +86,7 @@ class FlameBreath(BossModule module) : Components.GenericAOEs(module, ActionID.M
 
 class FlameBreath2(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.FlameBreathChannel))
 {
-    private AOEInstance? _aoe = null;
+    private AOEInstance? _aoe;
 
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Utils.ZeroOrOne(_aoe);
 
@@ -121,7 +121,7 @@ class Adds(BossModule module) : BossComponent(module)
 
 class Cauterize(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Cauterize))
 {
-    private Actor? Source = null;
+    private Actor? Source;
 
     private static readonly AOEShapeRect MoveIt = new(40, 22, 38);
 
@@ -168,8 +168,8 @@ class ScorchingBreath(BossModule module) : Components.GenericAOEs(module)
 
 class ScrollingBounds(BossModule module) : BossComponent(module)
 {
-    public static readonly float HalfHeight = 40;
-    public static readonly float HalfWidth = 22;
+    public const float HalfHeight = 40;
+    public const float HalfWidth = 22;
 
     public static readonly ArenaBoundsRect Bounds = new(HalfWidth, HalfHeight);
 

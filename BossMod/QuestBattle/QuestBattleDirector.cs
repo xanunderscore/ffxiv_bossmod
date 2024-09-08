@@ -95,15 +95,15 @@ public sealed class QuestBattleDirector : IDisposable
 
     private async void TryPathfind(Vector3 start, List<Vector3> connections, int maxRetries = 5)
     {
-        Waypoints = await TryPathfind(Enumerable.Repeat(start, 1).Concat(connections), maxRetries);
+        Waypoints = await TryPathfind(Enumerable.Repeat(start, 1).Concat(connections), maxRetries).ConfigureAwait(false);
     }
 
     private async Task<List<Vector3>> TryPathfind(IEnumerable<Vector3> connectionPoints, int maxRetries = 5)
     {
         if (!IsMeshReady())
         {
-            await Task.Delay(500);
-            return await TryPathfind(connectionPoints, maxRetries - 1);
+            await Task.Delay(500).ConfigureAwait(false);
+            return await TryPathfind(connectionPoints, maxRetries - 1).ConfigureAwait(false);
         }
         var points = connectionPoints.Take(3).ToList();
         if (points.Count < 2)
@@ -120,9 +120,9 @@ public sealed class QuestBattleDirector : IDisposable
             return [];
         }
 
-        var thesePoints = await task;
+        var thesePoints = await task.ConfigureAwait(false);
         if (points.Count > 2)
-            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1)));
+            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1)).ConfigureAwait(false));
         return thesePoints;
     }
 

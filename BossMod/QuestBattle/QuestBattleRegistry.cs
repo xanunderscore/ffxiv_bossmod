@@ -5,8 +5,8 @@ namespace BossMod.QuestBattle;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class QuestAttribute(BossModuleInfo.Maturity maturity, uint cfcId) : Attribute
 {
-    public BossModuleInfo.Maturity Maturity = maturity;
-    public uint CFCID = cfcId;
+    public BossModuleInfo.Maturity Maturity => maturity;
+    public uint CFCID => cfcId;
 }
 
 public static class QuestBattleRegistry
