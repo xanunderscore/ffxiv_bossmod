@@ -13,6 +13,8 @@ public sealed class QuestBattleDirector : IDisposable
     public QuestBattle? CurrentModule { get; private set; }
     public QuestObjective? CurrentObjective { get; private set; }
 
+    public bool Paused;
+
     public Event<QuestBattle> QuestActivated = new();
     public Event<QuestObjective> ObjectiveChanged = new();
     public Event<QuestObjective> ObjectiveCleared = new();
@@ -72,6 +74,9 @@ public sealed class QuestBattleDirector : IDisposable
 
     public void Update(AIHints hints)
     {
+        if (Paused)
+            return;
+
         var player = World.Party.Player();
         if (player == null)
             return;
@@ -104,6 +109,12 @@ public sealed class QuestBattleDirector : IDisposable
         if (CurrentWaypoints.Count == 0)
             return;
 
+        if (objective.ShouldCancelNavigation())
+        {
+            CurrentWaypoints.Clear();
+            return;
+        }
+
         var nextwp = CurrentWaypoints[0];
         var playerPos = player.PosRot.XYZ();
         var direction = nextwp - playerPos;
@@ -117,7 +128,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.PauseNavigationDuringCombat();
+            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.ShouldPauseNavigationInCombat();
             Camera.Instance?.DrawWorldLine(playerPos, nextwp, paused ? 0x80ffffff : ArenaColor.Safe);
             if (!paused)
             {
@@ -220,7 +231,8 @@ public sealed class QuestBattleDirector : IDisposable
         CurrentModule = newHandler;
         if (newHandler != null)
         {
-            SetMoveSpeedFactor(5);
+            if (_config.Speedhack)
+                SetMoveSpeedFactor(5);
             QuestActivated.Fire(newHandler);
         }
     }
@@ -235,9 +247,6 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void SetMoveSpeedFactor(float f)
     {
-        if (!_config.Speedhack)
-            return;
-
         var speedBase = f * 6;
         Service.SigScanner.TryScanText("F3 0F 59 05 ?? ?? ?? ?? F3 0F 59 05 ?? ?? ?? ?? F3 0F 58 05 ?? ?? ?? ?? 44 0F 28 C8", out var address);
         address = address + 4 + Marshal.ReadInt32(address + 4) + 4;

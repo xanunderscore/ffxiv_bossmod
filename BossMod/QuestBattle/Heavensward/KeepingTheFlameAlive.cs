@@ -1,5 +1,12 @@
 ﻿namespace BossMod.QuestBattle.Heavensward;
 
+public enum OID : uint
+{
+    HummingAtomizer = 0xF88,
+    IronCell = 0xF89,
+    IdentificationKey = 0x1E9A2A
+}
+
 class TriggerCutscene(WorldState ws) : QuestObjective(ws, "Trigger cutscene", [
     new Waypoint(-30.25f, 0.14f, -132.16f),
     // drop off bridge
@@ -7,52 +14,73 @@ class TriggerCutscene(WorldState ws) : QuestObjective(ws, "Trigger cutscene", [
     new Waypoint(-78.03f, -10.18f, -98.29f)
 ])
 {
-    public static uint IronCell = 0xF89;
-
     public override void OnActorCreated(Actor actor)
     {
-        Completed |= actor.OID == IronCell;
+        Completed |= actor.OID == (uint)OID.IronCell;
     }
 }
-class DestroyGenerator(WorldState ws) : QuestObjective(ws, "Destroy generator", new Waypoint(163.35f, 6.26f, -65.16f))
+
+// this step requires a separate waypoint because the cell's actual position vs its translated position are off by over 2y, making it impossible to attack for melee AI
+class OpenCell(WorldState ws) : QuestObjective(ws, "Open cell", new Waypoint(-44.18f, -10.72f, -120.78f))
 {
-    public static uint HummingAtomizer = 0xF88;
+    public override bool ShouldPauseNavigationInCombat() => false;
 
     public override void OnActorKilled(Actor actor)
     {
-        Completed |= actor.OID == HummingAtomizer;
+        Completed |= actor.OID == (uint)OID.IronCell;
     }
 
     public override void AddAIHints(Actor player, AIHints hints)
     {
-        foreach (var h in hints.PotentialTargets)
-        {
-            if (h.Actor.OID == TriggerCutscene.IronCell)
-            {
-                h.Priority = 0;
-                hints.RecommendedRangeToTarget = 2.5f;
-            }
-
-            if (h.Actor.OID == HummingAtomizer && player.PosRot.Y >= 6)
-                h.Priority = 0;
-        }
+        hints.PrioritizeTargetsByOID(OID.IronCell);
     }
 }
-class FindKey(WorldState ws) : QuestObjective(ws, "Find key", new Waypoint(105.59f, -3.35f, 57.61f))
+
+class DestroyGenerator(WorldState ws) : QuestObjective(ws, "Destroy generator", new Waypoint(163.35f, 6.26f, -65.16f))
 {
-    public static uint IdentificationKey = 0x1E9A2A;
+    public override void OnActorKilled(Actor actor)
+    {
+        Completed |= actor.OID == (uint)OID.HummingAtomizer;
+    }
+
+    public override void AddAIHints(Actor player, AIHints hints)
+    {
+        // budget LOS check
+        if (player.PosRot.Y >= 6)
+            hints.PrioritizeTargetsByOID(OID.HummingAtomizer);
+    }
+}
+class FindKey(WorldState ws) : QuestObjective(ws, "Find key", new Waypoint(117.31f, -3.71f, 36.29f))
+{
+    private bool CancelNav;
+    private static readonly uint[] CrystalBraves = [0xF70, 0xF71, 0xF72];
+
+    public override bool ShouldCancelNavigation() => CancelNav;
 
     public override void OnActorDestroyed(Actor actor)
     {
-        Completed |= actor.OID == IdentificationKey;
+        Completed |= actor.OID == (uint)OID.IdentificationKey;
+    }
+
+    public override void OnActorCombatChanged(Actor actor)
+    {
+        CancelNav |= CrystalBraves.Contains(actor.OID);
     }
 
     public override void AddAIHints(Actor player, AIHints hints)
     {
-        hints.PrioritizeTargetsByOID([0xF70, 0xF71, 0xF72]);
+        var inCombat = false;
+        foreach (var h in hints.PotentialTargets)
+        {
+            if (CrystalBraves.Contains(h.Actor.OID))
+            {
+                h.Priority = 0;
+                inCombat = true;
+            }
+        }
 
-        if (!player.InCombat)
-            hints.InteractWithOID(World, IdentificationKey);
+        if (!inCombat)
+            hints.InteractWithOID(World, OID.IdentificationKey);
     }
 }
 class FreeRaubahn(WorldState ws) : QuestObjective(ws, "Free Raubahn", [
@@ -71,7 +99,7 @@ class FreeRaubahn(WorldState ws) : QuestObjective(ws, "Free Raubahn", [
 [Quest(BossModuleInfo.Maturity.WIP, 400)]
 public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws, [
     new TriggerCutscene(ws),
-    // new OpenCell(ws),
+    new OpenCell(ws),
     new DestroyGenerator(ws),
     new FindKey(ws),
     new FreeRaubahn(ws)

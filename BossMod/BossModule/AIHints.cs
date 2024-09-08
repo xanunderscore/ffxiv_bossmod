@@ -140,6 +140,7 @@ public sealed class AIHints
     }
 
     public void PrioritizeTargetsByOID(uint oid, int priority = 0) => PrioritizeTargetsByOID([oid], priority);
+    public void PrioritizeTargetsByOID<OID>(OID oid, int priority = 0) where OID : Enum => PrioritizeTargetsByOID((uint)(object)oid, priority);
 
     public void PrioritizeTargetsByOID(uint[] oids, int priority = 0)
     {
@@ -151,6 +152,7 @@ public sealed class AIHints
     {
         InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);
     }
+    public void InteractWithOID<OID>(WorldState ws, OID oid) where OID : Enum => InteractWithOID(ws, (uint)(object)oid);
 
     public void AddForbiddenZone(Func<WPos, float> shapeDistance, DateTime activation = new()) => ForbiddenZones.Add((shapeDistance, activation));
     public void AddForbiddenZone(AOEShape shape, WPos origin, Angle rot = new(), DateTime activation = new()) => ForbiddenZones.Add((shape.Distance(origin, rot), activation));

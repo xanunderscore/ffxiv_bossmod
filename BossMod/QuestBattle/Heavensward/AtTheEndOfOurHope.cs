@@ -6,7 +6,7 @@ class Mills(WorldState ws) : QuestObjective(ws, "Gorgagne Mills", [
     new Waypoint(456.10f, 157.41f, -554.90f)
 ])
 {
-    public override bool PauseNavigationDuringCombat() => false;
+    public override bool ShouldPauseNavigationInCombat() => false;
 
     public override void AddAIHints(Actor player, AIHints hints)
     {

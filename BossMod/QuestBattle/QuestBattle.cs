@@ -16,11 +16,13 @@ public abstract class QuestObjective(WorldState ws, string name, List<Waypoint> 
 
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
-    public virtual bool PauseNavigationDuringCombat() => true;
+    public virtual bool ShouldPauseNavigationInCombat() => true;
+    public virtual bool ShouldCancelNavigation() => false;
 
     public virtual void Update() { }
     public virtual void OnNavigationComplete() { }
     public virtual void AddAIHints(Actor player, AIHints hints) { }
+    public virtual void OnActorCombatChanged(Actor actor) { }
     public virtual void OnActorEventStateChanged(Actor actor) { }
     public virtual void OnActorModelStateChanged(Actor actor) { }
     public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
@@ -38,6 +40,11 @@ public abstract class QuestBattle : IDisposable
     public readonly List<QuestObjective> Objectives = [];
     public int CurrentObjectiveIndex { get; private set; } = 0;
     public QuestObjective? CurrentObjective => CurrentObjectiveIndex >= 0 && CurrentObjectiveIndex < Objectives.Count ? Objectives[CurrentObjectiveIndex] : null;
+
+    // low-resolution bounds centered on player character, with radius roughly equal to object load range
+    // this allows AI to pathfind to any priority target regardless of distance, as long as it's loaded - this makes it easier to complete quest objectives which require combat
+    // note that precision for aoe avoidance will obviously suffer
+    public static readonly ArenaBoundsSquare OverworldBounds = new(100, 2.5f);
 
     public void Dispose()
     {
@@ -61,6 +68,7 @@ public abstract class QuestBattle : IDisposable
             ws.Actors.ModelStateChanged.Subscribe(act => CurrentObjective?.OnActorModelStateChanged(act)),
             ws.Actors.Added.Subscribe(act => CurrentObjective?.OnActorCreated(act)),
             ws.Actors.Removed.Subscribe(act => CurrentObjective?.OnActorDestroyed(act)),
+            ws.Actors.InCombatChanged.Subscribe(act => CurrentObjective?.OnActorCombatChanged(act)),
             ws.Actors.IsDeadChanged.Subscribe(act =>
             {
                 if (act.IsDead)
@@ -79,8 +87,10 @@ public abstract class QuestBattle : IDisposable
     {
         CurrentObjective?.OnNavigationComplete();
     }
+    public virtual void AddQuestAIHints(Actor player, AIHints hints) { }
     public void AddAIHints(Actor player, AIHints hints)
     {
+        AddQuestAIHints(player, hints);
         CurrentObjective?.AddAIHints(player, hints);
     }
     public void Advance() => CurrentObjectiveIndex++;
