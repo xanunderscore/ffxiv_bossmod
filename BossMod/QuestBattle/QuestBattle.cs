@@ -4,12 +4,43 @@ namespace BossMod.QuestBattle;
 
 public record struct Waypoint(Vector3 Position, bool Pathfind = true);
 
-public class QuestObjective(WorldState ws)
+public enum NavigationStrategy
 {
-    public readonly WorldState World = ws;
-    public string Name { get; protected set; } = "";
+    Continue,
+    PauseOnCombat,
+    CancelOnCombat
+}
+
+public class QuestObjective
+{
+    public readonly WorldState World;
+    public string Name { get; private set; } = "";
     public readonly List<Waypoint> Connections = [];
+    public NavigationStrategy NavigationStrategy = NavigationStrategy.PauseOnCombat;
+
     public bool Completed;
+
+    public Action<Actor, AIHints> AddAIHints = (_, _) => { };
+    public Action<Actor> OnModelStateChanged = (_) => { };
+    public Action<Actor, ActorStatus> OnStatusGain = (_, _) => { };
+    public Action<Actor, ActorStatus> OnStatusLose = (_, _) => { };
+    public Action<Actor> OnActorEventStateChanged = (_) => { };
+    public Action<Actor> OnActorCreated = (_) => { };
+    public Action<Actor> OnActorDestroyed = (_) => { };
+    public Action<Actor> OnActorCombatChanged = (_) => { };
+    public Action<Actor> OnActorKilled = (_) => { };
+    public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
+    public Action OnNavigationComplete = () => { };
+
+    public QuestObjective(WorldState ws)
+    {
+        World = ws;
+        OnActorCombatChanged += (act) =>
+        {
+            if (act.OID == 0 && act.InCombat && NavigationStrategy == NavigationStrategy.CancelOnCombat)
+                ShouldCancelNavigation = true;
+        };
+    }
 
     public QuestObjective Named(string name)
     {
@@ -35,19 +66,19 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
-    public QuestObjective WithPauseOnCombat(bool pause = true)
+    public QuestObjective NavStrategy(NavigationStrategy strat)
     {
-        ShouldPauseNavigationInCombat = pause;
+        NavigationStrategy = strat;
         return this;
     }
 
-    public QuestObjective WithStopOnCombat(bool stop = false)
+    public QuestObjective CancelNavigationOnCombat()
     {
-        ShouldCancelNavigation = stop;
+        NavigationStrategy = NavigationStrategy.CancelOnCombat;
         return this;
     }
 
-    public QuestObjective WithHints(AddAIHintsDelegate addHints)
+    public QuestObjective Hints(Action<Actor, AIHints> addHints)
     {
         AddAIHints += addHints;
         return this;
@@ -63,33 +94,49 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
-    public QuestObjective OnModelState(ActorModelStateChangedDelegate fun)
+    public QuestObjective ModelState(Action<Actor> fun)
     {
-        OnActorModelStateChanged += fun;
+        OnModelStateChanged += fun;
         return this;
     }
 
-    public delegate void AddAIHintsDelegate(Actor actor, AIHints hints);
-    public AddAIHintsDelegate AddAIHints = delegate { };
-    public delegate void ActorModelStateChangedDelegate(Actor actor);
-    public ActorModelStateChangedDelegate OnActorModelStateChanged = delegate { };
+    public QuestObjective StatusGain(Action<Actor, ActorStatus> fun)
+    {
+        OnStatusGain += fun;
+        return this;
+    }
+
+    public QuestObjective StatusLose(Action<Actor, ActorStatus> fun)
+    {
+        OnStatusLose += fun;
+        return this;
+    }
+
+    public QuestObjective CompleteOnActorAdded(uint oid)
+    {
+        OnActorCreated += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
+
+    public QuestObjective CompleteOnKilled(uint oid)
+    {
+        OnActorKilled += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
+
+    public QuestObjective CompleteOnDestroyed(uint oid)
+    {
+        OnActorDestroyed += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
 
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
-    public bool ShouldPauseNavigationInCombat { get; protected set; } = true;
-    public bool ShouldStopNavigationInCombat { get; protected set; } = false;
-    public bool ShouldCancelNavigation { get; protected set; }
+    public bool ShouldCancelNavigation;
 
     public virtual void Update() { }
-    public virtual void OnNavigationComplete() { }
-    public virtual void OnActorCombatChanged(Actor actor) { }
-    public virtual void OnActorEventStateChanged(Actor actor) { }
-    public virtual void OnStatusLose(Actor actor, ActorStatus status) { }
-    public virtual void OnStatusGain(Actor actor, ActorStatus status) { }
-    public virtual void OnActorCreated(Actor actor) { }
-    public virtual void OnActorDestroyed(Actor actor) { }
-    public virtual void OnActorKilled(Actor actor) { }
-    public virtual void OnConditionChange(ConditionFlag flag, bool value) { }
+
+    public void CompleteIf(bool c) { Completed = c; }
 }
 
 public abstract class QuestBattle : IDisposable
@@ -106,6 +153,8 @@ public abstract class QuestBattle : IDisposable
     // note that precision for aoe avoidance will obviously suffer
     public static readonly ArenaBoundsSquare OverworldBounds = new(100, 2.5f);
 
+    protected static Vector3 V3(float x, float y, float z) => new(x, y, z);
+
     public void Dispose()
     {
         Dispose(true);
@@ -117,16 +166,16 @@ public abstract class QuestBattle : IDisposable
         Service.Condition.ConditionChange -= OnConditionChange;
     }
 
-    protected QuestBattle(WorldState ws, List<QuestObjective> objectives)
+    protected QuestBattle(WorldState ws)
     {
         World = ws;
-        Objectives = objectives;
+        Objectives = DefineObjectives(ws);
 
         _subscriptions = new(
             ws.Actors.EventStateChanged.Subscribe(act => CurrentObjective?.OnActorEventStateChanged(act)),
             ws.Actors.StatusLose.Subscribe((act, ix) => CurrentObjective?.OnStatusLose(act, act.Statuses[ix])),
             ws.Actors.StatusGain.Subscribe((act, ix) => CurrentObjective?.OnStatusGain(act, act.Statuses[ix])),
-            ws.Actors.ModelStateChanged.Subscribe(act => CurrentObjective?.OnActorModelStateChanged(act)),
+            ws.Actors.ModelStateChanged.Subscribe(act => CurrentObjective?.OnModelStateChanged(act)),
             ws.Actors.Added.Subscribe(act => CurrentObjective?.OnActorCreated(act)),
             ws.Actors.Removed.Subscribe(act => CurrentObjective?.OnActorDestroyed(act)),
             ws.Actors.InCombatChanged.Subscribe(act => CurrentObjective?.OnActorCombatChanged(act)),
@@ -138,6 +187,8 @@ public abstract class QuestBattle : IDisposable
         );
         Service.Condition.ConditionChange += OnConditionChange;
     }
+
+    public abstract List<QuestObjective> DefineObjectives(WorldState ws);
 
     public void Update()
     {

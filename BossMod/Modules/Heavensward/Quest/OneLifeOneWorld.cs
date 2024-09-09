@@ -47,7 +47,7 @@ class Adds(BossModule module) : Components.AddsMulti(module, [0x17CE, 0x17CF, 0x
 class TargetPriorityHandler(BossModule module) : BossComponent(module)
 {
     private Actor? Knight => Module.Enemies(OID.KnightOfDarkness).FirstOrDefault();
-    private Actor? Covered => WorldState.Actors.FirstOrDefault(s => s.FindStatus(SID.Invincibility) != null);
+    private Actor? Covered => WorldState.Actors.FirstOrDefault(s => s.OID != 0x18D6 && s.FindStatus(SID.Invincibility) != null);
     private Actor? BladeOfLight => WorldState.Actors.FirstOrDefault(s => (OID)s.OID == OID.BladeOfLight && s.IsTargetable);
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)

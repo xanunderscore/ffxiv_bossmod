@@ -57,7 +57,7 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
                 var x = player.PosRot.X;
                 var y = player.PosRot.Y;
                 var z = player.PosRot.Z;
-                ImGui.SetClipboardText($"new Waypoint({x:F2}f, {y:F2}f, {z:F2}f)");
+                ImGui.SetClipboardText($"new Vector3({x:F2}f, {y:F2}f, {z:F2}f)");
             }
             ImGui.SameLine();
             if (ImGui.Button("Copy moveto"))

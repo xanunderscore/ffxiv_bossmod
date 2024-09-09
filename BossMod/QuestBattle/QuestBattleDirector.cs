@@ -65,6 +65,10 @@ public sealed class QuestBattleDirector : IDisposable
             ws.DirectorUpdate.Subscribe(diru =>
             {
                 Service.Log($"[QBD] Director update: {diru}");
+            }),
+            ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) =>
+            {
+                Service.Log($"[QBD] EObjAnim: {act}, {p1}, {p2}");
             })
         );
 
@@ -131,7 +135,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.ShouldPauseNavigationInCombat;
+            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.NavigationStrategy == NavigationStrategy.PauseOnCombat;
             Camera.Instance?.DrawWorldLine(playerPos, nextwp, paused ? 0x80ffffff : ArenaColor.Safe);
             if (!paused)
             {

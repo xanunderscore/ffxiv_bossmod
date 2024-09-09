@@ -58,8 +58,11 @@ class ReaperAI(BossModule module) : BossComponent(module)
     {
         if (actor.MountId == 103 && WorldState.Actors.Find(actor.TargetID) is var target && target != null)
         {
-            var aid = (OID)target.OID == OID.ImperialColossus ? Roleplay.AID.DiffractiveMagitekCannon : Roleplay.AID.MagitekCannon;
-            hints.ActionsToExecute.Push(ActionID.MakeSpell(aid), target, ActionQueue.Priority.High, targetPos: target.PosRot.XYZ());
+            if ((OID)target.OID == OID.ImperialColossus)
+                hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.DiffractiveMagitekCannon), target, ActionQueue.Priority.High, targetPos: target.PosRot.XYZ());
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.MagitekCannon), target, ActionQueue.Priority.High, targetPos: target.PosRot.XYZ());
+
+            hints.RecommendedRangeToTarget = 25;
         }
     }
 }
