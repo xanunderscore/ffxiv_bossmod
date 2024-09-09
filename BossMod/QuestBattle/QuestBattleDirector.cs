@@ -3,8 +3,26 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace BossMod.QuestBattle;
+
+class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>
+{
+    public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3) { }
+    public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3) => null;
+    public void Subscribe(Action<Vector3, Vector3, bool> action) { }
+    public void Unsubscribe(Action<Vector3, Vector3, bool> action) { }
+}
+
+class PathReadyNoop : ICallGateSubscriber<bool>
+{
+    public void InvokeAction() { }
+    public bool InvokeFunc() => false;
+    public void Subscribe(Action action) { }
+    public void Unsubscribe(Action action) { }
+}
+
 public sealed class QuestBattleDirector : IDisposable
 {
+
     public readonly WorldState World;
     private readonly EventSubscriptions _subscriptions;
     private readonly QuestBattleConfig _config;
@@ -72,8 +90,17 @@ public sealed class QuestBattleDirector : IDisposable
             })
         );
 
-        _pathfind = Service.PluginInterface.GetIpcSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>("vnavmesh.Nav.Pathfind");
-        _isMeshReady = Service.PluginInterface.GetIpcSubscriber<bool>("vnavmesh.Nav.IsReady");
+        if (Service.PluginInterface == null)
+        {
+            Service.Log($"[QBD] UIDev detected, skipping initialization");
+            _pathfind = new PathfindNoop();
+            _isMeshReady = new PathReadyNoop();
+        }
+        else
+        {
+            _pathfind = Service.PluginInterface.GetIpcSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>("vnavmesh.Nav.Pathfind");
+            _isMeshReady = Service.PluginInterface.GetIpcSubscriber<bool>("vnavmesh.Nav.IsReady");
+        }
     }
 
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
@@ -145,25 +172,51 @@ public sealed class QuestBattleDirector : IDisposable
         }
     }
 
-    private void Dash(Actor player, Vector3 destination, AIHints hints)
+    private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
         if (!_config.UseDash)
             return;
 
-        var moveDist = destination.Length();
-        var moveAngle = Angle.FromDirection(new WDir(destination.XZ()));
+        var moveDistance = direction.Length();
+        var moveAngle = Angle.FromDirection(new WDir(direction.XZ()));
+
+        ActionID dashAction = default;
+        var dashDistance = float.MaxValue;
 
         switch (player.Class)
         {
             case Class.PCT:
-                if (moveDist >= 15)
-                    hints.ActionsToExecute.Push(ActionID.MakeSpell(PCT.AID.Smudge), null, ActionQueue.Priority.Low, facingAngle: moveAngle);
+                dashAction = ActionID.MakeSpell(PCT.AID.Smudge);
+                dashDistance = 15;
                 break;
             case Class.DRG:
-                if (moveDist >= 15)
-                    hints.ActionsToExecute.Push(ActionID.MakeSpell(DRG.AID.ElusiveJump), null, ActionQueue.Priority.Low, facingAngle: Angle.FromDirection(-moveAngle.ToDirection()));
+                dashAction = ActionID.MakeSpell(DRG.AID.ElusiveJump);
+                dashDistance = 15;
+                moveAngle = Angle.FromDirection(-moveAngle.ToDirection());
                 break;
+            case Class.WHM:
+                dashAction = ActionID.MakeSpell(WHM.AID.AetherialShift);
+                dashDistance = 15;
+                break;
+            case Class.RPR:
+                dashAction = ActionID.MakeSpell(RPR.AID.HellsIngress);
+                dashDistance = 15;
+                break;
+            case Class.DNC:
+                dashAction = ActionID.MakeSpell(DNC.AID.EnAvant);
+                dashDistance = 10;
+                break;
+            case Class.NIN:
+                if (moveDistance > 20)
+                {
+                    var destination = direction / (moveDistance / 20);
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(NIN.AID.Shukuchi), null, ActionQueue.Priority.Low, targetPos: player.PosRot.XYZ() + destination);
+                }
+                return;
         }
+
+        if (moveDistance > dashDistance)
+            hints.ActionsToExecute.Push(dashAction, null, ActionQueue.Priority.Low, facingAngle: moveAngle);
     }
 
     private async void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
@@ -266,6 +319,12 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void SetMoveSpeedFactor(float f)
     {
+        if (Service.SigScanner == null)
+        {
+            Service.Log($"[QBD] UIDev detected, skipping initialization");
+            return;
+        }
+
         var speedBase = f * 6;
         Service.SigScanner.TryScanText("F3 0F 59 05 ?? ?? ?? ?? F3 0F 59 05 ?? ?? ?? ?? F3 0F 58 05 ?? ?? ?? ?? 44 0F 28 C8", out var address);
         address = address + 4 + Marshal.ReadInt32(address + 4) + 4;

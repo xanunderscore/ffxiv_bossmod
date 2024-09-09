@@ -155,6 +155,14 @@ public abstract class QuestBattle : IDisposable
 
     protected static Vector3 V3(float x, float y, float z) => new(x, y, z);
 
+    protected static QuestObjective Combat(WorldState ws, Vector3 destination)
+    {
+        var obj = new QuestObjective(ws).WithConnection(destination).CancelNavigationOnCombat();
+        obj.AddAIHints += (player, hints) =>
+            obj.CompleteIf(obj.ShouldCancelNavigation && !hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)));
+        return obj;
+    }
+
     public void Dispose()
     {
         Dispose(true);

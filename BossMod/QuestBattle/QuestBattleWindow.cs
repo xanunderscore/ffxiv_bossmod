@@ -4,15 +4,29 @@ using ImGuiNET;
 using System.Runtime.InteropServices;
 
 namespace BossMod.QuestBattle;
-public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowID, false, new(300, 200), ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse)
+public class QuestBattleWindow : UIWindow
 {
-    private readonly QuestBattleDirector _director = director;
+    private readonly QuestBattleDirector _director;
     private readonly QuestBattleConfig _config = Service.Config.Get<QuestBattleConfig>();
     private const string _windowID = "vbm Quest###Quest module";
     private WorldState World => _director.World;
 
+    private List<WPos> Waymarks = [];
+
     private delegate void AbandonDuty(bool a1);
     private readonly AbandonDuty abandonDutyHook = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
+
+    public QuestBattleWindow(QuestBattleDirector director) : base(_windowID, false, new(300, 200), ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse)
+    {
+        _director = director;
+
+        _director.World.CurrentZoneChanged.Subscribe(OnZoneChange);
+    }
+
+    private void OnZoneChange(WorldState.OpZoneChange zc)
+    {
+        Waymarks.Clear();
+    }
 
     public override void PreOpenCheck()
     {
@@ -73,6 +87,19 @@ public class QuestBattleWindow(QuestBattleDirector director) : UIWindow(_windowI
                 ImGui.TextUnformatted($"Distance: {player.DistanceToHitbox(tar)}");
                 ImGui.TextUnformatted($"Angle: {player.AngleTo(tar)}");
             }
+
+            ImGui.Spacing();
+            ImGui.Separator();
+            ImGui.Spacing();
+
+            if (ImGui.Button("Record position"))
+                Waymarks.Add(player.Position);
+
+            if (ImGui.Button("Copy all"))
+                ImGui.SetClipboardText(string.Join(", ", Waymarks.Select(w => $"new({w.X:F2}f, {w.Z:F2}f)")));
+
+            foreach (var w in Waymarks)
+                ImGui.TextUnformatted($"{w}");
         }
 
         ImGui.Spacing();
