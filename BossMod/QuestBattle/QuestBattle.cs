@@ -29,6 +29,7 @@ public class QuestObjective
     public Action<Actor> OnActorDestroyed = (_) => { };
     public Action<Actor> OnActorCombatChanged = (_) => { };
     public Action<Actor> OnActorKilled = (_) => { };
+    public Action<WorldState.OpDirectorUpdate> OnDirectorUpdate = (_) => { };
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
     public Action OnNavigationComplete = () => { };
 
@@ -191,7 +192,8 @@ public abstract class QuestBattle : IDisposable
             {
                 if (act.IsDead)
                     CurrentObjective?.OnActorKilled(act);
-            })
+            }),
+            ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op))
         );
         Service.Condition.ConditionChange += OnConditionChange;
     }

@@ -56,6 +56,7 @@ public enum AID : uint
     Resurrection = 173, // L12 SMN/SCH, 8.0s cast, GCD, range 30, single-target, targets=party/alliance/friendly
 
     // Duty actions
+    SmokeBomb = 7816,
     DeflectSmall = 10006,
     DeflectLarge = 18863,
 }
@@ -140,6 +141,7 @@ public sealed class Definitions : IDisposable
         });
 
         // Duty actions
+        d.RegisterSpell(AID.SmokeBomb);
         d.RegisterSpell(AID.DeflectSmall);
         d.RegisterSpell(AID.DeflectLarge);
 

@@ -44,7 +44,7 @@ class PathoPurge(BossModule module) : Components.GenericAOEs(module)
         base.AddAIHints(slot, actor, assignment, hints);
         // if next is cross and there are donuts after it, we still want to stay closer to it, to simplify getting to the next donut
         if (AOEs.Count >= 2 && AOEs[0].Shape == _shapeCross && AOEs.Skip(1).Any(aoe => aoe.Shape == _shapeDonut))
-            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(AOEs[0].Origin, 8), DateTime.MaxValue);
+            hints.AddForbiddenZone(ShapeDistance.InvertedCircle(AOEs[0].Origin, 8), WorldState.FutureTime(30));
     }
 
     public override void OnActorCreated(Actor actor)

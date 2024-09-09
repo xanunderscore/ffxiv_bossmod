@@ -321,8 +321,6 @@ public sealed class ReplayParserLog : IDisposable
             [new("EANM"u8)] = ParseActorEventObjectAnimation,
             [new("PATE"u8)] = ParseActorPlayActionTimelineEvent,
             [new("NYEL"u8)] = ParseActorEventNpcYell,
-            [new("NENP"u8)] = ParseActorAggroPlayer,
-            [new("MNTD"u8)] = ParseActorMount,
             [new("PAR "u8)] = ParsePartyModify,
             [new("PAR+"u8)] = ParsePartyModify, // legacy (up to v3)
             [new("PAR-"u8)] = ParsePartyLeave, // legacy (up to v3)
