@@ -40,7 +40,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
         foreach (var h in hints.PotentialTargets)
             // attacking sekiseigumi fails the mission
             if (h.Actor.OID is 0x1A6B or 0x1A66)
-                h.Priority = -1;
+                h.Priority = AIHints.Enemy.PriorityForbidFully;
 
         if (SmokeBomb && player.FindStatus(SID.Bind) != null)
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SmokeBomb), player, ActionQueue.Priority.Medium);
