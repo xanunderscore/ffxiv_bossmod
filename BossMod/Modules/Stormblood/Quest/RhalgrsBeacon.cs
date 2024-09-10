@@ -4,7 +4,12 @@ public enum OID : uint
 {
     Boss = 0x1A88,
     Helper = 0x233C,
-    TerminusEst = 0x1BCA
+    TerminusEst = 0x1BCA,
+    _Gen_MarkXLIIIArtilleryCannon = 0x1B4A, // R2.000, x3
+    _Gen_ = 0x1A57, // R0.500, x8
+    _Gen_SkullsSpear = 0x1A8C, // R0.500, x3
+    _Gen_SkullsBlade = 0x1A8B, // R0.500, x3
+    _Gen_MagitekTurretII = 0x1BC7, // R0.600, x0 (spawn during fight)
 }
 
 public enum AID : uint
@@ -23,6 +28,43 @@ public enum AID : uint
     _Weaponskill_DiffractiveLaser = 8340, // 1BC7->self, 2.5s cast, range 18+R 60-degree cone
     _Weaponskill_ChoppingBlock = 8345, // Boss->self, 3.0s cast, single-target
     _Weaponskill_ChoppingBlock1 = 8346, // 1A57->location, 3.0s cast, range 5 circle
+}
+
+class DiffractiveLaser(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_DiffractiveLaser), new AOEShapeCone(18.6f, 30.Degrees()));
+
+class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TheOrder))
+{
+    private readonly List<Actor> Termini = [];
+    private DateTime? CastFinish;
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        Arena.Actors(Module.Enemies(OID.TerminusEst).Where(x => !x.IsDead), ArenaColor.Object, true);
+    }
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        foreach (var t in Termini)
+            yield return new AOEInstance(new AOEShapeRect(41f, 2), t.Position, t.Rotation, Activation: CastFinish ?? WorldState.FutureTime(10));
+    }
+
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.TerminusEst)
+            Termini.Add(actor);
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action == WatchedAction)
+            CastFinish = Module.CastFinishAt(spell);
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID._Weaponskill_TerminusEst1)
+            Termini.Remove(caster);
+    }
 }
 
 class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSpell(AID._Weaponskill_Gunblade), stopAtWall: true)
@@ -48,16 +90,21 @@ class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSp
     }
 }
 
+class ChoppingBlock(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID._Weaponskill_ChoppingBlock1), m => m.Enemies(0x1EA4D9).Where(x => x.EventState != 7), 0);
+
 class FordolaRemLupisStates : StateMachineBuilder
 {
     public FordolaRemLupisStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<Gunblade>()
+            .ActivateOnEnter<TerminusEst>()
+            .ActivateOnEnter<DiffractiveLaser>()
+            .ActivateOnEnter<ChoppingBlock>()
             ;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 466, NameID = 5953)]
-public class FordolaRemLupis(WorldState ws, Actor primary) : BossModule(ws, primary, new(-195.33f, 150.68f), new ArenaBoundsCircle(20));
+public class FordolaRemLupis(WorldState ws, Actor primary) : BossModule(ws, primary, new(-195.25f, 147.5f), new ArenaBoundsCircle(20));
 

@@ -39,7 +39,10 @@ public class QuestObjective
         OnActorCombatChanged += (act) =>
         {
             if (act.OID == 0 && act.InCombat && NavigationStrategy == NavigationStrategy.CancelOnCombat)
+            {
+                Service.Log($"Entered combat -> canceling navigation");
                 ShouldCancelNavigation = true;
+            }
         };
     }
 
@@ -160,7 +163,7 @@ public abstract class QuestBattle : IDisposable
     {
         var obj = new QuestObjective(ws).WithConnection(destination).CancelNavigationOnCombat();
         obj.AddAIHints += (player, hints) =>
-            obj.CompleteIf(obj.ShouldCancelNavigation && !hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)));
+            obj.CompleteIf(obj.ShouldCancelNavigation && !player.InCombat && !hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)));
         return obj;
     }
 
@@ -172,7 +175,8 @@ public abstract class QuestBattle : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         _subscriptions.Dispose();
-        Service.Condition.ConditionChange -= OnConditionChange;
+        if (Service.Condition != null)
+            Service.Condition.ConditionChange -= OnConditionChange;
     }
 
     protected QuestBattle(WorldState ws)
@@ -195,7 +199,10 @@ public abstract class QuestBattle : IDisposable
             }),
             ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op))
         );
-        Service.Condition.ConditionChange += OnConditionChange;
+        if (Service.Condition == null)
+            Service.Log($"[QuestBattle] UIDev detected, not registering hook");
+        else
+            Service.Condition.ConditionChange += OnConditionChange;
     }
 
     public abstract List<QuestObjective> DefineObjectives(WorldState ws);

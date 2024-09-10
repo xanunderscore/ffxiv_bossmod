@@ -150,14 +150,14 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(AID.FleetingRaiju, primaryTarget);
         }
 
-        var useAOE = NumRangedAOETargets > 2;
+        var useNinjutsuAOE = NumRangedAOETargets > 2;
 
         // TODO save charges for trick
         if (Unlocked(AID.Raiton))
         {
             if (ReadyIn(AID.TrickAttack) < 15 && ShadowWalker == 0)
             {
-                if (useAOE)
+                if (useNinjutsuAOE)
                     UseMudra(AID.Huton, BestRangedAOETarget);
                 else
                     UseMudra(AID.Suiton, primaryTarget);
@@ -165,7 +165,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
             if (OnCooldown(AID.Kassatsu) && AssassinateCD > Kassatsu && ReadyIn(AID.TrickAttack) > Kassatsu)
             {
-                if (useAOE)
+                if (useNinjutsuAOE)
                     // this will get auto transformed to goka mekkyaku
                     UseMudra(AID.Katon, BestRangedAOETarget);
                 else
@@ -175,7 +175,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             // some condition changed during cast
             if (Mudra.Left > 0)
             {
-                if (useAOE)
+                if (useNinjutsuAOE)
                     PushGCD(AID.Katon, BestRangedAOETarget);
                 else
                     PushGCD(AID.Raiton, primaryTarget);
@@ -184,7 +184,9 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         else
             UseMudra(AID.FumaShuriken, primaryTarget);
 
-        if (useAOE && Unlocked(AID.DeathBlossom))
+        var useMeleeAOE = NumAOETargets > 2;
+
+        if (useMeleeAOE && Unlocked(AID.DeathBlossom))
         {
             if (ComboLastMove == AID.DeathBlossom)
                 PushGCD(AID.HakkeMujinsatsu, Player);

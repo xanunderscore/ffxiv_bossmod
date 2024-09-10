@@ -75,16 +75,28 @@ public class DebugObjects
 
         if (selected != null)
         {
-            var h = new Vector3(0, Utils.GameObjectInternal(selected)->Height, 0);
-            Camera.Instance?.DrawWorldLine(Service.ClientState.LocalPlayer?.Position ?? default, selected.Position, 0xff0000ff);
-            Camera.Instance?.DrawWorldCircle(selected.Position, selected.HitboxRadius, 0xff00ff00);
-            Camera.Instance?.DrawWorldCircle(selected.Position + h, selected.HitboxRadius, 0xff00ff00);
-            Camera.Instance?.DrawWorldCircle(selected.Position - h, selected.HitboxRadius, 0xff00ff00);
-            int numSegments = CurveApprox.CalculateCircleSegments(selected.HitboxRadius, 360.Degrees(), 1);
-            for (int i = 0; i < numSegments; ++i)
+            var selectedObj = Utils.GameObjectInternal(selected);
+            var h = new Vector3(0, selectedObj->Height, 0);
+
+            void drawHitbox(Vector3 pos, IGameObject selected, uint color = 0xff00ff00)
             {
-                var p = selected.Position + selected.HitboxRadius * (i * 360.0f / numSegments).Degrees().ToDirection().ToVec3();
-                Camera.Instance?.DrawWorldLine(p - h, p + h, 0xff00ff00);
+                Camera.Instance?.DrawWorldCircle(pos, selected.HitboxRadius, color);
+                Camera.Instance?.DrawWorldCircle(pos + h, selected.HitboxRadius, color);
+                Camera.Instance?.DrawWorldCircle(pos - h, selected.HitboxRadius, color);
+                int numSegments = CurveApprox.CalculateCircleSegments(selected.HitboxRadius, 360.Degrees(), 1);
+                for (int i = 0; i < numSegments; ++i)
+                {
+                    var p = pos + selected.HitboxRadius * (i * 360.0f / numSegments).Degrees().ToDirection().ToVec3();
+                    Camera.Instance?.DrawWorldLine(p - h, p + h, color);
+                }
+                Camera.Instance?.DrawWorldLine(Service.ClientState.LocalPlayer?.Position ?? default, pos, 0xff0000ff);
+            }
+
+            drawHitbox(selected.Position, selected);
+            if (selectedObj->LayoutInstance != null)
+            {
+                var imp = selectedObj->LayoutInstance->GetTranslationImpl();
+                drawHitbox(*imp, selected, 0xff00ffff);
             }
         }
     }

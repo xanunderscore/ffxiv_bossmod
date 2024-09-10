@@ -341,7 +341,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
 
-        if (Player.MountId != 103)
+        if (Player.MountId is not (103 or 117))
             Exec(strategy, primaryTarget);
     }
 

@@ -93,14 +93,8 @@ class ActivateOvoo(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var dest = new WPos(354, 296.5f);
         if (actor.MountId == 117)
-        {
-            if ((actor.Position - dest).Length() > 10)
-                hints.ForcedMovement = actor.DirectionTo(dest).ToVec3();
-            else
-                hints.Dismount = true;
-        }
+            hints.Dismount = true;
 
         var beingAttacked = false;
 
@@ -134,45 +128,13 @@ class ProtectOvoo(BossModule module) : BossComponent(module)
     }
 }
 
-class DrawEnemies : BossComponent
-{
-    public DrawEnemies(BossModule module) : base(module)
-    {
-        KeepOnPhaseChange = true;
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var act in WorldState.Actors.Where(x => !x.IsAlly))
-            Arena.Actor(act, act.OID == (uint)OID._Gen_StellarChuluu ? ArenaColor.Object : ArenaColor.Enemy);
-    }
-}
-
-class P1Bounds(BossModule module) : BossComponent(module)
-{
-    public override void Update()
-    {
-        Arena.Center = Raid.Player()?.Position ?? Arena.Center;
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        var dest = new WPos(354, 296.5f);
-
-        if (actor.Position.Z < -20)
-            hints.ForcedMovement = (-16.Degrees()).ToDirection().ToVec3();
-        else if ((actor.Position - dest).Length() > 10)
-            hints.ForcedMovement = actor.DirectionTo(dest).ToVec3();
-    }
-}
-
 class ProtectSadu(BossModule module) : BossComponent(module)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var chuluu = WorldState.Actors.Where(x => (OID)x.OID == OID._Gen_StellarChuluu1).Select(x => x.InstanceID).ToList();
 
-        foreach (var e in hints.PriorityTargets)
+        foreach (var e in hints.PotentialTargets)
         {
             if (chuluu.Contains(e.Actor.TargetID))
                 e.Priority = 5;
@@ -191,22 +153,17 @@ class NaadamStates : StateMachineBuilder
         bool DutyEnd() => module.WorldState.CurrentCFCID != 246;
 
         TrivialPhase()
-            .ActivateOnEnter<P1Bounds>()
-            .ActivateOnEnter<DrawEnemies>()
-            .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID.Ovoo && x.IsTargetable) || DutyEnd();
-        TrivialPhase(1)
             .ActivateOnEnter<ActivateOvoo>()
             .ActivateOnEnter<DrawOvoo>()
-            .OnEnter(() => Module.Arena.Center = new(354, 296.5f))
             .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID._Gen_MagnaiTheOlder && x.IsTargetable) || DutyEnd();
-        TrivialPhase(2)
+        TrivialPhase(1)
             .ActivateOnEnter<ProtectOvoo>()
             .ActivateOnEnter<ActivateOvoo>()
             .ActivateOnEnter<ViolentEarth>()
             .ActivateOnEnter<DispellingWind>()
             .ActivateOnEnter<Epigraph>()
             .Raw.Update = () => Module.WorldState.Actors.Any(x => x.OID == (uint)OID._Gen_Grynewaht && x.IsTargetable) || DutyEnd();
-        TrivialPhase(3)
+        TrivialPhase(2)
             .ActivateOnEnter<DiffractiveLaser>()
             .ActivateOnEnter<AugmentedSuffering>()
             .ActivateOnEnter<AugmentedUprising>()
@@ -215,9 +172,9 @@ class NaadamStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 246, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
-public class Naadam(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 246, PrimaryActorOID = (uint)OID.Ovoo)]
+public class Naadam(WorldState ws, Actor primary) : BossModule(ws, primary, new(354, 296.5f), new ArenaBoundsCircle(20))
 {
-    protected override bool CheckPull() => true;
+    protected override bool CheckPull() => Raid.Player()?.Position.InCircle(PrimaryActor.Position, 15) ?? false;
 }
 

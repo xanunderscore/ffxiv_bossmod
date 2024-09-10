@@ -100,7 +100,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         var maxDist = target.Type switch
         {
             ActorType.Aetheryte => 8.5f,
-            ActorType.EventObj => (obj->LayoutId & 1) == 1 ? 2.0999999f : 3.5999999f,
+            ActorType.EventObj => *((int*)obj + 0x79) > 0 ? 2.0999999f : 3.5999999f,
             ActorType.GatheringPoint => 3,
             _ => 25f
         };
