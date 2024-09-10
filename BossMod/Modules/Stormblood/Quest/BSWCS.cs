@@ -136,8 +136,7 @@ class MagitekVanguardIPrototypeStates : StateMachineBuilder
         Condition(id + 2, 300, () => BossHPRatio < 0.75f, "Adds 2");
         Condition(id + 4, 300, () => BossHPRatio < 0.65f, "Turrets").ActivateOnEnter<MagitekTurret>();
         Condition(id + 6, 300, () => BossHPRatio < 0.55f, "Adds 3");
-        Condition(id + 8, 300, () => BossHPRatio < 0.4f, "Cutscene")
-            .ActivateOnEnter<MagitekSelfDetonate>();
+        Condition(id + 8, 300, () => BossHPRatio < 0.4f, "Cutscene").ActivateOnEnter<MagitekSelfDetonate>();
         ComponentCondition<MagitekSelfDetonate>(id + 10, 18, m => m.NumCasts > 0);
         CastEnd(id + 12, 60, "Self-detonate").SetHint(StateMachine.StateHint.DowntimeStart);
     }

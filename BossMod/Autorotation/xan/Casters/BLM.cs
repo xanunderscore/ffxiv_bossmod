@@ -324,6 +324,9 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
         if (Thunderhead > GCD && TargetThunderLeft < 5 && ElementLeft > GCDLength + AnimationLockDelay)
             PushGCD(AID.Thunder1, primaryTarget);
 
+        if (Paradox)
+            PushGCD(AID.Paradox, primaryTarget);
+
         if (Ice < 3 && Unlocked(AID.Blizzard3))
             PushGCD(AID.Blizzard3, primaryTarget);
 

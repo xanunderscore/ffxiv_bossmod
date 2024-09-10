@@ -67,7 +67,7 @@ class Deflect(BossModule module) : BossComponent(module)
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var deflectRadius = WorldState.Client.DutyActions[0].ID == (uint)ClassShared.AID.DeflectSmall ? 4 : 20;
+        var deflectRadius = WorldState.Client.DutyActions[0].ID == 10006 ? 4 : 20;
 
         var closestSphere = Spheres.MaxBy(x => x.Position.Z);
         if (closestSphere != null)
@@ -78,7 +78,7 @@ class Deflect(BossModule module) : BossComponent(module)
                 hints.ForcedMovement = actor.DirectionTo(optimalDeflectPosition).ToVec3();
 
             if (actor.DistanceToHitbox(closestSphere) <= deflectRadius)
-                hints.ActionsToExecute.Push(WorldState.Client.DutyActions[0], actor, ActionQueue.Priority.VeryHigh);
+                hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralDuty1, actor, ActionQueue.Priority.VeryHigh);
         }
     }
 }
