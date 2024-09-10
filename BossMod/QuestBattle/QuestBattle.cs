@@ -6,9 +6,12 @@ public record struct Waypoint(Vector3 Position, bool Pathfind = true);
 
 public enum NavigationStrategy
 {
+    // keep moving to destination even if in combat
     Continue,
-    PauseOnCombat,
-    CancelOnCombat
+    // clear waypoints upon entering combat
+    CancelOnCombat,
+    // clear waypoints upon entering combat, repath when combat ends
+    RepathAfterCombat,
 }
 
 public class QuestObjective
@@ -16,7 +19,7 @@ public class QuestObjective
     public readonly WorldState World;
     public string Name { get; private set; } = "";
     public readonly List<Waypoint> Connections = [];
-    public NavigationStrategy NavigationStrategy = NavigationStrategy.PauseOnCombat;
+    public NavigationStrategy NavigationStrategy = NavigationStrategy.RepathAfterCombat;
 
     public bool Completed;
 
@@ -29,6 +32,7 @@ public class QuestObjective
     public Action<Actor> OnActorDestroyed = (_) => { };
     public Action<Actor> OnActorCombatChanged = (_) => { };
     public Action<Actor> OnActorKilled = (_) => { };
+    public Action<Actor> OnActorTargetableChanged = (_) => { };
     public Action<WorldState.OpDirectorUpdate> OnDirectorUpdate = (_) => { };
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
     public Action OnNavigationComplete = () => { };
@@ -38,7 +42,7 @@ public class QuestObjective
         World = ws;
         OnActorCombatChanged += (act) =>
         {
-            if (act.OID == 0 && act.InCombat && NavigationStrategy == NavigationStrategy.CancelOnCombat)
+            if (act.OID == 0 && act.InCombat && NavigationStrategy is NavigationStrategy.CancelOnCombat or NavigationStrategy.RepathAfterCombat)
             {
                 Service.Log($"Entered combat -> canceling navigation");
                 ShouldCancelNavigation = true;
@@ -76,6 +80,12 @@ public class QuestObjective
         return this;
     }
 
+    public QuestObjective With(Action<QuestObjective> act)
+    {
+        act(this);
+        return this;
+    }
+
     public QuestObjective CancelNavigationOnCombat()
     {
         NavigationStrategy = NavigationStrategy.CancelOnCombat;
@@ -88,6 +98,9 @@ public class QuestObjective
         return this;
     }
 
+    public QuestObjective WithInteract<OID>(OID targetOid, bool allowInCombat = false) where OID : Enum
+        => WithInteract((uint)(object)targetOid, allowInCombat);
+
     public QuestObjective WithInteract(uint targetOid, bool allowInCombat = false)
     {
         AddAIHints += (player, hints) =>
@@ -98,39 +111,9 @@ public class QuestObjective
         return this;
     }
 
-    public QuestObjective ModelState(Action<Actor> fun)
+    public QuestObjective CompleteAtDestination()
     {
-        OnModelStateChanged += fun;
-        return this;
-    }
-
-    public QuestObjective StatusGain(Action<Actor, ActorStatus> fun)
-    {
-        OnStatusGain += fun;
-        return this;
-    }
-
-    public QuestObjective StatusLose(Action<Actor, ActorStatus> fun)
-    {
-        OnStatusLose += fun;
-        return this;
-    }
-
-    public QuestObjective CompleteOnActorAdded(uint oid)
-    {
-        OnActorCreated += (act) => CompleteIf(act.OID == oid);
-        return this;
-    }
-
-    public QuestObjective CompleteOnKilled(uint oid)
-    {
-        OnActorKilled += (act) => CompleteIf(act.OID == oid);
-        return this;
-    }
-
-    public QuestObjective CompleteOnDestroyed(uint oid)
-    {
-        OnActorDestroyed += (act) => CompleteIf(act.OID == oid);
+        OnNavigationComplete += () => Completed = true;
         return this;
     }
 
@@ -197,7 +180,8 @@ public abstract class QuestBattle : IDisposable
                 if (act.IsDead)
                     CurrentObjective?.OnActorKilled(act);
             }),
-            ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op))
+            ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op)),
+            ws.Actors.IsTargetableChanged.Subscribe(act => CurrentObjective?.OnActorTargetableChanged(act))
         );
         if (Service.Condition == null)
             Service.Log($"[QuestBattle] UIDev detected, not registering hook");

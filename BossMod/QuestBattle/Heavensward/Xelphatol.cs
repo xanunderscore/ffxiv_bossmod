@@ -9,6 +9,6 @@ public class Xelphatol(WorldState ws) : QuestBattle(ws)
     public override List<QuestObjective> DefineObjectives(WorldState ws)
     {
         var p1 = new Vector3(-120.55f, -9.75f, 160.65f);
-        return [new QuestObjective(ws).WithConnection(p1).NavStrategy(NavigationStrategy.Continue)];
+        return [new QuestObjective(ws).WithConnection(new Vector3(-207.89f, -34.12f, 252.08f)).WithConnection(p1)];
     }
 }

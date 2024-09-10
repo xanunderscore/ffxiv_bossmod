@@ -27,9 +27,14 @@ public sealed class QuestBattleDirector : IDisposable
     private readonly EventSubscriptions _subscriptions;
     private readonly QuestBattleConfig _config;
 
-    public List<Vector3> CurrentWaypoints { get; private set; } = [];
+    public readonly record struct NavigationWaypoint(Vector3 Position, bool SpecifiedInPath);
+
+    public List<NavigationWaypoint> CurrentWaypoints { get; private set; } = [];
     public QuestBattle? CurrentModule { get; private set; }
     public QuestObjective? CurrentObjective { get; private set; }
+
+    public int ObjectiveWaypointProgress { get; private set; }
+    public List<Waypoint> CurrentConnections { get; private set; } = [];
 
     public bool Paused = false;
     public bool WaitCommence = false;
@@ -42,6 +47,8 @@ public sealed class QuestBattleDirector : IDisposable
 
     private readonly ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?> _pathfind;
     private readonly ICallGateSubscriber<bool> _isMeshReady;
+
+    private bool _combatFlag;
 
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
@@ -106,6 +113,23 @@ public sealed class QuestBattleDirector : IDisposable
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
     private bool IsMeshReady() => _isMeshReady.InvokeFunc();
 
+    private void OnPlayerEnterCombat()
+    {
+
+    }
+
+    private void OnPlayerExitCombat()
+    {
+        if (World.Party.Player() is Actor player
+            && CurrentObjective is QuestObjective obj
+            && obj.NavigationStrategy == NavigationStrategy.RepathAfterCombat)
+        {
+            Service.Log($"player exited combat, retrying pathfind");
+            obj.ShouldCancelNavigation = false;
+            TryPathfind(player.PosRot.XYZ(), obj.Connections);
+        }
+    }
+
     public void Update(AIHints hints)
     {
         if (Paused || WaitCommence)
@@ -114,6 +138,19 @@ public sealed class QuestBattleDirector : IDisposable
         var player = World.Party.Player();
         if (player == null)
             return;
+
+        if (HaveTarget(hints))
+        {
+            if (!_combatFlag)
+                OnPlayerEnterCombat();
+
+            _combatFlag = true;
+        }
+        else if (_combatFlag)
+        {
+            OnPlayerExitCombat();
+            _combatFlag = false;
+        }
 
         if (CurrentModule != null)
         {
@@ -151,9 +188,12 @@ public sealed class QuestBattleDirector : IDisposable
 
         var nextwp = CurrentWaypoints[0];
         var playerPos = player.PosRot.XYZ();
-        var direction = nextwp - playerPos;
+        var direction = nextwp.Position - playerPos;
         if (direction.XZ().Length() < Tolerance)
         {
+            if (nextwp.SpecifiedInPath)
+                ObjectiveWaypointProgress++;
+
             CurrentWaypoints.RemoveAt(0);
             if (CurrentWaypoints.Count == 0)
                 CurrentModule?.OnNavigationComplete();
@@ -162,15 +202,13 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            var paused = hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)) && objective.NavigationStrategy == NavigationStrategy.PauseOnCombat;
-            Camera.Instance?.DrawWorldLine(playerPos, nextwp, paused ? 0x80ffffff : ArenaColor.Safe);
-            if (!paused)
-            {
-                Dash(player, direction, hints);
-                hints.ForcedMovement = direction;
-            }
+            Camera.Instance?.DrawWorldLine(playerPos, nextwp.Position, ArenaColor.Safe);
+            Dash(player, direction, hints);
+            hints.ForcedMovement = direction;
         }
     }
+
+    public static bool HaveTarget(AIHints hints) => hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - hints.Center));
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
@@ -221,10 +259,11 @@ public sealed class QuestBattleDirector : IDisposable
 
     private async void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
     {
+        CurrentConnections = connections;
         CurrentWaypoints = await TryPathfind(Enumerable.Repeat(new Waypoint(start, false), 1).Concat(connections), maxRetries).ConfigureAwait(false);
     }
 
-    private async Task<List<Vector3>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)
+    private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)
     {
         if (!IsMeshReady())
         {
@@ -240,7 +279,7 @@ public sealed class QuestBattleDirector : IDisposable
         var start = points[0];
         var end = points[1];
 
-        List<Vector3> thesePoints;
+        List<NavigationWaypoint> thesePoints;
 
         if (end.Pathfind)
         {
@@ -252,11 +291,17 @@ public sealed class QuestBattleDirector : IDisposable
                 return [];
             }
 
-            thesePoints = await task.ConfigureAwait(false);
+            var ptVecs = await task.ConfigureAwait(false);
+            // returned path always contains the destination point twice for whatever reason
+            ptVecs.RemoveAt(ptVecs.Count - 1);
+
+            Service.Log(string.Join(", ", ptVecs.Select(Utils.Vec3String)));
+            thesePoints = ptVecs.Take(ptVecs.Count - 1).Select(p => new NavigationWaypoint(p, false)).ToList();
+            thesePoints.Add(new NavigationWaypoint(ptVecs.Last(), true));
         }
         else
         {
-            thesePoints = [start.Position, end.Position];
+            thesePoints = [new(start.Position, false), new(end.Position, true)];
         }
 
         if (points.Count > 2)

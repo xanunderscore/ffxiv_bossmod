@@ -12,9 +12,8 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
 {
     private static readonly uint[] CrystalBraves = [0xF70, 0xF71, 0xF72];
 
-    public override List<QuestObjective> DefineObjectives(WorldState ws)
-    {
-        var cutscene = new QuestObjective(ws)
+    public override List<QuestObjective> DefineObjectives(WorldState ws) => [
+        new QuestObjective(ws)
             .Named("Trigger cutscene")
             .WithConnections(
                 new Waypoint(new(-30.25f, 0.14f, -132.16f)),
@@ -22,16 +21,22 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
                 new Waypoint(new(-42.44f, -10.85f, -122.70f), false),
                 new Waypoint(new(-78.03f, -10.18f, -98.29f))
             )
-            .CompleteOnActorAdded((uint)OID.IronCell);
+            .With(obj =>
+            {
+                obj.OnActorCreated += (act) => obj.CompleteIf(act.OID == (uint)OID.IronCell);
+            }),
 
-        var openCell = new QuestObjective(ws)
+        new QuestObjective(ws)
             .Named("Open cell")
             .WithConnection(V3(-44.18f, -10.72f, -120.78f))
             .NavStrategy(NavigationStrategy.Continue)
             .Hints((act, hints) => hints.PrioritizeTargetsByOID(OID.IronCell))
-            .CompleteOnKilled((uint)OID.IronCell);
+            .With(obj =>
+            {
+                obj.OnActorKilled += (act) => obj.CompleteIf(act.OID == (uint)OID.IronCell);
+            }),
 
-        var destroyGenerator = new QuestObjective(ws)
+        new QuestObjective(ws)
             .Named("Destroy generator")
             .WithConnection(V3(163.35f, 6.26f, -65.16f))
             .Hints((player, hints) =>
@@ -39,26 +44,30 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
                 if (player.PosRot.Y >= 6)
                     hints.PrioritizeTargetsByOID(OID.HummingAtomizer);
             })
-            .CompleteOnKilled((uint)OID.HummingAtomizer);
+            .With(obj =>
+            {
+                obj.OnActorKilled += (act) => obj.CompleteIf(act.OID == (uint)OID.HummingAtomizer);
+            }),
 
-        var findkey = new QuestObjective(ws)
+        new QuestObjective(ws)
             .Named("Find key")
             .WithConnection(V3(117.31f, -3.71f, 36.29f))
             .Hints(FindkeyHints)
-            .CompleteOnDestroyed((uint)OID.IdentificationKey);
-        findkey.OnActorCombatChanged += (act) => findkey.ShouldCancelNavigation |= CrystalBraves.Contains(act.OID);
+            .With(obj =>
+            {
+                obj.OnActorDestroyed += (act) => obj.CompleteIf(act.OID == (uint)OID.IdentificationKey);
+                obj.OnActorCombatChanged += (act) => obj.ShouldCancelNavigation |= CrystalBraves.Contains(act.OID);
+            }),
 
-        var freeRaubahn = new QuestObjective(ws)
+        new QuestObjective(ws)
             .Named("Free Raubahn")
             .WithConnections(
                 new Waypoint(new(-30.25f, 0.14f, -132.16f)),
                 new Waypoint(new(-42.44f, -10.85f, -122.70f), false),
                 new Waypoint(new(-86.78f, -10.18f, -96.53f))
             )
-            .WithInteract(0x1E9D3C);
-
-        return [cutscene, openCell, destroyGenerator, findkey, freeRaubahn];
-    }
+            .WithInteract(0x1E9D3C)
+    ];
 
     private void FindkeyHints(Actor player, AIHints hints)
     {

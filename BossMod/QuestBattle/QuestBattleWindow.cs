@@ -1,4 +1,5 @@
-﻿using Dalamud.Interface.Colors;
+﻿using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.Runtime.InteropServices;
@@ -124,10 +125,20 @@ public class QuestBattleWindow : UIWindow
             ImGui.TextUnformatted($"#{i} {n.Name}");
             if (highlight)
             {
-                ImGui.SameLine();
-                if (n.Connections.Count > 0)
-                    ImGui.TextUnformatted(Utils.Vec3String(n.Connections.Last().Position));
+                foreach (var vec in _director.CurrentWaypoints)
+                {
+                    if (vec.SpecifiedInPath)
+                    {
+                        using (var f = ImRaii.PushFont(UiBuilder.IconFont))
+                        {
+                            ImGui.Text(FontAwesomeIcon.Star.ToIconString());
+                        }
+                        ImGui.SameLine();
+                    }
+                    ImGui.TextUnformatted(Utils.Vec3String(vec.Position));
+                }
             }
+            ImGui.TextUnformatted($"Waypoint progress: {_director.ObjectiveWaypointProgress}");
         }
         if (ImGui.Button("Skip step"))
             sqb.Advance();
