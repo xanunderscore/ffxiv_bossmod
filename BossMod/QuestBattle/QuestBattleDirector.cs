@@ -24,6 +24,7 @@ public sealed class QuestBattleDirector : IDisposable
 {
 
     public readonly WorldState World;
+    private readonly BossModuleManager bmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly QuestBattleConfig _config;
 
@@ -50,56 +51,60 @@ public sealed class QuestBattleDirector : IDisposable
 
     private bool _combatFlag;
 
+    private static void Log(string msg) => Service.Log($"[QBD] {msg}");
+
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
         World = ws;
         _config = Service.Config.Get<QuestBattleConfig>();
+        this.bmm = bmm;
 
         _subscriptions = new(
             ws.CurrentZoneChanged.Subscribe(OnZoneChange),
             ws.Actors.Added.Subscribe(OnActorAdded),
             ws.Actors.EventStateChanged.Subscribe(OnActorEventState),
-            ObjectiveChanged.Subscribe(OnNavigationChange),
-            ObjectiveCleared.Subscribe(OnNavigationClear),
+            ObjectiveChanged.Subscribe(OnObjectiveChanged),
+            ObjectiveCleared.Subscribe(OnObjectiveCleared),
             _config.Modified.Subscribe(OnConfigChange),
 
             ws.Actors.StatusGain.Subscribe((a, i) =>
             {
                 if (a.OID == 0)
                     return;
-                Service.Log($"[QBD] {a} gain {a.Statuses[i]}");
+                Log($"{a} gain {a.Statuses[i]}");
             }),
             ws.Actors.StatusGain.Subscribe((a, i) =>
             {
                 if (a.OID == 0)
                     return;
-                Service.Log($"[QBD] {a} lose {a.Statuses[i]}");
+                Log($"{a} lose {a.Statuses[i]}");
             }),
             ws.Actors.ModelStateChanged.Subscribe(a =>
             {
                 if (a.OID == 0)
                     return;
-                Service.Log($"[QBD] {a} model state: {a.ModelState}");
+                Log($"{a} model state: {a.ModelState}");
             }),
             ws.Actors.EventStateChanged.Subscribe(a =>
             {
                 if (a.OID == 0)
                     return;
-                Service.Log($"[QBD] {a} event state: {a.EventState}");
+                Log($"{a} event state: {a.EventState}");
             }),
             ws.DirectorUpdate.Subscribe(diru =>
             {
-                Service.Log($"[QBD] Director update: {diru}");
+                Log($"Director update: {diru}");
             }),
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) =>
             {
-                Service.Log($"[QBD] EObjAnim: {act}, {p1}, {p2}");
-            })
+                Log($"EObjAnim: {act}, {p1}, {p2}");
+            }),
+            bmm.ModuleActivated.Subscribe(OnBossModuleActivated)
         );
 
         if (Service.PluginInterface == null)
         {
-            Service.Log($"[QBD] UIDev detected, skipping initialization");
+            Log($"UIDev detected, skipping initialization");
             _pathfind = new PathfindNoop();
             _isMeshReady = new PathReadyNoop();
         }
@@ -113,10 +118,13 @@ public sealed class QuestBattleDirector : IDisposable
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
     private bool IsMeshReady() => _isMeshReady.InvokeFunc();
 
-    private void OnPlayerEnterCombat()
+    private void OnBossModuleActivated(BossModule bm)
     {
-
+        CurrentObjective = null;
+        CurrentModule?.Dispose();
     }
+
+    private void OnPlayerEnterCombat() { }
 
     private void OnPlayerExitCombat()
     {
@@ -124,9 +132,9 @@ public sealed class QuestBattleDirector : IDisposable
             && CurrentObjective is QuestObjective obj
             && obj.NavigationStrategy == NavigationStrategy.RepathAfterCombat)
         {
-            Service.Log($"player exited combat, retrying pathfind");
+            Log($"player exited combat, retrying pathfind");
             obj.ShouldCancelNavigation = false;
-            TryPathfind(player.PosRot.XYZ(), obj.Connections);
+            TryPathfind(player.PosRot.XYZ(), obj.Connections.Skip(ObjectiveWaypointProgress).ToList());
         }
     }
 
@@ -139,7 +147,7 @@ public sealed class QuestBattleDirector : IDisposable
         if (player == null)
             return;
 
-        if (HaveTarget(hints))
+        if (HaveTarget(player, hints))
         {
             if (!_combatFlag)
                 OnPlayerEnterCombat();
@@ -208,7 +216,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
     }
 
-    public static bool HaveTarget(AIHints hints) => hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - hints.Center));
+    public static bool HaveTarget(Actor player, AIHints hints) => player.InCombat || hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - hints.Center));
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
@@ -273,7 +281,7 @@ public sealed class QuestBattleDirector : IDisposable
         var points = connectionPoints.Take(3).ToList();
         if (points.Count < 2)
         {
-            Service.Log($"[QuestBattle] pathfind called with too few points (need 2, got {points.Count})");
+            Log($"pathfind called with too few points (need 2, got {points.Count})");
             return [];
         }
         var start = points[0];
@@ -287,7 +295,7 @@ public sealed class QuestBattleDirector : IDisposable
             var task = Pathfind(start.Position, end.Position);
             if (task == null)
             {
-                Service.Log($"[QuestBattle] Pathfind failure");
+                Log($"Pathfind failure");
                 return [];
             }
 
@@ -314,25 +322,30 @@ public sealed class QuestBattleDirector : IDisposable
         _subscriptions.Dispose();
     }
 
-    private void OnNavigationChange(QuestObjective obj)
+    private void OnObjectiveChanged(QuestObjective obj)
     {
-        Service.Log($"[QuestBattle] next objective: {obj}");
+        ObjectiveWaypointProgress = 0;
+        Log($"next objective: {obj}");
         if (World.Party.Player() is Actor player)
             TryPathfind(player.PosRot.XYZ(), obj.Connections);
     }
 
-    private void OnNavigationClear(QuestObjective obj)
+    private void OnObjectiveCleared(QuestObjective obj)
     {
-        Service.Log($"[QuestBattle] cleared objective: {obj}");
+        ObjectiveWaypointProgress = 0;
+        Log($"cleared objective: {obj}");
         CurrentWaypoints.Clear();
     }
 
     private void OnZoneChange(WorldState.OpZoneChange change)
     {
         SetMoveSpeedFactor(1);
-        var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID);
         CurrentObjective = null;
         CurrentModule?.Dispose();
+        if (bmm.ActiveModule != null)
+            return;
+
+        var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID);
         CurrentModule = newHandler;
         if (newHandler != null)
         {

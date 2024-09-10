@@ -36,6 +36,7 @@ public class QuestObjective
     public Action<WorldState.OpDirectorUpdate> OnDirectorUpdate = (_) => { };
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
     public Action OnNavigationComplete = () => { };
+    public Action Update = () => { };
 
     public QuestObjective(WorldState ws)
     {
@@ -120,8 +121,6 @@ public class QuestObjective
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
     public bool ShouldCancelNavigation;
-
-    public virtual void Update() { }
 
     public void CompleteIf(bool c) { Completed = c; }
 }

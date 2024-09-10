@@ -117,6 +117,7 @@ public class QuestBattleWindow : UIWindow
 
     private void DrawObjectives(QuestBattle sqb)
     {
+        ImGui.TextUnformatted($"Waypoint progress: {_director.ObjectiveWaypointProgress}");
         for (var i = 0; i < sqb.Objectives.Count; i++)
         {
             var n = sqb.Objectives[i];
@@ -138,7 +139,6 @@ public class QuestBattleWindow : UIWindow
                     ImGui.TextUnformatted(Utils.Vec3String(vec.Position));
                 }
             }
-            ImGui.TextUnformatted($"Waypoint progress: {_director.ObjectiveWaypointProgress}");
         }
         if (ImGui.Button("Skip step"))
             sqb.Advance();

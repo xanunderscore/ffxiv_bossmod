@@ -54,6 +54,9 @@ public enum AID : uint
 
     // Misc
     Resurrection = 173, // L12 SMN/SCH, 8.0s cast, GCD, range 30, single-target, targets=party/alliance/friendly
+
+    // Duty actions
+    AethericSiphon = 9102,
 }
 
 public sealed class Definitions : IDisposable
@@ -134,6 +137,8 @@ public sealed class Definitions : IDisposable
             InstantAnimLock = 0,
             CastAnimLock = 0
         });
+
+        d.RegisterSpell(AID.AethericSiphon);
 
         Customize(d);
     }
