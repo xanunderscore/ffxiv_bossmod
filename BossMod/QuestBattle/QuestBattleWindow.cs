@@ -111,12 +111,13 @@ public class QuestBattleWindow : UIWindow
 
         if (ImGui.Checkbox("Use dash abilities for movement", ref _config.UseDash))
             _config.Modified.Fire();
-        if (ImGui.Checkbox("Use speedhack in duties", ref _config.Speedhack))
-            _config.Modified.Fire();
+        _director.DrawSpeedToggle();
     }
 
     private void DrawObjectives(QuestBattle sqb)
     {
+        if (ImGui.Button("Skip step"))
+            sqb.Advance();
         ImGui.TextUnformatted($"Waypoint progress: {_director.CurrentObjectiveNavigationProgress}");
         for (var i = 0; i < sqb.Objectives.Count; i++)
         {
@@ -140,7 +141,5 @@ public class QuestBattleWindow : UIWindow
                 }
             }
         }
-        if (ImGui.Button("Skip step"))
-            sqb.Advance();
     }
 }

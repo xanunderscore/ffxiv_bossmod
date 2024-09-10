@@ -325,7 +325,7 @@ public sealed class QuestBattleDirector : IDisposable
     {
         CurrentObjectiveNavigationProgress = 0;
         Log($"next objective: {obj}");
-        if (World.Party.Player() is Actor player)
+        if (World.Party.Player() is Actor player && (!_combatFlag || obj.NavigationStrategy == NavigationStrategy.Continue))
             TryPathfind(player.PosRot.XYZ(), obj.Connections);
     }
 
@@ -338,7 +338,6 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void OnZoneChange(WorldState.OpZoneChange change)
     {
-        SetMoveSpeedFactor(1);
         Clear();
 
         if (bmm.ActiveModule != null)
@@ -348,10 +347,11 @@ public sealed class QuestBattleDirector : IDisposable
         CurrentModule = newHandler;
         if (newHandler != null)
         {
-            if (_config.Speedhack)
-                SetMoveSpeedFactor(5);
+            SetMoveSpeedFactor();
             QuestActivated.Fire(newHandler);
         }
+
+        SetMoveSpeedFactor();
     }
 
     private void OnActorAdded(Actor actor)
@@ -368,13 +368,25 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void OnConfigChange()
     {
-        if (_config.Speedhack && CurrentModule != null)
-            SetMoveSpeedFactor(5);
-        else if (!_config.Speedhack)
-            SetMoveSpeedFactor(1);
+        SetMoveSpeedFactor();
     }
 
-    private void SetMoveSpeedFactor(float f)
+    public void DrawSpeedToggle()
+    {
+#if DEBUG
+        if (ImGuiNET.ImGui.Checkbox("Use speedhack in duties", ref _config.Speedhack))
+            _config.Modified.Fire();
+#endif
+    }
+
+    private void SetMoveSpeedFactor()
+    {
+#if DEBUG
+        SetMoveSpeedFactorInternal(_config.Speedhack && CurrentModule != null ? 5 : 1);
+#endif
+    }
+
+    private void SetMoveSpeedFactorInternal(float f)
     {
         if (Service.SigScanner == null)
         {
