@@ -34,7 +34,7 @@ public sealed class QuestBattleDirector : IDisposable
     public QuestBattle? CurrentModule { get; private set; }
     public QuestObjective? CurrentObjective { get; private set; }
 
-    public int ObjectiveWaypointProgress { get; private set; }
+    public int CurrentObjectiveNavigationProgress { get; private set; }
     public List<Waypoint> CurrentConnections { get; private set; } = [];
 
     public bool Paused = false;
@@ -128,17 +128,18 @@ public sealed class QuestBattleDirector : IDisposable
         CurrentModule = null;
     }
 
-    private void OnPlayerEnterCombat() { }
-
-    private void OnPlayerExitCombat()
+    private void OnPlayerEnterCombat(Actor player)
     {
-        if (World.Party.Player() is Actor player
-            && CurrentObjective is QuestObjective obj
-            && obj.NavigationStrategy == NavigationStrategy.RepathAfterCombat)
+        if (CurrentObjective is QuestObjective obj && obj.NavigationStrategy is NavigationStrategy.Stop or NavigationStrategy.Pause)
+            CurrentWaypoints.Clear();
+    }
+
+    private void OnPlayerExitCombat(Actor player)
+    {
+        if (CurrentObjective is QuestObjective obj && obj.NavigationStrategy == NavigationStrategy.Pause)
         {
             Log($"player exited combat, retrying pathfind");
-            obj.ShouldCancelNavigation = false;
-            TryPathfind(player.PosRot.XYZ(), obj.Connections.Skip(ObjectiveWaypointProgress).ToList());
+            TryPathfind(player.PosRot.XYZ(), obj.Connections.Skip(CurrentObjectiveNavigationProgress).ToList());
         }
     }
 
@@ -154,13 +155,13 @@ public sealed class QuestBattleDirector : IDisposable
         if (HaveTarget(player, hints))
         {
             if (!_combatFlag)
-                OnPlayerEnterCombat();
+                OnPlayerEnterCombat(player);
 
             _combatFlag = true;
         }
         else if (_combatFlag)
         {
-            OnPlayerExitCombat();
+            OnPlayerExitCombat(player);
             _combatFlag = false;
         }
 
@@ -192,19 +193,13 @@ public sealed class QuestBattleDirector : IDisposable
         if (CurrentWaypoints.Count == 0)
             return;
 
-        if (objective.ShouldCancelNavigation)
-        {
-            CurrentWaypoints.Clear();
-            return;
-        }
-
         var nextwp = CurrentWaypoints[0];
         var playerPos = player.PosRot.XYZ();
         var direction = nextwp.Position - playerPos;
         if (direction.XZ().Length() < Tolerance)
         {
             if (nextwp.SpecifiedInPath)
-                ObjectiveWaypointProgress++;
+                CurrentObjectiveNavigationProgress++;
 
             CurrentWaypoints.RemoveAt(0);
             if (CurrentWaypoints.Count == 0)
@@ -328,7 +323,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void OnObjectiveChanged(QuestObjective obj)
     {
-        ObjectiveWaypointProgress = 0;
+        CurrentObjectiveNavigationProgress = 0;
         Log($"next objective: {obj}");
         if (World.Party.Player() is Actor player)
             TryPathfind(player.PosRot.XYZ(), obj.Connections);
@@ -336,7 +331,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void OnObjectiveCleared(QuestObjective obj)
     {
-        ObjectiveWaypointProgress = 0;
+        CurrentObjectiveNavigationProgress = 0;
         Log($"cleared objective: {obj}");
         CurrentWaypoints.Clear();
     }

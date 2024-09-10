@@ -117,7 +117,7 @@ public class QuestBattleWindow : UIWindow
 
     private void DrawObjectives(QuestBattle sqb)
     {
-        ImGui.TextUnformatted($"Waypoint progress: {_director.ObjectiveWaypointProgress}");
+        ImGui.TextUnformatted($"Waypoint progress: {_director.CurrentObjectiveNavigationProgress}");
         for (var i = 0; i < sqb.Objectives.Count; i++)
         {
             var n = sqb.Objectives[i];

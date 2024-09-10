@@ -9,17 +9,17 @@ public enum NavigationStrategy
     // keep moving to destination even if in combat
     Continue,
     // clear waypoints upon entering combat
-    CancelOnCombat,
+    Stop,
     // clear waypoints upon entering combat, repath when combat ends
-    RepathAfterCombat,
+    Pause,
 }
 
-public class QuestObjective
+public class QuestObjective(WorldState ws)
 {
-    public readonly WorldState World;
+    public readonly WorldState World = ws;
     public string Name { get; private set; } = "";
     public readonly List<Waypoint> Connections = [];
-    public NavigationStrategy NavigationStrategy = NavigationStrategy.RepathAfterCombat;
+    public NavigationStrategy NavigationStrategy = NavigationStrategy.Pause;
 
     public bool Completed;
 
@@ -37,19 +37,6 @@ public class QuestObjective
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
     public Action OnNavigationComplete = () => { };
     public Action Update = () => { };
-
-    public QuestObjective(WorldState ws)
-    {
-        World = ws;
-        OnActorCombatChanged += (act) =>
-        {
-            if (act.OID == 0 && act.InCombat && NavigationStrategy is NavigationStrategy.CancelOnCombat or NavigationStrategy.RepathAfterCombat)
-            {
-                Service.Log($"Entered combat -> canceling navigation");
-                ShouldCancelNavigation = true;
-            }
-        };
-    }
 
     public QuestObjective Named(string name)
     {
@@ -83,13 +70,13 @@ public class QuestObjective
 
     public QuestObjective PauseForCombat(bool pause)
     {
-        NavigationStrategy = pause ? NavigationStrategy.RepathAfterCombat : NavigationStrategy.Continue;
+        NavigationStrategy = pause ? NavigationStrategy.Pause : NavigationStrategy.Continue;
         return this;
     }
 
     public QuestObjective StopOnCombat()
     {
-        NavigationStrategy = NavigationStrategy.CancelOnCombat;
+        NavigationStrategy = NavigationStrategy.Stop;
         return this;
     }
 
@@ -152,9 +139,7 @@ public class QuestObjective
 
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
-    public bool ShouldCancelNavigation;
-
-    public void CompleteIf(bool c) { Completed = c; }
+    public void CompleteIf(bool c) { Completed |= c; }
 }
 
 public abstract class QuestBattle : IDisposable
