@@ -10,30 +10,30 @@ public class Quest(WorldState ws) : QuestBattle(ws)
 {
     private bool SmokeBomb = false;
 
-    public override List<QuestObjective> DefineObjectives(WorldState ws)
-    {
+    public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         // have to walk up the stairs to trigger dialogue
-        var combat1 = new QuestObjective(ws).WithConnection(new Vector3(-80.82f, -3.00f, 46.31f));
-
-        combat1.OnDirectorUpdate = (op) =>
-        {
-            // this op enables the Smoke Bomb duty action
-            if (op.Param1 == 14801)
+        new QuestObjective(ws)
+            .WithConnection(new Vector3(-80.82f, -3.00f, 46.31f))
+            .With(obj =>
             {
-                combat1.Completed = true;
-                SmokeBomb = true;
-            }
-        };
+                obj.OnDirectorUpdate += (op) =>
+                {
+                    // this op enables the Smoke Bomb duty action
+                    if (op.Param1 == 14801)
+                    {
+                        obj.Completed = true;
+                        SmokeBomb = true;
+                    }
+                };
+            }),
 
-        var stealth = new QuestObjective(ws)
+        new QuestObjective(ws)
             .WithConnection(new Vector3(-65.45f, -3.00f, 26.26f))
             .WithConnection(new Vector3(119.86f, 12.00f, 61.87f))
             .WithConnection(new Vector3(117.25f, 12.00f, 17.32f))
             .WithConnection(new Vector3(70, -5, 17))
-            .NavStrategy(NavigationStrategy.Continue);
-
-        return [combat1, stealth];
-    }
+            .PauseForCombat(false)
+    ];
 
     public override void AddQuestAIHints(Actor player, AIHints hints)
     {

@@ -12,7 +12,7 @@ public class QuestBattleWindow : UIWindow
     private const string _windowID = "vbm Quest###Quest module";
     private WorldState World => _director.World;
 
-    private List<WPos> Waymarks = [];
+    private readonly List<WPos> Waymarks = [];
 
     private delegate void AbandonDuty(bool a1);
     private readonly AbandonDuty abandonDutyHook = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));

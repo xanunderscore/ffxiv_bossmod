@@ -75,21 +75,53 @@ public class QuestObjective
         return this;
     }
 
-    public QuestObjective NavStrategy(NavigationStrategy strat)
-    {
-        NavigationStrategy = strat;
-        return this;
-    }
-
     public QuestObjective With(Action<QuestObjective> act)
     {
         act(this);
         return this;
     }
 
-    public QuestObjective CancelNavigationOnCombat()
+    public QuestObjective PauseForCombat(bool pause)
+    {
+        NavigationStrategy = pause ? NavigationStrategy.RepathAfterCombat : NavigationStrategy.Continue;
+        return this;
+    }
+
+    public QuestObjective StopOnCombat()
     {
         NavigationStrategy = NavigationStrategy.CancelOnCombat;
+        return this;
+    }
+
+    public QuestObjective CompleteOnTargetable(uint oid, bool targetable)
+    {
+        OnActorTargetableChanged += (act) => CompleteIf(act.OID == oid && act.IsTargetable == targetable);
+        return this;
+    }
+
+    public QuestObjective CompleteOnCreated(uint oid)
+    {
+        OnActorCreated += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
+
+    public QuestObjective CompleteOnKilled(uint oid)
+    {
+        OnActorKilled += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
+
+    public QuestObjective CompleteOnDestroyed(uint oid)
+    {
+        OnActorDestroyed += (act) => CompleteIf(act.OID == oid);
+        return this;
+    }
+
+    public QuestObjective ThenWait(float seconds)
+    {
+        var until = DateTime.MaxValue;
+        OnNavigationComplete += () => until = World.FutureTime(seconds);
+        Update += () => CompleteIf(World.CurrentTime > until);
         return this;
     }
 
@@ -140,14 +172,6 @@ public abstract class QuestBattle : IDisposable
     public static readonly ArenaBoundsSquare OverworldBounds = new(100, 2.5f);
 
     protected static Vector3 V3(float x, float y, float z) => new(x, y, z);
-
-    protected static QuestObjective Combat(WorldState ws, Vector3 destination)
-    {
-        var obj = new QuestObjective(ws).WithConnection(destination).CancelNavigationOnCombat();
-        obj.AddAIHints += (player, hints) =>
-            obj.CompleteIf(obj.ShouldCancelNavigation && !player.InCombat && !hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - player.Position)));
-        return obj;
-    }
 
     public void Dispose()
     {

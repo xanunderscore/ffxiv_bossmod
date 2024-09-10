@@ -21,20 +21,15 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
                 new Waypoint(new(-42.44f, -10.85f, -122.70f), false),
                 new Waypoint(new(-78.03f, -10.18f, -98.29f))
             )
-            .With(obj =>
-            {
-                obj.OnActorCreated += (act) => obj.CompleteIf(act.OID == (uint)OID.IronCell);
-            }),
+            .CompleteOnCreated((uint)OID.IronCell),
 
         new QuestObjective(ws)
             .Named("Open cell")
             .WithConnection(V3(-44.18f, -10.72f, -120.78f))
-            .NavStrategy(NavigationStrategy.Continue)
+            // force pathfind directly onto extremely janky iron cell hitbox
+            .PauseForCombat(false)
             .Hints((act, hints) => hints.PrioritizeTargetsByOID(OID.IronCell))
-            .With(obj =>
-            {
-                obj.OnActorKilled += (act) => obj.CompleteIf(act.OID == (uint)OID.IronCell);
-            }),
+            .CompleteOnKilled((uint)OID.IronCell),
 
         new QuestObjective(ws)
             .Named("Destroy generator")
@@ -44,20 +39,13 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
                 if (player.PosRot.Y >= 6)
                     hints.PrioritizeTargetsByOID(OID.HummingAtomizer);
             })
-            .With(obj =>
-            {
-                obj.OnActorKilled += (act) => obj.CompleteIf(act.OID == (uint)OID.HummingAtomizer);
-            }),
+            .CompleteOnKilled((uint)OID.HummingAtomizer),
 
         new QuestObjective(ws)
             .Named("Find key")
             .WithConnection(V3(117.31f, -3.71f, 36.29f))
             .Hints(FindkeyHints)
-            .With(obj =>
-            {
-                obj.OnActorDestroyed += (act) => obj.CompleteIf(act.OID == (uint)OID.IdentificationKey);
-                obj.OnActorCombatChanged += (act) => obj.ShouldCancelNavigation |= CrystalBraves.Contains(act.OID);
-            }),
+            .CompleteOnDestroyed((uint)OID.IdentificationKey),
 
         new QuestObjective(ws)
             .Named("Free Raubahn")

@@ -118,10 +118,14 @@ public sealed class QuestBattleDirector : IDisposable
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
     private bool IsMeshReady() => _isMeshReady.InvokeFunc();
 
-    private void OnBossModuleActivated(BossModule bm)
+    private void OnBossModuleActivated(BossModule bm) => Clear();
+
+    private void Clear()
     {
+        CurrentWaypoints.Clear();
         CurrentObjective = null;
         CurrentModule?.Dispose();
+        CurrentModule = null;
     }
 
     private void OnPlayerEnterCombat() { }
@@ -340,8 +344,8 @@ public sealed class QuestBattleDirector : IDisposable
     private void OnZoneChange(WorldState.OpZoneChange change)
     {
         SetMoveSpeedFactor(1);
-        CurrentObjective = null;
-        CurrentModule?.Dispose();
+        Clear();
+
         if (bmm.ActiveModule != null)
             return;
 

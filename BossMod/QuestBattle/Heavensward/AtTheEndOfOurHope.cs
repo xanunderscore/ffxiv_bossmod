@@ -11,6 +11,6 @@ public sealed class AtTheEndOfOurHope(WorldState ws) : QuestBattle(ws)
             new Vector3(456.10f, 157.41f, -554.90f)
         )
         .WithInteract(0x1E9B5A)
-        .NavStrategy(NavigationStrategy.Continue)
+        .PauseForCombat(false)
     ];
 }

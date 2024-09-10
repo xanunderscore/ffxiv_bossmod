@@ -5,32 +5,31 @@ namespace BossMod.QuestBattle.Heavensward.ASeriesOfUnfortunateEvents;
 [Quest(BossModuleInfo.Maturity.WIP, 395)]
 public sealed class Emmanellain(WorldState ws) : QuestBattle(ws)
 {
-    public override List<QuestObjective> DefineObjectives(WorldState ws)
-    {
-        var free = new QuestObjective(ws)
+    public override List<QuestObjective> DefineObjectives(WorldState ws) => [
+        new QuestObjective(ws)
            .Named("Free Emmanellain")
            .WithConnection(new Vector3(657.58f, -65.54f, -123.75f))
-           .WithInteract(0x1E9ACE);
+           .WithInteract(0x1E9ACE)
+           .With(obj =>
+           {
+               obj.OnModelStateChanged += (act) => obj.CompleteIf(act.OID == 0x1003 && act.ModelState.ModelState == 0);
+           }),
 
-        free.OnModelStateChanged += (act) => free.CompleteIf(act.OID == 0x1003 && act.ModelState.ModelState == 0);
-
-        var escort = new QuestObjective(ws).Named("Escort Emmanellain to safety");
-        escort.Hints((player, hints) =>
-        {
-            hints.Bounds = OverworldBounds;
-
-            var emmanellain = World.Actors.FirstOrDefault(i => i.OID == 0x1003);
-            if (emmanellain != null)
+        new QuestObjective(ws).Named("Escort Emmanellain to safety")
+            .Hints((player, hints) =>
             {
-                foreach (var h in hints.PotentialTargets)
-                    if (h.Actor.TargetID == emmanellain.InstanceID)
-                        h.Priority = 0;
+                hints.Bounds = OverworldBounds;
 
-                if (!player.InCombat && player.DistanceToHitbox(emmanellain) > 50)
-                    hints.ForcedMovement = player.DirectionTo(emmanellain).ToVec3();
-            }
-        });
+                var emmanellain = World.Actors.FirstOrDefault(i => i.OID == 0x1003);
+                if (emmanellain != null)
+                {
+                    foreach (var h in hints.PotentialTargets)
+                        if (h.Actor.TargetID == emmanellain.InstanceID)
+                            h.Priority = 0;
 
-        return [free, escort];
-    }
+                    if (!player.InCombat && player.DistanceToHitbox(emmanellain) > 50)
+                        hints.ForcedMovement = player.DirectionTo(emmanellain).ToVec3();
+                }
+            })
+    ];
 }

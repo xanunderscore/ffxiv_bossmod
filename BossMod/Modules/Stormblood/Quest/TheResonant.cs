@@ -27,6 +27,11 @@ public enum AID : uint
     _Spell_Fire = 966, // 1B7B->1B69, 1.0s cast, single-target
     _Weaponskill_TerminusEst = 9107, // Boss->self, no cast, single-target
     _Weaponskill_TheOrder = 9106, // Boss->self, 5.0s cast, single-target
+    _Weaponskill_HeavySwing = 8186, // _Gen_12ThLegionLaquearius->1B69/1B6C, no cast, single-target
+    _Weaponskill_FastBlade = 717, // _Gen_12ThLegionHoplomachus->1B6B/1B69/1B6C, no cast, single-target
+    _Weaponskill_TerminusEst1 = 9108, // _Gen_FordolaRemLupis1->self, no cast, range 40+R width 4 rect
+    _Weaponskill_Skullbreaker = 9111, // Boss->self, 5.3s cast, single-target
+    _Weaponskill_Skullbreaker1 = 9112, // _Gen_FordolaRemLupis->self, 6.0s cast, range 40 circle
 }
 
 public enum SID : uint
@@ -34,6 +39,34 @@ public enum SID : uint
     Resonant = 780,
 }
 
+class Skullbreaker(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Skullbreaker1), new AOEShapeCircle(12));
+
+class TerminusEst(BossModule module) : Components.GenericAOEs(module)
+{
+    private DateTime? Activation;
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        if (Activation == null)
+            yield break;
+
+        var casters = Module.Enemies(0x1BCA).Where(e => e.Position.AlmostEqual(Arena.Center, 0.5f));
+        foreach (var c in casters)
+            yield return new AOEInstance(new AOEShapeRect(41, 2), c.Position, c.Rotation, Activation: Activation.Value);
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID._Weaponskill_TheOrder)
+            Activation = Module.CastFinishAt(spell).AddSeconds(0.8f);
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (int)AID._Weaponskill_TerminusEst1)
+            Activation = null;
+    }
+}
 class MagitekRay(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Ability_MagitekRay), new AOEShapeRect(45.6f, 1));
 class ChoppingBlock(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_ChoppingBlock1), 5);
 
@@ -46,7 +79,7 @@ class Siphon(BossModule module) : BossComponent(module)
             if (h.Actor.FindStatus(SID.Resonant) != null)
             {
                 h.Priority = AIHints.Enemy.PriorityForbidFully;
-                hints.ActionsToExecute.Push(WorldState.Client.DutyActions[0].Action, h.Actor, ActionQueue.Priority.VeryHigh);
+                hints.ActionsToExecute.Push(WorldState.Client.DutyActions[0].Action, h.Actor, ActionQueue.Priority.Medium);
             }
         }
     }
@@ -59,11 +92,11 @@ public class FordolaRemLupisStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Siphon>()
             .ActivateOnEnter<MagitekRay>()
-            .ActivateOnEnter<ChoppingBlock>();
+            .ActivateOnEnter<ChoppingBlock>()
+            .ActivateOnEnter<TerminusEst>()
+            .ActivateOnEnter<Skullbreaker>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68086, NameID = 6104)]
-public class FordolaRemLupis(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsSquare(19.5f))
-{
-}
+public class FordolaRemLupis(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsSquare(19.5f));

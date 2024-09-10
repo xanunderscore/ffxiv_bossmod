@@ -48,16 +48,14 @@ public sealed class AsGoesLightSoGoesDarkness(WorldState ws) : QuestBattle(ws)
             Refugee(OID.Refugee3)
                 .Named("Refugee 3+4")
                 .WithInteract((uint)OID.Bonds)
-                .WithConnection(V3(-52, -300, -30))
-                .CancelNavigationOnCombat(),
+                .WithConnection(V3(-52, -300, -30)),
 
             Refugee(OID.Refugee5)
                 .Named("Refugee 5")
                 .WithInteract((uint)OID.Bonds)
-                .WithConnection(V3(55, -300, -68))
-                .CancelNavigationOnCombat(),
+                .WithConnection(V3(55, -300, -68)),
 
-            EventState(OID.ArenaWall).Named("Help Aymeric").WithConnection(V3(0, -292, -100)).CancelNavigationOnCombat(),
+            EventState(OID.ArenaWall).Named("Help Aymeric").WithConnection(V3(0, -292, -100)),
 
             new QuestObjective(ws).Named("Refugee 6").WithConnection(V3(2, -282.35f, -151))
         ];
