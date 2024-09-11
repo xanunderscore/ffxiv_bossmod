@@ -1,8 +1,15 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using System.Runtime.InteropServices;
 
 namespace BossMod.AI;
+
+[StructLayout(LayoutKind.Explicit, Size = 0x1A0)]
+public unsafe partial struct GameObject
+{
+    [FieldOffset(0x7C)] public uint SmallRadius;
+}
 
 // utility for simulating user actions based on AI decisions:
 // - navigation
@@ -100,7 +107,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         var maxDist = target.Type switch
         {
             ActorType.Aetheryte => 8.5f,
-            ActorType.EventObj => obj->BaseId > 0 ? 2.0999999f : 3.5999999f,
+            ActorType.EventObj => ((GameObject*)obj)->SmallRadius > 0 ? 2.0999999f : 3.5999999f,
             ActorType.GatheringPoint => 3,
             _ => 25f
         };
