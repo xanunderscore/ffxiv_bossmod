@@ -42,7 +42,6 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
             .Named("Find key")
             .WithConnection(V3(117.31f, -3.71f, 36.29f))
             .Hints(FindkeyHints)
-            .StopOnCombat()
             .CompleteOnDestroyed((uint)OID.IdentificationKey),
 
         new QuestObjective(ws)
