@@ -100,7 +100,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         var maxDist = target.Type switch
         {
             ActorType.Aetheryte => 8.5f,
-            ActorType.EventObj => *((int*)obj + 0x79) > 0 ? 2.0999999f : 3.5999999f,
+            ActorType.EventObj => obj->BaseId > 0 ? 2.0999999f : 3.5999999f,
             ActorType.GatheringPoint => 3,
             _ => 25f
         };
@@ -113,7 +113,8 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
             return false;
 
         var distanceBetweenHitboxes = ((Vector3)pos - player.PosRot.XYZ()).XZ().Length() - obj->HitboxRadius - player.HitboxRadius;
-        return distanceBetweenHitboxes <= maxDist;
+        // todo tweak range, AI can get stuck right at the edge
+        return distanceBetweenHitboxes < maxDist - 0.25f;
     }
 
     private unsafe void ExecuteInteract(DateTime now, Actor target)

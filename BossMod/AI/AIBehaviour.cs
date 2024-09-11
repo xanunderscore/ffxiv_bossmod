@@ -86,7 +86,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     {
         if (autorot.Hints.InteractWithTarget is Actor interact)
             // shortest possible interact range is 2.1y, but once we get within max interact range, AIController will disable movement, so any small number could go here - see AIController.WithinInteractRange
-            return new Targeting(new AIHints.Enemy(interact, false), 1);
+            return new Targeting(new AIHints.Enemy(interact, false), 0);
 
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
         // if current target is not among valid targets, clear it - this opens way for future target selection heuristics
@@ -129,6 +129,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 targeting.PreferredPosition = Positional.Any;
             return;
         }
+
+        if (targeting.Target.Actor.Omnidirectional)
+            targeting.PreferredPosition = Positional.Any;
 
         // if target-of-target is player, don't try flanking, it's probably impossible... - unless target is currently casting (TODO: reconsider?)
         // skip if targeting a dummy, they don't rotate

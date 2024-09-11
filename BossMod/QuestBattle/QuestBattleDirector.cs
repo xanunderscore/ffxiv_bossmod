@@ -53,6 +53,8 @@ public sealed class QuestBattleDirector : IDisposable
 
     private static void Log(string msg) => Service.Log($"[QBD] {msg}");
 
+    public bool Enabled => World.CurrentCFCID != 0 && World.Party[1] == null;
+
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
         World = ws;
@@ -98,8 +100,7 @@ public sealed class QuestBattleDirector : IDisposable
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) =>
             {
                 Log($"EObjAnim: {act}, {p1}, {p2}");
-            }),
-            bmm.ModuleActivated.Subscribe(OnBossModuleActivated)
+            })
         );
 
         if (Service.PluginInterface == null)
@@ -117,8 +118,6 @@ public sealed class QuestBattleDirector : IDisposable
 
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
     private bool IsMeshReady() => _isMeshReady.InvokeFunc();
-
-    private void OnBossModuleActivated(BossModule bm) => Clear();
 
     private void Clear()
     {
@@ -151,6 +150,12 @@ public sealed class QuestBattleDirector : IDisposable
         var player = World.Party.Player();
         if (player == null)
             return;
+
+        if (bmm?.ActiveModule?.StateMachine.ActivePhase != null)
+        {
+            Clear();
+            return;
+        }
 
         if (HaveTarget(player, hints))
         {
@@ -219,7 +224,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
-        if (!_config.UseDash)
+        if (!_config.UseDash || player.Statuses.Any(s => s.ID is 2109 or 1268))
             return;
 
         var moveDistance = direction.Length();
@@ -382,7 +387,7 @@ public sealed class QuestBattleDirector : IDisposable
     private void SetMoveSpeedFactor()
     {
 #if DEBUG
-        SetMoveSpeedFactorInternal(_config.Speedhack && CurrentModule != null ? 5 : 1);
+        SetMoveSpeedFactorInternal(_config.Speedhack && Enabled ? 5 : 1);
 #endif
     }
 

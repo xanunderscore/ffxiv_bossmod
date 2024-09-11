@@ -12,7 +12,6 @@ public sealed class BossModuleManager : IDisposable
     public IReadOnlyList<BossModule> LoadedModules => _loadedModules;
     public Event<BossModule> ModuleLoaded = new();
     public Event<BossModule> ModuleUnloaded = new();
-    public Event<BossModule> ModuleActivated = new();
 
     // drawn module among loaded modules; this can be changed explicitly if needed
     // usually we don't have multiple concurrently active modules, since this prevents meaningful cd planning, raid cooldown tracking, etc.
@@ -27,7 +26,6 @@ public sealed class BossModuleManager : IDisposable
             Service.Log($"[BMM] Active module override: from {_activeModule?.GetType().FullName ?? "<n/a>"} (manual-override={_activeModuleOverridden}) to {value?.GetType().FullName ?? "<n/a>"}");
             _activeModule = value;
             _activeModuleOverridden = true;
-            TriggerActivate();
         }
     }
 
@@ -109,14 +107,7 @@ public sealed class BossModuleManager : IDisposable
             Service.Log($"[BMM] Active module change: from {_activeModule?.GetType().FullName ?? "<n/a>"} (prio {curPriority}, manual-override={_activeModuleOverridden}) to {bestModule?.GetType().FullName ?? "<n/a>"} (prio {bestPriority})");
             _activeModule = bestModule;
             _activeModuleOverridden = false;
-            TriggerActivate();
         }
-    }
-
-    private void TriggerActivate()
-    {
-        if (_activeModule != null)
-            ModuleActivated.Fire(_activeModule);
     }
 
     private void LoadModule(BossModule m)

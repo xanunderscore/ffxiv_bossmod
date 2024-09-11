@@ -104,6 +104,12 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
+    public QuestObjective CompleteOnState7(uint oid)
+    {
+        OnActorEventStateChanged += (act) => CompleteIf(act.OID == oid && act.EventState == 7);
+        return this;
+    }
+
     public QuestObjective ThenWait(float seconds)
     {
         var until = DateTime.MaxValue;
