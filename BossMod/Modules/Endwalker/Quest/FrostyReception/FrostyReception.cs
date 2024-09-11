@@ -1,4 +1,5 @@
-﻿namespace BossMod.Endwalker.Quest.FrostyReception;
+﻿/*
+namespace BossMod.Endwalker.Quest.FrostyReception;
 
 public enum OID : uint
 {
@@ -71,3 +72,4 @@ public class FrostyReception(WorldState ws, Actor primary) : BossModule(ws, prim
         Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
     }
 }
+*/

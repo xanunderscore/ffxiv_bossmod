@@ -1,4 +1,5 @@
-﻿using RID = BossMod.Roleplay.AID;
+﻿/*
+using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Endwalker.Quest.HeavensBurn;
 
@@ -333,3 +334,4 @@ public class HB(WorldState ws, Actor primary) : BossModule(ws, primary, new(-300
 {
     protected override bool CheckPull() => true;
 }
+*/

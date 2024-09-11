@@ -1,7 +1,6 @@
 ﻿namespace BossMod.Stormblood.Quest.EmissaryOfTheDawn;
 
 // TODO use limit break
-// TODO the RP component targets the event object with the Boss OID, even though it's not a valid target
 
 public enum OID : uint
 {
@@ -61,7 +60,7 @@ class AirshipWreckageStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 582, NameID = 2009561)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68612, NameID = 2009561)]
 public class AirshipWreckage(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
 {
     protected override void UpdateModule()

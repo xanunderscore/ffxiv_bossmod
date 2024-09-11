@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Quest.FatherFirst;
+﻿namespace BossMod.Dawntrail.Quest.AFatherFirst;
 
 public enum OID : uint
 {
@@ -337,5 +337,5 @@ class GuloolJaJaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 828, NameID = 12675, PlanLevel = 94)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70419, NameID = 12675, PlanLevel = 94)]
 public class GuloolJaJa(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 49), new ArenaBoundsRect(15, 20));

@@ -72,7 +72,7 @@ class SlickshellCaptainStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 469, NameID = 6891)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68563, NameID = 6891)]
 public class SlickshellCaptain(WorldState ws, Actor primary) : BossModule(ws, primary, new(468.92f, 301.30f), CustomBounds)
 {
     private static readonly List<WDir> vertices = [

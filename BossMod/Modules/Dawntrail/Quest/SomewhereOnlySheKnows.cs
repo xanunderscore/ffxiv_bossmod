@@ -1,4 +1,5 @@
-﻿namespace BossMod.Dawntrail.Quest.SomewhereOnlySheKnows;
+﻿/*
+namespace BossMod.Dawntrail.Quest.SomewhereOnlySheKnows;
 
 public enum OID : uint
 {
@@ -226,3 +227,4 @@ public class Quest(WorldState ws, Actor primary) : BossModule(ws, primary, new(0
             e.Priority = 0;
     }
 }
+*/

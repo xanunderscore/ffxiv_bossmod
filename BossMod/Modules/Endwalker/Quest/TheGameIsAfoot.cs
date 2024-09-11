@@ -1,4 +1,4 @@
-﻿namespace BossMod.Endwalker.Quest.TheFootIsAGame;
+﻿namespace BossMod.Endwalker.Quest.TheGameIsAfoot;
 
 public enum OID : uint
 {
@@ -58,7 +58,7 @@ class GiantColibriStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 960, NameID = 12499)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70288, NameID = 12499)]
 public class GiantColibri(WorldState ws, Actor primary) : BossModule(ws, primary, new(425, -440), new ArenaBoundsCircle(15))
 {
     protected override void DrawArenaForeground(int pcSlot, Actor pc)

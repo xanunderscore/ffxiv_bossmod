@@ -1,4 +1,5 @@
-﻿namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
+﻿/*
+namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
 
 // TODO: add AI hint for the "enrage" + paladin safe zone
 
@@ -188,4 +189,4 @@ public class Bovian(WorldState ws, Actor primary) : BossModule(ws, primary, new(
 {
     protected override bool CheckPull() => true;
 }
-
+*/

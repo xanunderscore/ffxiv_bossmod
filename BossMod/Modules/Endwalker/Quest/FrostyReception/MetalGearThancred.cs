@@ -1,4 +1,5 @@
-﻿using RID = BossMod.Roleplay.AID;
+﻿/*
+using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Endwalker.Quest.FrostyReception;
 
@@ -81,3 +82,4 @@ class MetalGearBounds(BossModule module) : BossComponent(module)
         Service.Log($"[MGT] DIRU {updateID:X8} {param1:X2} {param2:X2} {param3:X2} {param4:X2}");
     }
 }
+*/

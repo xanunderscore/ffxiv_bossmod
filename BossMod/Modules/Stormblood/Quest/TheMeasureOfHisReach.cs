@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Stormblood.Quest.TheMeasureOfHisReach;
+﻿namespace BossMod.Stormblood.Quest.TheMeasureOfHisReach;
 
 public enum OID : uint
 {
@@ -19,13 +19,6 @@ class Moonlight(BossModule module) : Components.SelfTargetedAOEs(module, ActionI
 class Icewind(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HowlingIcewind), new AOEShapeRect(44, 2));
 class Dragonspirit(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Dragonspirit), new AOEShapeCircle(7.5f));
 class Bloomshower(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.HowlingBloomshower), new AOEShapeDonutSector(4, 8, 45.Degrees()));
-class Adds(BossModule module) : BossComponent(module)
-{
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(Module.Enemies(OID.Whitefang).Where(e => !e.IsDead), ArenaColor.Object, true);
-    }
-}
 
 class HakuroWhitefangStates : StateMachineBuilder
 {
@@ -36,11 +29,10 @@ class HakuroWhitefangStates : StateMachineBuilder
             .ActivateOnEnter<Moonlight>()
             .ActivateOnEnter<Dragonspirit>()
             .ActivateOnEnter<Bloomshower>()
-            .ActivateOnEnter<Adds>()
             ;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 468, NameID = 5975)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68088, NameID = 5975)]
 public class HakuroWhitefang(WorldState ws, Actor primary) : BossModule(ws, primary, new(504, -133), new ArenaBoundsCircle(20));
 

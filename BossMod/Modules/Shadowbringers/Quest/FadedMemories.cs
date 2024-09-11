@@ -1,4 +1,5 @@
-﻿namespace BossMod.Shadowbringers.Quest.FadedMemories;
+﻿/*
+namespace BossMod.Shadowbringers.Quest.FadedMemories;
 
 public enum OID : uint
 {
@@ -215,3 +216,4 @@ public class Elidibus(WorldState ws, Actor primary) : BossModule(ws, primary, ne
         Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
     }
 }
+*/

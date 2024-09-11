@@ -50,6 +50,7 @@ public enum SID : uint
     Invincibility = 325, // Lunar Ravana
 }
 
+/*
 class DUDStates : StateMachineBuilder
 {
     public DUDStates(BossModule module) : base(module)
@@ -122,3 +123,4 @@ public class DUD(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 
         Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
     }
 }
+*/

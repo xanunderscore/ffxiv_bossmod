@@ -66,9 +66,9 @@ class Adds(BossModule module) : BossComponent(module)
     }
 }
 
-class EncounterStates : StateMachineBuilder
+class ImperialCenturionStates : StateMachineBuilder
 {
-    public EncounterStates(BossModule module) : base(module)
+    public ImperialCenturionStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<Adds>()
@@ -84,7 +84,7 @@ class EncounterStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68560, NameID = 4148)]
-public class Encounter(WorldState ws, Actor primary) : BossModule(ws, primary, new(473.25f, 751.75f), BoundsP2)
+public class ImperialCenturion(WorldState ws, Actor primary) : BossModule(ws, primary, new(473.25f, 751.75f), BoundsP2)
 {
     public static readonly ArenaBoundsCustom BoundsP2 = new(30, new(CurveApprox.Ellipse(34, 21, 0.25f).Select(p => p.Rotate(140.Degrees()))));
 

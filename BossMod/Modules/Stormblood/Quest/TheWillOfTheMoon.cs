@@ -1,6 +1,6 @@
 ﻿using RPID = BossMod.Roleplay.AID;
 
-namespace BossMod.Modules.Stormblood.Quest;
+namespace BossMod.Stormblood.Quest.TheWillOfTheMoon;
 
 public enum OID : uint
 {
@@ -142,9 +142,9 @@ class P2Hints(BossModule module) : BossComponent(module)
     }
 }
 
-class WotMStates : StateMachineBuilder
+class SaduHeavensflameStates : StateMachineBuilder
 {
-    public WotMStates(BossModule module) : base(module)
+    public SaduHeavensflameStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<P1Hints>()
@@ -171,14 +171,13 @@ class WotMStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 609, NameID = 6152)]
-public class WotM(WorldState ws, Actor primary) : BossModule(ws, primary, new(-223, 519), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68683, NameID = 6152)]
+public class SaduHeavensflame(WorldState ws, Actor primary) : BossModule(ws, primary, new(-223, 519), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => true;
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
+    protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        foreach (var e in WorldState.Actors.Where(e => !e.IsAlly && !e.IsDeadOrDestroyed))
-            Arena.Actor(e, ArenaColor.Enemy);
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
     }
 }

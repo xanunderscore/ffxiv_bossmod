@@ -1,4 +1,5 @@
-﻿using RID = BossMod.Roleplay.AID;
+﻿/*
+using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Endwalker.Quest.UnforseenBargain;
 
@@ -226,4 +227,4 @@ public class Zero(WorldState ws, Actor primary) : BossModule(ws, primary, new(97
         Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
     }
 }
-
+*/

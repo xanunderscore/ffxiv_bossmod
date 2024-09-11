@@ -1,4 +1,5 @@
-﻿namespace BossMod.Endwalker.Quest.FrostyReception;
+﻿/*
+namespace BossMod.Endwalker.Quest.FrostyReception;
 
 public class CarriageBounds(BossModule module) : BossComponent(module)
 {
@@ -30,3 +31,4 @@ public class CarriageBounds(BossModule module) : BossComponent(module)
         Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
     }
 }
+*/

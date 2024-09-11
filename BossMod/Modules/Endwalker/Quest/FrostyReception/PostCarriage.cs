@@ -1,4 +1,5 @@
-﻿namespace BossMod.Endwalker.Quest.FrostyReception;
+﻿/*
+namespace BossMod.Endwalker.Quest.FrostyReception;
 
 class PostCarriage(BossModule module) : BossComponent(module)
 {
@@ -21,3 +22,4 @@ class LockOn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.M
 class ResinBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_ResinBomb), 5);
 class MagitekCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_MagitekCannon), 6);
 class Bombardment(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Bombardment1), 6);
+*/

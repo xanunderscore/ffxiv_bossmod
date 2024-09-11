@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Quest.TearfulReunion;
+﻿namespace BossMod.Shadowbringers.Quest.ATearfulReunion;
 
 public enum OID : uint
 {
@@ -121,7 +121,7 @@ class PhronesisStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 872, NameID = 8931)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69164, NameID = 8931)]
 public class Phronesis(WorldState ws, Actor primary) : BossModule(ws, primary, new(-256, -284), new ArenaBoundsCircle(20))
 {
     protected override void DrawArenaForeground(int pcSlot, Actor pc)

@@ -1,4 +1,5 @@
-﻿namespace BossMod.Endwalker.Quest.WhereEverythingBegins;
+﻿/*
+namespace BossMod.Endwalker.Quest.WhereEverythingBegins;
 
 public enum OID : uint
 {
@@ -153,3 +154,4 @@ public class Scarmiglione(WorldState ws, Actor primary) : BossModule(ws, primary
         Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
     }
 }
+*/

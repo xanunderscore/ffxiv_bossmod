@@ -46,7 +46,7 @@ class FordolaShield(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Shield != null)
-            hints.AddForbiddenZone(new AOEShapeDonut(4, 100), Shield.Position);
+            hints.AddForbiddenZone(new AOEShapeDonut(4, 100), Shield.Position, default, WorldState.FutureTime(5));
     }
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
@@ -99,7 +99,7 @@ class LakshmiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 282, NameID = 6385)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68508, NameID = 6385)]
 public class Lakshmi(WorldState ws, Actor primary) : BossModule(ws, primary, new(250, -353), new ArenaBoundsSquare(23))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

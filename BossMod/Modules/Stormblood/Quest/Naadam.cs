@@ -146,9 +146,9 @@ class ProtectSadu(BossModule module) : BossComponent(module)
     }
 }
 
-class NaadamStates : StateMachineBuilder
+class OvooStates : StateMachineBuilder
 {
-    public NaadamStates(BossModule module) : base(module)
+    public OvooStates(BossModule module) : base(module)
     {
         bool DutyEnd() => module.WorldState.CurrentCFCID != 246;
 
@@ -172,8 +172,8 @@ class NaadamStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 246, PrimaryActorOID = (uint)OID.Ovoo)]
-public class Naadam(WorldState ws, Actor primary) : BossModule(ws, primary, new(354, 296.5f), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68051, PrimaryActorOID = (uint)OID.Ovoo)]
+public class Ovoo(WorldState ws, Actor primary) : BossModule(ws, primary, new(354, 296.5f), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => Raid.Player()?.Position.InCircle(PrimaryActor.Position, 15) ?? false;
 }

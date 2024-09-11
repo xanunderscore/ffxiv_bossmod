@@ -1,4 +1,4 @@
-﻿namespace BossMod.Shadowbringers.Quest.ComingClean;
+﻿namespace BossMod.Shadowbringers.Quest.FullSteamAhead;
 
 public enum OID : uint
 {
@@ -116,7 +116,7 @@ class RanjitStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 860, NameID = 8374)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69155, NameID = 8374)]
 public class Ranjit(WorldState ws, Actor primary) : BossModule(ws, primary, new(-203, 395), new ArenaBoundsCircle(20))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

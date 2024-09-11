@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Heavensward.Quest.CloseEncountersOfTheVIthKind;
+﻿namespace BossMod.Heavensward.Quest.CloseEncountersOfTheVIthKind;
 
 public enum OID : uint
 {

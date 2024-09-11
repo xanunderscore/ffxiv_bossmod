@@ -1,4 +1,5 @@
-﻿namespace BossMod.Shadowbringers.Quest.TheGreatShipVylbrand;
+﻿/*
+namespace BossMod.Shadowbringers.Quest.TheGreatShipVylbrand;
 
 public enum OID : uint
 {
@@ -137,3 +138,4 @@ public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(
                 e.Priority = -1;
     }
 }
+*/
