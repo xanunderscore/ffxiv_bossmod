@@ -104,7 +104,7 @@ class SummoningNodeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 455, NameID = 6695)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68165, NameID = 6695)]
 public class SummoningNode(WorldState ws, Actor primary) : BossModule(ws, primary, new(-111, -295), ArenaBounds)
 {
     private static readonly List<WDir> vertices = [
@@ -128,5 +128,3 @@ public class SummoningNode(WorldState ws, Actor primary) : BossModule(ws, primar
 
     public static readonly ArenaBoundsCustom ArenaBounds = new(30, new(vertices));
 }
-
-

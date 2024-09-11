@@ -51,7 +51,7 @@ class SerCharibertTheSternStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 398, NameID = 4142)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67175, NameID = 4142)]
 public class SerCharibertTheStern(WorldState ws, Actor primary) : BossModule(ws, primary, new(65, 0), new ArenaBoundsCircle(18))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)

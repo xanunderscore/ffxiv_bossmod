@@ -2,7 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x2114,
+    Boss = 0x21B1,
     Helper = 0x233C,
 }
 
@@ -40,58 +40,9 @@ class CermetPile(BossModule module) : Components.SelfTargetedAOEs(module, Action
 class SelfDetonate(BossModule module) : Components.CastHint(module, ActionID.MakeSpell(AID._Weaponskill_SelfDetonate), "Kill before detonation!", true);
 class MineSelfDetonate(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_SelfDetonate1), new AOEShapeCircle(6));
 
-class EncounterStates : StateMachineBuilder
-{
-    public EncounterStates(BossModule module) : base(module)
-    {
-        TrivialPhase(0, 1800)
-            .ActivateOnEnter<BoundsP1>()
-            .ActivateOnEnter<Adds>()
-            .ActivateOnEnter<P1Barrier>()
-            .ActivateOnEnter<CermetPile>()
-            .Raw.Update = () => Module.Enemies(0x21CC).Any();
-        TrivialPhase(1, 1800)
-            .ActivateOnEnter<CircleOfDeath>()
-            .ActivateOnEnter<TwoTonzeMagitekMissile>()
-            .ActivateOnEnter<MagitekMissileProximity>()
-            .ActivateOnEnter<CermetPile>()
-            .ActivateOnEnter<SelfDetonate>()
-            .ActivateOnEnter<MineSelfDetonate>()
-            .ActivateOnEnter<AssaultCannon>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(472.40f, 751.06f);
-                Module.Arena.Bounds = Encounter.BoundsP2;
-            })
-            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
-    }
-}
-
-class P1Barrier(BossModule module) : BossComponent(module)
-{
-    public bool Transition;
-
-    public override void OnActorEState(Actor actor, ushort state)
-    {
-        if (actor.OID == 0x1EA1A1 && state == 0x0008)
-            Transition = true;
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints)
-    {
-        if (Transition)
-            hints.Add("Go upstairs!", false);
-    }
-}
-
-class Adds : Components.AddsMulti
+class Adds(BossModule module) : BossComponent(module)
 {
     private Actor? Alphinaud => WorldState.Actors.FirstOrDefault(a => a.OID == 0x21AC);
-
-    public Adds(BossModule module) : base(module, [0x2114, 0x21B3, 0x21B4, 0x21B2, 0x21B7, 0x21B1, 0x2115])
-    {
-        KeepOnPhaseChange = true;
-    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -115,114 +66,30 @@ class Adds : Components.AddsMulti
     }
 }
 
-class BoundsP1(BossModule module) : BossComponent(module)
+class EncounterStates : StateMachineBuilder
 {
-    public override void Update()
+    public EncounterStates(BossModule module) : base(module)
     {
-        Arena.Center = Raid.Player()!.Position;
+        TrivialPhase()
+            .ActivateOnEnter<Adds>()
+            .ActivateOnEnter<CircleOfDeath>()
+            .ActivateOnEnter<TwoTonzeMagitekMissile>()
+            .ActivateOnEnter<MagitekMissileProximity>()
+            .ActivateOnEnter<CermetPile>()
+            .ActivateOnEnter<SelfDetonate>()
+            .ActivateOnEnter<MineSelfDetonate>()
+            .ActivateOnEnter<AssaultCannon>()
+            .Raw.Update = () => module.WorldState.CurrentCFCID != 472;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 472, NameID = 6200)]
-public class Encounter(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68560, NameID = 4148)]
+public class Encounter(WorldState ws, Actor primary) : BossModule(ws, primary, new(473.25f, 751.75f), BoundsP2)
 {
-    /*
-    public override DutyObjective? GetNextObjective()
+    public static readonly ArenaBoundsCustom BoundsP2 = new(30, new(CurveApprox.Ellipse(34, 21, 0.25f).Select(p => p.Rotate(140.Degrees()))));
+
+    protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        if (FindComponent<P1Barrier>()?.Transition ?? false)
-            return new(new(553, 13, 752));
-
-        return null;
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
     }
-    */
-
-    private static readonly List<WDir> vertices = [
-  new WDir(14.43f, -26.75f),
-  new WDir(16.73f, -26.35f),
-  new WDir(18.88f, -25.99f),
-  new WDir(21.02f, -25.62f),
-  new WDir(21.21f, -23.55f),
-  new WDir(22.63f, -21.88f),
-  new WDir(24.19f, -20.36f),
-  new WDir(25.66f, -21.84f),
-  new WDir(27.55f, -20.45f),
-  new WDir(28.51f, -18.49f),
-  new WDir(29.44f, -16.47f),
-  new WDir(29.91f, -14.34f),
-  new WDir(29.94f, -12.19f),
-  new WDir(29.97f, -10.09f),
-  new WDir(30.01f, -8.00f),
-  new WDir(29.36f, -5.91f),
-  new WDir(28.72f, -3.93f),
-  new WDir(28.05f, -1.85f),
-  new WDir(27.40f, 0.17f),
-  new WDir(26.38f, 2.02f),
-  new WDir(25.24f, 3.84f),
-  new WDir(24.12f, 5.63f),
-  new WDir(23.00f, 7.42f),
-  new WDir(21.88f, 9.16f),
-  new WDir(20.38f, 10.72f),
-  new WDir(18.88f, 12.28f),
-  new WDir(17.41f, 13.78f),
-  new WDir(15.98f, 15.27f),
-  new WDir(14.49f, 16.82f),
-  new WDir(12.75f, 18.04f),
-  new WDir(10.96f, 19.30f),
-  new WDir(9.18f, 20.55f),
-  new WDir(7.48f, 21.74f),
-  new WDir(5.66f, 22.98f),
-  new WDir(3.74f, 23.81f),
-  new WDir(1.80f, 24.64f),
-  new WDir(-0.18f, 25.49f),
-  new WDir(-2.13f, 26.33f),
-  new WDir(-4.15f, 27.03f),
-  new WDir(-6.30f, 27.37f),
-  new WDir(-8.39f, 27.68f),
-  new WDir(-10.48f, 28.01f),
-  new WDir(-12.55f, 28.28f),
-  new WDir(-14.72f, 27.91f),
-  new WDir(-16.84f, 27.52f),
-  new WDir(-18.94f, 27.16f),
-  new WDir(-20.86f, 26.31f),
-  new WDir(-22.53f, 25.14f),
-  new WDir(-24.21f, 23.91f),
-  new WDir(-25.09f, 21.59f),
-  new WDir(-26.44f, 20.05f),
-  new WDir(-27.86f, 18.08f),
-  new WDir(-28.36f, 16.06f),
-  new WDir(-28.39f, 13.90f),
-  new WDir(-28.41f, 11.73f),
-  new WDir(-28.44f, 9.62f),
-  new WDir(-27.85f, 7.52f),
-  new WDir(-27.20f, 5.53f),
-  new WDir(-26.53f, 3.44f),
-  new WDir(-25.89f, 1.46f),
-  new WDir(-24.93f, -0.33f),
-  new WDir(-22.66f, -3.94f),
-  new WDir(-21.53f, -5.74f),
-  new WDir(-20.40f, -7.55f),
-  new WDir(-18.38f, -6.30f),
-  new WDir(-16.41f, -6.77f),
-  new WDir(-14.87f, -8.06f),
-  new WDir(-15.53f, -10.37f),
-  new WDir(-15.59f, -12.60f),
-  new WDir(-14.12f, -14.12f),
-  new WDir(-12.61f, -15.58f),
-  new WDir(-10.86f, -16.81f),
-  new WDir(-9.07f, -18.06f),
-  new WDir(-7.33f, -19.28f),
-  new WDir(-5.56f, -20.52f),
-  new WDir(-3.79f, -21.65f),
-  new WDir(-1.77f, -22.52f),
-  new WDir(0.31f, -22.92f),
-  new WDir(2.47f, -22.80f),
-  new WDir(4.32f, -21.81f),
-  new WDir(6.80f, -21.99f),
-  new WDir(7.54f, -24.27f),
-  new WDir(8.90f, -26.06f),
-  new WDir(11.15f, -26.42f),
-  new WDir(13.30f, -26.74f),
-];
-
-    public static readonly ArenaBoundsCustom BoundsP2 = new(30, new(vertices));
 }

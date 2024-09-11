@@ -57,6 +57,8 @@ public enum AID : uint
 
     // Duty actions
     AethericSiphon = 9102,
+    Deflect = 10006,
+    DeflectVeryEasy = 18863,
 }
 
 public sealed class Definitions : IDisposable
@@ -138,7 +140,10 @@ public sealed class Definitions : IDisposable
             CastAnimLock = 0
         });
 
+        // duty actions
         d.RegisterSpell(AID.AethericSiphon);
+        d.RegisterSpell(AID.Deflect);
+        d.RegisterSpell(AID.DeflectVeryEasy);
 
         Customize(d);
     }

@@ -21,7 +21,7 @@ class AlderiqueTheUnyieldingStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 343, NameID = 1454)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 66448, NameID = 1454)]
 public class AlderiqueTheUnyielding(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
 {
     protected override void UpdateModule()
@@ -46,7 +46,7 @@ public class AlderiqueTheUnyielding(WorldState ws, Actor primary) : BossModule(w
         }
     }
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
+    protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         foreach (var h in WorldState.Actors.Where(x => !x.IsAlly && !x.IsDead))
         {

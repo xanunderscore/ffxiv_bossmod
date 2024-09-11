@@ -1,4 +1,4 @@
-﻿namespace BossMod.Stormblood.Quest;
+﻿namespace BossMod.Stormblood.Quest.BestServedWithColdSteel;
 
 public enum OID : uint
 {
@@ -142,7 +142,7 @@ class MagitekVanguardIPrototypeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 463, NameID = 5650)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67989, NameID = 5650)]
 public class MagitekVanguardIPrototype(WorldState ws, Actor primary) : BossModule(ws, primary, ArenaCenter, CustomBounds)
 {
     private static readonly List<WDir> vertices = [

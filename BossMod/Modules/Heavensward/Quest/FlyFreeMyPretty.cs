@@ -1,4 +1,4 @@
-﻿namespace BossMod.Heavensward.Quest.Heliodrome;
+﻿namespace BossMod.Heavensward.Quest.FlyFreeMyPretty;
 
 public enum OID : uint
 {
@@ -93,7 +93,7 @@ class GrynewahtStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 222, NameID = 5576)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67894, NameID = 5576)]
 public class Grynewaht(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), HexBounds)
 {
     public static readonly ArenaBoundsCustom HexBounds = BuildHexBounds();

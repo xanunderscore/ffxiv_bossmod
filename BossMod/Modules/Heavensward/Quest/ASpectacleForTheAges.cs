@@ -113,7 +113,7 @@ class FlameGeneralAldynnStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 167, NameID = 4739)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67775, NameID = 4739)]
 public class FlameGeneralAldynn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-38, -209), new ArenaBoundsRect(25, 25, 45.Degrees()))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat;

@@ -1,8 +1,9 @@
-﻿namespace BossMod.Modules.Stormblood.Quest.RequiemForHeroesP2;
+﻿namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
 
 public enum OID : uint
 {
-    Boss = 0x268C,
+    Boss = 0x268A,
+    BossP2 = 0x268C,
     Helper = 0x233C,
     AmeNoHabakiri = 0x2692, // R3.000, x0 (spawn during fight)
     TheStorm = 0x2760, // R3.000, x0 (spawn during fight)
@@ -25,6 +26,38 @@ public enum AID : uint
     TheStormUnboundCast = 14815, // Helper->self, 3.0s cast, range 5 circle
     TheStormUnboundRepeat = 14816, // Helper->self, no cast, range 5 circle
     EntropicFlame = 14833, // Helper->self, 4.0s cast, range 50+R width 8 rect
+}
+
+class HienAI(BossModule module) : Components.RoleplayModule(module)
+{
+    public override void Execute(Actor? primaryTarget)
+    {
+        Hints.RecommendedRangeToTarget = 3;
+
+        var ajisai = StatusDetails(primaryTarget, Roleplay.SID.Ajisai, Player.InstanceID);
+
+        switch (ComboAction)
+        {
+            case Roleplay.AID.Gofu:
+                UseAction(Roleplay.AID.Yagetsu, primaryTarget);
+                break;
+
+            case Roleplay.AID.Kyokufu:
+                UseAction(Roleplay.AID.Gofu, primaryTarget);
+                break;
+
+            default:
+                if (ajisai.Left < 5)
+                    UseAction(Roleplay.AID.Ajisai, primaryTarget);
+                UseAction(Roleplay.AID.Kyokufu, primaryTarget);
+                break;
+        }
+
+        if (PredictedHP(Player) < 5000)
+            UseAction(Roleplay.AID.SecondWind, Player, -10);
+
+        UseAction(Roleplay.AID.HissatsuGyoten, primaryTarget, -10);
+    }
 }
 
 class StormUnbound(BossModule module) : Components.Exaflare(module, 5)
@@ -76,10 +109,6 @@ class Swell(BossModule module) : Components.KnockbackFromCastTarget(module, Acti
 class ArtOfTheSword1(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword1), new AOEShapeRect(40, 3));
 class ArtOfTheSword2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword2), new AOEShapeRect(40, 3));
 class ArtOfTheSword3(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.ArtOfTheSword3), new AOEShapeRect(40, 3));
-class Adds(BossModule module) : BossComponent(module)
-{
-    public override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => (OID)x.OID is OID.AmeNoHabakiri or OID.TheSwell or OID.TheStorm), ArenaColor.Enemy);
-}
 
 class DarkAether(BossModule module) : Components.GenericAOEs(module)
 {
@@ -92,11 +121,12 @@ class DarkAether(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-class ZenosYaeGalvusP2States : StateMachineBuilder
+public class ZenosYaeGalvusStates : StateMachineBuilder
 {
-    public ZenosYaeGalvusP2States(BossModule module) : base(module)
+    public ZenosYaeGalvusStates(BossModule module) : base(module)
     {
-        TrivialPhase()
+        TrivialPhase().ActivateOnEnter<HienAI>();
+        TrivialPhase(1)
             .ActivateOnEnter<FloodOfDarkness>()
             .ActivateOnEnter<VeinSplitter>()
             .ActivateOnEnter<LightlessSpark>()
@@ -109,12 +139,16 @@ class ZenosYaeGalvusP2States : StateMachineBuilder
             .ActivateOnEnter<ArtOfTheStorm>()
             .ActivateOnEnter<EntropicFlame>()
             .ActivateOnEnter<DarkAether>()
-            .ActivateOnEnter<Adds>()
             .ActivateOnEnter<StormUnbound>()
-            ;
+            .Raw.Update = () => module.Enemies(OID.BossP2).All(x => x.IsDeadOrDestroyed);
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 648, NameID = 6039)]
-public class ZenosYaeGalvusP2(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(16));
-
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68721, NameID = 6039)]
+public class ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20))
+{
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+    }
+}

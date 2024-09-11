@@ -1,4 +1,4 @@
-﻿namespace BossMod.RealmReborn.Quest.Devastation;
+﻿namespace BossMod.RealmReborn.Quest.TheUltimateWeapon;
 
 public enum OID : uint
 {
@@ -69,28 +69,6 @@ class FireSphere(BossModule module) : Components.GenericAOEs(module, ActionID.Ma
     }
 }
 
-class DevastationStates : StateMachineBuilder
-{
-    public DevastationStates(BossModule module) : base(module)
-    {
-        TrivialPhase()
-            .ActivateOnEnter<DeathWall>()
-            .ActivateOnEnter<DarkThunder>()
-            .ActivateOnEnter<SeaOfPitch>()
-            .ActivateOnEnter<AncientFire>()
-            .ActivateOnEnter<EndOfDays>()
-            .ActivateOnEnter<Nightburn>()
-            .ActivateOnEnter<FireSphere>()
-            .ActivateOnEnter<AncientEruption>()
-            .ActivateOnEnter<FluidFlare>()
-            .ActivateOnEnter<AncientCross>()
-            .ActivateOnEnter<BurstFlare>()
-            .ActivateOnEnter<GripOfNight>()
-            .ActivateOnEnter<EndOfDaysAdds>()
-            ;
-    }
-}
-
 class Nightburn(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.Nightburn), "WoLbuster");
 
 class AncientFire(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.AncientFireIII), hint: "Raidwide + spawn deathwall");
@@ -135,6 +113,28 @@ class SeaOfPitch(BossModule module) : Components.PersistentVoidzone(module, 4, m
 class EndOfDays(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EndOfDays), new AOEShapeRect(60, 4));
 class EndOfDaysAdds(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.EndOfDaysAdds), new AOEShapeRect(60, 4));
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 867, NameID = 2143)]
-public class Devastation(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20));
+class LahabreaStates : StateMachineBuilder
+{
+    public LahabreaStates(BossModule module) : base(module)
+    {
+        TrivialPhase()
+            .ActivateOnEnter<DeathWall>()
+            .ActivateOnEnter<DarkThunder>()
+            .ActivateOnEnter<SeaOfPitch>()
+            .ActivateOnEnter<AncientFire>()
+            .ActivateOnEnter<EndOfDays>()
+            .ActivateOnEnter<Nightburn>()
+            .ActivateOnEnter<FireSphere>()
+            .ActivateOnEnter<AncientEruption>()
+            .ActivateOnEnter<FluidFlare>()
+            .ActivateOnEnter<AncientCross>()
+            .ActivateOnEnter<BurstFlare>()
+            .ActivateOnEnter<GripOfNight>()
+            .ActivateOnEnter<EndOfDaysAdds>()
+            ;
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70058, NameID = 2143)]
+public class Lahabrea(WorldState ws, Actor primary) : BossModule(ws, primary, new(-704, 480), new ArenaBoundsCircle(20));
 

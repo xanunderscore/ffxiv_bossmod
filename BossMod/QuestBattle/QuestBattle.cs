@@ -29,6 +29,7 @@ public class QuestObjective(WorldState ws)
     public Action<Actor, ActorStatus> OnStatusGain = (_, _) => { };
     public Action<Actor, ActorStatus> OnStatusLose = (_, _) => { };
     public Action<Actor> OnActorEventStateChanged = (_) => { };
+    public Action<Actor, ushort> OnEventObjectStateChanged = (_, _) => { };
     public Action<Actor> OnActorCreated = (_) => { };
     public Action<Actor> OnActorDestroyed = (_) => { };
     public Action<Actor> OnActorCombatChanged = (_) => { };
@@ -195,6 +196,7 @@ public abstract class QuestBattle : IDisposable
                 if (act.IsDead)
                     CurrentObjective?.OnActorKilled(act);
             }),
+            ws.Actors.EventObjectStateChange.Subscribe((act, u) => CurrentObjective?.OnEventObjectStateChanged(act, u)),
             ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op)),
             ws.Actors.IsTargetableChanged.Subscribe(act => CurrentObjective?.OnActorTargetableChanged(act))
         );

@@ -303,7 +303,7 @@ public sealed class ClientState
 
         public override void Write(ReplayRecorder.Output output)
         {
-            output.EmitFourCC("BLUS"u8);
+            output.EmitFourCC("CBLU"u8);
             output.Emit((byte)Values.Length);
             foreach (var e in Values)
                 output.Emit(e);

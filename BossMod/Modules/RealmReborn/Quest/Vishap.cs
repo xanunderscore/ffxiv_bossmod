@@ -1,4 +1,4 @@
-﻿namespace BossMod.RealmReborn.Quest.StepsOfFaith;
+﻿namespace BossMod.RealmReborn.Quest.TheStepsOfFaith;
 
 public enum OID : uint
 {
@@ -233,9 +233,9 @@ class ScrollingBounds(BossModule module) : BossComponent(module)
     }
 }
 
-class StepsOfFaithStates : StateMachineBuilder
+class VishapStates : StateMachineBuilder
 {
-    public StepsOfFaithStates(BossModule module) : base(module)
+    public VishapStates(BossModule module) : base(module)
     {
         TrivialPhase()
             .ActivateOnEnter<FlameBreath>()
@@ -258,8 +258,8 @@ class StepsOfFaithStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 885, NameID = 3330)]
-public class StepsOfFaith(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 245), ScrollingBounds.Bounds)
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70127, NameID = 3330)]
+public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 245), ScrollingBounds.Bounds)
 {
     // vishap doesn't start targetable
     protected override bool CheckPull() => PrimaryActor.InCombat;

@@ -1,4 +1,4 @@
-﻿namespace BossMod.RealmReborn.Quest.CapeWestwind;
+﻿namespace BossMod.RealmReborn.Quest.OperationArchon;
 
 public enum OID : uint
 {
@@ -79,8 +79,5 @@ class RhitahtynSasArvinaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 865, NameID = 2160)]
-public class RhitahtynSasArvina(WorldState ws, Actor primary) : BossModule(ws, primary, new(-689, -815), new ArenaBoundsCircle(14.5f))
-{
-}
-
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70057, NameID = 2160)]
+public class RhitahtynSasArvina(WorldState ws, Actor primary) : BossModule(ws, primary, new(-689, -815), new ArenaBoundsCircle(14.5f));
