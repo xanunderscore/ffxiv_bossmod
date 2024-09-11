@@ -82,7 +82,7 @@ public sealed class ClassSCHUtility(RotationModuleManager manager, Actor player)
 
         // TODO add Consolation
 
-        var gauge = GetGauge<ScholarGauge>();
+        var gauge = World.Client.GetGauge<ScholarGauge>();
         var seraphTimer = gauge.SeraphTimer * 0.001f;
         var haveSeraph = seraphTimer > World.Client.AnimationLock;
         var havePet = World.Client.ActivePet.InstanceID != 0xE0000000;

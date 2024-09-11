@@ -1,15 +1,9 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using System.Runtime.InteropServices;
 
 namespace BossMod.AI;
-
-[StructLayout(LayoutKind.Explicit, Size = 0x1A0)]
-public unsafe partial struct GameObject
-{
-    [FieldOffset(0x7C)] public uint SmallRadius;
-}
 
 // utility for simulating user actions based on AI decisions:
 // - navigation
@@ -81,7 +75,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         if (hints.Dismount && player.MountId > 0)
             ExecuteDismount(now);
 
-        if (hints.InteractWithTarget is Actor tar && WithinInteractRange(player, tar))
+        if (hints.InteractWithTarget is Actor tar && CanInteract(player, tar))
         {
             hints.ForcedMovement = new();
             ExecuteInteract(now, tar);
@@ -96,40 +90,32 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
         _nextDismount = now.AddMilliseconds(100);
     }
 
-    private unsafe bool WithinInteractRange(Actor player, Actor target)
+    private unsafe bool CanInteract(Actor player, Actor target)
     {
-        var obj = GameObjectManager.Instance()->Objects.IndexSorted[target.SpawnIndex].Value;
-        if (obj == null || obj->GetGameObjectId() != target.InstanceID)
+        var pobj = ActorToObj(player);
+        var tobj = ActorToObj(target);
+
+        if (pobj == null || tobj == null)
             return false;
 
-        var maxDeltaH = 5;
+        return EventFramework.Instance()->IsInInteractRange(pobj, tobj, 1, false);
+    }
 
-        var maxDist = target.Type switch
-        {
-            ActorType.Aetheryte => 8.5f,
-            ActorType.EventObj => ((GameObject*)obj)->SmallRadius > 0 ? 2.0999999f : 3.5999999f,
-            ActorType.GatheringPoint => 3,
-            _ => 25f
-        };
+    private static unsafe GameObject* ActorToObj(Actor t)
+    {
+        var aobj = GameObjectManager.Instance()->Objects.IndexSorted[t.SpawnIndex].Value;
+        if (aobj == null || aobj->GetGameObjectId() != t.InstanceID)
+            return null;
 
-        var pos = obj->Position;
-        if (obj->LayoutInstance != null)
-            pos = *obj->LayoutInstance->GetTranslationImpl();
-
-        if (MathF.Abs(pos.Y - player.PosRot.Y) > maxDeltaH)
-            return false;
-
-        var distanceBetweenHitboxes = ((Vector3)pos - player.PosRot.XYZ()).XZ().Length() - obj->HitboxRadius - player.HitboxRadius;
-        // todo tweak range, AI can get stuck right at the edge
-        return distanceBetweenHitboxes < maxDist - 0.25f;
+        return aobj;
     }
 
     private unsafe void ExecuteInteract(DateTime now, Actor target)
     {
         if (_amex.EffectiveAnimationLock > 0 || now < _nextInteract)
             return;
-        var obj = GameObjectManager.Instance()->Objects.IndexSorted[target.SpawnIndex].Value;
-        if (obj == null || obj->GetGameObjectId() != target.InstanceID)
+        var obj = ActorToObj(target);
+        if (obj == null)
             return;
         TargetSystem.Instance()->OpenObjectInteraction(obj);
         _nextInteract = now.AddMilliseconds(100);

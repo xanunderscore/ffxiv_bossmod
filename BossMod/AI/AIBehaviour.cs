@@ -85,8 +85,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
         if (autorot.Hints.InteractWithTarget is Actor interact)
-            // shortest possible interact range is 2.1y, but once we get within max interact range, AIController will disable movement, so any small number could go here - see AIController.WithinInteractRange
-            return new Targeting(new AIHints.Enemy(interact, false), 0);
+            return new Targeting(new AIHints.Enemy(interact, false), 2);
 
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
         // if current target is not among valid targets, clear it - this opens way for future target selection heuristics

@@ -66,7 +66,7 @@ class ThancredAI(BossModule module) : Components.RoleplayModule(module)
     {
         Hints.RecommendedRangeToTarget = 3;
 
-        if (WorldState.Client.DutyActions[0].Charges > 0)
+        if (WorldState.Client.DutyActions[0].CurCharges > 0)
         {
             UseAction(ActionDefinitions.IDGeneralDuty1, primaryTarget);
             return;

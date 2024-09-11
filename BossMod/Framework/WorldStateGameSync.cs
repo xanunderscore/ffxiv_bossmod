@@ -236,7 +236,8 @@ sealed class WorldStateGameSync : IDisposable
         var nameID = chr != null ? chr->NameId : 0;
         var classID = chr != null ? (Class)chr->ClassJob : Class.None;
         var level = chr != null ? chr->Level : 0;
-        var posRot = new Vector4(obj->Position, obj->Rotation);
+        var pos = *obj->GetPosition();
+        var posRot = new Vector4(pos, obj->Rotation);
         var hpmp = new ActorHPMP();
         bool inCombat = false;
         if (chr != null)

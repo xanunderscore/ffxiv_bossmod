@@ -39,10 +39,6 @@ public sealed class ClientState
     public record struct Pet(ulong InstanceID, byte Order, byte Stance);
     public record struct DutyAction(ActionID Action, byte CurCharges, byte MaxCharges);
 
-    public record struct Pet(uint InstanceID, byte Order, byte Stance);
-
-    public record struct DutyAction(ActionID Action, byte Charges);
-
     public const int NumCooldownGroups = 82;
     public const int NumClassLevels = 32; // see ClassJob.ExpArrayIndex
     public const int NumBlueMageSpells = 24;
@@ -271,25 +267,6 @@ public sealed class ClientState
         }
     }
 
-    public Event<OpBlueMageSpellsChange> BlueMageSpellsChanged = new();
-    public sealed record class OpBlueMageSpellsChange(uint[] Values) : WorldState.Operation
-    {
-        public readonly uint[] Values = Values;
-
-        protected override void Exec(WorldState ws)
-        {
-            Array.Copy(Values, ws.Client.BlueMageSpells, NumBlueMageSpells);
-            ws.Client.BlueMageSpellsChanged.Fire(this);
-        }
-        public override void Write(ReplayRecorder.Output output)
-        {
-            output.EmitFourCC("CBLU"u8);
-            output.Emit((byte)Values.Length);
-            foreach (var e in Values)
-                output.Emit(e);
-        }
-    }
-
     public Event<OpClassJobLevelsChange> ClassJobLevelsChanged = new();
     public sealed record class OpClassJobLevelsChange(short[] Values) : WorldState.Operation
     {
@@ -364,20 +341,5 @@ public sealed class ClientState
             ws.Client.FocusTargetChanged.Fire(this);
         }
         public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("CLFT"u8).Emit(Value, "X8");
-    }
-
-    public Event<OpActivePetChange> ActivePetChanged = new();
-    public sealed record class OpActivePetChange(Pet Value) : WorldState.Operation
-    {
-        protected override void Exec(WorldState ws)
-        {
-            ws.Client.ActivePet = Value;
-            ws.Client.ActivePetChanged.Fire(this);
-        }
-
-        public override void Write(ReplayRecorder.Output output)
-        {
-            output.EmitFourCC("PETS"u8).Emit(Value.InstanceID).Emit(Value.Order).Emit(Value.Stance);
-        }
     }
 }
