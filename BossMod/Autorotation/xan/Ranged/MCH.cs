@@ -59,7 +59,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
 
-        var gauge = GetGauge<MachinistGauge>();
+        var gauge = World.Client.GetGauge<MachinistGauge>();
 
         Heat = gauge.Heat;
         Battery = gauge.Battery;
@@ -145,7 +145,6 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
 
             PushGCD(AID.SplitShot, primaryTarget);
         }
-
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)

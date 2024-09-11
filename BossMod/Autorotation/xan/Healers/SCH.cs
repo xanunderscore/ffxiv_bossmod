@@ -55,7 +55,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
 
-        var gauge = GetGauge<ScholarGauge>();
+        var gauge = World.Client.GetGauge<ScholarGauge>();
         Aetherflow = gauge.Aetherflow;
         FairyGauge = gauge.FairyGauge;
         SeraphTimer = gauge.SeraphTimer * 0.001f;
