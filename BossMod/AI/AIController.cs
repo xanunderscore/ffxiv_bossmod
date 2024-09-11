@@ -22,7 +22,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
     private DateTime _nextJump;
     private DateTime _nextDismount;
 
-    public bool InCutscene => Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.Occupied33] || Service.Condition[ConditionFlag.BetweenAreas] || Service.Condition[ConditionFlag.OccupiedInQuestEvent];
+    public static bool InCutscene => Service.Condition[ConditionFlag.OccupiedInCutSceneEvent] || Service.Condition[ConditionFlag.WatchingCutscene78] || Service.Condition[ConditionFlag.Occupied33] || Service.Condition[ConditionFlag.BetweenAreas] || Service.Condition[ConditionFlag.OccupiedInQuestEvent];
     public bool IsVerticalAllowed => Service.Condition[ConditionFlag.InFlight];
     public Angle CameraFacing => (Camera.Instance?.CameraAzimuth ?? 0).Radians() + 180.Degrees();
     public Angle CameraAltitude => (Camera.Instance?.CameraAltitude ?? 0).Radians();
@@ -77,6 +77,7 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
 
         if (hints.InteractWithTarget is Actor tar && CanInteract(player, tar))
         {
+            // clear forced movement so we don't interrupt our own interact
             hints.ForcedMovement = new();
             ExecuteInteract(now, tar);
         }

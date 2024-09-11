@@ -21,6 +21,7 @@ public class QuestObjective(WorldState ws)
     public readonly List<Waypoint> Connections = [];
     public NavigationStrategy NavigationStrategy = NavigationStrategy.Pause;
 
+    public bool ForceStopNavigation;
     public bool Completed;
 
     public Action<Actor, AIHints> AddAIHints = (_, _) => { };

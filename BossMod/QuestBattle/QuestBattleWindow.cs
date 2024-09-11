@@ -1,8 +1,6 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using FFXIVClientStructs.FFXIV.Common.Lua;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 
@@ -20,22 +18,10 @@ public unsafe class QuestBattleWindow : UIWindow
     private delegate void AbandonDuty(bool a1);
     private readonly AbandonDuty abandonDutyHook = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
 
-    private delegate ulong EnqueueSnipeTask(EventSceneModuleImplBase* scene, lua_State* state);
-    private readonly HookAddress<EnqueueSnipeTask> _enqueueSnipe;
-
     public QuestBattleWindow(QuestBattleDirector director) : base(_windowID, false, new(300, 200), ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse)
     {
         _director = director;
         _director.World.CurrentZoneChanged.Subscribe(OnZoneChange);
-
-        _enqueueSnipe = new("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 50 48 8B F1 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 4C 24 ??", (scene, state) =>
-        {
-            var val = state->top;
-            val->tt = 3;
-            val->value.n = 1;
-            state->top += 1;
-            return 1;
-        });
     }
 
     private void OnZoneChange(WorldState.OpZoneChange zc)
@@ -51,10 +37,7 @@ public unsafe class QuestBattleWindow : UIWindow
     protected override void Dispose(bool disposing)
     {
         if (disposing)
-        {
             _director.Dispose();
-            _enqueueSnipe.Dispose();
-        }
         base.Dispose(disposing);
     }
 

@@ -25,9 +25,6 @@ public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
 
         new QuestObjective(ws)
             .Named("Open cell")
-            .WithConnection(V3(-44.18f, -10.72f, -120.78f))
-            // force pathfind directly onto extremely janky iron cell hitbox
-            .PauseForCombat(false)
             .Hints((act, hints) => hints.PrioritizeTargetsByOID(OID.IronCell))
             .CompleteOnKilled((uint)OID.IronCell),
 

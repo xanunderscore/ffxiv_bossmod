@@ -1,4 +1,5 @@
-﻿using Dalamud.Plugin.Ipc;
+﻿using BossMod.AI;
+using Dalamud.Plugin.Ipc;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -195,7 +196,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void MoveNext(Actor player, QuestObjective objective, AIHints hints)
     {
-        if (CurrentWaypoints.Count == 0)
+        if (CurrentWaypoints.Count == 0 || AIController.InCutscene)
             return;
 
         var nextwp = CurrentWaypoints[0];
@@ -387,6 +388,9 @@ public sealed class QuestBattleDirector : IDisposable
     private void SetMoveSpeedFactor()
     {
 #if DEBUG
+        if (World.Party.Player()?.MountId > 0)
+            return;
+
         SetMoveSpeedFactorInternal(_config.Speedhack && Enabled ? 5 : 1);
 #endif
     }
