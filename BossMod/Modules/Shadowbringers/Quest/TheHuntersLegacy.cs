@@ -71,7 +71,7 @@ class RonkanAura(BossModule module) : BossComponent(module)
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
         if (AuraCenter is Actor a)
-            Arena.AddCircleFilled(a.Position, 10, ArenaColor.SafeFromAOE);
+            Arena.ZoneCircle(a.Position, 10, ArenaColor.SafeFromAOE);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
