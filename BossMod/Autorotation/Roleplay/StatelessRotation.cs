@@ -1,5 +1,5 @@
 ﻿namespace BossMod.Autorotation;
-public abstract class RoleplayRotation(WorldState ws)
+public abstract class StatelessRotation(WorldState ws)
 {
     protected AIHints Hints = null!;
     protected Actor Player = null!;

@@ -2,7 +2,7 @@
 
 namespace BossMod.Shadowbringers.Quest.DeathUntoDawn;
 
-class UriangerAI(BossModule module) : Components.RoleplayModule(module)
+class UriangerAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public const ushort StatusParam = 158;
 

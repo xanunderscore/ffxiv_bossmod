@@ -2,7 +2,7 @@
 
 namespace BossMod.Shadowbringers.Quest.DeathUntoDawn;
 
-class AlisaieAI(BossModule module) : Components.RoleplayModule(module)
+class AlisaieAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public const ushort StatusParam = 157;
 

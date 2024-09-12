@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Shadowbringers.NyelbertsLament;
 
-public class NyelbertAI(WorldState ws) : RoleplayRotation(ws)
+public class AutoNyelbert(WorldState ws) : StatelessRotation(ws)
 {
     protected override void Exec(Actor? primaryTarget)
     {
@@ -41,7 +41,7 @@ public class NyelbertAI(WorldState ws) : RoleplayRotation(ws)
 [Quest(BossModuleInfo.Maturity.WIP, 686)]
 public class Quest(WorldState ws) : QuestBattle(ws)
 {
-    private readonly NyelbertAI _ai = new(ws);
+    private readonly AutoNyelbert _ai = new(ws);
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

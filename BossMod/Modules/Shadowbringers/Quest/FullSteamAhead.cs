@@ -60,7 +60,7 @@ class NexusOfThunder(BossModule module) : Components.SelfTargetedAOEs(module, Ac
 class CoiledLevin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_CoiledLevin1), new AOEShapeCircle(6));
 class LightningVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.LightningVoidzone).Where(x => x.EventState != 7));
 
-class ThancredAI(BossModule module) : Components.RoleplayModule(module)
+class ThancredAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public override void Execute(Actor? primaryTarget)
     {

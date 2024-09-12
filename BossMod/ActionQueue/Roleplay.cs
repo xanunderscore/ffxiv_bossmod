@@ -34,6 +34,13 @@ public enum AID : uint
     RonkanFlare = 16577,
     FallingStar = 16578,
 
+    // Renda-Rae - The Hunter's Legacy (ShB)
+    HeavyShot = 17123,
+    AcidicBite = 17122,
+    RadiantArrow = 17124,
+    HuntersPrudence = 17596,
+    DullingArrow = 17125,
+
     // Thancred - Coming Clean (ShB)
     KeenEdge = 16434,
     BrutalShell = 16418,
@@ -155,6 +162,9 @@ public enum SID : uint
     // Nyelbert
     Electrocution = 271,
 
+    // Renda-Rae
+    AcidicBite = 2073,
+
     // thancred
     PerfectDeception = 1906,
     SouldeepInvisibility = 1956,
@@ -205,6 +215,12 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RonkanThunder3);
         d.RegisterSpell(AID.RonkanFlare);
         d.RegisterSpell(AID.FallingStar, castAnimLock: 5.10f);
+
+        d.RegisterSpell(AID.HeavyShot);
+        d.RegisterSpell(AID.AcidicBite);
+        d.RegisterSpell(AID.RadiantArrow);
+        d.RegisterSpell(AID.HuntersPrudence);
+        d.RegisterSpell(AID.DullingArrow);
 
         d.RegisterSpell(AID.KeenEdge);
         d.RegisterSpell(AID.BrutalShell);

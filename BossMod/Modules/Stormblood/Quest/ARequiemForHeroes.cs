@@ -28,7 +28,7 @@ public enum AID : uint
     EntropicFlame = 14833, // Helper->self, 4.0s cast, range 50+R width 8 rect
 }
 
-class HienAI(BossModule module) : Components.RoleplayModule(module)
+class HienAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public override void Execute(Actor? primaryTarget)
     {

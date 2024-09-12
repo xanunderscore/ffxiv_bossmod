@@ -66,7 +66,7 @@ public class WindChisel(BossModule module) : Components.SelfTargetedAOEs(module,
 
 public class Scales(BossModule module) : Components.Adds(module, (uint)OID.TheScaleOfTheFather);
 
-class YshtolaAI(BossModule module) : Components.RoleplayModule(module)
+class YshtolaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     private Actor Magnai => Module.Enemies(OID.Magnai)[0];
     private Actor Hien => Module.WorldState.Actors.First(x => (OID)x.OID == OID.Hien);

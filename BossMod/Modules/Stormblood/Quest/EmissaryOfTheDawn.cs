@@ -38,7 +38,7 @@ class Step1(BossModule module) : BossComponent(module)
     }
 }
 
-class AlphiAI(BossModule module) : Components.RoleplayModule(module)
+class AlphiAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public override void Execute(Actor? primaryTarget)
     {

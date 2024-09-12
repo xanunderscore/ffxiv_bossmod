@@ -1,7 +1,7 @@
 ﻿using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Shadowbringers.Quest.DeathUntoDawn;
-class GrahaAI(BossModule module) : Components.RoleplayModule(module)
+class GrahaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 {
     public const ushort StatusParam = 159;
 
