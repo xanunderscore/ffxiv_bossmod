@@ -8,10 +8,11 @@ public enum AID : uint
     DiffractiveMagitekCannon = 7621, // range 30 radius 10 ground targeted aoe
     HighPoweredMagitekCannon = 7622, // range 42 width 8 rect aoe
 
-    // Alphinaud - I forgot the name of this quest and it needs a module
+    // Alphinaud - Emissary of the Dawn (StB)
     RuinIII = 11191,
     Physick = 11192,
     TriShackle = 11482,
+    Starstorm = 11193,
 
     // Y'shtola - Will of the Moon (StB)
     StoneIVSeventhDawn = 13423,
@@ -197,6 +198,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RuinIII);
         d.RegisterSpell(AID.Physick);
         d.RegisterSpell(AID.TriShackle);
+        d.RegisterSpell(AID.Starstorm, castAnimLock: 5.10f);
 
         d.RegisterSpell(AID.StoneIVSeventhDawn);
         d.RegisterSpell(AID.AeroIISeventhDawn);

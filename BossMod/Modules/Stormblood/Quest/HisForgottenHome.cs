@@ -34,42 +34,17 @@ class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, new A
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         base.AddAIHints(slot, actor, assignment, hints);
-        var isse = WorldState.Actors.FirstOrDefault(a => a.OID == 0x2138);
-        if (isse != null)
-            hints.AddForbiddenZone(new AOEShapeCircle(6), isse.Position);
+        if (CurrentBaits.Count > 0 && WorldState.Actors.FirstOrDefault(a => a.OID == 0x2138) is Actor isse)
+            hints.AddForbiddenZone(new AOEShapeCircle(8), isse.Position, activation: CurrentBaits[0].Activation);
     }
 }
 class BlizzardIIICast(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID._Spell_BlizzardIII), m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7), 0);
-
-class Adds(BossModule module) : Components.AddsMulti(module, [0x213B, 0x213C, 0x213D])
-{
-    private Actor? Isse => WorldState.Actors.FirstOrDefault(a => a.OID == 0x2138);
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        foreach (var e in hints.PotentialTargets)
-        {
-            e.Priority = e.Actor.TargetID == Isse?.InstanceID ? 1 : 0;
-        }
-    }
-}
-
-class Allies(BossModule module) : BossComponent(module)
-{
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var actor in WorldState.Actors.Where(a => a.IsAlly))
-            Arena.Actor(actor, ArenaColor.PlayerGeneric);
-    }
-}
 
 class SlickshellCaptainStates : StateMachineBuilder
 {
     public SlickshellCaptainStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Adds>()
-            .ActivateOnEnter<Allies>()
             .ActivateOnEnter<WaterIII>()
             .ActivateOnEnter<Kasaya>()
             .ActivateOnEnter<BlizzardIIIIcon>()
@@ -88,5 +63,20 @@ public class SlickshellCaptain(WorldState ws, Actor primary) : BossModule(ws, pr
     ];
 
     public static readonly ArenaBoundsCustom CustomBounds = new(30, new(vertices.Select(v => v - BoundsCenter)));
+
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+
+    protected override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        foreach (var actor in WorldState.Actors.Where(a => a.IsAlly))
+            Arena.Actor(actor, ArenaColor.PlayerGeneric);
+    }
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        // attack anyone targeting isse
+        foreach (var h in hints.PotentialTargets)
+            h.Priority = WorldState.Actors.Find(h.Actor.TargetID)?.OID == 0x2138 ? 1 : 0;
+    }
 }
 

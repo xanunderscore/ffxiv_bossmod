@@ -1,49 +1,19 @@
 ﻿namespace BossMod.Stormblood.Quest.EmissaryOfTheDawn;
 
-// TODO use limit break
-
 public enum OID : uint
 {
     Boss = 0x234B,
     Helper = 0x233C,
 }
 
-class Step1(BossModule module) : BossComponent(module)
-{
-    public bool Complete;
-    public Actor? Wreckage => Module.Enemies(0x234C).FirstOrDefault();
-    public WPos WreckagePosition = new(-6.3f, 5.75f);
-    public Actor? Popularis => Module.Enemies(0x2344).FirstOrDefault();
-    public Actor? PopularisEvent => WorldState.Actors.FirstOrDefault(a => a.OID == 0x1EA9D9);
+class AutoAlphi(BossModule module) : Components.RotationModule<QuestBattle.Stormblood.EmissaryOfTheDawn.AlphiAI>(module);
 
+class LB(BossModule module) : BossComponent(module)
+{
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (actor.DistanceToHitbox(WreckagePosition, 0) > 5)
-            hints.ForcedMovement = actor.DirectionTo(WreckagePosition).ToVec3();
-
-        if (Wreckage != null && Wreckage.IsTargetable && !Wreckage.IsDeadOrDestroyed)
-            hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.RuinIII), Wreckage, ActionQueue.Priority.High);
-
-        if (Popularis?.IsTargetable ?? false)
-            hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.Physick), Popularis, ActionQueue.Priority.High);
-
-        if (PopularisEvent?.IsTargetable ?? false)
-            hints.InteractWithTarget = PopularisEvent;
-    }
-
-    public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4)
-    {
-        if (updateID == 0x80000001 && param1 == 0x00000027)
-            Complete = true;
-    }
-}
-
-class AlphiAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
-{
-    public override void Execute(Actor? primaryTarget)
-    {
-        if (primaryTarget != null)
-            UseAction(Roleplay.AID.RuinIII, primaryTarget);
+        if (WorldState.Actors.Any(x => x.OID == 0x2340 && x.FindStatus(1497) != null))
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.Starstorm), null, ActionQueue.Priority.VeryHigh, targetPos: new Vector3(Arena.Center.X, 0, Arena.Center.Z));
     }
 }
 
@@ -52,19 +22,24 @@ class HostileSkyArmorStates : StateMachineBuilder
     public HostileSkyArmorStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<AlphiAI>()
+            .ActivateOnEnter<AutoAlphi>()
+            .ActivateOnEnter<LB>()
             .Raw.Update = () => module.WorldState.CurrentCFCID != 582;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68612, NameID = 2009561)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68612, NameID = 7257)]
 public class HostileSkyArmor(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
 {
-    protected override void UpdateModule()
-    {
-        Arena.Center = Raid.Player()!.Position;
-    }
-
     protected override bool CheckPull() => true;
+
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var h in hints.PotentialTargets)
+            h.Priority = 0;
+    }
 }
 

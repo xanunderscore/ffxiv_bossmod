@@ -34,7 +34,7 @@ public sealed class RotationModuleManager : IDisposable
     public DateTime CombatStart { get; private set; } // default value when player is not in combat, otherwise timestamp when player entered combat
     public (DateTime Time, ActorCastEvent? Data) LastCast { get; private set; }
 
-    private static bool IsRoleplayStatus(ActorStatus st) => (Roleplay.SID)st.ID is Roleplay.SID.RolePlaying or Roleplay.SID.BorrowedFlesh;
+    public static bool IsRoleplayStatus(ActorStatus st) => (Roleplay.SID)st.ID is Roleplay.SID.RolePlaying or Roleplay.SID.BorrowedFlesh;
 
     public RotationModuleManager(RotationDatabase db, BossModuleManager bmm, AIHints hints, int playerSlot = PartyState.PlayerSlot)
     {

@@ -1,4 +1,5 @@
 ﻿using BossMod.AI;
+using BossMod.Autorotation;
 using Dalamud.Plugin.Ipc;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -225,7 +226,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
-        if (!_config.UseDash || player.Statuses.Any(s => s.ID is 2109 or 1268))
+        if (!_config.UseDash || player.Statuses.Any(s => s.ID is 2109 or 1268 || RotationModuleManager.IsRoleplayStatus(s)))
             return;
 
         var moveDistance = direction.Length();
