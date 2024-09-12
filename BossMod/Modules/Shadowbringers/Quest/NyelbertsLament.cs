@@ -1,6 +1,4 @@
-﻿using BossMod.Components;
-
-namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
+﻿namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
 
 // TODO: add AI hint for the "enrage" + paladin safe zone
 
@@ -111,7 +109,7 @@ class PassageOfArms(BossModule module) : BossComponent(module)
     }
 }
 
-class NyelbertAI(BossModule module) : RotationModule<QuestBattle.Shadowbringers.NyelbertsLament.AutoNyelbert>(module);
+class NyelbertAI(BossModule module) : Components.RotationModule<QuestBattle.Shadowbringers.NyelbertsLament.AutoNyelbert>(module);
 
 class BovianStates : StateMachineBuilder
 {
