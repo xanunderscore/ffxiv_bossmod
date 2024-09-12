@@ -43,12 +43,10 @@ class StreakLightning1(BossModule module) : Components.LocationTargetedAOEs(modu
 class AlternatingCurrent(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AlternatingCurrent1), new AOEShapeRect(60, 2.5f));
 class RumblingThunder(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_RumblingThunderStack), 5, 1);
 
-class RendaRae(WorldState ws) : StatelessRotation(ws)
+class RendaRae(WorldState ws) : StatelessRotation(ws, 20)
 {
     protected override void Exec(Actor? primaryTarget)
     {
-        Hints.RecommendedRangeToTarget = 20;
-
         var dot = StatusDetails(primaryTarget, Roleplay.SID.AcidicBite, Player.InstanceID);
         if (dot.Left < 2.5f)
             UseAction(Roleplay.AID.AcidicBite, primaryTarget, 10);
@@ -64,11 +62,23 @@ class RendaRae(WorldState ws) : StatelessRotation(ws)
     }
 }
 
-class RendaRaeAI(BossModule module) : BossComponent(module)
-{
-    private readonly RendaRae _ai = new(module.WorldState);
+class RendaRaeAI(BossModule module) : Components.RotationModule<RendaRae>(module);
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints, float maxCastTime) => _ai.Execute(actor, hints, maxCastTime);
+class RonkanAura(BossModule module) : BossComponent(module)
+{
+    private Actor? AuraCenter => Module.Enemies(0x1EADA5).FirstOrDefault();
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        if (AuraCenter is Actor a)
+            Arena.AddCircleFilled(a.Position, 10, ArenaColor.SafeFromAOE);
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (AuraCenter is Actor a)
+            hints.AddForbiddenZone(new AOEShapeDonut(10, 100), a.Position, activation: WorldState.FutureTime(5));
+    }
 }
 
 class BalamQuitzStates : StateMachineBuilder
@@ -85,7 +95,8 @@ class BalamQuitzStates : StateMachineBuilder
             .ActivateOnEnter<StreakLightning1>()
             .ActivateOnEnter<AlternatingCurrent>()
             .ActivateOnEnter<RumblingThunder>()
-            .ActivateOnEnter<Thunderbolt>();
+            .ActivateOnEnter<Thunderbolt>()
+            .ActivateOnEnter<RonkanAura>();
     }
 }
 

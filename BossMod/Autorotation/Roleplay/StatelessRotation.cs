@@ -1,5 +1,5 @@
 ﻿namespace BossMod.Autorotation;
-public abstract class StatelessRotation(WorldState ws)
+public abstract class StatelessRotation(WorldState ws, float effectiveRange)
 {
     protected AIHints Hints = null!;
     protected Actor Player = null!;
@@ -18,6 +18,8 @@ public abstract class StatelessRotation(WorldState ws)
         Player = player;
 
         MP = (uint)Math.Max(0, Player.HPMP.CurMP + World.PendingEffects.PendingHPDifference(Player.InstanceID));
+
+        Hints.RecommendedRangeToTarget = effectiveRange;
 
         Exec(World.Actors.Find(player.TargetID));
     }

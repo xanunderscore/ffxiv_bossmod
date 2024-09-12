@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Shadowbringers.NyelbertsLament;
 
-public class AutoNyelbert(WorldState ws) : StatelessRotation(ws)
+public class AutoNyelbert(WorldState ws) : StatelessRotation(ws, 25)
 {
     protected override void Exec(Actor? primaryTarget)
     {
