@@ -204,7 +204,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RonkanBlizzard3);
         d.RegisterSpell(AID.RonkanThunder3);
         d.RegisterSpell(AID.RonkanFlare);
-        d.RegisterSpell(AID.FallingStar);
+        d.RegisterSpell(AID.FallingStar, castAnimLock: 5.10f);
 
         d.RegisterSpell(AID.KeenEdge);
         d.RegisterSpell(AID.BrutalShell);

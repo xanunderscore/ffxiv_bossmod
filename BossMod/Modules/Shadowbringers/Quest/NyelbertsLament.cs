@@ -1,17 +1,12 @@
-﻿/*
-namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
+﻿namespace BossMod.Shadowbringers.Quest.NyelbertsLament;
 
 // TODO: add AI hint for the "enrage" + paladin safe zone
 
 public enum OID : uint
 {
-    Boss = 0x2971,
+    Boss = 0x2977,
     Helper = 0x233C,
-
-    Troodon = 0x2975,
-    Bovian = 0x2977,
     BovianBull = 0x2976,
-
     _Gen_LooseBoulder = 0x2978, // R2.400, x0 (spawn during fight)
 }
 
@@ -36,6 +31,11 @@ public enum AID : uint
     _Weaponskill_2000MinaSlashOnPlayer = 16601, // Bovian->self/player, 5.0s cast, range 40 ?-degree cone
     _Weaponskill_2000MinaSlashOnNPC = 16602, // Bovian->self, no cast, range 40 ?-degree cone
     _Weaponskill_Shatter = 16608, // _Gen_LooseBoulder->self, no cast, range 8 circle
+}
+
+public enum SID : uint
+{
+    WingedShield = 1900
 }
 
 class TwoThousandMinaSlash : Components.GenericLineOfSightAOE
@@ -85,82 +85,35 @@ class ZoomIn(BossModule module) : Components.SimpleLineStack(module, 4, 42, Acti
     }
 }
 
-class NyelbertAI : Components.RoleplayModule
+class PassageOfArms(BossModule module) : BossComponent(module)
 {
-    public NyelbertAI(BossModule module) : base(module)
-    {
-        KeepOnPhaseChange = true;
-    }
-
-    public override void Execute(Actor? primaryTarget)
-    {
-        if (primaryTarget == null || Player.DistanceToHitbox(primaryTarget) > 25)
-            return;
-
-        if (WorldState.Party.LimitBreakCur == 10000)
-        {
-            Hints.RecommendedRangeToTarget = 20;
-            if ((primaryTarget.Position - Player.Position).Length() < 25)
-                UseAction(Roleplay.AID.FallingStar, null, 10, primaryTarget.PosRot.XYZ());
-        }
-
-        var numAOETargets = Hints.NumPriorityTargetsInAOECircle(primaryTarget.Position, 5);
-
-        if (MP < 800)
-            UseAction(Roleplay.AID.RonkanBlizzard3, primaryTarget);
-        else if (MP < 1800)
-            UseAction(Roleplay.AID.RonkanFlare, primaryTarget);
-        else if (numAOETargets > 1)
-            UseAction(Roleplay.AID.RonkanFlare, primaryTarget);
-        else
-        {
-            if (primaryTarget.OID is 0x2975 or 0x2977)
-            {
-                var dotRemaining = StatusDetails(primaryTarget, Roleplay.SID.Electrocution, Player.InstanceID).Left;
-                if (dotRemaining < 5)
-                    UseAction(Roleplay.AID.RonkanThunder3, primaryTarget);
-            }
-
-            UseAction(Roleplay.AID.RonkanFire3, primaryTarget);
-        }
-    }
-}
-
-class Hints : BossComponent
-{
-    public Hints(BossModule module) : base(module)
-    {
-        KeepOnPhaseChange = true;
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var e in WorldState.Actors)
-        {
-            if (e.IsAlly)
-                Arena.Actor(e, ArenaColor.PlayerGeneric);
-            else if (!e.IsDead && e.IsTargetable)
-                Arena.Actor(e, ArenaColor.Enemy);
-        }
-    }
+    private ActorCastInfo? EnrageCast => Module.PrimaryActor.CastInfo is { Action.ID: 16604 } castInfo ? castInfo : null;
+    private Actor? Paladin => WorldState.Actors.FirstOrDefault(x => x.FindStatus(SID.WingedShield) != null);
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        foreach (var e in hints.PotentialTargets)
-            e.Priority = (OID)e.Actor.OID switch
-            {
-                OID.BovianBull => 1,
-                _ => 0
-            };
+        if (EnrageCast != null && Paladin != null)
+            hints.AddForbiddenZone(ShapeDistance.InvertedCone(Paladin.Position, 8, Paladin.Rotation + 180.Degrees(), 60.Degrees()), Module.CastFinishAt(EnrageCast));
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        if (EnrageCast != null && Paladin != null)
+            Arena.ZoneCone(Paladin.Position, 0, 8, Paladin.Rotation + 180.Degrees(), 60.Degrees(), ArenaColor.SafeFromAOE);
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints)
+    {
+        if (EnrageCast != null && Paladin != null && !actor.Position.InCircleCone(Paladin.Position, 8, Paladin.Rotation + 180.Degrees(), 60.Degrees()))
+            hints.Add("Hide behind tank!");
     }
 }
 
-class BoundsP1(BossModule module) : BossComponent(module)
+class NyelbertAI(BossModule module) : BossComponent(module)
 {
-    public override void Update()
-    {
-        Arena.Center = Raid.Player()?.Position ?? Arena.Center;
-    }
+    private readonly QuestBattle.Shadowbringers.NyelbertsLament.NyelbertAI _ai = new(module.WorldState);
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints, float maxCastTime) => _ai.Execute(actor, hints, maxCastTime);
 }
 
 class BovianStates : StateMachineBuilder
@@ -168,25 +121,23 @@ class BovianStates : StateMachineBuilder
     public BovianStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Hints>()
             .ActivateOnEnter<NyelbertAI>()
-            .ActivateOnEnter<BoundsP1>()
-            .Raw.Update = () => Module.Enemies(OID.Bovian).Any(x => x.InCombat);
-        TrivialPhase(1)
             .ActivateOnEnter<FallingRock>()
             .ActivateOnEnter<ZoomIn>()
             .ActivateOnEnter<TwoThousandMinaSlash>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(-440, -691);
-            })
-            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
+            .ActivateOnEnter<PassageOfArms>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 686, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
-public class Bovian(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69162, NameID = 8363)]
+public class Bovian(WorldState ws, Actor primary) : BossModule(ws, primary, new(-440, -691), new ArenaBoundsCircle(20))
 {
-    protected override bool CheckPull() => true;
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
+
+    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        hints.PrioritizeTargetsByOID(OID.BovianBull, 1);
+    }
 }
-*/

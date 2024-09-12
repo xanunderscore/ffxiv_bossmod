@@ -13,7 +13,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(551.57f, 12.94f, 751.91f))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints)
+    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;

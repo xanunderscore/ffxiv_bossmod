@@ -218,10 +218,10 @@ public abstract class QuestBattle : IDisposable
     {
         CurrentObjective?.OnNavigationComplete();
     }
-    public virtual void AddQuestAIHints(Actor player, AIHints hints) { }
-    public void AddAIHints(Actor player, AIHints hints)
+    public virtual void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) { }
+    public void AddAIHints(Actor player, AIHints hints, float maxCastTime)
     {
-        AddQuestAIHints(player, hints);
+        AddQuestAIHints(player, hints, maxCastTime);
         CurrentObjective?.AddAIHints(player, hints);
     }
     public void Advance() => CurrentObjectiveIndex++;

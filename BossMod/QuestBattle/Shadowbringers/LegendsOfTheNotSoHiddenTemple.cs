@@ -112,7 +112,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
         ];
     }
 
-    public override void AddQuestAIHints(Actor player, AIHints hints)
+    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
         foreach (var h in hints.PotentialTargets)
             if (h.Actor.OID == 0x2955)

@@ -35,7 +35,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
             .PauseForCombat(false)
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints)
+    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
         foreach (var h in hints.PotentialTargets)
             // attacking sekiseigumi fails the mission
