@@ -4,7 +4,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x1EA9D9,
+    Boss = 0x234B,
     Helper = 0x233C,
 }
 
@@ -47,21 +47,18 @@ class AlphiAI(BossModule module) : Components.RoleplayModule(module)
     }
 }
 
-class AirshipWreckageStates : StateMachineBuilder
+class HostileSkyArmorStates : StateMachineBuilder
 {
-    public AirshipWreckageStates(BossModule module) : base(module)
+    public HostileSkyArmorStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Step1>()
-            .Raw.Update = () => (Module.FindComponent<Step1>()?.Complete ?? true) || (Module.Raid.Player()?.IsDeadOrDestroyed ?? true);
-        TrivialPhase(1)
             .ActivateOnEnter<AlphiAI>()
-            .Raw.Update = () => Module.Raid.Player()?.IsDeadOrDestroyed ?? true;
+            .Raw.Update = () => module.WorldState.CurrentCFCID != 582;
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68612, NameID = 2009561)]
-public class AirshipWreckage(WorldState ws, Actor primary) : BossModule(ws, primary, new(100, 100), new ArenaBoundsCircle(20))
+public class HostileSkyArmor(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
 {
     protected override void UpdateModule()
     {
