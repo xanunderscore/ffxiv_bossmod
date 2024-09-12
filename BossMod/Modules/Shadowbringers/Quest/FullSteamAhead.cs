@@ -68,7 +68,7 @@ class ThancredAI(BossModule module) : Components.DeprecatedRoleplayModule(module
 
         if (WorldState.Client.DutyActions[0].CurCharges > 0)
         {
-            UseAction(ActionDefinitions.IDGeneralDuty1, primaryTarget);
+            UseAction(WorldState.Client.DutyActions[0].Action, primaryTarget);
             return;
         }
 
@@ -117,7 +117,7 @@ class RanjitStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69155, NameID = 8374)]
-public class Ranjit(WorldState ws, Actor primary) : BossModule(ws, primary, new(-203, 395), new ArenaBoundsCircle(20))
+public class Ranjit(WorldState ws, Actor primary) : BossModule(ws, primary, new(-203, 395), new ArenaBoundsCircle(19.5f))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {

@@ -229,9 +229,10 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.SolidBarrel);
         d.RegisterSpell(AID.RoughDivide);
         d.RegisterSpell(AID.Nebula);
-        d.RegisterSpell(AID.SoothingPotion);
+        d.RegisterSpell(AID.SoothingPotion, instantAnimLock: 1.1f);
         d.RegisterSpell(AID.Smackdown);
         d.RegisterSpell(AID.PerfectDeception);
+        d.RegisterSpell(AID.SouldeepInvisibility);
         d.RegisterSpell(AID.ShiningBlade);
 
         d.RegisterSpell(AID.DoomSpike);

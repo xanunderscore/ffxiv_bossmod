@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 
 namespace BossMod;
 
@@ -49,7 +50,16 @@ public class ConfigRoot
         catch (Exception e)
         {
             Service.Log($"Failed to load config from {file.FullName}: {e}");
+#if DEBUG
+            // file contention caused by dalamud hot reload + uidev restart
+            // this is an extremely bad idea, never use this
+            if (e is IOException io && (io.HResult & 0xFFFF) == 0x20)
+            {
+                Thread.Sleep(500);
+                LoadFromFile(file);
+            }
         }
+#endif
     }
 
     public void SaveToFile(FileInfo file)
