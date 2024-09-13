@@ -101,7 +101,7 @@ class BalamQuitzStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68812, NameID = 8397)]
-public class BalamQuitz(WorldState ws, Actor primary) : BossModule(ws, primary, new(-247, 688.5f), new ArenaBoundsCircle(19.5f))
+public class BalamQuitz(WorldState ws, Actor primary) : BossModule(ws, primary, new(-247.11f, 688.33f), new ArenaBoundsCircle(19.5f))
 {
     protected override bool CheckPull() => true;
 

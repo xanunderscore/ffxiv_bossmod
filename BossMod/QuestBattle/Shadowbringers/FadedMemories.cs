@@ -51,6 +51,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(-282.51f, -244.74f, 523.28f))
             .WithInteract(0x2F0D)
             .With(obj => {
+                // dunno which wall this is, it triggers right after you interact with elidibert
                 obj.OnEventObjectStateChanged += (act, state) => obj.CompleteIf(act.OID == 0x1EA1A1 && state == 2);
             })
             .Named("Dialogue 3"),

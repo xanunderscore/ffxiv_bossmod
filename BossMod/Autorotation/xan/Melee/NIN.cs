@@ -239,7 +239,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         if (Kazematoi >= 4)
             return AID.AeolianEdge;
 
-        return GetCurrentPositional(primaryTarget) == Positional.Rear ? AID.AeolianEdge : AID.ArmorCrush;
+        return primaryTarget.Omnidirectional || GetCurrentPositional(primaryTarget) == Positional.Rear ? AID.AeolianEdge : AID.ArmorCrush;
     }
 
     private void UseMudra(AID mudra, Actor? target, bool startCondition = true, bool endCondition = true)

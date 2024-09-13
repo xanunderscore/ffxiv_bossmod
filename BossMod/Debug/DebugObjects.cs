@@ -41,6 +41,7 @@ public class DebugObjects
                 _tree.LeafNode($"Unique ID: {uniqueID:X}");
                 _tree.LeafNode($"Gimmick ID: {Utils.ReadField<uint>(internalObj, 0x7C):X}");
                 _tree.LeafNode($"Radius: {obj.HitboxRadius:f3}");
+                _tree.LeafNode($"'Actual' position: {Utils.Vec3String(*internalObj->GetPosition())}");
                 _tree.LeafNode($"Owner: {Utils.ObjectString(obj.OwnerId)}");
                 _tree.LeafNode($"BNpcBase/Name: {obj.DataId:X}/{Utils.GameObjectInternal(obj)->GetNameId()}");
                 _tree.LeafNode($"Targetable: {obj.IsTargetable}");
