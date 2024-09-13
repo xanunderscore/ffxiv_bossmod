@@ -135,4 +135,6 @@ public class ArchUltima(WorldState ws, Actor primary) : BossModule(ws, primary, 
                 _ => 0
             };
     }
+
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 }
