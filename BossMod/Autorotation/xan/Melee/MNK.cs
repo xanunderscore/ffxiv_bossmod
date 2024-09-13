@@ -373,7 +373,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         // this condition is unfortunately a little contrived. there are no other general cases in the monk rotation where we want to overwrite a lunar, as it's overall a dps loss
         // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
         // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
-        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && ReadyIn(AID.PerfectBalance) > GCD;
+        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && ReadyIn(AID.PerfectBalance) > GCD && CanFitGCD(FireLeft, 3);
         var forcedSolar = nadi is NadiStrategy.Solar or NadiStrategy.SolarDowntime
             || ForcedSolar
             || HasLunar && !HasSolar && !forcedDoubleLunar;
@@ -447,7 +447,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         var useRof = ShouldRoF(strategy);
 
         if (useRof)
+        {
+            Service.Log($"rof delay: {GCD - EarliestRoF(AnimationLockDelay)}");
             PushOGCD(AID.RiddleOfFire, Player, OGCDPriority.RiddleOfFire, GCD - EarliestRoF(AnimationLockDelay));
+        }
 
         if (ShouldRoW(strategy))
             PushOGCD(AID.RiddleOfWind, Player, OGCDPriority.RiddleOfWind);
@@ -531,7 +534,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     }
 
     private float DesiredFireWindow => GCDLength * 10;
-    private float EarliestRoF(float estimatedDelay) => MathF.Max(estimatedDelay + 0.6f, 20.6f - DesiredFireWindow);
+    private float EarliestRoF(float estimatedDelay) => MathF.Max(estimatedDelay + 0.8f, 20.6f - DesiredFireWindow);
 
     private void Potion() => Hints.ActionsToExecute.Push(ActionDefinitions.IDPotionStr, Player, ActionQueue.Priority.Low + 100 + (float)OGCDPriority.Potion);
 
