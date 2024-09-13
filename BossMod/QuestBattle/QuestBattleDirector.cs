@@ -99,6 +99,10 @@ public sealed class QuestBattleDirector : IDisposable
             {
                 Log($"Director update: {diru}");
             }),
+            ws.Actors.EventObjectStateChange.Subscribe((act, u) =>
+            {
+                Log($"EObjState: {act} => 0x{u:X}");
+            }),
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) =>
             {
                 Log($"EObjAnim: {act}, {p1}, {p2}");

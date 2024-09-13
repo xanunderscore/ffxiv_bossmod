@@ -234,6 +234,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.PerfectDeception);
         d.RegisterSpell(AID.SouldeepInvisibility);
         d.RegisterSpell(AID.ShiningBlade);
+        d.RegisterSpell(AID.LeapOfFaith);
 
         d.RegisterSpell(AID.DoomSpike);
         d.RegisterSpell(AID.SonicThrust);
