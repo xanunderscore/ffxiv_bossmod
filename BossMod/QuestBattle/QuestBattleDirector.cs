@@ -97,7 +97,7 @@ public sealed class QuestBattleDirector : IDisposable
             }),
             ws.DirectorUpdate.Subscribe(diru =>
             {
-                Log($"Director update: {diru}");
+                Log($"Director update: U:0x{diru.UpdateID:X} P1:0x{diru.Param1:X} P2:{diru.Param2:X} P3:{diru.Param3:X} P4:{diru.Param4:X}");
             }),
             ws.Actors.EventObjectStateChange.Subscribe((act, u) =>
             {
@@ -150,18 +150,12 @@ public sealed class QuestBattleDirector : IDisposable
 
     public void Update(AIHints hints)
     {
-        if (Paused || WaitCommence)
+        if (Paused || WaitCommence || bmm?.ActiveModule?.StateMachine.ActivePhase != null)
             return;
 
         var player = World.Party.Player();
         if (player == null)
             return;
-
-        if (bmm?.ActiveModule?.StateMachine.ActivePhase != null)
-        {
-            Clear();
-            return;
-        }
 
         if (HaveTarget(player, hints))
         {
