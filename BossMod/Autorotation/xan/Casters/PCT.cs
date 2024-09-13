@@ -185,7 +185,16 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         Hammer(strategy);
         Holy(strategy);
 
-        if (NumAOETargets > 3 && Unlocked(AID.FireIIInRed))
+        int aoeBreakpoint;
+
+        if (Unlocked(TraitID.EnhancedPictomancyIV))
+            aoeBreakpoint = 4;
+        else if (Subtractive > 0 || ah2 > GCD)
+            aoeBreakpoint = 3;
+        else
+            aoeBreakpoint = 4;
+
+        if (NumAOETargets >= aoeBreakpoint && Unlocked(AID.FireIIInRed))
         {
             if (Subtractive > 0)
                 PushGCD(AID.BlizzardIIInCyan, BestAOETarget, GCDPriority.Standard);
@@ -242,6 +251,9 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         if (HammerTime.Left < GCD + GCDLength + (4 * HammerTime.Stacks - 1))
             prio = GCDPriority.Standard;
 
+        if (NumAOETargets > 1)
+            prio = GCDPriority.Standard;
+
         PushGCD(AID.HammerStamp, BestAOETarget, prio);
     }
 
@@ -261,6 +273,10 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         // use comet to prevent overcap or during buffs
         // regular holy can be overcapped without losing dps
         if (Monochrome && (Paint == 5 || RaidBuffsLeft > GCD))
+            prio = GCDPriority.Standard;
+
+        // holy always a gain in aoe
+        if (NumAOETargets > 1)
             prio = GCDPriority.Standard;
 
         PushGCD(Monochrome ? AID.CometInBlack : AID.HolyInWhite, BestAOETarget, prio);

@@ -75,7 +75,8 @@ public sealed class UIRotationWindow : UIWindow
         ImGui.TextUnformatted($"GCD={_mgr.WorldState.Client.Cooldowns[ActionDefinitions.GCDGroup].Remaining:f3}, AnimLock={_amex.EffectiveAnimationLock:f3}+{_amex.AnimationLockDelayEstimate:f3}, Combo={_amex.ComboTimeLeft:f3}, RBIn={_mgr.Bossmods.RaidCooldowns.NextDamageBuffIn():f3}");
         foreach (var a in _mgr.Hints.ActionsToExecute.Entries)
         {
-            ImGui.TextUnformatted($"> {a.Action} ({a.Priority:f2})");
+            var targetstr = a.Target?.Name ?? "<none>";
+            ImGui.TextUnformatted($"> {a.Action} @ '{targetstr}' ({a.Priority:f2})");
         }
     }
 

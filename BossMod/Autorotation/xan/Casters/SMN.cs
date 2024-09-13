@@ -188,6 +188,26 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
         _ => Unlocked(AID.TriDisaster) ? AID.TriDisaster : AID.Outburst,
     };
 
+    public AID BestAethercharge
+    {
+        get
+        {
+            if (TranceFlags.HasFlag(SmnFlags.SolarBahamut))
+                return AID.SummonSolarBahamut;
+
+            if (TranceFlags.HasFlag(SmnFlags.Phoenix))
+                return AID.SummonPhoenix;
+
+            if (Unlocked(AID.SummonBahamut))
+                return AID.SummonBahamut;
+
+            if (Unlocked(AID.DreadwyrmTrance))
+                return AID.DreadwyrmTrance;
+
+            return AID.Aethercharge;
+        }
+    }
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
@@ -277,9 +297,8 @@ public sealed class SMN(RotationModuleManager manager, Actor player) : Castxan<A
             // balance says to default to summons if you don't know whether you will lose a usage or not
             if (ReadyIn(AID.Aethercharge) <= GCD && Player.InCombat)
             {
-                var isTargeted = Unlocked(TraitID.AetherchargeMastery);
                 // scarlet flame and wyrmwave are both single target, this is ok
-                PushGCD(AID.Aethercharge, isTargeted ? primaryTarget : Player);
+                PushGCD(BestAethercharge, primaryTarget);
             }
 
             if (TranceFlags.HasFlag(SmnFlags.Topaz))

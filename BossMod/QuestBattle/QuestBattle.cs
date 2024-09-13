@@ -145,6 +145,13 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
+    public static QuestObjective Combat(WorldState ws, params Vector3[] connections) =>
+        new QuestObjective(ws).WithConnections(connections)
+            .With(obj =>
+            {
+                obj.OnActorCombatChanged += (act) => obj.CompleteIf(act.OID == 0 && !act.InCombat);
+            });
+
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
     public void CompleteIf(bool c) { Completed |= c; }
