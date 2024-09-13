@@ -212,6 +212,7 @@ public class BaitAwayChargeCast(BossModule module, ActionID aid, float halfWidth
 {
     public float HalfWidth = halfWidth;
 
+    // TODO this causes the current bait size to be drawn on other friendly actors, even if they are much closer or much further from the boss - see D01Holminster D012TesleenTheForgiven
     public override void Update()
     {
         foreach (ref var b in CurrentBaits.AsSpan())

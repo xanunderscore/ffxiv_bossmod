@@ -55,7 +55,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private static void Log(string msg) => Service.Log($"[QBD] {msg}");
 
-    public bool Enabled => World.CurrentCFCID != 0 && World.Party[1] == null;
+    public bool Enabled => World.CurrentCFCID != 0 && World.Party.WithoutSlot().Count(x => x.Type == ActorType.Player) == 1;
 
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
