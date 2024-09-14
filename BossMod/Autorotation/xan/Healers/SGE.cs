@@ -123,7 +123,12 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Pneuma, BestPneumaTarget);
 
         if (ShouldPhlegma(strategy))
+        {
+            if (ReadyIn(AID.Phlegma) <= GCD)
+                Hints.RecommendedRangeToTarget = 6;
+
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
+        }
 
         if (NumAOETargets > 1)
         {
@@ -135,9 +140,6 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
         PushGCD(AID.Dosis, primaryTarget);
 
-        // fallbacks for forced movement
-        if (ReadyIn(AID.Phlegma) <= GCD && NumPhlegmaTargets > 0)
-            PushGCD(AID.Phlegma, BestPhlegmaTarget);
         if (NumRangedAOETargets > 0 && Sting > 0)
             PushGCD(AID.Toxikon, BestRangedAOETarget);
         if (NumAOETargets > 0)
@@ -165,7 +167,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
         if ((Gall == 3 || Gall == 2 && NextGall < 2.5f) && Player.HPMP.CurMP <= 9000 && strategy.Option(Track.Druo).As<DruoStrategy>() == DruoStrategy.Auto)
         {
-            var healTarget = World.Party.WithoutSlot(partyOnly: true).MinBy(x => x.HPMP.CurHP / x.HPMP.MaxHP);
+            var healTarget = Hints.Allies.WithoutSlot().MinBy(a => (float)a.HPMP.CurHP / a.HPMP.MaxHP);
             PushOGCD(AID.Druochole, healTarget);
         }
 

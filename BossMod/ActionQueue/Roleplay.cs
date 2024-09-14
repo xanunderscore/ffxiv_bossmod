@@ -52,6 +52,13 @@ public enum AID : uint
     ChivalrousSpirit = 17236,
     Interject = 15537,
 
+    // Lamitt - The Lost and the Found (ShB)
+    RonkanStoneII = 17003,
+    RonkanCureII = 17000,
+    RonkanMedica = 17001,
+    RonkanEsuna = 17002,
+    RonkanRenew = 17004,
+
     // Thancred - Coming Clean (ShB)
     KeenEdge = 16434,
     BrutalShell = 16418,
@@ -242,6 +249,12 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.FightOrFlight);
         d.RegisterSpell(AID.ChivalrousSpirit);
         d.RegisterSpell(AID.Interject);
+
+        d.RegisterSpell(AID.RonkanStoneII);
+        d.RegisterSpell(AID.RonkanCureII);
+        d.RegisterSpell(AID.RonkanMedica);
+        d.RegisterSpell(AID.RonkanEsuna);
+        d.RegisterSpell(AID.RonkanRenew);
 
         d.RegisterSpell(AID.KeenEdge);
         d.RegisterSpell(AID.BrutalShell);

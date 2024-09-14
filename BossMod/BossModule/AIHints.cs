@@ -111,6 +111,7 @@ public sealed class AIHints
         Bounds = DefaultBounds;
         PotentialTargets.Clear();
         Allies.Clear();
+        _savedStatus = null;
         ForcedTarget = null;
         ForcedMovement = null;
         InteractWithTarget = null;
@@ -295,7 +296,15 @@ public sealed class AIHints
         (uint)WAR.SID.BloodwhettingDefenseLong
     ];
 
+    private PartyMemberHealthStatus? _savedStatus;
+
     public PartyMemberHealthStatus CalcPartyMemberHealth(WorldState ws)
+    {
+        _savedStatus ??= RecalcPartyMemberHealth(ws);
+        return _savedStatus.Value;
+    }
+
+    private PartyMemberHealthStatus RecalcPartyMemberHealth(WorldState ws)
     {
         BitMask esunas = new();
         foreach (var caster in Allies.WithoutSlot().Where(a => a.CastInfo?.IsSpell(WHM.AID.Esuna) ?? false))

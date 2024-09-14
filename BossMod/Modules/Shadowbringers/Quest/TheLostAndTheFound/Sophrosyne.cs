@@ -6,6 +6,20 @@ public enum OID : uint
     Helper = 0x233C,
 }
 
+public enum AID : uint
+{
+    _Spell_SanctifiedVivify = 16997, // Boss->29AB, 5.0s cast, single-target
+    _Spell_SanctifiedAeroII = 16994, // Boss->player/29A9, no cast, single-target
+    _AutoAttack_Attack = 870, // 29AB->29A9, no cast, single-target
+    _Spell_SanctifiedStoneIII = 16993, // Boss->player/29A9, 3.0s cast, single-target
+    _Weaponskill_Charge = 16999, // 29AB->29A9, 3.0s cast, width 4 rect charge
+    _Spell_SanctifiedCureII = 16995, // Boss->self/29AB/Boss, 3.0s cast, single-target
+    _Weaponskill_ScoldsBridle = 16998, // 29AB->self, 4.0s cast, range 40 circle
+    _Spell_SanctifiedHoly = 16996, // Boss->self, 3.0s cast, range 8 circle
+}
+
+class Charge(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Charge), 2);
+
 class SaveTheDipshit(BossModule module) : BossComponent(module)
 {
     private Actor? Dwarf;
@@ -23,7 +37,8 @@ class SophrosyneStates : StateMachineBuilder
     public SophrosyneStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<SaveTheDipshit>();
+            .ActivateOnEnter<SaveTheDipshit>()
+            .ActivateOnEnter<Charge>();
     }
 }
 
