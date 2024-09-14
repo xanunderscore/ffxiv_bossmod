@@ -4,37 +4,10 @@ namespace BossMod.Autorotation.xan;
 
 public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(manager, player)
 {
-    public record struct PartyMemberState
-    {
-        public int Slot;
-        public int PredictedHP;
-        public int PredictedHPMissing;
-        public float AttackerStrength;
-        // predicted ratio including pending HP loss and current attacker strength
-        public float PredictedHPRatio;
-        // *actual* ratio including pending HP loss, used mainly just for essential dignity
-        public float PendingHPRatio;
-        // remaining time on cleansable status, to avoid casting it on a target that will lose the status by the time we finish
-        public float EsunableStatusRemaining;
-        // tank invulns go here, but also statuses like Excog that give burst heal below a certain HP threshold
-        // no point in spam healing a tank in an area with high mob density (like Sirensong Sea pull after second boss) until their excog falls off
-        public float NoHealStatusRemaining;
-        // Doom (1769 and possibly other statuses) is only removed once a player reaches full HP, must be healed asap
-        public float DoomRemaining;
-    }
-
-    public record PartyHealthState
-    {
-        public int LowestHPSlot;
-        public int Count;
-        public float Avg;
-        public float StdDev;
-    }
-
     public const float AOEBreakpointHPVariance = 0.25f;
 
-    private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
-    private PartyHealthState PartyHealth = new();
+    private AIHints.PartyMemberHealthStatus PartyMemberStates = new([]);
+    private AIHints.PartyHealthState PartyHealth = new();
 
     public enum Track { Raise, RaiseTarget, Heal, Esuna }
     public enum RaiseStrategy
@@ -81,87 +54,29 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         return def;
     }
 
-    private (Actor Target, PartyMemberState State)? BestSTHealTarget => PartyHealth.StdDev > AOEBreakpointHPVariance ? (World.Party[PartyHealth.LowestHPSlot]!, PartyMemberStates[PartyHealth.LowestHPSlot]) : null;
+    private AIHints.PartyMemberState? BestSTHealTarget => PartyHealth.StdDev > AOEBreakpointHPVariance ? PartyMemberStates[PartyHealth.LowestHPSlot] : null;
 
-    private PartyHealthState CalcPartyHealthInArea(WPos center, float radius) => CalculatePartyHealthState(act => act.Position.InCircle(center, radius));
+    private AIHints.PartyHealthState CalcPartyHealthInArea(WPos center, float radius) => PartyMemberStates.GetPartyHealth(act => act.Position.InCircle(center, radius));
     private bool ShouldHealInArea(WPos center, float radius, float hpThreshold)
     {
         var st = CalcPartyHealthInArea(center, radius);
-        Service.Log($"party health in radius {radius}: {st}");
+        // Service.Log($"party health in radius {radius}: {st}");
         return st.Count > 1 && st.StdDev <= AOEBreakpointHPVariance && st.Avg <= hpThreshold;
     }
 
-    private void HealSingle(Action<Actor, PartyMemberState> healFun)
+    private void HealSingle(Action<AIHints.PartyMemberState> healFun)
     {
-        if (BestSTHealTarget is (var a, var b))
-            healFun(a, b);
+        if (BestSTHealTarget is AIHints.PartyMemberState st)
+            healFun(st);
     }
-
-    private static readonly uint[] NoHealStatuses = [
-        82, // Hallowed Ground
-        409, // Holmgang
-        810, // Living Dead
-        811, // Walking Dead
-        1220, // Excogitation
-        1836, // Superbolide
-        2685, // Catharsis of Corundum
-        (uint)WAR.SID.BloodwhettingDefenseLong
-    ];
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
     {
         if (Player.MountId > 0)
             return;
 
-        // copied from veyn's HealerActions in EW bossmod - i am a thief
-        BitMask esunas = new();
-        foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
-            esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
-
-        for (var i = 0; i < PartyState.MaxPartySize; i++)
-        {
-            var actor = World.Party[i];
-            ref var state = ref PartyMemberStates[i];
-            state.Slot = i;
-            state.EsunableStatusRemaining = 0;
-            state.NoHealStatusRemaining = 0;
-            if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
-            {
-                state.PredictedHP = state.PredictedHPMissing = 0;
-                state.PredictedHPRatio = state.PendingHPRatio = 1;
-            }
-            else
-            {
-                state.PredictedHP = (int)actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID);
-                state.PredictedHPMissing = (int)actor.HPMP.MaxHP - state.PredictedHP;
-                state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
-                var canEsuna = actor.IsTargetable && !esunas[i];
-                foreach (var s in actor.Statuses)
-                {
-                    if (canEsuna && Utils.StatusIsRemovable(s.ID))
-                        state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
-
-                    if (NoHealStatuses.Contains(s.ID))
-                        state.NoHealStatusRemaining = StatusDuration(s.ExpireAt);
-
-                    if (s.ID == 1769)
-                        state.DoomRemaining = StatusDuration(s.ExpireAt);
-                }
-            }
-        }
-
-        foreach (var enemy in Hints.PotentialTargets)
-        {
-            var targetSlot = World.Party.FindSlot(enemy.Actor.TargetID);
-            if (targetSlot >= 0 && targetSlot < PartyMemberStates.Length)
-            {
-                ref var state = ref PartyMemberStates[targetSlot];
-                state.AttackerStrength += enemy.AttackStrength;
-                if (state.PredictedHPRatio < 0.99f)
-                    state.PredictedHPRatio -= enemy.AttackStrength;
-            }
-        }
-        PartyHealth = CalculatePartyHealthState(_ => true);
+        PartyMemberStates = Hints.CalcPartyMemberHealth(World);
+        PartyHealth = PartyMemberStates.GetPartyHealth();
 
         AutoRaise(strategy);
 
@@ -171,7 +86,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             {
                 if (st.EsunableStatusRemaining > GCD + 2f)
                 {
-                    UseGCD(BossMod.WHM.AID.Esuna, World.Party[st.Slot]);
+                    UseGCD(BossMod.WHM.AID.Esuna, st.Actor);
                     break;
                 }
             }
@@ -189,47 +104,10 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 case Class.SCH:
                     AutoSCH(strategy, primaryTarget);
                     break;
+                case Class.SGE:
+                    AutoSGE(strategy, primaryTarget);
+                    break;
             }
-    }
-
-    private PartyHealthState CalculatePartyHealthState(Func<Actor, bool> filter)
-    {
-        int count = 0;
-        float mean = 0;
-        float m2 = 0;
-        float min = float.MaxValue;
-        int minSlot = -1;
-
-        foreach (var p in PartyMemberStates)
-        {
-            var act = World.Party[p.Slot];
-            if (act == null || !filter(act))
-                continue;
-
-            if (p.NoHealStatusRemaining > 1.5f && p.DoomRemaining == 0)
-                continue;
-
-            var pred = p.DoomRemaining > 0 ? 0 : p.PredictedHPRatio;
-            if (pred < min)
-            {
-                min = pred;
-                minSlot = p.Slot;
-            }
-            count++;
-            var delta = pred - mean;
-            mean += delta / count;
-            var delta2 = pred - mean;
-            m2 += delta * delta2;
-        }
-
-        var variance = m2 / count;
-        return new PartyHealthState()
-        {
-            LowestHPSlot = minSlot,
-            Avg = mean,
-            StdDev = MathF.Sqrt(variance),
-            Count = count
-        };
     }
 
     private void UseGCD<AID>(AID action, Actor? target, int extraPriority = 0) where AID : Enum
@@ -313,14 +191,14 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<WhiteMageGauge>();
 
-        HealSingle((target, state) =>
+        HealSingle((target) =>
         {
-            if (state.PredictedHPRatio < 0.25)
+            if (target.PredictedHPRatio < 0.25)
             {
                 if (gauge.Lily > 0)
-                    UseGCD(BossMod.WHM.AID.AfflatusSolace, target);
+                    UseGCD(BossMod.WHM.AID.AfflatusSolace, target.Actor);
 
-                UseOGCD(BossMod.WHM.AID.Tetragrammaton, target);
+                UseOGCD(BossMod.WHM.AID.Tetragrammaton, target.Actor);
             }
         });
     }
@@ -336,21 +214,21 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     {
         var gauge = GetGauge<AstrologianGauge>();
 
-        HealSingle((target, state) =>
+        HealSingle((target) =>
         {
-            if (state.PendingHPRatio < 0.3)
-                UseOGCD(BossMod.AST.AID.EssentialDignity, target);
+            if (target.PendingHPRatio < 0.3)
+                UseOGCD(BossMod.AST.AID.EssentialDignity, target.Actor);
 
-            if (state.PredictedHPRatio < 0.3)
+            if (target.PredictedHPRatio < 0.3)
             {
-                UseOGCD(BossMod.AST.AID.CelestialIntersection, target);
+                UseOGCD(BossMod.AST.AID.CelestialIntersection, target.Actor);
 
                 if (gauge.CurrentArcana == AstrologianCard.Lady)
                     UseOGCD(BossMod.AST.AID.LadyOfCrowns, Player);
 
                 foreach (var (card, action) in SupportCards)
                     if (gauge.CurrentCards.Contains(card))
-                        UseOGCD(action, target);
+                        UseOGCD(action, target.Actor);
             }
         });
 
@@ -368,7 +246,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         var aetherflow = gauge.Aetherflow > 0;
 
-        if (World.Party.WithoutSlot().Count() == 1 && aetherflow && primaryTarget != null)
+        if (Hints.Allies.Count == 1 && aetherflow && primaryTarget != null)
             UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
 
         if (aetherflow && ShouldHealInArea(Player.Position, 15, 0.5f))
@@ -383,21 +261,50 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 UseOGCD(BossMod.SCH.AID.WhisperingDawn, Player);
         }
 
-        HealSingle((target, state) =>
+        HealSingle((target) =>
         {
-            if (state.PredictedHPRatio < 0.3)
+            if (target.PredictedHPRatio < 0.3)
             {
                 var canLustrate = gauge.Aetherflow > 0 && Unlocked(BossMod.SCH.AID.Lustrate);
                 if (canLustrate)
                 {
-                    UseOGCD(BossMod.SCH.AID.Excogitation, target);
-                    UseOGCD(BossMod.SCH.AID.Lustrate, target);
+                    UseOGCD(BossMod.SCH.AID.Excogitation, target.Actor);
+                    UseOGCD(BossMod.SCH.AID.Lustrate, target.Actor);
                 }
                 else
                 {
-                    UseGCD(BossMod.SCH.AID.Adloquium, target);
-                    UseGCD(BossMod.SCH.AID.Physick, target);
+                    UseGCD(BossMod.SCH.AID.Adloquium, target.Actor);
+                    UseGCD(BossMod.SCH.AID.Physick, target.Actor);
                 }
+            }
+        });
+    }
+
+    private void AutoSGE(StrategyValues strategy, Actor? primaryTarget)
+    {
+        var gauge = GetGauge<SageGauge>();
+
+        var haveBalls = gauge.Addersgall > 0;
+
+        if (haveBalls && ShouldHealInArea(Player.Position, 15, 0.5f))
+            UseOGCD(BossMod.SGE.AID.Ixochole, Player);
+
+        if (ShouldHealInArea(Player.Position, 30, 0.8f))
+        {
+            UseOGCD(Unlocked(BossMod.SGE.AID.PhysisII) ? BossMod.SGE.AID.PhysisII : BossMod.SGE.AID.Physis, Player);
+        }
+
+        HealSingle((target) =>
+        {
+            if (target.PredictedHPRatio < 0.5)
+            {
+                UseOGCD(BossMod.SGE.AID.Taurochole, target.Actor);
+                UseOGCD(BossMod.SGE.AID.Druochole, target.Actor);
+            }
+
+            if (target.PredictedHPRatio < 0.3)
+            {
+                UseOGCD(BossMod.SGE.AID.Haima, target.Actor);
             }
         });
     }

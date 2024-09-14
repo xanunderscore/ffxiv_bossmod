@@ -91,9 +91,12 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
             && Unlocked(AID.Kardia)
             && Player.FindStatus((uint)SID.Kardia) == null
-            && FindKardiaTarget() is Actor kardiaTarget
-            && !World.Party.Members[World.Party.FindSlot(kardiaTarget.InstanceID)].InCutscene)
-            PushGCD(AID.Kardia, kardiaTarget);
+            && FindKardiaTarget() is Actor kardiaTarget)
+        {
+            var partySlot = World.Party.FindSlot(kardiaTarget.InstanceID);
+            if (partySlot == -1 || !World.Party.Members[partySlot].InCutscene)
+                PushGCD(AID.Kardia, kardiaTarget);
+        }
 
         if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia && Player.MountId == 0)
             PushGCD(AID.Eukrasia, Player);
@@ -119,7 +122,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         if (ReadyIn(AID.Pneuma) <= GCD && NumPneumaTargets > 1)
             PushGCD(AID.Pneuma, BestPneumaTarget);
 
-        if (MaxChargesIn(AID.Phlegma) <= GCD || NumPhlegmaTargets > 2 && ReadyIn(AID.Phlegma) <= GCD)
+        if (ShouldPhlegma(strategy))
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
 
         if (NumAOETargets > 1)
@@ -139,6 +142,17 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Toxikon, BestRangedAOETarget);
         if (NumAOETargets > 0)
             PushGCD(AID.Dyskrasia, Player);
+    }
+
+    private bool ShouldPhlegma(StrategyValues strategy)
+    {
+        if (MaxChargesIn(AID.Phlegma) <= GCD)
+            return true;
+
+        if (NumPhlegmaTargets > 2 && ReadyIn(AID.Phlegma) <= GCD)
+            return true;
+
+        return RaidBuffsLeft > GCD || RaidBuffsIn > 9000;
     }
 
     private void DoOGCD(StrategyValues strategy, Actor? primaryTarget)
@@ -181,11 +195,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
     private Actor? FindKardiaTarget()
     {
-        var party = World.Party.WithoutSlot(partyOnly: true);
         var total = 0;
         var tanks = 0;
         Actor? tank = null;
-        foreach (var actor in party)
+        foreach (var actor in Hints.Allies.WithoutSlot())
         {
             total++;
             if (actor.Class.GetRole() == Role.Tank)
