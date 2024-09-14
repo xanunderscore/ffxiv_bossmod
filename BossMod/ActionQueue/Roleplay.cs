@@ -42,6 +42,16 @@ public enum AID : uint
     HuntersPrudence = 17596,
     DullingArrow = 17125,
 
+    // Branden - The Hardened Heart (ShB)
+    FastBlade = 16788,
+    RightfulSword = 16269,
+    Swashbuckler = 16984,
+    Sunshadow = 16789,
+    GreatestEclipse = 16985,
+    FightOrFlight = 15870,
+    ChivalrousSpirit = 17236,
+    Interject = 15537,
+
     // Thancred - Coming Clean (ShB)
     KeenEdge = 16434,
     BrutalShell = 16418,
@@ -223,6 +233,15 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RadiantArrow);
         d.RegisterSpell(AID.HuntersPrudence);
         d.RegisterSpell(AID.DullingArrow);
+
+        d.RegisterSpell(AID.FastBlade);
+        d.RegisterSpell(AID.RightfulSword);
+        d.RegisterSpell(AID.Swashbuckler);
+        d.RegisterSpell(AID.Sunshadow);
+        d.RegisterSpell(AID.GreatestEclipse);
+        d.RegisterSpell(AID.FightOrFlight);
+        d.RegisterSpell(AID.ChivalrousSpirit);
+        d.RegisterSpell(AID.Interject);
 
         d.RegisterSpell(AID.KeenEdge);
         d.RegisterSpell(AID.BrutalShell);

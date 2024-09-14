@@ -14,7 +14,7 @@ class DebugAutorotation(RotationModuleManager autorot)
         new AIHintsVisualizer(autorot.Hints, autorot.Bossmods.WorldState, player, player.TargetID, e =>
         {
             // TODO: ...
-            return (e, 3, Positional.Any, false);
+            return (e, 3, Positional.Any, tank: e != null && e.DesiredPosition != e.Actor.Position);
             //var t = e != null ? autorot.ClassActions.SelectBetterTarget(e) : new();
             //return (t.Target, t.PreferredRange, t.PreferredPosition, t.PreferTanking);
         }).Draw(_tree);

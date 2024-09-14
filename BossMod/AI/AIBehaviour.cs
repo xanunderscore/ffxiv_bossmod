@@ -148,15 +148,16 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, null, 0, new(), Positional.Any);
 
         var adjRange = targeting.PreferredRange + player.HitboxRadius + targeting.Target.Actor.HitboxRadius;
-        if (targeting.Target.DesiredPosition != targeting.Target.Actor.Position)
+        if (targeting.Target.DesiredPosition != targeting.Target.Actor.Position && targeting.Target.Actor.TargetID == player.InstanceID)
         {
             // see whether we need to move target
             // TODO: think more about keeping uptime while tanking, this is tricky...
             var desiredToTarget = targeting.Target.Actor.Position - targeting.Target.DesiredPosition;
-            if (desiredToTarget.LengthSq() > 4 /*&& (_autorot.ClassActions?.GetState().GCD ?? 0) > 0.5f*/)
+            if (desiredToTarget.Length() > 2)
             {
                 var dest = autorot.Hints.ClampToBounds(targeting.Target.DesiredPosition - adjRange * desiredToTarget.Normalized());
-                return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, dest, 0.5f, new(), Positional.Any);
+                // need to ensure target radius is large enough to give us a destination cell, otherwise pathfind will do nothing
+                return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player, dest, autorot.Hints.Bounds.MapResolution * 2, new(), Positional.Any);
             }
         }
 

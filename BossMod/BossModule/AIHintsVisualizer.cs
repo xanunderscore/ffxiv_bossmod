@@ -80,7 +80,7 @@ public class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player, ulong
             if (desiredToTarget.LengthSq() > 4 /* && gcd check*/)
             {
                 var dest = target.DesiredPosition - adjRange * desiredToTarget.Normalized();
-                return NavigationDecision.Build(_naviCtx, ws, hints, player, dest, 0.5f, new(), Positional.Any);
+                return NavigationDecision.Build(_naviCtx, ws, hints, player, dest, 1, new(), Positional.Any);
             }
         }
 
