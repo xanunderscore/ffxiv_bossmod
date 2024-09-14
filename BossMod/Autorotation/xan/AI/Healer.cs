@@ -296,7 +296,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         HealSingle((target) =>
         {
-            if (target.PredictedHPRatio < 0.5)
+            if (haveBalls && target.PredictedHPRatio < 0.5)
             {
                 UseOGCD(BossMod.SGE.AID.Taurochole, target.Actor);
                 UseOGCD(BossMod.SGE.AID.Druochole, target.Actor);

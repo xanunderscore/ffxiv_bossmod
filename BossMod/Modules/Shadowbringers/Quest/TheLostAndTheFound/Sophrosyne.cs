@@ -22,13 +22,9 @@ class Charge(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpe
 
 class SaveTheDipshit(BossModule module) : BossComponent(module)
 {
-    private Actor? Dwarf;
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        Dwarf ??= WorldState.Actors.FirstOrDefault(x => x.OID == 0x29A9);
-        if (Dwarf?.IsTargetable ?? false)
-            hints.Allies.Add(Dwarf);
     }
 }
 
@@ -45,6 +41,8 @@ class SophrosyneStates : StateMachineBuilder
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68806, NameID = 8395)]
 public class Sophrosyne(WorldState ws, Actor primary) : BossModule(ws, primary, new(632, 64.15f), new ArenaBoundsCircle(20))
 {
+    private Actor? Dwarf;
+
     protected override bool CheckPull() => true;
 
     protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
@@ -52,6 +50,10 @@ public class Sophrosyne(WorldState ws, Actor primary) : BossModule(ws, primary, 
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        Dwarf ??= WorldState.Actors.FirstOrDefault(x => x.OID == 0x29A9);
+        if (Dwarf?.IsTargetable ?? false)
+            hints.Allies.Add(Dwarf);
+
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;
     }

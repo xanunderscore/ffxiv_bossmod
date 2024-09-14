@@ -90,8 +90,8 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
             && Unlocked(AID.Kardia)
-            && Player.FindStatus((uint)SID.Kardia) == null
-            && FindKardiaTarget() is Actor kardiaTarget)
+            && FindKardiaTarget() is Actor kardiaTarget
+            && kardiaTarget.FindStatus((uint)SID.Kardion, Player.InstanceID) == null)
         {
             var partySlot = World.Party.FindSlot(kardiaTarget.InstanceID);
             if (partySlot == -1 || !World.Party.Members[partySlot].InCutscene)
