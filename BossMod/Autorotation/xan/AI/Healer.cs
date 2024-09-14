@@ -118,7 +118,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
             esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
 
-        for (var i = 0; i < PartyMemberStates.Length; i++)
+        for (var i = 0; i < PartyState.MaxPartySize; i++)
         {
             var actor = World.Party[i];
             ref var state = ref PartyMemberStates[i];
@@ -149,6 +149,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 }
             }
         }
+
         foreach (var enemy in Hints.PotentialTargets)
         {
             var targetSlot = World.Party.FindSlot(enemy.Actor.TargetID);

@@ -181,7 +181,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
         if (RaidBuffsLeft > GCD)
             return true;
 
-        var impendingBlood = ComboLastMove == (NumAOETargets > 2 ? AID.Unleash : AID.Souleater);
+        var impendingBlood = ComboLastMove == (NumAOETargets > 2 ? AID.Unleash : AID.SyphonStrike);
 
         return Blood + (impendingBlood ? 20 : 0) > 100;
     }
@@ -209,14 +209,16 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
+        var buffs = RaidBuffsLeft > GCD || RaidBuffsIn > 9000;
+
         switch (track)
         {
             case EdgeStrategy.Automatic:
-                if (RaidBuffsLeft > GCD)
+                if (buffs)
                     use(OGCDPriority.Edge);
                 break;
             case EdgeStrategy.AutomaticTBN:
-                if (RaidBuffsLeft > GCD && canUseTBN)
+                if (buffs && canUseTBN)
                     use(OGCDPriority.Edge);
                 break;
             case EdgeStrategy.Force:

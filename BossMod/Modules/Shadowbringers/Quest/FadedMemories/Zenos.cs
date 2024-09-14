@@ -17,7 +17,7 @@ class ZenosYaeGalvusStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 69311, NameID = 6039, PrimaryActorOID = (uint)OID.Zenos)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69311, NameID = 6039, PrimaryActorOID = (uint)OID.Zenos)]
 public class ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(-321.03f, 617.73f), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat;
