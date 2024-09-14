@@ -32,20 +32,16 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Targ
     internal uint PredictedHP(Actor actor) => (uint)Math.Clamp(actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID), 0, actor.HPMP.MaxHP);
     internal float PredictedHPRatio(Actor actor) => (float)PredictedHP(actor) / actor.HPMP.MaxHP;
 
-    internal IEnumerable<DateTime> Raidwides => Hints.PredictedDamage.Where(d => World.Party.WithSlot(partyOnly: true).IncludedInMask(d.players).Count() >= 2).Select(t => t.activation);
+    internal IEnumerable<DateTime> Raidwides => Hints.PredictedDamage.Where(d => Hints.Allies.IncludedInMask(d.players).Count() >= 2).Select(t => t.activation);
+
     internal IEnumerable<(Actor, DateTime)> Tankbusters
     {
         get
         {
             foreach (var d in Hints.PredictedDamage)
             {
-                var targets = World.Party.WithSlot(partyOnly: true).IncludedInMask(d.players).GetEnumerator();
-                targets.MoveNext();
-                var target1 = targets.Current;
-                if (targets.MoveNext())
-                    continue;
-
-                yield return (target1.Item2, d.activation);
+                if (Hints.Allies.IncludedInMask(d.players).SingleOrDefault() is Actor target)
+                    yield return (target, d.activation);
             }
         }
     }
