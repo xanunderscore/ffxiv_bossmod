@@ -94,9 +94,9 @@ public class DebugObjects
             }
 
             drawHitbox(selected.Position, selected);
-            if (selectedObj->LayoutInstance != null)
+            if (selectedObj->SharedGroupLayoutInstance != null)
             {
-                var imp = selectedObj->LayoutInstance->GetTranslationImpl();
+                var imp = selectedObj->SharedGroupLayoutInstance->GetTranslationImpl();
                 drawHitbox(*imp, selected, 0xff00ffff);
             }
         }
