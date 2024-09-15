@@ -51,8 +51,8 @@ public class Sophrosyne(WorldState ws, Actor primary) : BossModule(ws, primary, 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         Dwarf ??= WorldState.Actors.FirstOrDefault(x => x.OID == 0x29A9);
-        if (Dwarf?.IsTargetable ?? false)
-            hints.Allies.Add(Dwarf);
+        //if (Dwarf?.IsTargetable ?? false)
+        //    hints.Allies.Add(Dwarf);
 
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;

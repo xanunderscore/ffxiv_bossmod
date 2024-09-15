@@ -35,15 +35,15 @@ class LamittAI(WorldState ws) : StatelessRotation(ws, 25)
         if (primaryTarget == null)
             return;
 
-        var pmhealth = Hints.CalcPartyMemberHealth(World);
-        var overall = pmhealth.GetPartyHealth();
-        var medica = pmhealth.GetPartyHealth(act => act.Position.InCircle(Player.Position, 15));
+        //var pmhealth = Hints.CalcPartyMemberHealth(World);
+        //var overall = pmhealth.GetPartyHealth();
+        //var medica = pmhealth.GetPartyHealth(act => act.Position.InCircle(Player.Position, 15));
 
-        if (medica.Avg < 0.6f)
-            UseAction(Roleplay.AID.RonkanMedica, Player);
+        //if (medica.Avg < 0.6f)
+        //    UseAction(Roleplay.AID.RonkanMedica, Player);
 
-        if (overall.StdDev > 0.25f)
-            UseAction(Roleplay.AID.RonkanCureII, Hints.Allies[overall.LowestHPSlot]);
+        //if (overall.StdDev > 0.25f)
+        //    UseAction(Roleplay.AID.RonkanCureII, Hints.Allies[overall.LowestHPSlot]);
 
         UseAction(Roleplay.AID.RonkanStoneII, primaryTarget);
     }
@@ -58,8 +58,8 @@ class Hints(BossModule module) : BossComponent(module)
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;
 
-        foreach (var h in WorldState.Actors.Where(x => x.IsAlly && x.IsTargetable && x.Type == ActorType.Enemy))
-            hints.Allies.Add(h);
+        //foreach (var h in WorldState.Actors.Where(x => x.IsAlly && x.IsTargetable && x.Type == ActorType.Enemy))
+        //    hints.Allies.Add(h);
     }
 }
 

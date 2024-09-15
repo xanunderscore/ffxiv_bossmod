@@ -62,8 +62,8 @@ class SaveTheIdiot(BossModule module, uint oid) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         Idiot ??= WorldState.Actors.FirstOrDefault(x => x.OID == oid);
-        if (Idiot?.IsTargetable ?? false)
-            hints.Allies.Add(Idiot);
+        //if (Idiot?.IsTargetable ?? false)
+        //    hints.Allies.Add(Idiot);
     }
 }
 

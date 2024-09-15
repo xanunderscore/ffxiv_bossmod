@@ -90,13 +90,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (strategy.Option(Track.Kardia).As<KardiaStrategy>() == KardiaStrategy.Auto
             && Unlocked(AID.Kardia)
+            && Player.FindStatus((uint)SID.Kardia) == null
             && FindKardiaTarget() is Actor kardiaTarget
-            && kardiaTarget.FindStatus((uint)SID.Kardion, Player.InstanceID) == null)
-        {
-            var partySlot = World.Party.FindSlot(kardiaTarget.InstanceID);
-            if (partySlot == -1 || !World.Party.Members[partySlot].InCutscene)
-                PushGCD(AID.Kardia, kardiaTarget);
-        }
+            && !World.Party.Members[World.Party.FindSlot(kardiaTarget.InstanceID)].InCutscene)
+            PushGCD(AID.Kardia, kardiaTarget);
 
         if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia && Player.MountId == 0)
             PushGCD(AID.Eukrasia, Player);
@@ -167,7 +164,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
         if ((Gall == 3 || Gall == 2 && NextGall < 2.5f) && Player.HPMP.CurMP <= 9000 && strategy.Option(Track.Druo).As<DruoStrategy>() == DruoStrategy.Auto)
         {
-            var healTarget = Hints.Allies.WithoutSlot().MinBy(a => (float)a.HPMP.CurHP / a.HPMP.MaxHP);
+            var healTarget = World.Party.WithoutSlot().MinBy(a => (float)a.HPMP.CurHP / a.HPMP.MaxHP);
             PushOGCD(AID.Druochole, healTarget);
         }
 
@@ -200,7 +197,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         var total = 0;
         var tanks = 0;
         Actor? tank = null;
-        foreach (var actor in Hints.Allies.WithoutSlot())
+        foreach (var actor in World.Party.WithoutSlot())
         {
             total++;
             if (actor.Class.GetRole() == Role.Tank)

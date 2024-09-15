@@ -56,8 +56,6 @@ public sealed class AIHints
     public List<Enemy> PotentialTargets = [];
     public int HighestPotentialTargetPriority;
 
-    public AllyState Allies = new([]);
-
     // forced target
     // this should be set only if either explicitly planned by user or by ai, otherwise it will be annoying to user
     public Actor? ForcedTarget;
@@ -110,8 +108,6 @@ public sealed class AIHints
         Dismount = false;
         Bounds = DefaultBounds;
         PotentialTargets.Clear();
-        Allies.Clear();
-        _savedStatus = null;
         ForcedTarget = null;
         ForcedMovement = null;
         InteractWithTarget = null;
@@ -157,8 +153,6 @@ public sealed class AIHints
             });
         }
     }
-
-    public void FillAllies(WorldState ws) => Allies.Allies.AddRange(ws.Party.WithoutSlot(partyOnly: true));
 
     public void PrioritizeTargetsByOID(uint oid, int priority = 0) => PrioritizeTargetsByOID([oid], priority);
     public void PrioritizeTargetsByOID<OID>(OID oid, int priority = 0) where OID : Enum => PrioritizeTargetsByOID((uint)(object)oid, priority);
@@ -210,157 +204,4 @@ public sealed class AIHints
     public bool TargetInAOERect(Actor target, WPos origin, WDir direction, float lenFront, float halfWidth, float lenBack = 0) => target.Position.InRect(origin, direction, lenFront + target.HitboxRadius, lenBack, halfWidth);
 
     public WPos ClampToBounds(WPos position) => Center + Bounds.ClampToBounds(position - Center);
-
-    public record struct PartyMemberHealthStatus(List<PartyMemberState> Members) : IEnumerable<PartyMemberState>
-    {
-        public readonly IEnumerator<PartyMemberState> GetEnumerator() => Members.GetEnumerator();
-        public readonly PartyMemberState this[int Index] => Members[Index];
-        public readonly PartyHealthState GetPartyHealth() => GetPartyHealth(_ => true);
-        public readonly PartyHealthState GetPartyHealth(Func<Actor, bool> actorFilter)
-        {
-            int count = 0;
-            float mean = 0;
-            float m2 = 0;
-            float min = float.MaxValue;
-            int minSlot = -1;
-
-            for (var i = 0; i < Members.Count; i++)
-            {
-                var p = Members[i];
-                if (!actorFilter(p.Actor))
-                    continue;
-
-                if (p.NoHealStatusRemaining > 1.5f && p.DoomRemaining == 0)
-                    continue;
-
-                var pred = p.DoomRemaining > 0 ? 0 : p.PredictedHPRatio;
-                if (pred < min)
-                {
-                    min = pred;
-                    minSlot = i;
-                }
-                count++;
-                var delta = pred - mean;
-                mean += delta / count;
-                var delta2 = pred - mean;
-                m2 += delta * delta2;
-            }
-            var variance = m2 / count;
-            return new PartyHealthState()
-            {
-                LowestHPSlot = minSlot,
-                Avg = mean,
-                StdDev = MathF.Sqrt(variance),
-                Count = count
-            };
-        }
-
-        readonly IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Members).GetEnumerator();
-    }
-
-    public record PartyMemberState(Actor Actor)
-    {
-        public Actor Actor = Actor;
-        public int PredictedHP;
-        public int PredictedHPMissing;
-        public float AttackerStrength;
-        // predicted ratio including pending HP loss and current attacker strength
-        public float PredictedHPRatio;
-        // *actual* ratio including pending HP loss, used mainly just for essential dignity
-        public float PendingHPRatio;
-        // remaining time on cleansable status, to avoid casting it on a target that will lose the status by the time we finish
-        public float EsunableStatusRemaining;
-        // tank invulns go here, but also statuses like Excog that give burst heal below a certain HP threshold
-        // no point in spam healing a tank in an area with high mob density (like Sirensong Sea pull after second boss) until their excog falls off
-        public float NoHealStatusRemaining;
-        // Doom (1769 and possibly other statuses) is only removed once a player reaches full HP, must be healed asap
-        public float DoomRemaining;
-    }
-
-    public record PartyHealthState
-    {
-        public int LowestHPSlot;
-        public int Count;
-        public float Avg;
-        public float StdDev;
-    }
-
-    private static readonly uint[] NoHealStatuses = [
-        82, // Hallowed Ground
-        409, // Holmgang
-        810, // Living Dead
-        811, // Walking Dead
-        1220, // Excogitation
-        1836, // Superbolide
-        2685, // Catharsis of Corundum
-        (uint)WAR.SID.BloodwhettingDefenseLong
-    ];
-
-    private PartyMemberHealthStatus? _savedStatus;
-
-    public PartyMemberHealthStatus CalcPartyMemberHealth(WorldState ws)
-    {
-        _savedStatus ??= RecalcPartyMemberHealth(ws);
-        return _savedStatus.Value;
-    }
-
-    private PartyMemberHealthStatus RecalcPartyMemberHealth(WorldState ws)
-    {
-        BitMask esunas = new();
-        foreach (var caster in Allies.WithoutSlot().Where(a => a.CastInfo?.IsSpell(WHM.AID.Esuna) ?? false))
-            esunas.Set(Allies.FindSlot(caster.TargetID));
-
-        float StatusDuration(DateTime expireAt) => Math.Max((float)(expireAt - ws.CurrentTime).TotalSeconds, 0.0f);
-
-        List<PartyMemberState> states = [];
-
-        for (var i = 0; i < Allies.Count; i++)
-        {
-            var actor = Allies[i];
-            var state = new PartyMemberState(actor)
-            {
-                EsunableStatusRemaining = 0,
-                NoHealStatusRemaining = 0
-            };
-            if (actor.IsDead || actor.HPMP.MaxHP == 0)
-            {
-                state.PredictedHP = state.PredictedHPMissing = 0;
-                state.PredictedHPRatio = state.PendingHPRatio = 1;
-            }
-            else
-            {
-                state.PredictedHP = (int)actor.HPMP.CurHP + ws.PendingEffects.PendingHPDifference(actor.InstanceID);
-                state.PredictedHPMissing = (int)actor.HPMP.MaxHP - state.PredictedHP;
-                state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
-                var canEsuna = actor.IsTargetable && !esunas[i];
-                foreach (var s in actor.Statuses)
-                {
-                    if (canEsuna && Utils.StatusIsRemovable(s.ID))
-                        state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
-
-                    if (NoHealStatuses.Contains(s.ID))
-                        state.NoHealStatusRemaining = StatusDuration(s.ExpireAt);
-
-                    if (s.ID == 1769)
-                        state.DoomRemaining = StatusDuration(s.ExpireAt);
-                }
-            }
-            states.Add(state);
-        }
-
-        foreach (var enemy in PotentialTargets)
-        {
-            var targetSlot = Allies.FindSlot(enemy.Actor.TargetID);
-            if (targetSlot >= 0)
-            {
-                var state = states[targetSlot];
-
-                state.AttackerStrength += enemy.AttackStrength;
-                if (state.PredictedHPRatio < 0.99f)
-                    state.PredictedHPRatio -= enemy.AttackStrength;
-            }
-        }
-
-        return new(states);
-    }
 }
