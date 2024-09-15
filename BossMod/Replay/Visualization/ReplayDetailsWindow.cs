@@ -252,14 +252,19 @@ class ReplayDetailsWindow : UIWindow
     // x, z, rot, hp, name, target, cast, statuses
     private void DrawCommonColumns(Actor actor)
     {
+        var centerX = _hints.Center.X;
+        var centerZ = _hints.Center.Z;
+        var (minX, maxX) = (_hints.Center.X - 20, _hints.Center.X + 20);
+        var (minZ, maxZ) = (_hints.Center.Z - 20, _hints.Center.Z + 20);
+
         var posX = actor.Position.X;
         var posZ = actor.Position.Z;
         var rot = actor.Rotation.Deg;
         bool modified = false;
         ImGui.TableNextColumn();
-        modified |= ImGui.DragFloat("###X", ref posX, 0.25f, 80, 120);
+        modified |= ImGui.DragFloat("###X", ref posX, 0.25f, minX, maxX);
         ImGui.TableNextColumn();
-        modified |= ImGui.DragFloat("###Z", ref posZ, 0.25f, 80, 120);
+        modified |= ImGui.DragFloat("###Z", ref posZ, 0.25f, minZ, maxZ);
         ImGui.TableNextColumn();
         modified |= ImGui.DragFloat("###Rot", ref rot, 1, -180, 180);
         if (modified)

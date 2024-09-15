@@ -165,6 +165,18 @@ public enum AID : uint
     Communio = 31794,
     Engravement = 31785,
     Bloodbath = 33013,
+
+    // Wuk Lamat
+    ClawOfTheBraax = 37120,
+    FangsOfTheBraax = 37121,
+    TailOfTheBraax = 37122,
+    RunOfTheRroneek = 37123,
+    LuwatenaPulse = 37124,
+    BeakOfTheLuwatena = 37125,
+    TuraliJudgment = 37126,
+    TrialsOfTural = 37127,
+    TuraliFervor = 37128,
+    DawnlitConviction = 37129
 }
 
 public enum TraitID : uint { }
@@ -352,6 +364,17 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Communio);
         d.RegisterSpell(AID.Engravement);
         d.RegisterSpell(AID.Bloodbath);
+
+        d.RegisterSpell(AID.ClawOfTheBraax);
+        d.RegisterSpell(AID.FangsOfTheBraax);
+        d.RegisterSpell(AID.TailOfTheBraax);
+        d.RegisterSpell(AID.RunOfTheRroneek);
+        d.RegisterSpell(AID.LuwatenaPulse);
+        d.RegisterSpell(AID.BeakOfTheLuwatena);
+        d.RegisterSpell(AID.TuraliJudgment);
+        d.RegisterSpell(AID.TrialsOfTural);
+        d.RegisterSpell(AID.TuraliFervor);
+        d.RegisterSpell(AID.DawnlitConviction, castAnimLock: 3.86f);
     }
 
     public void Dispose() { }

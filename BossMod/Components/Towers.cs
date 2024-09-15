@@ -1,4 +1,6 @@
-﻿namespace BossMod.Components;
+﻿using BossMod.Util;
+
+namespace BossMod.Components;
 
 public class GenericTowers(BossModule module, ActionID aid = default) : CastCounter(module, aid)
 {
@@ -53,9 +55,16 @@ public class GenericTowers(BossModule module, ActionID aid = default) : CastCoun
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        var missingTowers = Towers.Where(t => ShouldHint(slot, actor, t)).ToList();
-        if (missingTowers.Count > 0)
-            hints.AddForbiddenZone(ShapeDistance.Intersection(missingTowers.Select(t => ShapeDistance.InvertedCircle(t.Position, t.Radius))), missingTowers.Select(t => t.Activation).Min());
+        // group towers whose activations are within 500ms of each other - draw hints for soonest group first
+        // TODO is this too conservative?
+        var missingTowers = Towers.Where(t => ShouldHint(slot, actor, t)).GroupBy(x => x.Activation.Round(TimeSpan.FromMilliseconds(500))).OrderBy(gt => gt.Key);
+
+        foreach (var grp in missingTowers)
+        {
+            var zone = ShapeDistance.Intersection(grp.Select(t => ShapeDistance.InvertedCircle(t.Position, t.Radius)));
+            hints.AddForbiddenZone(zone, grp.Select(t => t.Activation).Min());
+            break;
+        }
     }
 
     private bool ShouldHint(int slot, Actor actor, Tower t)
@@ -86,7 +95,7 @@ public class CastTowers(BossModule module, ActionID aid, float radius, int minSo
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action == WatchedAction)
-            Towers.Add(new(DeterminePosition(caster, spell), Radius, MinSoakers, MaxSoakers));
+            Towers.Add(new(DeterminePosition(caster, spell), Radius, MinSoakers, MaxSoakers, activation: Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
