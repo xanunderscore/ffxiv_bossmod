@@ -14,12 +14,12 @@ public sealed class PartyState
     public const int MaxPartySize = 8;
     public const int MaxAllianceSize = 24;
 
-    public record struct Member(ulong ContentId, ulong InstanceId, bool InCutscene, string Name)
+    public record struct Member(ulong ContentId, ulong InstanceId, bool InCutscene, string Name, bool IsNPC)
     {
         // note that a valid member can have 0 contentid (eg buddy) or 0 instanceid (eg player in a different zone)
         public readonly bool IsValid() => ContentId != 0 || InstanceId != 0;
     }
-    public static readonly Member EmptySlot = new(0, 0, false, "");
+    public static readonly Member EmptySlot = new(0, 0, false, "", false);
 
     public readonly Member[] Members = Utils.MakeArray(MaxAllianceSize, EmptySlot);
     private readonly Actor?[] _actors = new Actor?[MaxAllianceSize]; // transient
@@ -100,7 +100,7 @@ public sealed class PartyState
                 Service.Log($"[PartyState] Out-of-bounds slot {Slot}");
             }
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PAR "u8).Emit(Slot).Emit(Member.ContentId, "X").Emit(Member.InstanceId, "X8").Emit(Member.InCutscene).Emit(Member.Name);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PAR "u8).Emit(Slot).Emit(Member.ContentId, "X").Emit(Member.InstanceId, "X8").Emit(Member.InCutscene).Emit(Member.Name).Emit(Member.IsNPC);
     }
 
     public Event<OpLimitBreakChange> LimitBreakChanged = new();

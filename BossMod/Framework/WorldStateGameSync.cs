@@ -421,7 +421,7 @@ sealed class WorldStateGameSync : IDisposable
             var ui = UIState.Instance();
             if (ui->PlayerState.IsLoaded != 0)
             {
-                player = new(ui->PlayerState.ContentId, ui->PlayerState.EntityId, false, ui->PlayerState.CharacterNameString);
+                player = new(ui->PlayerState.ContentId, ui->PlayerState.EntityId, false, ui->PlayerState.CharacterNameString, false);
                 if (pc != null && (pc->ContentId != player.ContentId || pc->EntityId != player.InstanceId))
                     Service.Log($"[WSG] Object #0 is valid ({pc->AccountId:X}.{pc->ContentId:X}, {pc->EntityId:X8} '{pc->NameString}') but different from playerstate ({player})");
             }
@@ -439,7 +439,7 @@ sealed class WorldStateGameSync : IDisposable
             // in playback mode, the primary data source is object #0
             if (pc != null)
             {
-                player = new(pc->ContentId, pc->EntityId, false, pc->NameString);
+                player = new(pc->ContentId, pc->EntityId, false, pc->NameString, false);
             }
             // else: just assume there's no player for now...
         }
@@ -465,9 +465,14 @@ sealed class WorldStateGameSync : IDisposable
             }
             else if (m.InstanceId != 0)
             {
-                // slot was occupied by trust => see if it's still in party
-                if (!HasBuddy(m.InstanceId))
-                    UpdatePartySlot(i, PartyState.EmptySlot); // buddy is no longer in party => clear slot
+                var isValidPartyMember = m.IsNPC
+                    // NPC ally treated as party member - do nothing if object still exists
+                    ? _ws.Actors.Find(m.InstanceId) != null
+                    // slot was occupied by trust => see if it's still in party
+                    : HasBuddy(m.InstanceId);
+
+                if (!isValidPartyMember)
+                    UpdatePartySlot(i, PartyState.EmptySlot); // clear slot
                 // else: no reason to update...
             }
             // else: slot was empty, skip
@@ -489,7 +494,7 @@ sealed class WorldStateGameSync : IDisposable
             if (instanceID != InvalidEntityId && _ws.Party.FindSlot(instanceID) < 0)
             {
                 var obj = GameObjectManager.Instance()->Objects.GetObjectByEntityId(instanceID);
-                AddPartyMember(new(0, instanceID, false, obj != null ? obj->NameString : ""));
+                AddPartyMember(new(0, instanceID, false, obj != null ? obj->NameString : "", false));
             }
             // else: buddy is non-existent or already updated, skip
         }
@@ -526,7 +531,7 @@ sealed class WorldStateGameSync : IDisposable
         return -1;
     }
 
-    private unsafe PartyState.Member BuildPartyMember(PartyMember* m) => m != null ? new(m->ContentId, m->EntityId, (m->Flags & 0x10) != 0, m->NameString) : PartyState.EmptySlot;
+    private unsafe PartyState.Member BuildPartyMember(PartyMember* m) => m != null ? new(m->ContentId, m->EntityId, (m->Flags & 0x10) != 0, m->NameString, false) : PartyState.EmptySlot;
 
     private void AddPartyMember(PartyState.Member m)
     {

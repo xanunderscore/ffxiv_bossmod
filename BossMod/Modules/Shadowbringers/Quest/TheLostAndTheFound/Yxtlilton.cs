@@ -30,20 +30,32 @@ class CodexOfGravity(BossModule module) : Components.StackWithCastTargets(module
 
 class LamittAI(WorldState ws) : StatelessRotation(ws, 25)
 {
+    private float ActorHP(Actor a) => (float)(a.HPMP.CurHP + World.PendingEffects.PendingHPDifference(a.InstanceID)) / a.HPMP.MaxHP;
+
     protected override void Exec(Actor? primaryTarget)
     {
         if (primaryTarget == null)
             return;
 
-        //var pmhealth = Hints.CalcPartyMemberHealth(World);
-        //var overall = pmhealth.GetPartyHealth();
-        //var medica = pmhealth.GetPartyHealth(act => act.Position.InCircle(Player.Position, 15));
+        var partyHealth = World.Party.WithoutSlot().Where(x => x.Position.InCircle(Player.Position, 15)).Average(ActorHP);
+        var lowest = World.Party.WithoutSlot().MinBy(ActorHP)!;
+        var esunable = World.Party.WithoutSlot().FirstOrDefault(x => x.FindStatus(482) != null);
+        var doomed = World.Party.WithoutSlot().FirstOrDefault(x => x.FindStatus(1769) != null);
 
-        //if (medica.Avg < 0.6f)
-        //    UseAction(Roleplay.AID.RonkanMedica, Player);
+        if (partyHealth < 0.6f)
+            UseAction(Roleplay.AID.RonkanMedica, Player);
 
-        //if (overall.StdDev > 0.25f)
-        //    UseAction(Roleplay.AID.RonkanCureII, Hints.Allies[overall.LowestHPSlot]);
+        if (lowest.HPMP.CurHP * 3 <= lowest.HPMP.MaxHP)
+            UseAction(Roleplay.AID.RonkanCureII, lowest);
+
+        if (esunable != null)
+            UseAction(Roleplay.AID.RonkanEsuna, esunable);
+
+        if (doomed != null)
+        {
+            UseAction(Roleplay.AID.RonkanRenew, doomed);
+            UseAction(Roleplay.AID.RonkanCureII, doomed);
+        }
 
         UseAction(Roleplay.AID.RonkanStoneII, primaryTarget);
     }
@@ -57,9 +69,15 @@ class Hints(BossModule module) : BossComponent(module)
     {
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;
+    }
 
-        //foreach (var h in WorldState.Actors.Where(x => x.IsAlly && x.IsTargetable && x.Type == ActorType.Enemy))
-        //    hints.Allies.Add(h);
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID is 0x29AD or 0x29AE or 0x29AF)
+        {
+            var ix = WorldState.Party.WithoutSlot().Count();
+            new PartyState.OpModify(ix, new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
+        }
     }
 }
 
