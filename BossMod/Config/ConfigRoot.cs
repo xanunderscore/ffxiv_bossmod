@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading;
 
 namespace BossMod;
 
@@ -58,8 +57,8 @@ public class ConfigRoot
                 Thread.Sleep(500);
                 LoadFromFile(file);
             }
-        }
 #endif
+        }
     }
 
     public void SaveToFile(FileInfo file)
