@@ -10,7 +10,7 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    _AutoAttack_Attack = 6497, // Boss->player, no cast, single-target
+    AutoAttack = 6497, // Boss->player, no cast, single-target
 
     FancyBladework = 36413, // Boss->self, 5.0s cast, range 60 circle
 
@@ -68,15 +68,6 @@ class Thrill(BossModule module) : Components.GenericTowers(module)
     {
         if ((AID)spell.Action.ID is AID.ShadeThrill or AID.BossThrill)
             Towers.Add(new(caster.Position, 3, activation: Module.CastFinishAt(spell)));
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        foreach (var t in Towers)
-        {
-            hints.AddForbiddenZone(new AOEShapeDonut(3, 100), t.Position, activation: t.Activation);
-            break;
-        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
