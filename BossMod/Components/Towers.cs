@@ -4,7 +4,7 @@ namespace BossMod.Components;
 
 public class GenericTowers(BossModule module, ActionID aid = default) : CastCounter(module, aid)
 {
-    public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, BitMask forbiddenSoakers = default, DateTime activation = default, bool includeNPCs = false)
+    public struct Tower(WPos position, float radius, int minSoakers = 1, int maxSoakers = 1, BitMask forbiddenSoakers = default, DateTime activation = default)
     {
         public WPos Position = position;
         public float Radius = radius;
@@ -15,11 +15,7 @@ public class GenericTowers(BossModule module, ActionID aid = default) : CastCoun
 
         public readonly bool IsInside(WPos pos) => pos.InCircle(Position, Radius);
         public readonly bool IsInside(Actor actor) => IsInside(actor.Position);
-        private readonly IEnumerable<(int, Actor)> AllowedSoakers(BossModule module)
-            => module.Raid.WithSlot()
-                .ExcludedFromMask(ForbiddenSoakers)
-                .Concat(includeNPCs ? module.WorldState.Actors.Where(x => x.Type == ActorType.Enemy && x.IsAlly).Select(a => (-1, a)) : []);
-        public readonly int NumInside(BossModule module) => AllowedSoakers(module).InRadius(Position, Radius).Count();
+        public readonly int NumInside(BossModule module) => module.Raid.WithSlot().ExcludedFromMask(ForbiddenSoakers).InRadius(Position, Radius).Count();
         public readonly bool CorrectAmountInside(BossModule module) => NumInside(module) is var count && count >= MinSoakers && count <= MaxSoakers;
     }
 
