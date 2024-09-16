@@ -146,8 +146,8 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
-    public static QuestObjective Combat(WorldState ws, params Vector3[] connections) =>
-        new QuestObjective(ws).WithConnections(connections)
+    public static QuestObjective Combat(WorldState ws, params Vector3[] connections)
+        => new QuestObjective(ws).WithConnections(connections)
             .With(obj =>
             {
                 obj.OnActorCombatChanged += (act) => obj.CompleteIf(act.OID == 0 && !act.InCombat);
