@@ -37,6 +37,14 @@ class Hints(BossModule module) : BossComponent(module)
     }
 }
 
+class Nails(BossModule module) : Components.Adds(module, (uint)OID.InfernalNail)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        hints.PrioritizeTargetsByOID(OID.InfernalNail, 1);
+    }
+}
+
 class Incinerate(BossModule module) : Components.Cleave(module, ActionID.MakeSpell(AID.Incinerate), new AOEShapeCone(16, 60.Degrees())); // TODO: verify angle
 class Eruption(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.EruptionAOE), 8);
 class RadiantPlume(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.RadiantPlumeAOE), 8);
@@ -47,6 +55,7 @@ class T01IfritNStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<Hints>()
+            .ActivateOnEnter<Nails>()
             .ActivateOnEnter<Incinerate>()
             .ActivateOnEnter<Eruption>()
             .ActivateOnEnter<RadiantPlume>();
