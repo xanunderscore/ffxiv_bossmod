@@ -373,7 +373,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
     private void Meikyo(StrategyValues strategy)
     {
         // TODO: DT requires early meikyo in even windows, resulting in double meikyo at 6m
-        if (KaeshiAction.Left == 0 && MeikyoLeft == 0 && Tendo == 0)
+        if (MeikyoLeft == 0 && Tendo == 0 && (CanWeave(MaxChargesIn(AID.MeikyoShisui), 0.6f) || CanFitGCD(RaidBuffsLeft, 3)))
             PushOGCD(AID.MeikyoShisui, Player);
     }
 
