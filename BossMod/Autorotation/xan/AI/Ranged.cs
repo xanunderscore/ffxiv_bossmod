@@ -61,7 +61,7 @@ public class RangedAI(RotationModuleManager manager, Actor player) : AIBase(mana
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.BRD.AID.WardensPaean), tar, ActionQueue.Priority.Low);
     }
 
-    private unsafe void ExecLB(StrategyValues strategy, Actor? primaryTarget)
+    private void ExecLB(StrategyValues strategy, Actor? primaryTarget)
     {
         Actor? lbTarget(float halfWidth) => FindBetterTargetBy(primaryTarget, 30, actor => Hints.NumPriorityTargetsInAOERect(Player.Position, Player.DirectionTo(actor), 30, halfWidth)).Target;
 

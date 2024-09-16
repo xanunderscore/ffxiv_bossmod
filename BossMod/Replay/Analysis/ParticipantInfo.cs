@@ -223,7 +223,7 @@ class ParticipantInfo : CommonEnumInfo
             sb.AppendLine();
             sb.AppendLine("    private void SinglePhase(uint id)");
             sb.AppendLine("    {");
-            sb.AppendLine("        SimpleState(id + 0xFF0000, 10000, \"???\"");
+            sb.AppendLine("        SimpleState(id + 0xFF0000, 10000, \"???\");");
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    //private void XXX(uint id, float delay)");
