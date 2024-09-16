@@ -24,21 +24,6 @@ public sealed class AIHints
         public bool StayAtLongRange; // if set, players with ranged attacks don't bother coming closer than max range (TODO: reconsider)
     }
 
-    public class AllyState(List<Actor> allies)
-    {
-        public List<Actor> Allies = allies;
-        public void Clear() => Allies.Clear();
-
-        public void Add(Actor ally) => Allies.Add(ally);
-
-        public IEnumerable<(int, Actor)> WithSlot() => Allies.Select((a, i) => (i, a));
-        public IEnumerable<Actor> WithoutSlot() => Allies;
-        public int Count => Allies.Count;
-        public Actor this[int Index] => Allies[Index];
-
-        public int FindSlot(ulong instanceID) => instanceID != 0 ? Allies.FindIndex(a => a.InstanceID == instanceID) : -1;
-    }
-
     public enum SpecialMode
     {
         Normal,
