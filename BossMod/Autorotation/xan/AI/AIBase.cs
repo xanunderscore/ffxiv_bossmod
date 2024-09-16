@@ -40,8 +40,13 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Targ
         {
             foreach (var d in Hints.PredictedDamage)
             {
-                if (World.Party.WithSlot().IncludedInMask(d.players).Select(a => a.Item2).SingleOrDefault() is Actor target)
-                    yield return (target, d.activation);
+                var targets = World.Party.WithSlot(partyOnly: true).IncludedInMask(d.players).GetEnumerator();
+                targets.MoveNext();
+                var target1 = targets.Current;
+                if (targets.MoveNext())
+                    continue;
+
+                yield return (target1.Item2, d.activation);
             }
         }
     }
