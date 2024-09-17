@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Stormblood.TheResonant;
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 269)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class TheResonant(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

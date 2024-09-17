@@ -1,17 +1,17 @@
-﻿namespace BossMod.QuestBattle.Stormblood.TheKeyToVictory;
-
-enum OID : uint
-{
-    Wiscar = 0x1E82,
-    Soblyn = 0x1E83,
-    QueerDevice = 0x1EA757,
-    TatteredDiary = 0x1EA752,
-    Colossus = 0x1E7F
-}
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 467)]
-public sealed class Quest(WorldState ws) : QuestBattle(ws)
+public sealed class TheKeyToVictory(WorldState ws) : QuestBattle(ws)
 {
+    enum OID : uint
+    {
+        Wiscar = 0x1E82,
+        Soblyn = 0x1E83,
+        QueerDevice = 0x1EA757,
+        TatteredDiary = 0x1EA752,
+        Colossus = 0x1E7F
+    }
+
     public override List<QuestObjective> DefineObjectives(WorldState ws)
     {
         return [
@@ -29,10 +29,7 @@ public sealed class Quest(WorldState ws) : QuestBattle(ws)
             new QuestObjective(ws)
                 .WithConnection(new Vector3(-278.78f, 11.18f, 158.27f))
                 .PauseForCombat(false)
-                .Hints((player, hints) => {
-                    foreach(var h in hints.PotentialTargets)
-                        h.Priority = 0;
-                })
+                .Hints((player, hints) => hints.PrioritizeAll())
                 .CompleteOnKilled((uint)OID.Colossus),
 
             new QuestObjective(ws)

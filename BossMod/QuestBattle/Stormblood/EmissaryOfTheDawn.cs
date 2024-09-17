@@ -1,6 +1,6 @@
 ﻿using BossMod.Autorotation;
 
-namespace BossMod.QuestBattle.Stormblood.EmissaryOfTheDawn;
+namespace BossMod.QuestBattle.Stormblood;
 
 public class AlphiAI(WorldState ws) : StatelessRotation(ws, 25)
 {
@@ -17,7 +17,7 @@ public class AlphiAI(WorldState ws) : StatelessRotation(ws, 25)
 }
 
 [Quest(BossModuleInfo.Maturity.WIP, 582)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class EmissaryOfTheDawn(WorldState ws) : QuestBattle(ws)
 {
     private readonly AlphiAI _ai = new(ws);
 

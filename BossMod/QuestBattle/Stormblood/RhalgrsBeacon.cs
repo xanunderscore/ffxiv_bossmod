@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Stormblood.RhalgrsBeacon;
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 466)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class RhalgrsBeacon(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

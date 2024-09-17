@@ -1,4 +1,4 @@
-﻿namespace BossMod.QuestBattle.Stormblood.InCrimsonItBegan;
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 464)]
 public sealed class InCrimsonItBegan(WorldState ws) : QuestBattle(ws)
@@ -11,9 +11,5 @@ public sealed class InCrimsonItBegan(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(76.48f, 0.31f, -73.51f))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
-    {
-        foreach (var h in hints.PotentialTargets)
-            h.Priority = 0;
-    }
+    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) => hints.PrioritizeAll();
 }

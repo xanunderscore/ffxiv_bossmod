@@ -1,13 +1,13 @@
-﻿namespace BossMod.QuestBattle.Stormblood.ItsProbablyATrap;
-
-enum SID : uint
-{
-    Bind = 280,
-}
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 237)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class ItsProbablyATrap(WorldState ws) : QuestBattle(ws)
 {
+    enum SID : uint
+    {
+        Bind = 280,
+    }
+
     private bool SmokeBomb = false;
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

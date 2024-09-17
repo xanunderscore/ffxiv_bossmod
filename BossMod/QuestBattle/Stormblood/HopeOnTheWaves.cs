@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Stormblood.HopeOnTheWaves;
+﻿namespace BossMod.QuestBattle.Stormblood;
 
 [Quest(BossModuleInfo.Maturity.WIP, 472)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class HopeOnTheWaves(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)
@@ -13,9 +13,5 @@ public class Quest(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(551.57f, 12.94f, 751.91f))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
-    {
-        foreach (var h in hints.PotentialTargets)
-            h.Priority = 0;
-    }
+    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) => hints.PrioritizeAll();
 }
