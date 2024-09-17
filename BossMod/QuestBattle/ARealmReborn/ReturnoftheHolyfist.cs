@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.ReturnOfTheHolyfist;
+﻿namespace BossMod.QuestBattle.ARealmReborn;
 
 [Quest(BossModuleInfo.Maturity.WIP, 323)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class ReturnOfTheHolyfist(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) => hints.PrioritizeAll();
 }

@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.LordOfTheInferno;
+﻿namespace BossMod.QuestBattle.ARealmReborn;
 
 [Quest(BossModuleInfo.Maturity.WIP, 339)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class LordOfTheInferno(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {

@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.TheLominsanWay;
+﻿namespace BossMod.QuestBattle.ARealmReborn;
 
 [Quest(BossModuleInfo.Maturity.WIP, 354)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class TheLominsanWay(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {

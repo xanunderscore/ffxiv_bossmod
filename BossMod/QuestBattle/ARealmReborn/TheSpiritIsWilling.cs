@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.TheSpiritIsWilling;
+﻿namespace BossMod.QuestBattle.ARealmReborn;
 
 [Quest(BossModuleInfo.Maturity.WIP, 319)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class TheSpiritIsWilling(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {

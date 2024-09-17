@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.StarcrossedRivals;
+﻿namespace BossMod.QuestBattle.ARealmReborn;
 
 [Quest(BossModuleInfo.Maturity.WIP, 321)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class StarcrossedRivals(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
