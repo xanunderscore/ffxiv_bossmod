@@ -54,7 +54,7 @@ public class ConfigRoot
             // this is an extremely bad idea, never use this
             if (e is IOException io && (io.HResult & 0xFFFF) == 0x20)
             {
-                Thread.Sleep(500);
+                System.Threading.Thread.Sleep(500);
                 LoadFromFile(file);
             }
 #endif

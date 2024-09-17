@@ -148,6 +148,13 @@ public sealed class AIHints
             if (oids.Contains(h.Actor.OID))
                 h.Priority = Math.Max(priority, h.Priority);
     }
+
+    public void PrioritizeAll()
+    {
+        foreach (var h in PotentialTargets)
+            h.Priority = Math.Max(h.Priority, 0);
+    }
+
     public void InteractWithOID(WorldState ws, uint oid)
     {
         InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);

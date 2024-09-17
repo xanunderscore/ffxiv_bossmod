@@ -2,11 +2,12 @@
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
+using Lumina.Excel.GeneratedSheets;
 using System.Runtime.InteropServices;
 
 namespace BossMod.QuestBattle;
 
-public unsafe class QuestBattleWindow : UIWindow
+public unsafe partial class QuestBattleWindow : UIWindow
 {
     private readonly QuestBattleDirector _director;
     private readonly QuestBattleConfig _config = Service.Config.Get<QuestBattleConfig>();
@@ -63,6 +64,8 @@ public unsafe class QuestBattleWindow : UIWindow
         }
 
         ImGui.TextUnformatted($"Zone: {World.CurrentZone} / CFC: {World.CurrentCFCID}");
+        ImGui.SameLine();
+        GenerateModule();
         if (World.Party.Player() is Actor player)
         {
             ImGui.TextUnformatted($"Position: {Utils.Vec3String(player.PosRot.XYZ())}");
@@ -112,6 +115,56 @@ public unsafe class QuestBattleWindow : UIWindow
         if (ImGui.Checkbox("Use dash abilities for movement", ref _config.UseDash))
             _config.Modified.Fire();
         _director.DrawSpeedToggle();
+    }
+
+    private void GenerateModule()
+    {
+        if (World.CurrentCFCID == 0)
+            return;
+
+        if (ImGui.Button("Generate module stub"))
+        {
+            var cfc = Service.LuminaRow<ContentFinderCondition>(World.CurrentCFCID);
+            if (cfc == null)
+                return;
+
+            string name;
+            if (cfc.ContentLinkType == 5)
+            {
+                var qb = Service.LuminaRow<Lumina.Excel.GeneratedSheets.QuestBattle>(cfc.Content)!;
+                var quest = Service.LuminaRow<Quest>((uint)qb.Quest)!;
+                name = quest.Name;
+            }
+            else
+            {
+                name = cfc.Name;
+            }
+
+            var expansion = cfc.ClassJobLevelSync switch
+            {
+                > 0 and <= 50 => "ARealmReborn",
+                > 50 and <= 60 => "Heavensward",
+                > 60 and <= 70 => "Stormblood",
+                > 70 and <= 80 => "Shadowbringers",
+                > 80 and <= 90 => "Endwalker",
+                > 90 and <= 100 => "Dawntrail",
+                _ => "Unknown"
+            };
+
+            var questname = Utils.StringToIdentifier(name);
+
+            var module = $"namespace BossMod.QuestBattle.{expansion};\n" +
+                        $"\n" +
+                        $"[Quest(BossModuleInfo.Maturity.WIP, {World.CurrentCFCID})]\n" +
+                        $"internal class {questname}(WorldState ws) : QuestBattle(ws)\n" +
+                        "{\n" +
+                        "   public override List<QuestObjective> DefineObjectives(WorldState ws) => [\n" +
+                        "       new QuestObjective(ws)\n" +
+                        "   ];\n" +
+                        "}\n";
+
+            ImGui.SetClipboardText(module);
+        }
     }
 
     private void DrawObjectives(QuestBattle sqb)

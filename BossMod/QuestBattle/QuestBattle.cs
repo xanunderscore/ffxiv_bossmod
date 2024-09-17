@@ -215,7 +215,7 @@ public abstract class QuestBattle : IDisposable
             Service.Condition.ConditionChange += OnConditionChange;
     }
 
-    public abstract List<QuestObjective> DefineObjectives(WorldState ws);
+    public virtual List<QuestObjective> DefineObjectives(WorldState ws) => [];
 
     public void Update()
     {

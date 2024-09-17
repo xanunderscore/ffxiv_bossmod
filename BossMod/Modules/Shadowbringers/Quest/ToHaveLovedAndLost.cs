@@ -56,7 +56,7 @@ class Fracture(BossModule module) : Components.GenericTowers(module)
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (IsTower(spell.Action))
-            Towers.Add(new(spell.LocXZ, 3, activation: Module.CastFinishAt(spell), includeNPCs: true));
+            Towers.Add(new(spell.LocXZ, 3, activation: Module.CastFinishAt(spell)));
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell)
