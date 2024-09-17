@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Stormblood;
 
-public class AlphiAI(WorldState ws) : StatelessRotation(ws, 25)
+public class AutoAlphi(WorldState ws) : StatelessRotation(ws, 25)
 {
     private Actor? Carby => World.Actors.FirstOrDefault(x => x.OID == 0x2343);
 
@@ -19,7 +19,7 @@ public class AlphiAI(WorldState ws) : StatelessRotation(ws, 25)
 [Quest(BossModuleInfo.Maturity.WIP, 582)]
 public class EmissaryOfTheDawn(WorldState ws) : QuestBattle(ws)
 {
-    private readonly AlphiAI _ai = new(ws);
+    private readonly AutoAlphi _ai = new(ws);
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

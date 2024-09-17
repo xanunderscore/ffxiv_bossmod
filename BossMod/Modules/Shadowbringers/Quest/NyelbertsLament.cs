@@ -109,7 +109,7 @@ class PassageOfArms(BossModule module) : BossComponent(module)
     }
 }
 
-class NyelbertAI(BossModule module) : Components.RotationModule<QuestBattle.Shadowbringers.NyelbertsLament.AutoNyelbert>(module);
+class NyelbertAI(BossModule module) : Components.RotationModule<QuestBattle.Shadowbringers.AutoNyelbert>(module);
 
 class BovianStates : StateMachineBuilder
 {

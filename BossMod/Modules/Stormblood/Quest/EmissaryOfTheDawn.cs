@@ -6,7 +6,7 @@ public enum OID : uint
     Helper = 0x233C,
 }
 
-class AutoAlphi(BossModule module) : Components.RotationModule<QuestBattle.Stormblood.EmissaryOfTheDawn.AlphiAI>(module);
+class AlphiAI(BossModule module) : Components.RotationModule<QuestBattle.Stormblood.AutoAlphi>(module);
 
 class LB(BossModule module) : BossComponent(module)
 {
@@ -22,7 +22,7 @@ class HostileSkyArmorStates : StateMachineBuilder
     public HostileSkyArmorStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<AutoAlphi>()
+            .ActivateOnEnter<AlphiAI>()
             .ActivateOnEnter<LB>()
             .Raw.Update = () => module.WorldState.CurrentCFCID != 582;
     }
