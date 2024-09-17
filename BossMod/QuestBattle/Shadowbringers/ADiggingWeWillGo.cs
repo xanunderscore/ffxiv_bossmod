@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.ADiggingWeWillGo;
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 665)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class ADiggingWeWillGo(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         QuestObjective.Combat(ws, new Vector3(-300.51f, 385.53f, -433.57f)),

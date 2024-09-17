@@ -1,4 +1,4 @@
-﻿namespace BossMod.QuestBattle.Heavensward.AtTheEndOfOurHope;
+﻿namespace BossMod.QuestBattle.Heavensward;
 
 [Quest(BossModuleInfo.Maturity.WIP, 416)]
 public sealed class AtTheEndOfOurHope(WorldState ws) : QuestBattle(ws)

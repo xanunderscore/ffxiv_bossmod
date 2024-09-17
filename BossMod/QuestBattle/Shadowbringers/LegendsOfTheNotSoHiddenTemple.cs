@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.LegendsOfTheNotSoHiddenTemple;
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 681)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class LegendsOfTheNotSoHiddenTemple(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws)
     {
@@ -92,12 +92,6 @@ public class Quest(WorldState ws) : QuestBattle(ws)
                 .With(obj => {
                     obj.OnActorTargetableChanged += (act) => obj.CompleteIf(act.OID == 0x2952 && !act.IsTargetable);
                 }),
-
-            // force walking inside the door hitbox because the stupid FUCKING layout instance is offset by more than the size of the entire actor
-            new QuestObjective(ws)
-                .WithConnection(new Vector3(232.45f, -105.31f, -511.68f))
-                .PauseForCombat(false)
-                .CompleteAtDestination(),
 
             new QuestObjective(ws)
                 .WithConnection(new Vector3(232.41f, -105.31f, -511.72f))

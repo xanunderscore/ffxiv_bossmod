@@ -1,15 +1,15 @@
-﻿namespace BossMod.QuestBattle.Heavensward.KeepingTheFlameAlive;
-
-enum OID : uint
-{
-    HummingAtomizer = 0xF88,
-    IronCell = 0xF89,
-    IdentificationKey = 0x1E9A2A
-}
+﻿namespace BossMod.QuestBattle.Heavensward;
 
 [Quest(BossModuleInfo.Maturity.WIP, 400)]
 public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
 {
+    enum OID : uint
+    {
+        HummingAtomizer = 0xF88,
+        IronCell = 0xF89,
+        IdentificationKey = 0x1E9A2A
+    }
+
     private static readonly uint[] CrystalBraves = [0xF70, 0xF71, 0xF72];
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

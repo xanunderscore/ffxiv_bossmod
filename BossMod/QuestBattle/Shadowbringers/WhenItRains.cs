@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.WhenItRains;
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 663)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class WhenItRains(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

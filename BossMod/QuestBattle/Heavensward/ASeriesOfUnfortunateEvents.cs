@@ -1,9 +1,9 @@
 ﻿using Lumina.Excel.GeneratedSheets;
 
-namespace BossMod.QuestBattle.Heavensward.ASeriesOfUnfortunateEvents;
+namespace BossMod.QuestBattle.Heavensward;
 
 [Quest(BossModuleInfo.Maturity.WIP, 395)]
-public sealed class Emmanellain(WorldState ws) : QuestBattle(ws)
+public sealed class ASeriesOfUnfortunateEvents(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

@@ -1,6 +1,6 @@
 ﻿using BossMod.Autorotation;
 
-namespace BossMod.QuestBattle.Shadowbringers.NyelbertsLament;
+namespace BossMod.QuestBattle.Shadowbringers;
 
 public class AutoNyelbert(WorldState ws) : StatelessRotation(ws, 25)
 {
@@ -39,7 +39,7 @@ public class AutoNyelbert(WorldState ws) : StatelessRotation(ws, 25)
 }
 
 [Quest(BossModuleInfo.Maturity.WIP, 686)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class NyelbertsLament(WorldState ws) : QuestBattle(ws)
 {
     private readonly AutoNyelbert _ai = new(ws);
 

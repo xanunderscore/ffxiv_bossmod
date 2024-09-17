@@ -1,13 +1,13 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.FadedMemories;
-
-enum SID : uint
-{
-    Invincibility = 671
-}
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 743)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class FadedMemories(WorldState ws) : QuestBattle(ws)
 {
+    enum SID : uint
+    {
+        Invincibility = 671
+    }
+
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)
             .Named("Scions + Dialogue 1")
@@ -17,7 +17,7 @@ public class Quest(WorldState ws) : QuestBattle(ws)
                 obj.OnDirectorUpdate += (diru) => obj.CompleteIf(diru.Param1 == 0x801202 && diru.Param2 == 0xF119);
             }),
 
-        QuestObjective.Combat(ws, new Vector3(-121.18f, -281.11f, 176.96f)).Named("Garleans 1"),
+        QuestObjective.Combat(ws, new Vector3(-121.18f, -281.11f, 176.96f)).Named("Garleans"),
         QuestObjective.Combat(ws, new Vector3(-183.93f, -281.11f, 198.60f)).Named("Crystal Braves"),
 
         new QuestObjective(ws)

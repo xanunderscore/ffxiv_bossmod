@@ -1,26 +1,27 @@
-﻿namespace BossMod.QuestBattle.Heavensward.AsGoesLightSoGoesDarkness;
-
-enum OID : uint
-{
-    Boss = 0x148A,
-    Helper = 0x233C,
-    VaultDoor1 = 0x1E9ED7,
-    VaultDoor2 = 0x1E9ED8,
-    ArenaDoor = 0x1E9ED9,
-    VaultDoor3 = 0x1E9EDA,
-    ArenaWall = 0x1E9EDD,
-
-    Refugee1 = 0x14BE,
-    Refugee2 = 0x14BF,
-    Refugee3 = 0x14C0,
-    Refugee4 = 0x14C1,
-    Refugee5 = 0x14C2,
-    Bonds = 0x1E9EE0,
-}
+﻿namespace BossMod.QuestBattle.Heavensward;
 
 [Quest(BossModuleInfo.Maturity.WIP, 441)]
 public sealed class AsGoesLightSoGoesDarkness(WorldState ws) : QuestBattle(ws)
 {
+    enum OID : uint
+    {
+        Boss = 0x148A,
+        Helper = 0x233C,
+        VaultDoor1 = 0x1E9ED7,
+        VaultDoor2 = 0x1E9ED8,
+        ArenaDoor = 0x1E9ED9,
+        VaultDoor3 = 0x1E9EDA,
+        ArenaWall = 0x1E9EDD,
+
+        Refugee1 = 0x14BE,
+        Refugee2 = 0x14BF,
+        Refugee3 = 0x14C0,
+        Refugee4 = 0x14C1,
+        Refugee5 = 0x14C2,
+        Bonds = 0x1E9EE0,
+    }
+
+
     public override List<QuestObjective> DefineObjectives(WorldState ws)
     {
         QuestObjective Refugee(OID oid)

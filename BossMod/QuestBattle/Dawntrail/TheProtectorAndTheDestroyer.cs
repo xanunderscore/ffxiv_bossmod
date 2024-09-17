@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Dawntrail.TheProtectorAndTheDestroyer;
+﻿namespace BossMod.QuestBattle.Dawntrail;
 
 [Quest(BossModuleInfo.Maturity.WIP, 998)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class TheProtectorAndTheDestroyer(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

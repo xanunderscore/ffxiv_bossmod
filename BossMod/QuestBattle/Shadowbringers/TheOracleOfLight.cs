@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.TheOracleOfLight;
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 662)]
-internal class Quest(WorldState ws) : QuestBattle(ws)
+internal class TheOracleOfLight(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)

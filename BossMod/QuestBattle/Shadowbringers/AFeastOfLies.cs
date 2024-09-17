@@ -1,7 +1,7 @@
-﻿namespace BossMod.QuestBattle.Shadowbringers.AFeastOfLies;
+﻿namespace BossMod.QuestBattle.Shadowbringers;
 
 [Quest(BossModuleInfo.Maturity.WIP, 664)]
-public class Quest(WorldState ws) : QuestBattle(ws)
+public class AFeastOfLies(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
         new QuestObjective(ws)
