@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.Stormblood;
 
-[Quest(BossModuleInfo.Maturity.WIP, 464)]
+[Quest(BossModuleInfo.Maturity.Contributed, 464)]
 public sealed class InCrimsonItBegan(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.Heavensward;
 
-[Quest(BossModuleInfo.Maturity.WIP, 400)]
+[Quest(BossModuleInfo.Maturity.Contributed, 400)]
 public class KeepingTheFlameAlive(WorldState ws) : QuestBattle(ws)
 {
     enum OID : uint

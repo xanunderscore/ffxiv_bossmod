@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.Shadowbringers;
 
-[Quest(BossModuleInfo.Maturity.WIP, 664)]
+[Quest(BossModuleInfo.Maturity.Contributed, 664)]
 public class AFeastOfLies(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

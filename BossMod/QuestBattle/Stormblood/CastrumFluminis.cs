@@ -1,7 +1,7 @@
 ﻿namespace BossMod.QuestBattle.Stormblood.CastrumFluminis;
 
 // not a quest battle, only exists to increase priority on adds during suffering phase
-[Quest(BossModuleInfo.Maturity.WIP, 537)]
+[Quest(BossModuleInfo.Maturity.Contributed, 537)]
 public class Tsukuyomi(WorldState ws) : QuestBattle(ws)
 {
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)

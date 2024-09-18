@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.Shadowbringers;
 
-[Quest(BossModuleInfo.Maturity.WIP, 663)]
+[Quest(BossModuleInfo.Maturity.Contributed, 663)]
 public class WhenItRains(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

@@ -142,7 +142,7 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
             var module = $"namespace BossMod.QuestBattle.{expansion};\n" +
                         $"\n" +
-                        $"[Quest(BossModuleInfo.Maturity.WIP, {World.CurrentCFCID})]\n" +
+                        $"[Quest(BossModuleInfo.Maturity.Contributed, {World.CurrentCFCID})]\n" +
                         $"internal class {questname}(WorldState ws) : QuestBattle(ws)\n" +
                         "{\n" +
                         "   public override List<QuestObjective> DefineObjectives(WorldState ws) => [\n" +

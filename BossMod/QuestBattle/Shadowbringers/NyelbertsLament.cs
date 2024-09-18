@@ -38,7 +38,7 @@ public class AutoNyelbert(WorldState ws) : StatelessRotation(ws, 25)
     }
 }
 
-[Quest(BossModuleInfo.Maturity.WIP, 686)]
+[Quest(BossModuleInfo.Maturity.Contributed, 686)]
 public class NyelbertsLament(WorldState ws) : QuestBattle(ws)
 {
     private readonly AutoNyelbert _ai = new(ws);

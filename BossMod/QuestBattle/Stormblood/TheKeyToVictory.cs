@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.Stormblood;
 
-[Quest(BossModuleInfo.Maturity.WIP, 467)]
+[Quest(BossModuleInfo.Maturity.Contributed, 467)]
 public sealed class TheKeyToVictory(WorldState ws) : QuestBattle(ws)
 {
     enum OID : uint

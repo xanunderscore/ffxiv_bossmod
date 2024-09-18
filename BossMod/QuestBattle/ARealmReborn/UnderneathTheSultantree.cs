@@ -1,6 +1,6 @@
 ﻿namespace BossMod.QuestBattle.ARealmReborn;
 
-[Quest(BossModuleInfo.Maturity.WIP, 335)]
+[Quest(BossModuleInfo.Maturity.Contributed, 335)]
 public class UnderneathTheSultantree(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [

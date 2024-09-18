@@ -16,7 +16,7 @@ public class AutoAlphi(WorldState ws) : StatelessRotation(ws, 25)
     }
 }
 
-[Quest(BossModuleInfo.Maturity.WIP, 582)]
+[Quest(BossModuleInfo.Maturity.Contributed, 582)]
 public class EmissaryOfTheDawn(WorldState ws) : QuestBattle(ws)
 {
     private readonly AutoAlphi _ai = new(ws);
