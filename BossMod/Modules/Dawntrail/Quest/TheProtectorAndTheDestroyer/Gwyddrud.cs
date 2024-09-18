@@ -1,0 +1,119 @@
+﻿namespace BossMod.Dawntrail.Quest.TheProtectorAndTheDestroyer;
+
+class RollingThunder(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_RollingThunder1), new AOEShapeCone(20, 22.5f.Degrees()))
+{
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        var i = 0;
+        foreach (var aoe in base.ActiveAOEs(slot, actor))
+        {
+            if (++i > 6)
+                break;
+            yield return aoe with { Color = i <= 2 ? ArenaColor.Danger : ArenaColor.AOE };
+        }
+    }
+}
+class CracklingHowl(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Weaponskill_CracklingHowl));
+class VioletVoltage(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<AOEInstance> aoes = [];
+
+    private DateTime? Finish;
+    private int CastsToRecord;
+
+    private static readonly AOEShape Shape = new AOEShapeCone(20, 90.Degrees());
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
+        for (var i = 0; i < Math.Min(2, aoes.Count); i++)
+            yield return aoes[i] with { Color = i == 0 ? ArenaColor.Danger : ArenaColor.AOE };
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var aoe in ActiveAOEs(slot, actor))
+        {
+            hints.AddForbiddenZone(aoe.Shape, aoe.Origin, aoe.Rotation, aoe.Activation);
+            break;
+        }
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.VioletVoltage3)
+        {
+            Finish = Module.CastFinishAt(spell);
+            CastsToRecord = 3;
+        }
+
+        if (spell.Action.ID == (uint)AID.VioletVoltage4)
+        {
+            Finish = Module.CastFinishAt(spell);
+            CastsToRecord = 4;
+        }
+
+        if (spell.Action.ID == (uint)AID._Weaponskill_ && Finish != null && CastsToRecord > 0)
+        {
+            aoes.Add(new AOEInstance(Shape, caster.Position, caster.Rotation, Finish.Value.AddSeconds(aoes.Count * 2)));
+            CastsToRecord--;
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID._Weaponskill_VioletVoltage2 && aoes.Count > 0)
+            aoes.RemoveAt(0);
+    }
+}
+class UntamedCurrent(BossModule module) : Components.GenericAOEs(module)
+{
+    private readonly List<Actor> Casters = [];
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Select(c => new AOEInstance(new AOEShapeCircle(5), c.CastInfo!.LocXZ, default, Module.CastFinishAt(c.CastInfo)));
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID is AID._Weaponskill_UntamedCurrent1 or AID._Weaponskill_UntamedCurrent2 or AID._Weaponskill_UntamedCurrent3 or AID._Weaponskill_UntamedCurrent4 or AID._Weaponskill_UntamedCurrent5 or AID._Weaponskill_UntamedCurrent6 or AID._Weaponskill_UntamedCurrent7 or AID._Weaponskill_1 or AID._Weaponskill_2)
+            Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID is AID._Weaponskill_UntamedCurrent1 or AID._Weaponskill_UntamedCurrent2 or AID._Weaponskill_UntamedCurrent3 or AID._Weaponskill_UntamedCurrent4 or AID._Weaponskill_UntamedCurrent5 or AID._Weaponskill_UntamedCurrent6 or AID._Weaponskill_UntamedCurrent7 or AID._Weaponskill_1 or AID._Weaponskill_2)
+            Casters.Remove(caster);
+    }
+}
+
+class UntamedCurrentSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_UntamedCurrent8), 5);
+
+class BallOfLevin(BossModule module) : Components.Adds(module, (uint)OID._Gen_BallOfLevin)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var h in hints.PotentialTargets)
+            if (h.Actor.OID == (uint)OID._Gen_BallOfLevin && h.Actor.Position.InCircle(Arena.Center, 20))
+                h.Priority = (int)((20 - h.Actor.DistanceToHitbox(Module.PrimaryActor)) * 100);
+    }
+}
+class SuperchargedLevin(BossModule module) : Components.Adds(module, (uint)OID._Gen_SuperchargedLevin);
+
+class GwyddrudStates : StateMachineBuilder
+{
+    public GwyddrudStates(BossModule module) : base(module)
+    {
+        TrivialPhase()
+            .ActivateOnEnter<CracklingHowl>()
+            .ActivateOnEnter<VioletVoltage>()
+            .ActivateOnEnter<RollingThunder>()
+            .ActivateOnEnter<UntamedCurrent>()
+            .ActivateOnEnter<UntamedCurrentSpread>()
+            .ActivateOnEnter<BallOfLevin>()
+            .ActivateOnEnter<SuperchargedLevin>();
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70478, NameID = 13170, PrimaryActorOID = (uint)OID.BossP2)]
+public class Gwyddrud(WorldState ws, Actor primary) : BossModule(ws, primary, new(349, -14), new ArenaBoundsCircle(19.5f))
+{
+    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly && x.Type == ActorType.Enemy), ArenaColor.PlayerGeneric);
+}
