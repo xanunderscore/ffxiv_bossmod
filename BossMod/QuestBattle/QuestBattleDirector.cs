@@ -38,8 +38,7 @@ public sealed class QuestBattleDirector : IDisposable
     public int CurrentObjectiveNavigationProgress { get; private set; }
     public List<Waypoint> CurrentConnections { get; private set; } = [];
 
-    public bool Paused = false;
-    public bool WaitCommence = false;
+    public bool Paused;
 
     public Event<QuestBattle> QuestActivated = new();
     public Event<QuestObjective> ObjectiveChanged = new();
@@ -63,10 +62,6 @@ public sealed class QuestBattleDirector : IDisposable
         this.bmm = bmm;
 
         _subscriptions = new(
-            ws.CurrentZoneChanged.Subscribe(OnZoneChange),
-            ObjectiveChanged.Subscribe(OnObjectiveChanged),
-            ObjectiveCleared.Subscribe(OnObjectiveCleared),
-
 #if DEBUG
             ws.Actors.StatusGain.Subscribe((a, i) =>
             {
@@ -103,8 +98,11 @@ public sealed class QuestBattleDirector : IDisposable
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) =>
             {
                 Log($"EObjAnim: {act}, {p1}, {p2}");
-            })
+            }),
 #endif
+            ws.CurrentZoneChanged.Subscribe(OnZoneChange),
+            ObjectiveChanged.Subscribe(OnObjectiveChanged),
+            ObjectiveCleared.Subscribe(OnObjectiveCleared)
         );
 
         if (Service.PluginInterface == null)
@@ -369,6 +367,9 @@ public sealed class QuestBattleDirector : IDisposable
         var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID, _config.MinMaturity);
         CurrentModule = newHandler;
         if (newHandler != null)
+        {
+            newHandler.Init();
             QuestActivated.Fire(newHandler);
+        }
     }
 }

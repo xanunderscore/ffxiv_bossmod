@@ -177,8 +177,8 @@ public abstract class QuestBattle : IDisposable
     public readonly WorldState World;
     private readonly EventSubscriptions _subscriptions;
 
-    public readonly List<QuestObjective> Objectives = [];
-    public int CurrentObjectiveIndex { get; private set; } = 0;
+    public List<QuestObjective> Objectives { get; private set; } = [];
+    public int CurrentObjectiveIndex { get; private set; }
     public QuestObjective? CurrentObjective => CurrentObjectiveIndex >= 0 && CurrentObjectiveIndex < Objectives.Count ? Objectives[CurrentObjectiveIndex] : null;
 
     // low-resolution bounds centered on player character, with radius roughly equal to object load range
@@ -227,6 +227,11 @@ public abstract class QuestBattle : IDisposable
             Service.Log($"[QuestBattle] UIDev detected, not registering hook");
         else
             Service.Condition.ConditionChange += OnConditionChange;
+    }
+
+    public void Init()
+    {
+        Objectives = DefineObjectives(World);
     }
 
     public virtual List<QuestObjective> DefineObjectives(WorldState ws) => [];
