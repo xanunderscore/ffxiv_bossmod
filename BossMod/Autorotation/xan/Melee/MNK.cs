@@ -298,12 +298,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         Meditate(strategy, primaryTarget);
 
+        var sprint = StatusLeft(BossMod.SGE.SID.Sprint);
+
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining is > 2 and < 11.8f && FormShiftLeft == 0)
+            if (CountdownRemaining is > 2 and < 15 && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
 
-            if (CountdownRemaining < 0.7f && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
+            if (CountdownRemaining < 0.7f && sprint < CountdownRemaining && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
                 PushGCD(AID.Thunderclap, primaryTarget);
 
             // facepull precast demolish opener

@@ -44,8 +44,7 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
 
     private void AISAM()
     {
-        // if nearby enemies are auto-attacking us, use guard skill
-        if (HPRatio() <= 0.8 && EnemiesAutoingMe.Any())
+        if (Hints.PredictedDamage.Any(x => x.players[0] && x.activation < World.FutureTime(4)))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.SAM.AID.ThirdEye), Player, ActionQueue.Priority.Low);
     }
 
