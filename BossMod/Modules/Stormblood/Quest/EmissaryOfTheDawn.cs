@@ -1,4 +1,6 @@
-﻿namespace BossMod.Stormblood.Quest.EmissaryOfTheDawn;
+﻿using BossMod.QuestBattle.Stormblood.MSQ;
+
+namespace BossMod.Stormblood.Quest.EmissaryOfTheDawn;
 
 public enum OID : uint
 {
@@ -6,7 +8,7 @@ public enum OID : uint
     Helper = 0x233C,
 }
 
-class AlphiAI(BossModule module) : Components.RotationModule<QuestBattle.Stormblood.AutoAlphi>(module);
+class AlphiAI(BossModule module) : Components.RotationModule<AutoAlphi>(module);
 
 class LB(BossModule module) : BossComponent(module)
 {
