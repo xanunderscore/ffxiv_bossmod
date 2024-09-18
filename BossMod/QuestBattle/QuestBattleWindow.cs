@@ -44,28 +44,6 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
     public override void Draw()
     {
-        if (_director.Paused)
-        {
-            if (ImGui.Button("Resume duty"))
-                _director.Paused = false;
-        }
-        else if (ImGui.Button("Pause duty"))
-            _director.Paused = true;
-
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        if (UIMisc.Button("Leave duty", !ImGui.GetIO().KeyShift, "Hold shift to leave"))
-            abandonDutyHook.Invoke(false);
-
-        ImGui.SameLine();
-        UIMisc.HelpMarker("Attempt to leave duty by directly sending the \"abandon duty\" packet, which may be able to bypass the out-of-combat restriction. Only works in some duties.");
-
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
         if (_director.CurrentModule is QuestBattle qb)
         {
             ImGui.Text($"Module: {qb.GetType().Name}");
@@ -178,11 +156,32 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
     private void DrawObjectives(QuestBattle sqb)
     {
+        if (_director.Paused)
+        {
+            if (ImGui.Button("Resume"))
+                _director.Paused = false;
+        }
+        else if (ImGui.Button("Pause"))
+            _director.Paused = true;
+
+        ImGui.SameLine();
+
+        if (UIMisc.Button("Leave duty", !ImGui.GetIO().KeyShift, "Hold shift to leave"))
+            abandonDutyHook.Invoke(false);
+
+        ImGui.SameLine();
+        UIMisc.HelpMarker("Attempt to leave duty by directly sending the \"abandon duty\" packet, which may be able to bypass the out-of-combat restriction. Only works in some duties.");
+
         if (ImGui.Button("Skip current step"))
             sqb.Advance();
         ImGui.SameLine();
         if (ImGui.Button("Restart from step 1"))
             sqb.Reset();
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
         for (var i = 0; i < sqb.Objectives.Count; i++)
         {
             var n = sqb.Objectives[i];
