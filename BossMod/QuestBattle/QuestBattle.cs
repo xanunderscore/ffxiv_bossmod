@@ -21,6 +21,20 @@ public class QuestObjective(WorldState ws)
     public readonly List<Waypoint> Connections = [];
     public NavigationStrategy NavigationStrategy = NavigationStrategy.Pause;
 
+    public string DisplayName
+    {
+        get
+        {
+            if (Name.Length > 0)
+                return Name;
+
+            if (Connections.Count > 0)
+                return Utils.Vec3String(Connections.Last().Position);
+
+            return "<none>";
+        }
+    }
+
     public bool ForceStopNavigation;
     public bool Completed;
 
@@ -234,5 +248,6 @@ public abstract class QuestBattle : IDisposable
         CurrentObjective?.AddAIHints(player, hints);
     }
     public void Advance() => CurrentObjectiveIndex++;
+    public void Reset() => CurrentObjectiveIndex = 0;
     public void OnConditionChange(ConditionFlag flag, bool value) => CurrentObjective?.OnConditionChange(flag, value);
 }

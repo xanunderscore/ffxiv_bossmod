@@ -32,7 +32,7 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
     public override void PreOpenCheck()
     {
-        IsOpen = _director.Enabled;
+        IsOpen = _director.Enabled && _config.ShowUI;
     }
 
     protected override void Dispose(bool disposing)
@@ -44,8 +44,21 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
     public override void Draw()
     {
-        if (ImGui.Button("Leave duty"))
+        if (_director.Paused)
+        {
+            if (ImGui.Button("Resume duty"))
+                _director.Paused = false;
+        }
+        else if (ImGui.Button("Pause duty"))
+            _director.Paused = true;
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        if (UIMisc.Button("Leave duty", !ImGui.GetIO().KeyShift, "Hold shift to leave"))
             abandonDutyHook.Invoke(false);
+
         ImGui.SameLine();
         UIMisc.HelpMarker("Attempt to leave duty by directly sending the \"abandon duty\" packet, which may be able to bypass the out-of-combat restriction. Only works in some duties.");
 
@@ -64,11 +77,14 @@ public unsafe partial class QuestBattleWindow : UIWindow
         }
 
         ImGui.TextUnformatted($"Zone: {World.CurrentZone} / CFC: {World.CurrentCFCID}");
+#if DEBUG
         ImGui.SameLine();
         GenerateModule();
+#endif
         if (World.Party.Player() is Actor player)
         {
             ImGui.TextUnformatted($"Position: {Utils.Vec3String(player.PosRot.XYZ())}");
+#if DEBUG
             ImGui.SameLine();
             if (ImGui.Button("Copy vec"))
             {
@@ -85,6 +101,7 @@ public unsafe partial class QuestBattleWindow : UIWindow
                 var z = player.PosRot.Z;
                 ImGui.SetClipboardText($"/vnav moveto {x:F2} {y:F2} {z:F2}");
             }
+#endif
             if (World.Actors.Find(player.TargetID) is Actor tar)
             {
                 ImGui.TextUnformatted($"Target: {tar.Name} ({tar.Type}; {tar.OID:X}) (hb={tar.HitboxRadius})");
@@ -92,6 +109,7 @@ public unsafe partial class QuestBattleWindow : UIWindow
                 ImGui.TextUnformatted($"Angle: {player.AngleTo(tar)}");
             }
 
+#if DEBUG
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
@@ -104,17 +122,8 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
             foreach (var w in Waymarks)
                 ImGui.TextUnformatted($"{w}");
+#endif
         }
-
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        ImGui.Checkbox("Pause duty execution", ref _director.Paused);
-
-        if (ImGui.Checkbox("Use dash abilities for movement", ref _config.UseDash))
-            _config.Modified.Fire();
-        _director.DrawSpeedToggle();
     }
 
     private void GenerateModule()
@@ -169,30 +178,30 @@ public unsafe partial class QuestBattleWindow : UIWindow
 
     private void DrawObjectives(QuestBattle sqb)
     {
-        if (ImGui.Button("Skip step"))
+        if (ImGui.Button("Skip current step"))
             sqb.Advance();
-        ImGui.TextUnformatted($"Waypoint progress: {_director.CurrentObjectiveNavigationProgress}");
+        ImGui.SameLine();
+        if (ImGui.Button("Restart from step 1"))
+            sqb.Reset();
         for (var i = 0; i < sqb.Objectives.Count; i++)
         {
             var n = sqb.Objectives[i];
             var highlight = n == _director.CurrentObjective;
             using var c = ImRaii.PushColor(ImGuiCol.Text, highlight ? ImGuiColors.DalamudWhite : ImGuiColors.DalamudGrey);
-            ImGui.TextUnformatted($"#{i} {n.Name}");
+            ImGui.TextUnformatted($"#{i + 1} {n.DisplayName}");
+#if DEBUG
             if (highlight)
-            {
                 foreach (var vec in _director.CurrentWaypoints)
                 {
                     if (vec.SpecifiedInPath)
                     {
                         using (var f = ImRaii.PushFont(UiBuilder.IconFont))
-                        {
                             ImGui.Text(FontAwesomeIcon.Star.ToIconString());
-                        }
                         ImGui.SameLine();
                     }
                     ImGui.TextUnformatted(Utils.Vec3String(vec.Position));
                 }
-            }
+#endif
         }
     }
 }

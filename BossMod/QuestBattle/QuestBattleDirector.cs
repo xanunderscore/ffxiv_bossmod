@@ -1,7 +1,6 @@
 ﻿using BossMod.AI;
 using BossMod.Autorotation;
 using Dalamud.Plugin.Ipc;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace BossMod.QuestBattle;
@@ -55,7 +54,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private static void Log(string msg) => Service.Log($"[QBD] {msg}");
 
-    public bool Enabled => World.CurrentCFCID != 0 && World.Party.WithoutSlot(includeDead: true).Count(x => x.Type == ActorType.Player) == 1;
+    public bool Enabled => _config.Enabled && World.CurrentCFCID != 0 && World.Party.WithoutSlot(includeDead: true).Count(x => x.Type == ActorType.Player) == 1;
 
     public QuestBattleDirector(WorldState ws, BossModuleManager bmm)
     {
@@ -65,12 +64,10 @@ public sealed class QuestBattleDirector : IDisposable
 
         _subscriptions = new(
             ws.CurrentZoneChanged.Subscribe(OnZoneChange),
-            ws.Actors.Added.Subscribe(OnActorAdded),
-            ws.Actors.EventStateChanged.Subscribe(OnActorEventState),
             ObjectiveChanged.Subscribe(OnObjectiveChanged),
             ObjectiveCleared.Subscribe(OnObjectiveCleared),
-            _config.Modified.Subscribe(OnConfigChange),
 
+#if DEBUG
             ws.Actors.StatusGain.Subscribe((a, i) =>
             {
                 if (a.OID == 0)
@@ -97,7 +94,7 @@ public sealed class QuestBattleDirector : IDisposable
             }),
             ws.DirectorUpdate.Subscribe(diru =>
             {
-                Log($"Director update: U:0x{diru.UpdateID:X} P1:0x{diru.Param1:X} P2:{diru.Param2:X} P3:{diru.Param3:X} P4:{diru.Param4:X}");
+                Log($"Director update: U:0x{diru.UpdateID:X} P1:0x{diru.Param1:X} P2:0x{diru.Param2:X} P3:0x{diru.Param3:X} P4:0x{diru.Param4:X}");
             }),
             ws.Actors.EventObjectStateChange.Subscribe((act, u) =>
             {
@@ -107,6 +104,7 @@ public sealed class QuestBattleDirector : IDisposable
             {
                 Log($"EObjAnim: {act}, {p1}, {p2}");
             })
+#endif
         );
 
         if (Service.PluginInterface == null)
@@ -150,7 +148,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     public void Update(AIHints hints)
     {
-        if (Paused || WaitCommence || bmm?.ActiveModule?.StateMachine.ActivePhase != null)
+        if (!Enabled || Paused || bmm?.ActiveModule?.StateMachine.ActivePhase != null)
             return;
 
         var player = World.Party.Player();
@@ -198,6 +196,9 @@ public sealed class QuestBattleDirector : IDisposable
         if (CurrentWaypoints.Count == 0 || AIController.InCutscene)
             return;
 
+        if (_config.ShowWaypoints)
+            DrawWaypoints(player.PosRot.XYZ());
+
         var nextwp = CurrentWaypoints[0];
         var playerPos = player.PosRot.XYZ();
         var direction = nextwp.Position - playerPos;
@@ -214,17 +215,34 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            Camera.Instance?.DrawWorldLine(playerPos, nextwp.Position, ArenaColor.Safe);
             Dash(player, direction, hints);
             hints.ForcedMovement = direction;
         }
     }
 
+    private void DrawWaypoints(Vector3 playerPos)
+    {
+        var start = playerPos;
+        var current = true;
+        foreach (var wp in CurrentWaypoints)
+        {
+            Camera.Instance?.DrawWorldLine(start, wp.Position, current ? ArenaColor.Safe : ArenaColor.Danger);
+            current = false;
+            start = wp.Position;
+        }
+    }
+
     public static bool HaveTarget(Actor player, AIHints hints) => player.InCombat || hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - hints.Center));
+
+    enum ActionsProhibitedStatus : uint
+    {
+        OutOfTheAction = 2109,
+        InEvent = 1268,
+    }
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
-        if (!_config.UseDash || player.Statuses.Any(s => s.ID is 2109 or 1268 || RotationModuleManager.IsRoleplayStatus(s)))
+        if (!_config.UseDash || player.Statuses.Any(s => (ActionsProhibitedStatus)s.ID is ActionsProhibitedStatus.OutOfTheAction or ActionsProhibitedStatus.InEvent || RotationModuleManager.IsRoleplayStatus(s)))
             return;
 
         var moveDistance = direction.Length();
@@ -307,7 +325,7 @@ public sealed class QuestBattleDirector : IDisposable
             // returned path always contains the destination point twice for whatever reason
             ptVecs.RemoveAt(ptVecs.Count - 1);
 
-            Service.Log(string.Join(", ", ptVecs.Select(Utils.Vec3String)));
+            Log(string.Join(", ", ptVecs.Select(Utils.Vec3String)));
             thesePoints = ptVecs.Take(ptVecs.Count - 1).Select(p => new NavigationWaypoint(p, false)).ToList();
             thesePoints.Add(new NavigationWaypoint(ptVecs.Last(), true));
         }
@@ -348,69 +366,9 @@ public sealed class QuestBattleDirector : IDisposable
         if (bmm.ActiveModule != null)
             return;
 
-        var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID);
+        var newHandler = QuestBattleRegistry.GetHandler(World, change.CFCID, _config.MinMaturity);
         CurrentModule = newHandler;
         if (newHandler != null)
-        {
-            SetMoveSpeedFactor();
             QuestActivated.Fire(newHandler);
-        }
-
-        SetMoveSpeedFactor();
-    }
-
-    private void OnActorAdded(Actor actor)
-    {
-        if (actor.OID == 0x1E8536)
-            WaitCommence = true;
-    }
-
-    private void OnActorEventState(Actor actor)
-    {
-        if (actor.OID == 0x1E8536 && actor.EventState == 7)
-            WaitCommence = false;
-    }
-
-    private void OnConfigChange()
-    {
-        SetMoveSpeedFactor();
-    }
-
-    public void DrawSpeedToggle()
-    {
-#if DEBUG
-        if (ImGuiNET.ImGui.Checkbox("Use speedhack in duties", ref _config.Speedhack))
-            _config.Modified.Fire();
-#endif
-    }
-
-    private void SetMoveSpeedFactor()
-    {
-#if DEBUG
-        if (World.Party.Player()?.MountId > 0)
-            return;
-
-        SetMoveSpeedFactorInternal(_config.Speedhack && Enabled ? 5 : 1);
-#endif
-    }
-
-    private void SetMoveSpeedFactorInternal(float f)
-    {
-        if (Service.SigScanner == null)
-        {
-            Service.Log($"[QBD] UIDev detected, skipping initialization");
-            return;
-        }
-
-        var speedBase = f * 6;
-        Service.SigScanner.TryScanText("F3 0F 59 05 ?? ?? ?? ?? F3 0F 59 05 ?? ?? ?? ?? F3 0F 58 05 ?? ?? ?? ?? 44 0F 28 C8", out var address);
-        address = address + 4 + Marshal.ReadInt32(address + 4) + 4;
-        Dalamud.SafeMemory.Write(address + 20, speedBase);
-        SetMoveControlData(speedBase);
-    }
-
-    private unsafe void SetMoveControlData(float speed)
-    {
-        Dalamud.SafeMemory.Write(((delegate* unmanaged[Stdcall]<byte, nint>)Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 48 85 C0 74 AE 83 FD 05"))(1) + 8, speed);
     }
 }

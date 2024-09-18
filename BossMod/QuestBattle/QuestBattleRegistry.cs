@@ -42,9 +42,9 @@ public static class QuestBattleRegistry
         }
     }
 
-    public static QuestBattle? GetHandler(WorldState ws, uint cfcId)
+    public static QuestBattle? GetHandler(WorldState ws, uint cfcId, BossModuleInfo.Maturity minMaturity)
     {
-        return _questHandlersByCFC.TryGetValue(cfcId, out var info) ? info.Factory(ws) : null;
+        return _questHandlersByCFC.TryGetValue(cfcId, out var info) && info.Maturity >= minMaturity ? info.Factory(ws) : null;
     }
 }
 
