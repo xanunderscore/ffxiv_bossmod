@@ -87,7 +87,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
     private bool ShouldHealInArea(WPos center, float radius, float hpThreshold)
     {
         var st = CalcPartyHealthInArea(center, radius);
-        Service.Log($"party health in radius {radius}: {st}");
+        // Service.Log($"party health in radius {radius}: {st}");
         return st.Count > 1 && st.StdDev <= AOEBreakpointHPVariance && st.Avg <= hpThreshold;
     }
 
@@ -432,5 +432,11 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 UseOGCD(BossMod.SGE.AID.Haima, target);
             }
         });
+
+        foreach (var rw in Raidwides)
+        {
+            if ((rw - World.CurrentTime).TotalSeconds < 15 && haveBalls)
+                UseOGCD(BossMod.SGE.AID.Kerachole, Player);
+        }
     }
 }

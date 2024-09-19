@@ -127,13 +127,11 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Phlegma, BestPhlegmaTarget);
         }
 
-        if (NumAOETargets > 1)
-        {
-            if (Sting > 0 && NumPhlegmaTargets > 1)
-                PushGCD(AID.Toxikon, BestPhlegmaTarget);
+        if (NumRangedAOETargets > 1 && Sting > 0)
+            PushGCD(AID.Toxikon, BestPhlegmaTarget);
 
+        if (NumAOETargets > 1)
             PushGCD(AID.Dyskrasia, Player);
-        }
 
         PushGCD(AID.Dosis, primaryTarget);
 
@@ -148,10 +146,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         if (MaxChargesIn(AID.Phlegma) <= GCD)
             return true;
 
-        if (NumPhlegmaTargets > 2 && ReadyIn(AID.Phlegma) <= GCD)
-            return true;
+        if (ReadyIn(AID.Phlegma) > GCD)
+            return false;
 
-        return RaidBuffsLeft > GCD || RaidBuffsIn > 9000;
+        return NumPhlegmaTargets > 2 || RaidBuffsLeft > GCD || RaidBuffsIn > 9000;
     }
 
     private void DoOGCD(StrategyValues strategy, Actor? primaryTarget)

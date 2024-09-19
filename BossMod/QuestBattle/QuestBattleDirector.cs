@@ -146,7 +146,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     public void Update(AIHints hints)
     {
-        if (!Enabled || Paused || bmm?.ActiveModule?.StateMachine.ActivePhase != null)
+        if (!Enabled || Paused || bmm?.ActiveModule/*?.StateMachine.ActivePhase*/ != null)
             return;
 
         var player = World.Party.Player();
