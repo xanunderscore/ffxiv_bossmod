@@ -162,30 +162,26 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (MeikyoLeft > GCD)
             PushGCD(MeikyoAction, NumAOETargets > 2 ? Player : primaryTarget);
 
+        if (ComboLastMove == AOEStarter && NumAOECircleTargets > 0)
+        {
+            if (FugetsuLeft <= FukaLeft)
+                PushGCD(AID.Mangetsu, Player);
+            if (FukaLeft <= FugetsuLeft)
+                PushGCD(AID.Oka, Player);
+        }
+
+        if (ComboLastMove == AID.Jinpu)
+            PushGCD(AID.Gekko, primaryTarget);
+        if (ComboLastMove == AID.Shifu)
+            PushGCD(AID.Kasha, primaryTarget);
+
+        if (ComboLastMove == STStarter)
+            PushGCD(GetHakazeComboAction(strategy), primaryTarget);
+
         if (NumAOETargets > 2 && Unlocked(AID.Fuga))
-        {
-            if (ComboLastMove == AOEStarter)
-            {
-                if (FugetsuLeft <= FukaLeft)
-                    PushGCD(AID.Mangetsu, Player);
-                if (FukaLeft <= FugetsuLeft)
-                    PushGCD(AID.Oka, Player);
-            }
-
             PushGCD(AOEStarter, BestAOETarget);
-        }
         else
-        {
-            if (ComboLastMove == AID.Jinpu)
-                PushGCD(AID.Gekko, primaryTarget);
-            if (ComboLastMove == AID.Shifu)
-                PushGCD(AID.Kasha, primaryTarget);
-
-            if (ComboLastMove == STStarter)
-                PushGCD(GetHakazeComboAction(strategy), primaryTarget);
-
             PushGCD(AID.Hakaze, primaryTarget);
-        }
 
         if (EnhancedEnpi > GCD)
             PushGCD(AID.Enpi, primaryTarget);
