@@ -69,7 +69,7 @@ public sealed class QuestBattleDirector : IDisposable
                     return;
                 Log($"{a} gain {a.Statuses[i]}");
             }),
-            ws.Actors.StatusGain.Subscribe((a, i) =>
+            ws.Actors.StatusLose.Subscribe((a, i) =>
             {
                 if (a.OID == 0)
                     return;

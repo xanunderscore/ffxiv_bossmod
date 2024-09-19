@@ -355,7 +355,13 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     if (gauge.CurrentCards.Contains(card))
                         UseOGCD(action, target);
             }
+
+            if (state.PredictedHPRatio < 0.5 && !Unlocked(BossMod.AST.AID.CelestialIntersection) && NextChargeIn(BossMod.AST.AID.EssentialDignity) > 2.5f)
+                UseGCD(BossMod.AST.AID.Benefic, target);
         });
+
+        if (ShouldHealInArea(Player.Position, 15, 0.5f))
+            UseGCD(BossMod.AST.AID.AspectedHelios, Player);
 
         if (Player.InCombat)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.EarthlyStar), Player, ActionQueue.Priority.Medium, targetPos: Player.PosRot.XYZ());
