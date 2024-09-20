@@ -58,5 +58,5 @@ class TerminusEst(BossModule module) : Components.GenericAOEs(module, ActionID.M
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67203, NameID = 3818)]
-public class RegulaVanHydrus(WorldState ws, Actor primary) : BossModule(ws, primary, new(252.75f, 553), new ArenaBoundsCircle(20));
+public class RegulaVanHydrus(WorldState ws, Actor primary) : BossModule(ws, primary, new(252.75f, 553), new ArenaBoundsCircle(19.5f));
 
