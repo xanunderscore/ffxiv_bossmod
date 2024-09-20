@@ -5,7 +5,14 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Higanbana = SharedTrack.Count }
+    public enum Track { Higanbana = SharedTrack.Count, Enpi }
+
+    public enum EnpiStrategy
+    {
+        None,
+        Ranged,
+        Enhanced
+    }
 
     public static RotationModuleDefinition Definition()
     {
@@ -17,6 +24,11 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(OffensiveStrategy.Automatic, "Auto", "Keep Higanbana uptime against 1 or 2 targets")
             .AddOption(OffensiveStrategy.Delay, "Delay", "Do not apply Higanbana")
             .AddOption(OffensiveStrategy.Force, "Force", "Always apply Higanbana to target");
+
+        def.Define(Track.Enpi).As<EnpiStrategy>("Enpi")
+            .AddOption(EnpiStrategy.None, "None", "Do not use")
+            .AddOption(EnpiStrategy.Ranged, "Ranged", "Use when out of range")
+            .AddOption(EnpiStrategy.Enhanced, "Enhanced", "Use if Enhanced Enpi is active");
 
         return def;
     }
@@ -178,13 +190,20 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (ComboLastMove == STStarter)
             PushGCD(GetHakazeComboAction(strategy), primaryTarget);
 
-        if (NumAOETargets > 2 && Unlocked(AID.Fuga))
+        // note that this is intentionally checking for number of "nearby" targets even if our AOE starter is a cone AOE
+        if (NumAOECircleTargets > 2 && Unlocked(AID.Fuga))
             PushGCD(AOEStarter, BestAOETarget);
         else
             PushGCD(AID.Hakaze, primaryTarget);
 
-        if (EnhancedEnpi > GCD)
-            PushGCD(AID.Enpi, primaryTarget);
+        var enpiprio = strategy.Option(Track.Enpi).As<EnpiStrategy>() switch
+        {
+            EnpiStrategy.Enhanced => EnhancedEnpi > GCD ? 2 : 0,
+            EnpiStrategy.Ranged => 2,
+            _ => 0,
+        };
+
+        PushGCD(AID.Enpi, primaryTarget, enpiprio);
     }
 
     private AID GetHakazeComboAction(StrategyValues strategy)
@@ -218,7 +237,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
     {
         get
         {
-            if (NumAOETargets > 2)
+            if (NumAOECircleTargets > 2)
             {
                 // priority 0: damage buff
                 if (FugetsuLeft == 0)
