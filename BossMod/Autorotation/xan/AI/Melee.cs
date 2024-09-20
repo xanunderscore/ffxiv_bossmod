@@ -56,7 +56,6 @@ public class MeleeAI(RotationModuleManager manager, Actor player) : AIBase(manag
         switch (World.Party.LimitBreakLevel)
         {
             case 1:
-                Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Braver), primaryTarget, ActionQueue.Priority.VeryHigh);
                 break;
             case 2:
                 Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bladedance), primaryTarget, ActionQueue.Priority.VeryHigh);

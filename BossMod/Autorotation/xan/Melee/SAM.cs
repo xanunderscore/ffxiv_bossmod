@@ -172,7 +172,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
             PushGCD(AID.OgiNamikiri, BestOgiTarget);
 
         if (MeikyoLeft > GCD)
-            PushGCD(MeikyoAction, NumAOETargets > 2 ? Player : primaryTarget);
+            PushGCD(MeikyoAction, NumAOECircleTargets > 2 ? Player : primaryTarget);
 
         if (ComboLastMove == AOEStarter && NumAOECircleTargets > 0)
         {
