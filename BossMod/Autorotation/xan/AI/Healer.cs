@@ -360,7 +360,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 UseGCD(BossMod.AST.AID.Benefic, target);
         });
 
-        if (ShouldHealInArea(Player.Position, 15, 0.5f))
+        if (ShouldHealInArea(Player.Position, 15, 0.7f))
             UseGCD(BossMod.AST.AID.AspectedHelios, Player);
 
         if (Player.InCombat)

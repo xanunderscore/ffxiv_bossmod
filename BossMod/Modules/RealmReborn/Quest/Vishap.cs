@@ -110,15 +110,6 @@ class FlameBreath2(BossModule module) : Components.GenericAOEs(module, ActionID.
     }
 }
 
-class Adds(BossModule module) : BossComponent(module)
-{
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
-        Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-    }
-}
-
 class Cauterize(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.Cauterize))
 {
     private Actor? Source;
@@ -239,7 +230,6 @@ class VishapStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<FlameBreath>()
-            .ActivateOnEnter<Adds>()
             .ActivateOnEnter<Cauterize>()
             .ActivateOnEnter<Touchdown>()
             .ActivateOnEnter<FireballSpread>()
@@ -266,8 +256,12 @@ public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(
 
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
-        base.DrawEnemies(pcSlot, pc);
+        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
         Arena.Actor(PrimaryActor, ArenaColor.Enemy, true);
     }
+
+    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) => hints.PrioritizeAll();
 }
 
