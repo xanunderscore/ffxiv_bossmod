@@ -1,4 +1,4 @@
-﻿namespace BossMod.Util;
+﻿namespace BossMod;
 
 public static class DateTimeExtensions
 {

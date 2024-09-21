@@ -27,7 +27,7 @@ public enum AID : uint
     SteelfoldStrikeVisual = 37182, // Boss->location, 5.0+1.0s cast, single-target
     SteelfoldStrikeVisual2 = 39300, // Boss->location, no cast, single-target
     SteelfoldStrike = 37183, // Helper->self, 6.0s cast, range 30 width 8 cross
-    SteelfoldStrike_Unknown = 39532, // Helper->self, 6.0s cast, range 30 width 8 cross
+    SteelfoldStrikeIDK = 39532, // Helper->self, 6.0s cast, range 30 width 8 cross
 
     OuterWakeVisual = 37202, // Boss->self, 2.5+2.5s cast, single-target
     OuterWake = 37203, // Helper->self, 5.0s cast, range 6-40 donut

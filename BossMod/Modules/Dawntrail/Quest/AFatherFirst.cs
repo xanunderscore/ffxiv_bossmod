@@ -25,7 +25,7 @@ public enum AID : uint
 
     SteeledStrikeCast = 36389, // Boss->location, 4.0s cast, single-target
     SteeledStrikeAOE = 36390, // Helper->self, 5.2s cast, range 30 width 8 cross
-    SteeledStrike_Unknown = 37062, // Helper->self, 5.2s cast, range 30 width 8 cross, dunno what the fuck this is
+    SteeledStrikeIDK = 37062, // Helper->self, 5.2s cast, range 30 width 8 cross, dunno what the fuck this is
 
     CoiledStrikeCW = 36405, // Boss->self, 5.0+1.0s cast, single-target
     CoiledStrikeCCW = 36406, // Boss->self, 5.0+1.0s cast, single-target
@@ -57,7 +57,7 @@ public enum AID : uint
 
     ShadeSteeledStrikeCast = 36391, // Shade->location, 4.0s cast, single-target
     ShadeSteeledStrike = 36392, // Helper->self, 5.2s cast, range 30 width 8 cross
-    ShadeSteeledStrike_Unknown = 37063, // Helper->self, 5.2s cast, range 30 width 8 cross
+    ShadeSteeledStrikeIDK = 37063, // Helper->self, 5.2s cast, range 30 width 8 cross
 }
 
 class FancyBladework(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.FancyBladework));
@@ -303,7 +303,7 @@ class GuloolJaJaStates : StateMachineBuilder
         CoiledStrike(id + 0xA0, 6.6f, bothCasts: false);
         ComponentCondition<SteeledStrikeShade>(id + 0xB0, 5, s => s.NumCasts > 0, "Cross 1")
             .DeactivateOnExit<SteeledStrikeShade>();
-        ComponentCondition<SteeledStrike>(id + 0x02, 3.6f, b => b.NumCasts > 0, "Cross 2")
+        ComponentCondition<SteeledStrike>(id + 0xB2, 3.6f, b => b.NumCasts > 0, "Cross 2")
             .DeactivateOnExit<SteeledStrike>();
 
         id += 0x10000;
