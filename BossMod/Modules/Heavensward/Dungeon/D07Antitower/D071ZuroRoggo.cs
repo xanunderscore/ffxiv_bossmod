@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Heavensward.Dungeon.D07Antitower;
+﻿namespace BossMod.Modules.Heavensward.Dungeon.D07Antitower.D071ZuroRoggo;
 
 public enum OID : uint
 {
