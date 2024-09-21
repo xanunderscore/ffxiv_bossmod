@@ -9,16 +9,15 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    _AutoAttack_Attack = 872, // Boss->player, no cast, single-target
-    _Weaponskill_GyratingGlare = 31835, // Boss->self, 5.0s cast, range 40 circle
-    _Weaponskill_ = 31836, // Boss->location, no cast, single-target
-    _Weaponskill_ShinySummoning = 31831, // Boss->self, no cast, single-target
-    _Weaponskill_MysticLight = 31838, // Stardust->self, 6.0s cast, range 12 circle
-    _Weaponskill_JitteringGlare = 31832, // Boss->self, 3.0s cast, range 40 30-degree cone
-    _Weaponskill_JitteringJounce = 31833, // Boss->self, 6.0s cast, single-target
-    _Weaponskill_JitteringJounce1 = 31840, // Boss->player/Stardust, no cast, width 6 rect charge
-    _Weaponskill_DeepFracture = 31839, // Stardust->self, 4.0s cast, range 11 circle
-    _Weaponskill_JitteringJab = 31837, // Boss->player, 5.0s cast, single-target
+    AutoAttack = 872, // Boss->player, no cast, single-target
+    GyratingGlare = 31835, // Boss->self, 5.0s cast, range 40 circle
+    ShinySummoning = 31831, // Boss->self, no cast, single-target
+    MysticLight = 31838, // Stardust->self, 6.0s cast, range 12 circle
+    JitteringGlare = 31832, // Boss->self, 3.0s cast, range 40 30-degree cone
+    JitteringJounceCast = 31833, // Boss->self, 6.0s cast, single-target
+    JitteringJounceCharge = 31840, // Boss->player/Stardust, no cast, width 6 rect charge
+    DeepFracture = 31839, // Stardust->self, 4.0s cast, range 11 circle
+    JitteringJab = 31837, // Boss->player, 5.0s cast, single-target
 }
 
 public enum IconID : uint
@@ -31,8 +30,8 @@ public enum TetherID : uint
     JitteringJounce = 2, // Boss->player/Stardust
 }
 
-class JitteringGlare(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_JitteringGlare), new AOEShapeCone(40, 15.Degrees()));
-class JitteringJab(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID._Weaponskill_JitteringJab));
+class JitteringGlare(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.JitteringGlare), new AOEShapeCone(40, 15.Degrees()));
+class JitteringJab(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.JitteringJab));
 
 class JitteringJounce(BossModule module) : BossComponent(module)
 {
@@ -55,7 +54,6 @@ class JitteringJounce(BossModule module) : BossComponent(module)
     {
         foreach (var (src, slot, target) in Tethers)
         {
-            // Arena.AddLine(src.Position, target.Position, ArenaColor.Danger);
             if (slot == pcSlot)
             {
                 Arena.AddRect(src.Position, src.DirectionTo(target), (target.Position - src.Position).Length(), 0, 3, ArenaColor.Danger);
@@ -93,9 +91,9 @@ class Stardust(BossModule module) : BossComponent(module)
 {
     public override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(Module.Enemies(OID.Stardust).Where(x => !x.IsDead), ArenaColor.Object, true);
 }
-class DeepFracture(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_DeepFracture), new AOEShapeCircle(11));
-class GyratingGlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Weaponskill_GyratingGlare));
-class MysticLight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_MysticLight), new AOEShapeCircle(12));
+class DeepFracture(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.DeepFracture), new AOEShapeCircle(11));
+class GyratingGlare(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.GyratingGlare));
+class MysticLight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.MysticLight), new AOEShapeCircle(12));
 
 class ZiggyStates : StateMachineBuilder
 {
@@ -108,8 +106,7 @@ class ZiggyStates : StateMachineBuilder
             .ActivateOnEnter<DeepFracture>()
             .ActivateOnEnter<JitteringJounce>()
             .ActivateOnEnter<JitteringJab>()
-            .ActivateOnEnter<JitteringGlare>()
-            ;
+            .ActivateOnEnter<JitteringGlare>();
     }
 }
 

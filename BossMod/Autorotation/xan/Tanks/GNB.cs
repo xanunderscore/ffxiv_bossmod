@@ -145,7 +145,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
 
         if (usedNM)
         {
-            PushOGCD(AID.BlastingZone, primaryTarget);
+            PushOGCD(AID.DangerZone, primaryTarget);
 
             if (NumAOETargets > 0)
                 PushOGCD(AID.BowShock, Player);

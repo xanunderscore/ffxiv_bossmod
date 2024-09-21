@@ -43,6 +43,6 @@ public class ItsProbablyATrap(WorldState ws) : QuestBattle(ws)
                 h.Priority = AIHints.Enemy.PriorityForbidFully;
 
         if (SmokeBomb && player.FindStatus(SID.Bind) != null)
-            hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralDuty1, player, ActionQueue.Priority.Medium);
+            hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.SmokeScreen), player, ActionQueue.Priority.Medium);
     }
 }

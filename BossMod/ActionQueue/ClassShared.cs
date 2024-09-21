@@ -56,6 +56,7 @@ public enum AID : uint
     Resurrection = 173, // L12 SMN/SCH, 8.0s cast, GCD, range 30, single-target, targets=party/alliance/friendly
 
     // Duty actions
+    SmokeScreen = 7816,
     AethericSiphon = 9102,
     Deflect = 10006,
     DeflectVeryEasy = 18863,
@@ -141,6 +142,7 @@ public sealed class Definitions : IDisposable
         });
 
         // duty actions
+        d.RegisterSpell(AID.SmokeScreen);
         d.RegisterSpell(AID.AethericSiphon);
         d.RegisterSpell(AID.Deflect);
         d.RegisterSpell(AID.DeflectVeryEasy);
