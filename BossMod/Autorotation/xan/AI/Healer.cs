@@ -33,7 +33,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     public const float AOEBreakpointHPVariance = 0.25f;
 
-    private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxPartySize];
+    private readonly PartyMemberState[] PartyMemberStates = new PartyMemberState[PartyState.MaxAllies];
     private PartyHealthState PartyHealth = new();
 
     public enum Track { Raise, RaiseTarget, Heal, Esuna }
@@ -118,13 +118,11 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
             esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
 
-        for (var i = 0; i < PartyState.MaxPartySize; i++)
+        for (var i = 0; i < PartyState.MaxAllies; i++)
         {
             var actor = World.Party[i];
             ref var state = ref PartyMemberStates[i];
             state.Slot = i;
-            state.EsunableStatusRemaining = 0;
-            state.NoHealStatusRemaining = 0;
             if (actor == null || actor.IsDead || actor.HPMP.MaxHP == 0)
             {
                 state.PredictedHP = state.PredictedHPMissing = 0;
@@ -135,6 +133,10 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 state.PredictedHP = (int)actor.HPMP.CurHP + World.PendingEffects.PendingHPDifference(actor.InstanceID);
                 state.PredictedHPMissing = (int)actor.HPMP.MaxHP - state.PredictedHP;
                 state.PredictedHPRatio = state.PendingHPRatio = (float)state.PredictedHP / actor.HPMP.MaxHP;
+                state.AttackerStrength = 0;
+                state.EsunableStatusRemaining = 0;
+                state.DoomRemaining = 0;
+                state.NoHealStatusRemaining = 0;
                 var canEsuna = actor.IsTargetable && !esunas[i];
                 foreach (var s in actor.Statuses)
                 {
@@ -153,7 +155,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         foreach (var enemy in Hints.PotentialTargets)
         {
             var targetSlot = World.Party.FindSlot(enemy.Actor.TargetID);
-            if (targetSlot >= 0 && targetSlot < PartyMemberStates.Length)
+            if (targetSlot >= 0)
             {
                 ref var state = ref PartyMemberStates[targetSlot];
                 state.AttackerStrength += enemy.AttackStrength;
