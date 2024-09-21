@@ -58,8 +58,6 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
     private Actor? BestAOETarget;
     private Actor? BestLineTarget;
 
-    private bool WingPlanned => PomOnly && !Creature && CanWeave(AID.LivingMuse, 0, extraFixedDelay: 4);
-
     public enum GCDPriority : int
     {
         None = 0,
@@ -178,8 +176,10 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
         if (RainbowBright > GCD)
             PushGCD(AID.RainbowDrip, BestLineTarget, GCDPriority.Standard);
 
+        var shouldWing = WingPlanned(strategy);
+
         // hardcasting wing motif is #1 prio in opener
-        if (WingPlanned)
+        if (shouldWing)
             PushGCD(AID.CreatureMotif, Player, GCDPriority.Standard);
 
         Hammer(strategy);
@@ -228,6 +228,15 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
             MotifStrategy.Combat => RaidBuffsLeft == 0,
             _ => false
         };
+    }
+
+    // only relevant during opener
+    private bool WingPlanned(StrategyValues strategy)
+    {
+        if (strategy.Option(Track.Motif).As<MotifStrategy>() != MotifStrategy.Combat)
+            return false;
+
+        return PomOnly && !Creature && CanWeave(AID.LivingMuse, 0, extraFixedDelay: 4);
     }
 
     protected override float GetCastTime(AID aid) => aid switch
