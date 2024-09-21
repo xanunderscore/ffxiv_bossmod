@@ -308,7 +308,6 @@ sealed class WorldStateGameSync : IDisposable
         if (act.MountId != mountId)
             _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
 
-
         DispatchActorEvents(act.InstanceID);
 
         var castInfo = chr != null ? chr->GetCastInfo() : null;
@@ -391,6 +390,7 @@ sealed class WorldStateGameSync : IDisposable
         var playerMember = UpdatePartyPlayer(replay, group);
         UpdatePartyNormal(group, playerMember);
         UpdatePartyAlliance(group);
+        UpdatePartyNPCs();
 
         // update limit break
         var lb = LimitBreakController.Instance();
@@ -421,7 +421,7 @@ sealed class WorldStateGameSync : IDisposable
             var ui = UIState.Instance();
             if (ui->PlayerState.IsLoaded != 0)
             {
-                player = new(ui->PlayerState.ContentId, ui->PlayerState.EntityId, false, ui->PlayerState.CharacterNameString, false);
+                player = new(ui->PlayerState.ContentId, ui->PlayerState.EntityId, false, ui->PlayerState.CharacterNameString);
                 if (pc != null && (pc->ContentId != player.ContentId || pc->EntityId != player.InstanceId))
                     Service.Log($"[WSG] Object #0 is valid ({pc->AccountId:X}.{pc->ContentId:X}, {pc->EntityId:X8} '{pc->NameString}') but different from playerstate ({player})");
             }
@@ -439,7 +439,7 @@ sealed class WorldStateGameSync : IDisposable
             // in playback mode, the primary data source is object #0
             if (pc != null)
             {
-                player = new(pc->ContentId, pc->EntityId, false, pc->NameString, false);
+                player = new(pc->ContentId, pc->EntityId, false, pc->NameString);
             }
             // else: just assume there's no player for now...
         }
@@ -465,13 +465,8 @@ sealed class WorldStateGameSync : IDisposable
             }
             else if (m.InstanceId != 0)
             {
-                var isValidPartyMember = m.IsNPC
-                    // NPC ally treated as party member - do nothing if object still exists
-                    ? _ws.Actors.Find(m.InstanceId) != null
-                    // slot was occupied by trust => see if it's still in party
-                    : HasBuddy(m.InstanceId);
-
-                if (!isValidPartyMember)
+                // slot was occupied by trust => see if it's still in party
+                if (!HasBuddy(m.InstanceId))
                     UpdatePartySlot(i, PartyState.EmptySlot); // clear slot
                 // else: no reason to update...
             }
@@ -494,7 +489,7 @@ sealed class WorldStateGameSync : IDisposable
             if (instanceID != InvalidEntityId && _ws.Party.FindSlot(instanceID) < 0)
             {
                 var obj = GameObjectManager.Instance()->Objects.GetObjectByEntityId(instanceID);
-                AddPartyMember(new(0, instanceID, false, obj != null ? obj->NameString : "", false));
+                AddPartyMember(new(0, instanceID, false, obj != null ? obj->NameString : ""));
             }
             // else: buddy is non-existent or already updated, skip
         }
@@ -511,6 +506,35 @@ sealed class WorldStateGameSync : IDisposable
             if (member != null && !member->IsValidAllianceMember)
                 member = null;
             UpdatePartySlot(i, BuildPartyMember(member));
+        }
+    }
+
+    private unsafe void UpdatePartyNPCs()
+    {
+        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxNumAllies; ++i)
+        {
+            ref var m = ref _ws.Party.Members[i];
+            if (m.InstanceId != 0)
+            {
+                var actor = _ws.Actors.Find(m.InstanceId);
+                if (!(actor?.IsFriendlyNPC ?? false))
+                    UpdatePartySlot(i, PartyState.EmptySlot);
+            }
+        }
+
+        foreach (var actor in _ws.Actors)
+        {
+            if (!actor.IsFriendlyNPC)
+                continue;
+
+            if (_ws.Party.FindSlot(actor.InstanceID) == -1)
+            {
+                var slot = FindFreeNPCAllySlot();
+                if (slot > 0)
+                    UpdatePartySlot(slot, new(0, actor.InstanceID, false, actor.Name));
+                else
+                    Service.Log($"[WorldState] Failed to find empty slot for allied NPC {actor.InstanceID:X}");
+            }
         }
     }
 
@@ -531,7 +555,15 @@ sealed class WorldStateGameSync : IDisposable
         return -1;
     }
 
-    private unsafe PartyState.Member BuildPartyMember(PartyMember* m) => m != null ? new(m->ContentId, m->EntityId, (m->Flags & 0x10) != 0, m->NameString, false) : PartyState.EmptySlot;
+    private int FindFreeNPCAllySlot()
+    {
+        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxNumAllies; ++i)
+            if (!_ws.Party.Members[i].IsValid())
+                return i;
+        return -1;
+    }
+
+    private unsafe PartyState.Member BuildPartyMember(PartyMember* m) => m != null ? new(m->ContentId, m->EntityId, (m->Flags & 0x10) != 0, m->NameString) : PartyState.EmptySlot;
 
     private void AddPartyMember(PartyState.Member m)
     {

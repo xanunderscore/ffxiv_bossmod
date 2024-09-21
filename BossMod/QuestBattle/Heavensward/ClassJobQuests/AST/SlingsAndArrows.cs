@@ -32,13 +32,6 @@ internal class SlingsAndArrows(WorldState ws) : QuestBattle(ws)
 
         new QuestObjective(ws)
             .With(obj => {
-                obj.OnActorCreated += (actor) => {
-                    if (actor.OID is 0x129E or 0x129F)
-                    {
-                        new PartyState.OpModify(World.Party.WithoutSlot().Count(), new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(World);
-                    }
-                };
-
                 obj.OnActorTargetableChanged += (actor) => obj.CompleteIf(actor.OID == 0x12A1 && !actor.IsTargetable);
             }),
 

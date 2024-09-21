@@ -116,6 +116,8 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
     public bool Omnidirectional => Statuses.Any(s => s.ID == 3808) || Utils.CharacterIsOmnidirectional(OID);
     public bool IsDeadOrDestroyed => IsDead || IsDestroyed;
 
+    public bool IsFriendlyNPC => Type == ActorType.Enemy && IsAlly && IsTargetable;
+
     public ActorStatus? FindStatus(uint sid)
     {
         var i = Array.FindIndex(Statuses, x => x.ID == sid);

@@ -6,6 +6,8 @@
 // note that player could be in party without having actor in world (e.g. if he is in different zone)
 // if player does not exist in world, party is always empty; otherwise player is always in slot 0
 // in alliance, two 'other' groups use slots 8-15 and 16-23; alliance members don't have content-ID, but always have actor-ID
+// slots 24-63 are occupied by friendly NPCs, i.e. actors with type = Enemy who have the IsAlly and IsTargetable flags set. certain modules need to treat NPCs as regular party members for the purpose of mechanic resolution
+// we limit to 64 slots to facilitate a bitmask for the entire "party" state fitting inside one ulong
 // in trust, buddies are considered party members with content-id 0 (but non-zero actor id, they are always in world)
 // party slot is considered 'empty' if both ids are 0
 public sealed class PartyState
@@ -13,16 +15,17 @@ public sealed class PartyState
     public const int PlayerSlot = 0;
     public const int MaxPartySize = 8;
     public const int MaxAllianceSize = 24;
+    public const int MaxNumAllies = 64;
 
-    public record struct Member(ulong ContentId, ulong InstanceId, bool InCutscene, string Name, bool IsNPC)
+    public record struct Member(ulong ContentId, ulong InstanceId, bool InCutscene, string Name)
     {
         // note that a valid member can have 0 contentid (eg buddy) or 0 instanceid (eg player in a different zone)
         public readonly bool IsValid() => ContentId != 0 || InstanceId != 0;
     }
-    public static readonly Member EmptySlot = new(0, 0, false, "", false);
+    public static readonly Member EmptySlot = new(0, 0, false, "");
 
-    public readonly Member[] Members = Utils.MakeArray(MaxAllianceSize, EmptySlot);
-    private readonly Actor?[] _actors = new Actor?[MaxAllianceSize]; // transient
+    public readonly Member[] Members = Utils.MakeArray(MaxNumAllies, EmptySlot);
+    private readonly Actor?[] _actors = new Actor?[MaxNumAllies]; // transient
 
     public Actor? this[int slot] => (slot >= 0 && slot < _actors.Length) ? _actors[slot] : null; // bounds-checking accessor
     public Actor? Player() => this[PlayerSlot];
@@ -56,11 +59,29 @@ public sealed class PartyState
                 continue;
             yield return player;
         }
+        for (int i = MaxAllianceSize; i < MaxNumAllies; ++i)
+        {
+            var player = _actors[i];
+            if (player == null)
+                continue;
+            if (player.IsDead && !includeDead)
+                continue;
+            yield return player;
+        }
     }
 
     public IEnumerable<(int, Actor)> WithSlot(bool includeDead = false, bool partyOnly = false)
     {
         for (int i = 0, size = partyOnly ? MaxPartySize : MaxAllianceSize; i < size; ++i)
+        {
+            var player = _actors[i];
+            if (player == null)
+                continue;
+            if (player.IsDead && !includeDead)
+                continue;
+            yield return (i, player);
+        }
+        for (int i = MaxAllianceSize; i < MaxNumAllies; ++i)
         {
             var player = _actors[i];
             if (player == null)
@@ -100,7 +121,7 @@ public sealed class PartyState
                 Service.Log($"[PartyState] Out-of-bounds slot {Slot}");
             }
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PAR "u8).Emit(Slot).Emit(Member.ContentId, "X").Emit(Member.InstanceId, "X8").Emit(Member.InCutscene).Emit(Member.Name).Emit(Member.IsNPC);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("PAR "u8).Emit(Slot).Emit(Member.ContentId, "X").Emit(Member.InstanceId, "X8").Emit(Member.InCutscene).Emit(Member.Name);
     }
 
     public Event<OpLimitBreakChange> LimitBreakChanged = new();

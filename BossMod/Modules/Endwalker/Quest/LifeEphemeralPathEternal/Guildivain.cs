@@ -1,14 +1,5 @@
 ﻿namespace BossMod.Endwalker.Quest.LifeEphemeralPathEternal;
 
-class AlliesP2(BossModule module) : BossComponent(module)
-{
-    public override void OnActorCreated(Actor actor)
-    {
-        if ((OID)actor.OID is OID.Lalah or OID.Loifa or OID.Mahaud or OID.Ancel)
-            new PartyState.OpModify(WorldState.Party.WithoutSlot().Count(), new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
-    }
-}
-
 class AetherstreamTether(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50, 2), (uint)TetherID.Noulith)
 {
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
@@ -78,7 +69,6 @@ class GuildivainOfTheTaintedEdgeStates : StateMachineBuilder
     public GuildivainOfTheTaintedEdgeStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<AlliesP2>()
             .ActivateOnEnter<AetherstreamTether>()
             .ActivateOnEnter<Tracheostomy>()
             .ActivateOnEnter<RightScalpel>()

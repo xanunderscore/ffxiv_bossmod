@@ -20,21 +20,11 @@ public enum AID : uint
 
 class Charge(BossModule module) : Components.ChargeAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Charge), 2);
 
-class SaveTheDipshit(BossModule module) : BossComponent(module)
-{
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID == 0x29A9)
-            new PartyState.OpModify(1, new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
-    }
-}
-
 class SophrosyneStates : StateMachineBuilder
 {
     public SophrosyneStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<SaveTheDipshit>()
             .ActivateOnEnter<Charge>();
     }
 }

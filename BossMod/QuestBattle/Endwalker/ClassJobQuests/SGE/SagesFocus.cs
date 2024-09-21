@@ -9,11 +9,6 @@ internal class SagesFocus(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws)
             .WithConnection(new Vector3(7.71f, 0.00f, 108.57f))
             .With(obj => {
-                obj.OnActorCreated += (act) => {
-                    if (act.OID == 0x3589)
-                        new PartyState.OpModify(1, new PartyState.Member(0, act.InstanceID, false, act.Name, true)).Execute(World);
-                };
-
                 obj.OnEventObjectAnimation += (act, p1, p2) => obj.CompleteIf(act.OID == 0x1EA1A1 && p1 == 4 && p2 == 8);
             }),
 

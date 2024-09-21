@@ -60,27 +60,16 @@ class Repose(BossModule module) : BossComponent(module)
     }
 }
 
-class Dwarf(BossModule module) : BossComponent(module)
-{
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID is 0x29CD or 0x29D7)
-            new PartyState.OpModify(1, new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
-    }
-}
-
 class SophrosyneStates : StateMachineBuilder
 {
     public SophrosyneStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Dwarf>()
             .ActivateOnEnter<HolyBlur>()
             .ActivateOnEnter<Focus>()
             .ActivateOnEnter<Repose>()
             .Raw.Update = () => module.Enemies(OID.BossP2).Any(x => x.IsTargetable) || module.WorldState.CurrentCFCID != 673;
         TrivialPhase(1)
-            .ActivateOnEnter<Dwarf>()
             .ActivateOnEnter<SanctifiedAero>()
             .ActivateOnEnter<SanctifiedStone>()
             .ActivateOnEnter<TemperedVirtue>()

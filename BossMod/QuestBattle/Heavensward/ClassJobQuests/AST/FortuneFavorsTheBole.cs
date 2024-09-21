@@ -7,13 +7,7 @@ internal class FortuneFavorsTheBole(WorldState ws) : QuestBattle(ws)
         => new QuestObjective(ws).WithConnection(pos).WithInteract(oid).CompleteOnState7(oid);
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
-        Card(ws, new(141.36f, 18.58f, 73.59f), 0x1E9BC7)
-            .With(obj => {
-                obj.OnActorCreated += (actor) => {
-                    if (actor.OID is 0x10D2 or 0x10D4)
-                        new PartyState.OpModify(World.Party.WithoutSlot().Count(), new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(World);
-                };
-            }),
+        Card(ws, new(141.36f, 18.58f, 73.59f), 0x1E9BC7),
         Card(ws, new(98.61f, 22.82f, 172.71f), 0x1E9BC8),
         Card(ws, new(51.44f, 24.93f, 135.83f), 0x1E9BC9),
         Card(ws, new(79.41f, 23.67f, 199.89f), 0x1E9BCA),

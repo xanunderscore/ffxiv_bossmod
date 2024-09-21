@@ -70,15 +70,6 @@ class Hints(BossModule module) : BossComponent(module)
         foreach (var h in hints.PotentialTargets)
             h.Priority = 0;
     }
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID is 0x29AD or 0x29AE or 0x29AF)
-        {
-            var ix = WorldState.Party.WithoutSlot().Count();
-            new PartyState.OpModify(ix, new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
-        }
-    }
 }
 
 class YxtliltonStates : StateMachineBuilder

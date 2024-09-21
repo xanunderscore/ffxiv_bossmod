@@ -30,15 +30,6 @@ class ChiBlast(BossModule module) : Components.RaidwideCast(module, ActionID.Mak
 class Explosion(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Explosion), new AOEShapeCircle(6));
 class ArmOfTheScholar(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_ArmOfTheScholar), new AOEShapeCircle(5));
 
-class Allies(BossModule module) : BossComponent(module)
-{
-    public override void OnActorCreated(Actor actor)
-    {
-        if ((OID)actor.OID is OID.Lalah or OID.Loifa)
-            new PartyState.OpModify(WorldState.Party.WithoutSlot().Count(), new PartyState.Member(0, actor.InstanceID, false, actor.Name, true)).Execute(WorldState);
-    }
-}
-
 class ClassicalFire(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_ClassicalFire), 6);
 class ClassicalThunder(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_ClassicalThunder), 6);
 class ClassicalBlizzard(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_ClassicalBlizzard), 6);
@@ -49,7 +40,6 @@ class AncelRockfistStates : StateMachineBuilder
     public AncelRockfistStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<Allies>()
             .ActivateOnEnter<ChiBlast>()
             .ActivateOnEnter<Explosion>()
             .ActivateOnEnter<ArmOfTheScholar>()
@@ -58,12 +48,7 @@ class AncelRockfistStates : StateMachineBuilder
             .ActivateOnEnter<ClassicalFire>()
             .ActivateOnEnter<ClassicalThunder>()
             .ActivateOnEnter<ClassicalBlizzard>()
-            .ActivateOnEnter<ClassicalStone>()
-            .OnExit(() =>
-            {
-                new PartyState.OpModify(1, new PartyState.Member(0, 0, false, "", false)).Execute(module.WorldState);
-                new PartyState.OpModify(2, new PartyState.Member(0, 0, false, "", false)).Execute(module.WorldState);
-            });
+            .ActivateOnEnter<ClassicalStone>();
     }
 }
 
