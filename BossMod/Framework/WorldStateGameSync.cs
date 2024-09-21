@@ -511,7 +511,7 @@ sealed class WorldStateGameSync : IDisposable
 
     private unsafe void UpdatePartyNPCs()
     {
-        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxNumAllies; ++i)
+        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxAllies; ++i)
         {
             ref var m = ref _ws.Party.Members[i];
             if (m.InstanceId != 0)
@@ -557,7 +557,7 @@ sealed class WorldStateGameSync : IDisposable
 
     private int FindFreeNPCAllySlot()
     {
-        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxNumAllies; ++i)
+        for (int i = PartyState.MaxAllianceSize; i < PartyState.MaxAllies; ++i)
             if (!_ws.Party.Members[i].IsValid())
                 return i;
         return -1;

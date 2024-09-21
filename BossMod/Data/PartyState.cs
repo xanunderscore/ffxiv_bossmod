@@ -15,7 +15,7 @@ public sealed class PartyState
     public const int PlayerSlot = 0;
     public const int MaxPartySize = 8;
     public const int MaxAllianceSize = 24;
-    public const int MaxNumAllies = 64;
+    public const int MaxAllies = 64;
 
     public record struct Member(ulong ContentId, ulong InstanceId, bool InCutscene, string Name)
     {
@@ -24,8 +24,8 @@ public sealed class PartyState
     }
     public static readonly Member EmptySlot = new(0, 0, false, "");
 
-    public readonly Member[] Members = Utils.MakeArray(MaxNumAllies, EmptySlot);
-    private readonly Actor?[] _actors = new Actor?[MaxNumAllies]; // transient
+    public readonly Member[] Members = Utils.MakeArray(MaxAllies, EmptySlot);
+    private readonly Actor?[] _actors = new Actor?[MaxAllies]; // transient
 
     public Actor? this[int slot] => (slot >= 0 && slot < _actors.Length) ? _actors[slot] : null; // bounds-checking accessor
     public Actor? Player() => this[PlayerSlot];
@@ -59,7 +59,7 @@ public sealed class PartyState
                 continue;
             yield return player;
         }
-        for (int i = MaxAllianceSize; i < MaxNumAllies; ++i)
+        for (int i = MaxAllianceSize; i < MaxAllies; ++i)
         {
             var player = _actors[i];
             if (player == null)
@@ -81,7 +81,7 @@ public sealed class PartyState
                 continue;
             yield return (i, player);
         }
-        for (int i = MaxAllianceSize; i < MaxNumAllies; ++i)
+        for (int i = MaxAllianceSize; i < MaxAllies; ++i)
         {
             var player = _actors[i];
             if (player == null)
