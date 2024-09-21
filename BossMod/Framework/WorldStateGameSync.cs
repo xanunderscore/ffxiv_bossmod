@@ -302,12 +302,6 @@ sealed class WorldStateGameSync : IDisposable
         if (act.MountId != mountId)
             _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
 
-        if (act.MountId != mountId)
-            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
-
-        if (act.MountId != mountId)
-            _ws.Execute(new ActorState.OpMount(act.InstanceID, mountId));
-
         DispatchActorEvents(act.InstanceID);
 
         var castInfo = chr != null ? chr->GetCastInfo() : null;
