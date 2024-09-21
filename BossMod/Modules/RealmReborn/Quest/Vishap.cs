@@ -260,8 +260,6 @@ public class Vishap(WorldState ws, Actor primary) : BossModule(ws, primary, new(
         Arena.Actor(PrimaryActor, ArenaColor.Enemy, true);
     }
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) => hints.PrioritizeAll();
 }
 

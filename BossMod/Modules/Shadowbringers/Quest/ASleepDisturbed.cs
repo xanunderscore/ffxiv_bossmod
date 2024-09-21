@@ -75,6 +75,4 @@ public class ASleepDisturbed(WorldState ws, Actor primary) : BossModule(ws, prim
     {
         hints.PrioritizeTargetsByOID(OID.Boss, 0);
     }
-
-    protected override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
 }
