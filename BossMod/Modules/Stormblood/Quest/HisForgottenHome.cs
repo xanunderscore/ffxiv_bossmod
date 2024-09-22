@@ -66,12 +66,6 @@ public class SlickshellCaptain(WorldState ws, Actor primary) : BossModule(ws, pr
 
     protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var actor in WorldState.Actors.Where(a => a.IsAlly))
-            Arena.Actor(actor, ArenaColor.PlayerGeneric);
-    }
-
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         // attack anyone targeting isse

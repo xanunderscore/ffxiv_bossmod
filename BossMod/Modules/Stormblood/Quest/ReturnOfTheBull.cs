@@ -112,10 +112,5 @@ public class Lakshmi(WorldState ws, Actor primary) : BossModule(ws, primary, new
                 _ => 0
             };
     }
-
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => x.OID is 0x1FDC or 0x1FD6 or 0x1FD8 or 0x1FD9), ArenaColor.PlayerGeneric);
-    }
 }
 

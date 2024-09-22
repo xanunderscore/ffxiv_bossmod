@@ -25,7 +25,6 @@ public enum SID : uint
 {
     _Gen_Invincibility = 325, // none->_Gen_TheOldOne/Boss/_Gen_, extra=0x0
     _Gen_Transfiguration = 1448, // none->player, extra=0x4A
-
 }
 
 class MysticLight(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_MysticLight), new AOEShapeCone(44.6f, 30.Degrees()));
@@ -45,7 +44,7 @@ class Transfiguration(BossModule module) : BossComponent(module)
         if (closestTarget == null)
             return;
 
-        if ((closestTarget.Position - actor.Position).Length() <= 5)
+        if ((closestTarget.Position - actor.Position).Length() < 5)
             hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Shatterstone), actor, ActionQueue.Priority.High);
         else
             hints.ForcedMovement = actor.DirectionTo(closestTarget).ToVec3();

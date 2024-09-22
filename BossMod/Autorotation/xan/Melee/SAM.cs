@@ -9,9 +9,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
 
     public enum EnpiStrategy
     {
+        Enhanced,
         None,
-        Ranged,
-        Enhanced
+        Ranged
     }
 
     public static RotationModuleDefinition Definition()
@@ -26,9 +26,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(OffensiveStrategy.Force, "Force", "Always apply Higanbana to target");
 
         def.Define(Track.Enpi).As<EnpiStrategy>("Enpi")
+            .AddOption(EnpiStrategy.Enhanced, "Enhanced", "Use if Enhanced Enpi is active")
             .AddOption(EnpiStrategy.None, "None", "Do not use")
-            .AddOption(EnpiStrategy.Ranged, "Ranged", "Use when out of range")
-            .AddOption(EnpiStrategy.Enhanced, "Enhanced", "Use if Enhanced Enpi is active");
+            .AddOption(EnpiStrategy.Ranged, "Ranged", "Use when out of range");
 
         return def;
     }
