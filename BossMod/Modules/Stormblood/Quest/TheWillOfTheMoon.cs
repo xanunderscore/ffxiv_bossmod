@@ -76,6 +76,8 @@ class YshtolaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
 
     public override void Execute(Actor? primaryTarget)
     {
+        Hints.RecommendedRangeToTarget = 25;
+
         var hienMinHP = Daidukul.CastInfo?.Action.ID == (uint)AID.TranquilAnnihilation
             ? 28000
             : 10000;
