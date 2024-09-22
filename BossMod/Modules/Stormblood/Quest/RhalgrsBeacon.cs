@@ -10,6 +10,7 @@ public enum OID : uint
     _Gen_SkullsSpear = 0x1A8C, // R0.500, x3
     _Gen_SkullsBlade = 0x1A8B, // R0.500, x3
     _Gen_MagitekTurretII = 0x1BC7, // R0.600, x0 (spawn during fight)
+    ChoppingBlock = 0x1EA4D9, // R0.500, x0 (spawn during fight), voidzone event object
 }
 
 public enum AID : uint
@@ -71,6 +72,29 @@ class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSp
 {
     public readonly List<Actor> Casters = [];
 
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (Casters.Count == 0)
+            return;
+
+        var voidzones = Module.Enemies(OID.ChoppingBlock).Where(x => x.EventState != 7).Select(v => ShapeDistance.Circle(v.Position, 5)).ToList();
+        if (voidzones.Count == 0)
+            return;
+
+        var combined = ShapeDistance.Union(voidzones);
+
+        var origin = Casters[0].Position;
+
+        float projectedDist(WPos pos)
+        {
+            var direction = (pos - origin).Normalized();
+            var projected = pos + 10 * direction;
+            return combined(projected);
+        }
+
+        hints.AddForbiddenZone(projectedDist, Module.CastFinishAt(Casters[0].CastInfo));
+    }
+
     public override IEnumerable<Source> Sources(int slot, Actor actor)
     {
         foreach (var c in Casters)
@@ -90,7 +114,7 @@ class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSp
     }
 }
 
-class ChoppingBlock(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID._Weaponskill_ChoppingBlock1), m => m.Enemies(0x1EA4D9).Where(x => x.EventState != 7), 0);
+class ChoppingBlock(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 5, ActionID.MakeSpell(AID._Weaponskill_ChoppingBlock1), m => m.Enemies(OID.ChoppingBlock).Where(x => x.EventState != 7), 0);
 
 class FordolaRemLupisStates : StateMachineBuilder
 {
