@@ -30,13 +30,6 @@ class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, new A
         if (spell.Action.ID == (uint)AID._Spell_BlizzardIII)
             CurrentBaits.Clear();
     }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        base.AddAIHints(slot, actor, assignment, hints);
-        if (CurrentBaits.Count > 0 && WorldState.Actors.FirstOrDefault(a => a.OID == 0x2138) is Actor isse)
-            hints.AddForbiddenZone(new AOEShapeCircle(8), isse.Position, activation: CurrentBaits[0].Activation);
-    }
 }
 class BlizzardIIICast(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID._Spell_BlizzardIII), m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7), 0);
 
