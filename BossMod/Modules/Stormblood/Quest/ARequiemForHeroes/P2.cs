@@ -61,6 +61,8 @@ class DarkAether(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
+class Adds(BossModule module) : Components.AddsMulti(module, [(uint)OID.TheStorm, (uint)OID.TheSwell, (uint)OID.AmeNoHabakiri]);
+
 public class ZenosP2States : StateMachineBuilder
 {
     public ZenosP2States(BossModule module) : base(module)
@@ -78,7 +80,8 @@ public class ZenosP2States : StateMachineBuilder
             .ActivateOnEnter<ArtOfTheStorm>()
             .ActivateOnEnter<EntropicFlame>()
             .ActivateOnEnter<DarkAether>()
-            .ActivateOnEnter<StormUnbound>();
+            .ActivateOnEnter<StormUnbound>()
+            .ActivateOnEnter<Adds>();
     }
 }
 
