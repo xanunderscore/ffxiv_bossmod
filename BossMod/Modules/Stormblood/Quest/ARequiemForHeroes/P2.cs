@@ -1,65 +1,5 @@
 ﻿namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
 
-public enum OID : uint
-{
-    Boss = 0x268A,
-    BossP2 = 0x268C,
-    Helper = 0x233C,
-    AmeNoHabakiri = 0x2692, // R3.000, x0 (spawn during fight)
-    TheStorm = 0x2760, // R3.000, x0 (spawn during fight)
-    TheSwell = 0x275F, // R3.000, x0 (spawn during fight)
-    DarkAether = 0x2694, // R1.200, x0 (spawn during fight)
-}
-
-public enum AID : uint
-{
-    FloodOfDarkness = 14808, // Helper->self, 3.5s cast, range 6 circle
-    VeinSplitter = 14839, // Boss->self, 4.0s cast, range 10 circle
-    LightlessSpark = 14838, // Boss->self, 4.0s cast, range 40+R 90-degree cone
-    LightlessSparkAdds = 14824, // 268D->self, 4.0s cast, range 40+R 90-degree cone
-    ArtOfTheSwell = 14812, // Boss->self, 4.0s cast, range 33 circle
-    TheSwellUnbound = 14813, // Helper->self, 8.0s cast, range 8-20 donut
-    ArtOfTheSword1 = 14819, // Helper->self, 4.0s cast, range 40+R width 6 rect
-    ArtOfTheSword2 = 14818, // Helper->self, 6.0s cast, range 40+R width 6 rect
-    ArtOfTheSword3 = 14820, // Helper->self, 2.0s cast, range 40+R width 6 rect
-    ArtOfTheStorm = 14814, // Boss->self, 4.0s cast, range 8 circle
-    TheStormUnboundCast = 14815, // Helper->self, 3.0s cast, range 5 circle
-    TheStormUnboundRepeat = 14816, // Helper->self, no cast, range 5 circle
-    EntropicFlame = 14833, // Helper->self, 4.0s cast, range 50+R width 8 rect
-}
-
-class HienAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
-{
-    public override void Execute(Actor? primaryTarget)
-    {
-        Hints.RecommendedRangeToTarget = 3;
-
-        var ajisai = StatusDetails(primaryTarget, Roleplay.SID.Ajisai, Player.InstanceID);
-
-        switch (ComboAction)
-        {
-            case Roleplay.AID.Gofu:
-                UseAction(Roleplay.AID.Yagetsu, primaryTarget);
-                break;
-
-            case Roleplay.AID.Kyokufu:
-                UseAction(Roleplay.AID.Gofu, primaryTarget);
-                break;
-
-            default:
-                if (ajisai.Left < 5)
-                    UseAction(Roleplay.AID.Ajisai, primaryTarget);
-                UseAction(Roleplay.AID.Kyokufu, primaryTarget);
-                break;
-        }
-
-        if (PredictedHP(Player) < 5000)
-            UseAction(Roleplay.AID.SecondWind, Player, -10);
-
-        UseAction(Roleplay.AID.HissatsuGyoten, primaryTarget, -10);
-    }
-}
-
 class StormUnbound(BossModule module) : Components.Exaflare(module, 5)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -121,12 +61,11 @@ class DarkAether(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-public class ZenosYaeGalvusStates : StateMachineBuilder
+public class ZenosP2States : StateMachineBuilder
 {
-    public ZenosYaeGalvusStates(BossModule module) : base(module)
+    public ZenosP2States(BossModule module) : base(module)
     {
-        TrivialPhase().ActivateOnEnter<HienAI>();
-        TrivialPhase(1)
+        TrivialPhase()
             .ActivateOnEnter<FloodOfDarkness>()
             .ActivateOnEnter<VeinSplitter>()
             .ActivateOnEnter<LightlessSpark>()
@@ -139,16 +78,9 @@ public class ZenosYaeGalvusStates : StateMachineBuilder
             .ActivateOnEnter<ArtOfTheStorm>()
             .ActivateOnEnter<EntropicFlame>()
             .ActivateOnEnter<DarkAether>()
-            .ActivateOnEnter<StormUnbound>()
-            .Raw.Update = () => module.Enemies(OID.BossP2).All(x => x.IsDeadOrDestroyed);
+            .ActivateOnEnter<StormUnbound>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68721, NameID = 6039)]
-public class ZenosYaeGalvus(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20))
-{
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
-    }
-}
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68721, NameID = 6039, PrimaryActorOID = (uint)OID.BossP2)]
+public class ZenosP2(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20));
