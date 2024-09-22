@@ -389,6 +389,9 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
 
     private void Meikyo(StrategyValues strategy)
     {
+        if (ComboLastMove is AID.Jinpu or AID.Shifu or AID.Hakaze or AID.Gyofu or AID.Fuga or AID.Fuko)
+            return;
+
         // TODO: DT requires early meikyo in even windows, resulting in double meikyo at 6m
         if (MeikyoLeft == 0 && Tendo == 0 && (CanWeave(MaxChargesIn(AID.MeikyoShisui), 0.6f) || CanFitGCD(RaidBuffsLeft, 3)))
             PushOGCD(AID.MeikyoShisui, Player);

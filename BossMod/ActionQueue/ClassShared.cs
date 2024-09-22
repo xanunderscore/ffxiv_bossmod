@@ -58,6 +58,7 @@ public enum AID : uint
     // Duty actions
     SmokeScreen = 7816,
     AethericSiphon = 9102,
+    Shatterstone = 9823,
     Deflect = 10006,
     DeflectVeryEasy = 18863,
 }
@@ -144,6 +145,7 @@ public sealed class Definitions : IDisposable
         // duty actions
         d.RegisterSpell(AID.SmokeScreen);
         d.RegisterSpell(AID.AethericSiphon);
+        d.RegisterSpell(AID.Shatterstone);
         d.RegisterSpell(AID.Deflect);
         d.RegisterSpell(AID.DeflectVeryEasy);
 
