@@ -74,7 +74,8 @@ class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSp
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (Casters.Count == 0)
+        var caster = Casters.FirstOrDefault();
+        if (caster == null)
             return;
 
         var voidzones = Module.Enemies(OID.ChoppingBlock).Where(x => x.EventState != 7).Select(v => ShapeDistance.Circle(v.Position, 5)).ToList();
@@ -83,16 +84,14 @@ class Gunblade(BossModule module) : Components.Knockback(module, ActionID.MakeSp
 
         var combined = ShapeDistance.Union(voidzones);
 
-        var origin = Casters[0].Position;
-
         float projectedDist(WPos pos)
         {
-            var direction = (pos - origin).Normalized();
+            var direction = (pos - caster.Position).Normalized();
             var projected = pos + 10 * direction;
             return combined(projected);
         }
 
-        hints.AddForbiddenZone(projectedDist, Module.CastFinishAt(Casters[0].CastInfo));
+        hints.AddForbiddenZone(projectedDist, Module.CastFinishAt(caster.CastInfo));
     }
 
     public override IEnumerable<Source> Sources(int slot, Actor actor)
