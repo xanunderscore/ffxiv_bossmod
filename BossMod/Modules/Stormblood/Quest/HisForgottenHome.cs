@@ -30,6 +30,12 @@ class BlizzardIIIIcon(BossModule module) : Components.BaitAwayIcon(module, new A
         if (spell.Action.ID == (uint)AID._Spell_BlizzardIII)
             CurrentBaits.Clear();
     }
+
+    public override void OnActorDestroyed(Actor actor)
+    {
+        if (actor == Module.PrimaryActor)
+            CurrentBaits.Clear();
+    }
 }
 class BlizzardIIICast(BossModule module) : Components.PersistentVoidzoneAtCastTarget(module, 6, ActionID.MakeSpell(AID._Spell_BlizzardIII), m => m.Enemies(0x1E8D9C).Where(x => x.EventState != 7), 0);
 
