@@ -599,11 +599,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 var dist = Player.DistanceToHitbox(primaryTarget);
                 var secToMelee = dist / 7.8f;
                 // TODO account for acceleration
-                if (CountdownRemaining < secToMelee)
+                if (CountdownRemaining < secToMelee + GetApplicationDelay(AID.DragonKick))
+                {
                     Hints.ForcedMovement = Player.DirectionTo(primaryTarget).ToVec3();
-
-                if (CountdownRemaining < GetApplicationDelay(AID.DragonKick))
                     PushGCD(AID.DragonKick, primaryTarget);
+                }
+
                 return;
 
             // TODO delay autoattacks to prevent early pull
