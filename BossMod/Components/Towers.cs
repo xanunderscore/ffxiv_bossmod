@@ -1,6 +1,4 @@
-﻿using BossMod.Util;
-
-namespace BossMod.Components;
+﻿namespace BossMod.Components;
 
 public class GenericTowers(BossModule module, ActionID aid = default) : CastCounter(module, aid)
 {

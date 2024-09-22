@@ -10,21 +10,23 @@ public enum OID : uint
 
 public enum AID : uint
 {
-    _Spell_RonkanFire = 18117, // Boss/2923/2922->player/2916, no cast, single-target
-    _AutoAttack_Attack = 870, // 2926->player/2914, no cast, single-target
+    _Spell_RonkanFire = 18117, // Boss/2922/2923->player/2914, no cast, single-target
+    _AutoAttack_Attack = 870, // 2926/2920/2924/2925/2921/291F/291E/291D/291C/291A/291B->player/2914, no cast, single-target
     _Spell_Monstrosity = 15530, // Boss->self, 3.0s cast, single-target
     _Spell_Monstrosity1 = 15531, // Helper->location, 3.0s cast, range 2 circle
-    _Spell_SanctifiedFireIII = 18090, // 2922/2923->2917/2915, 8.0s cast, range 6 circle
+    _Spell_SanctifiedFireIII = 18090, // 2922/2923->players/2917/2915/2914, 8.0s cast, range 6 circle
     _Spell_TwistedTalent = 13632, // Boss->self, 5.0s cast, single-target
-    _Spell_TwistedTalent1 = 13637, // Helper->player/2916/2917/2914/2915, 5.0s cast, range 5 circle
-    _Weaponskill_AbyssalCharge = 15538, // 291E->self, 3.0s cast, single-target
+    _Spell_TwistedTalent1 = 13637, // Helper->player/2916/2914/2915/2917, 5.0s cast, range 5 circle
+    _Weaponskill_AbyssalCharge = 15538, // 291E/291F->self, 3.0s cast, single-target
     _Weaponskill_AbyssalCharge1 = 15539, // 25BB->self, 3.0s cast, range 40+R width 4 rect
-    _Weaponskill_Burn = 15542, // 2920/2925/2921/2924->self, 20.0s cast, range 60 circle
+    DeadlyBite = 15543, // 291D/291C->player/2914, no cast, single-target
+    _Weaponskill_RustingClaw = 15540, // 291B/291A->self, 5.0s cast, range 8+R ?-degree cone
+    _Weaponskill_Burn = 15542, // 2921/2920/2924/2925->self, 20.0s cast, range 60 circle
+    _Spell_SanctifiedQuakeIII = 15533, // Boss->location, 100.0s cast, range 100 circle
     _Spell_SanctifiedDark = 18091, // 2922/2923->player/2914, 20.0s cast, range 6 circle
-    DeadlyBite = 15543
 }
 
-class SanctifiedFireIII(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Spell_SanctifiedFireIII), 6, 1)
+class SanctifiedFireIII(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Spell_SanctifiedFireIII), 6)
 {
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -112,6 +114,8 @@ class TankbusterTether(BossModule module) : BossComponent(module)
 
 class BrandenAI(BossModule module) : Components.RotationModule<AutoBranden>(module);
 
+class RustingClaw(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_RustingClaw), new AOEShapeCone(10.3f, 45.Degrees()));
+
 class TadricTheVaingloriousStates : StateMachineBuilder
 {
     public TadricTheVaingloriousStates(BossModule module) : base(module)
@@ -121,7 +125,8 @@ class TadricTheVaingloriousStates : StateMachineBuilder
             .ActivateOnEnter<SanctifiedFireIII>()
             .ActivateOnEnter<TwistedTalent>()
             .ActivateOnEnter<AbyssalCharge>()
-            .ActivateOnEnter<TankbusterTether>();
+            .ActivateOnEnter<TankbusterTether>()
+            .ActivateOnEnter<RustingClaw>();
     }
 }
 

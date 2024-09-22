@@ -47,7 +47,7 @@ class Touchdown(BossModule module) : Components.RaidwideInstant(module, ActionID
     {
         base.OnEventCast(caster, spell);
         if (spell.Action.ID == (uint)AID.Massacre)
-            Activation = WorldState.FutureTime(7.3f);
+            Activation = WorldState.FutureTime(Delay);
     }
 }
 class TheScarletPrice(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID.TheScarletPrice));
