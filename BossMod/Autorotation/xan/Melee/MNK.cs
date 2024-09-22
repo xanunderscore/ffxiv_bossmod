@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FiresReply, Nadi, RoF, RoW, PB, BH, TC, Blitz }
+    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FiresReply, Nadi, RoF, RoW, PB, BH, TC, Blitz, Engage }
     public enum PotionStrategy
     {
         Manual,
@@ -64,6 +64,13 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         MultiRoF,
         Delay
     }
+    public enum EngageStrategy
+    {
+        TC,
+        Sprint,
+        FacepullDK,
+        FacepullDemo
+    }
 
     public static RotationModuleDefinition Definition()
     {
@@ -119,6 +126,12 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(BlitzStrategy.MultiRoF, "Hold blitz until Riddle of Fire and 2+ targets", minLevel: 60)
             .AddOption(BlitzStrategy.Delay, "Do not use", minLevel: 60)
             .AddAssociatedActions(AID.ElixirField, AID.FlintStrike, AID.TornadoKick, AID.ElixirBurst, AID.RisingPhoenix, AID.PhantomRush);
+
+        def.Define(Track.Engage).As<EngageStrategy>("Engage")
+            .AddOption(EngageStrategy.TC, "Thunderclap to target")
+            .AddOption(EngageStrategy.Sprint, "Sprint to melee range")
+            .AddOption(EngageStrategy.FacepullDK, "Precast Dragon Kick from melee range")
+            .AddOption(EngageStrategy.FacepullDemo, "Precast Demolish from melee range");
 
         return def;
     }
@@ -302,23 +315,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining is > 2 and < 15 && FormShiftLeft == 0)
+            if (CountdownRemaining is > 3 and < 15 && FormShiftLeft == 0)
                 PushGCD(AID.FormShift, Player);
 
-            if (CountdownRemaining < 0.7f && sprint < CountdownRemaining && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
-                PushGCD(AID.Thunderclap, primaryTarget);
-
-            // facepull precast demolish opener
-            // works with DK opener, but only at 2.0 GCD - 1.94 gives too little time to weave PB
-            //if (Bossmods.ActiveModule?.PrimaryActor is Actor a && Player.DistanceToHitbox(a) <= 3)
-            //{
-            //    if (CountdownRemaining < GetApplicationDelay(AID.Demolish))
-            //        PushGCD(AID.Demolish, a);
-
-            //    if (CountdownRemaining < 0.53f)
-            //        Hints.ForcedTarget = a;
-            //}
-
+            SmartEngage(strategy, primaryTarget);
             return;
         }
 
@@ -449,10 +449,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         var useRof = ShouldRoF(strategy);
 
         if (useRof)
-        {
-            Service.Log($"rof delay: {GCD - EarliestRoF(AnimationLockDelay)}");
             PushOGCD(AID.RiddleOfFire, Player, OGCDPriority.RiddleOfFire, GCD - EarliestRoF(AnimationLockDelay));
-        }
 
         if (ShouldRoW(strategy))
             PushOGCD(AID.RiddleOfWind, Player, OGCDPriority.RiddleOfWind);
@@ -576,6 +573,56 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         s = StatusLeft(SID.CoeurlForm);
 
         return s > 0 ? (Form.Coeurl, s) : (Form.None, 0);
+    }
+
+    private void SmartEngage(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (primaryTarget == null)
+            return;
+        var facepullAction = AID.None;
+
+        // invariant: countdown is > 0
+        switch (strategy.Option(Track.Engage).As<EngageStrategy>())
+        {
+            case EngageStrategy.TC:
+                if (CountdownRemaining < 0.7f && Player.DistanceToHitbox(primaryTarget) > 3)
+                    PushGCD(AID.Thunderclap, primaryTarget);
+
+                if (CountdownRemaining < GetApplicationDelay(AID.DragonKick))
+                    PushGCD(AID.DragonKick, primaryTarget);
+                return;
+
+            case EngageStrategy.Sprint:
+                if (CountdownRemaining < 10)
+                    PushGCD(AID.Sprint, Player);
+
+                var dist = Player.DistanceToHitbox(primaryTarget);
+                var secToMelee = dist / 7.8f;
+                // TODO account for acceleration
+                if (CountdownRemaining < secToMelee)
+                    Hints.ForcedMovement = Player.DirectionTo(primaryTarget).ToVec3();
+
+                if (CountdownRemaining < GetApplicationDelay(AID.DragonKick))
+                    PushGCD(AID.DragonKick, primaryTarget);
+                return;
+
+            // TODO delay autoattacks to prevent early pull
+            case EngageStrategy.FacepullDK:
+                facepullAction = AID.DragonKick;
+                break;
+            case EngageStrategy.FacepullDemo:
+                facepullAction = AID.Demolish;
+                break;
+        }
+
+        if (facepullAction == default)
+            return;
+
+        if (Player.DistanceToHitbox(primaryTarget) > 3)
+            Hints.ForcedMovement = Player.DirectionTo(primaryTarget).ToVec3();
+
+        if (CountdownRemaining < GetApplicationDelay(facepullAction))
+            PushGCD(facepullAction, primaryTarget);
     }
 }
 

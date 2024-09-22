@@ -366,7 +366,10 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
                 if (NumLineTargets > 1)
                     PushOGCD(AID.HissatsuGuren, BestLineTarget);
 
+                // queue senei since guren may not be unlocked (gated by job quest)
                 PushOGCD(AID.HissatsuSenei, primaryTarget);
+                // queue guren since senei may not be unlocked (unlocks at level 72)
+                PushOGCD(AID.HissatsuGuren, BestLineTarget);
             }
         }
 

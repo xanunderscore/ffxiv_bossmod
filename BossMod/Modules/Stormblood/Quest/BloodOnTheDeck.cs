@@ -45,7 +45,7 @@ class GurumiBorlumiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 248, NameID = 6289)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68098, NameID = 6289)]
 public class GurumiBorlumi(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 15.8f), new ArenaBoundsRect(8, 7.5f))
 {
     protected override bool CheckPull() => true;
