@@ -81,7 +81,7 @@ class JitteringJounce(BossModule module) : BossComponent(module)
         foreach (var (src, tslot, tar) in Tethers)
         {
             if (tslot == slot)
-                hints.AddForbiddenZone(ShapeDistance.Intersection(Meteors.Select(st => ShapeDistance.InvertedCircle(st.Position, st.HitboxRadius))), Module.CastFinishAt(src.CastInfo));
+                hints.AddForbiddenZone(ShapeDistance.Intersection(Meteors.Select(st => ShapeDistance.InvertedCircle(st.Position, st.HitboxRadius)).ToList()), Module.CastFinishAt(src.CastInfo));
             else
                 hints.AddForbiddenZone(new AOEShapeRect((tar.Position - src.Position).Length(), 3), src.Position, src.AngleTo(tar), Module.CastFinishAt(src.CastInfo));
         }

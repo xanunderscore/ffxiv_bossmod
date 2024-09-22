@@ -363,11 +363,10 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
 
             if (Kenki >= 25 && Zanshin == 0)
             {
-                // these are ordered backwards because guren unlocks first
-                if (NumLineTargets < 2)
-                    PushOGCD(AID.HissatsuSenei, primaryTarget);
+                if (NumLineTargets > 1)
+                    PushOGCD(AID.HissatsuGuren, BestLineTarget);
 
-                PushOGCD(AID.HissatsuGuren, BestLineTarget);
+                PushOGCD(AID.HissatsuSenei, primaryTarget);
             }
         }
 
