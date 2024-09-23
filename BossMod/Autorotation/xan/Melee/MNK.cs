@@ -596,10 +596,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 if (CountdownRemaining < 10)
                     PushGCD(AID.Sprint, Player);
 
-                var dist = Player.DistanceToHitbox(primaryTarget);
-                var secToMelee = dist / 7.8f;
+                var distToMelee = Player.DistanceToHitbox(primaryTarget) - 3;
+                var secToMelee = distToMelee / 7.8f;
                 // TODO account for acceleration
-                if (CountdownRemaining < secToMelee + GetApplicationDelay(AID.DragonKick))
+                if (CountdownRemaining < secToMelee + 0.5f)
                 {
                     Hints.ForcedMovement = Player.DirectionTo(primaryTarget).ToVec3();
                     PushGCD(AID.DragonKick, primaryTarget);

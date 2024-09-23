@@ -93,7 +93,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        if (Overheated)
+        if (Overheated && Unlocked(AID.HeatBlast))
         {
             if (FMFLeft > GCD)
                 PushGCD(AID.FullMetalField, BestRangedAOETarget);
@@ -226,7 +226,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             return false;
 
         if (!Unlocked(AID.Drill))
-            return ComboLastMove == AID.SlugShot;
+        {
+            return ComboLastMove == (Unlocked(AID.CleanShot) ? AID.SlugShot : AID.SplitShot);
+        }
 
         return NextToolCharge <= GCD;
     }
