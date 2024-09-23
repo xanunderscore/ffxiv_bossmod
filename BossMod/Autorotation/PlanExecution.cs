@@ -66,6 +66,7 @@ public sealed class PlanExecution
     public (bool, float) EstimateTimeToNextDowntime()
     {
         var s = FindCurrentStateData();
+        Service.Log($"current state: {s}");
         return (s.Downtime.Active, s.Downtime.TransitionIn - Math.Min(Module.StateMachine.TimeSinceTransition, s.Duration));
     }
 
