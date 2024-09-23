@@ -162,7 +162,7 @@ public sealed class PCT(RotationModuleManager manager, Actor player) : Castxan<A
                 PushOGCD(AID.LucidDreaming, Player);
         }
 
-        if (DowntimeIn > 0 && !CanFitGCD(DowntimeIn - GetApplicationDelay(AID.RainbowDrip), 1))
+        if (DowntimeIn is float d && !CanFitGCD(d - GetApplicationDelay(AID.RainbowDrip), 1))
         {
             PushOGCD(AID.Swiftcast, Player, 50);
 

@@ -66,5 +66,5 @@ class GarulaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6173)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6173)]
 public class Garula(WorldState ws, Actor primary) : BossModule(ws, primary, new(4, 248.5f), new ArenaBoundsCircle(25));

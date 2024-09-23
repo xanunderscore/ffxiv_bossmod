@@ -46,6 +46,6 @@ class YolStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6155)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6155)]
 public class Yol(WorldState ws, Actor primary) : BossModule(ws, primary, new(24, -475.5f), new ArenaBoundsCircle(20));
 

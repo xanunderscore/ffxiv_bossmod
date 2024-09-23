@@ -151,7 +151,7 @@ class BardamStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6177)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 240, NameID = 6177)]
 public class Bardam(WorldState ws, Actor primary) : BossModule(ws, primary, new(-28.5f, -14), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat;

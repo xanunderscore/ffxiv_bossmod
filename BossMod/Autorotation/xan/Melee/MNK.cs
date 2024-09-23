@@ -322,6 +322,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
+        if (UptimeIn < 20 && FormShiftLeft < UptimeIn)
+            PushGCD(AID.FormShift, Player);
+
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
         WindsReply();
@@ -353,7 +356,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
             case OffensiveStrategy.Automatic:
-                if (DowntimeIn > 0 && !CanFitGCD(DowntimeIn - GetApplicationDelay(AID.SixSidedStar), 1))
+                if (DowntimeIn is float d && !CanFitGCD(d - GetApplicationDelay(AID.SixSidedStar), 1))
                     PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
         }
