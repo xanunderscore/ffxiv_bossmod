@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Stormblood.Dungeon.D03BardamsMettle.D031Garula;
+﻿namespace BossMod.Stormblood.Dungeon.D03BardamsMettle.D031Garula;
 
 public enum OID : uint
 {

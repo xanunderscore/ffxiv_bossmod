@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Stormblood.Dungeon.D03BardamsMettle.D032Bardam;
+﻿namespace BossMod.Stormblood.Dungeon.D03BardamsMettle.D032Bardam;
 
 public enum OID : uint
 {
@@ -36,11 +36,6 @@ public enum AID : uint
     __Tremblor2 = 9605, // _Gen_HunterOfBardam->self, 3.5s cast, single-target
     _Ability_MeteorImpact = 9602, // _Gen_LoomingShadow->self, 30.0s cast, ???
 }
-
-// comet: 8 followup casts
-/*
-class Comet(BossModule module) : Components.StandardChasingAOEs(module, new AOEShapeCircle(4), ActionID.MakeSpell(AID._Weaponskill_Comet), ActionID.MakeSpell(AID._Weaponskill_Comet1), 5, 1.5f, 8);
-*/
 
 class Comet(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Comet), 4);
 class Comet1(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Comet1), 4);
@@ -160,5 +155,11 @@ class BardamStates : StateMachineBuilder
 public class Bardam(WorldState ws, Actor primary) : BossModule(ws, primary, new(-28.5f, -14), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat;
+
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        foreach (var h in hints.PotentialTargets)
+            h.Priority = AIHints.Enemy.PriorityForbidFully;
+    }
 }
 
