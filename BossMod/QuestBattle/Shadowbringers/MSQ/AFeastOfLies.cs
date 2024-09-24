@@ -31,6 +31,6 @@ public class AFeastOfLies(WorldState ws) : QuestBattle(ws)
             }),
 
         new QuestObjective(ws)
-            .WithConnection(new Vector3(0, 82.00f, 18))
+            .WithConnection(new Vector3(0, 82.9f, -38))
     ];
 }
