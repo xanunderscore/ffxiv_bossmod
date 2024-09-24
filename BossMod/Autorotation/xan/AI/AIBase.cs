@@ -18,10 +18,7 @@ public abstract class AIBase(RotationModuleManager manager, Actor player) : Targ
     internal bool IsCastReactable(Actor act)
     {
         var castInfo = act.CastInfo;
-        if (castInfo == null || castInfo.TotalTime <= 1.5 || castInfo.EventHappened)
-            return false;
-
-        return castInfo.NPCTotalTime - castInfo.NPCRemainingTime > 1;
+        return !(castInfo == null || castInfo.TotalTime <= 1.5 || castInfo.EventHappened);
     }
 
     internal IEnumerable<AIHints.Enemy> EnemiesAutoingMe => Hints.PriorityTargets.Where(x => x.Actor.CastInfo == null && x.Actor.TargetID == Player.InstanceID && Player.DistanceToHitbox(x.Actor) <= 6);

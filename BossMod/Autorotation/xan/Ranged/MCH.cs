@@ -152,6 +152,9 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining is > 0 and < 5 && ReassembleLeft == 0)
             PushOGCD(AID.Reassemble, Player);
 
+        if (CountdownRemaining == null && !Player.InCombat && Player.DistanceToHitbox(primaryTarget) <= 25 && NextToolCharge == 0 && ReassembleLeft == 0)
+            PushGCD(AID.Reassemble, Player, 30);
+
         if (IsPausedForFlamethrower || !Player.InCombat || primaryTarget == null)
             return;
 
