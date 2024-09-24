@@ -106,13 +106,15 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         return (0, Kaeshi.None);
     }
 
+    // TODO: fix GCD priorities - use kaeshi as fallback action (during forced movement, etc)
+    // use kaeshi goken asap in aoe? we usually arent holding for buffs with 3 targets
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
 
         var gauge = GetGauge<SamuraiGauge>();
-        // other kaeshi are distinguished by status ID now
         KaeshiAction = GetKaeshiAction();
+        // other kaeshi are distinguished by status ID now
         KaeshiNamikiri = gauge.Kaeshi == FFXIVClientStructs.FFXIV.Client.Game.Gauge.KaeshiAction.Namikiri;
         Kenki = gauge.Kenki;
         Meditation = gauge.MeditationStacks;
@@ -214,11 +216,8 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (Unlocked(AID.Shifu) && !CanFitGCD(FukaLeft, 2))
             return AID.Shifu;
 
-        // TODO fix loop, can't track tsubame anymore
-        // if (NumStickers == 0 && GCDSUntilNextTsubame is 19 or 21)
-        //     PushGCD(AID.Yukikaze, primaryTarget);
-
-        // TODO use yukikaze if we need to re apply higanbana?
+        if (Unlocked(AID.Yukikaze) && !Ice)
+            return AID.Yukikaze;
 
         if (Unlocked(AID.Shifu) && !Flower && FugetsuLeft > FukaLeft)
             return AID.Shifu;
@@ -226,11 +225,8 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (Unlocked(AID.Jinpu) && !Moon)
             return AID.Jinpu;
 
-        if (Unlocked(AID.Yukikaze) && !Ice)
-            return AID.Yukikaze;
-
         // fallback if we are full on sen but can't use midare bc of movement restrictions or w/e
-        return Unlocked(AID.Jinpu) ? AID.Jinpu : AID.None;
+        return Unlocked(AID.Yukikaze) ? AID.Yukikaze : AID.None;
     }
 
     private AID MeikyoAction
@@ -276,37 +272,51 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         if (KaeshiNamikiri)
             PushGCD(AID.KaeshiNamikiri, BestOgiTarget);
 
-        var (left, action) = KaeshiAction;
-        if (action == Kaeshi.None)
+        var (aid, target) = KaeshiToAID(primaryTarget, KaeshiAction.Action);
+        if (aid == default)
             return;
-        var (aid, target, numStickers) = KaeshiToAID(primaryTarget, action);
 
-        if (RaidBuffsLeft > GCD || !CanFitGCD(left, 1) || NumStickers >= numStickers)
+        if (RaidBuffsLeft > GCD || !CanFitGCD(KaeshiAction.Left, 1))
             PushGCD(aid, target);
     }
 
-    private (AID, Actor?, int) KaeshiToAID(Actor? primaryTarget, Kaeshi k) => k switch
+    private (AID, Actor?) KaeshiToAID(Actor? primaryTarget, Kaeshi k) => k switch
     {
-        Kaeshi.Setsugekka => (AID.KaeshiSetsugekka, primaryTarget, 3),
-        Kaeshi.TendoSetsugekka => (AID.TendoKaeshiSetsugekka, primaryTarget, 3),
-        Kaeshi.Goken => (AID.KaeshiGoken, Player, 2),
-        Kaeshi.TendoGoken => (AID.TendoKaeshiGoken, Player, 2),
-        _ => (default, null, int.MaxValue)
+        Kaeshi.Setsugekka => (AID.KaeshiSetsugekka, primaryTarget),
+        Kaeshi.TendoSetsugekka => (AID.TendoKaeshiSetsugekka, primaryTarget),
+        Kaeshi.Goken => (AID.KaeshiGoken, Player),
+        Kaeshi.TendoGoken => (AID.TendoKaeshiGoken, Player),
+        _ => (default, null)
     };
 
     private void UseIaijutsu(Actor? primaryTarget)
     {
-        if (!HaveFugetsu)
+        if (!HaveFugetsu || NumStickers == 0)
             return;
 
         if (NumStickers == 1 && TargetDotLeft < 10 && FukaLeft > 0)
             PushGCD(AID.Higanbana, BestDotTarget);
 
+        void kaeshi()
+        {
+            var (a, k) = KaeshiToAID(primaryTarget, KaeshiAction.Action);
+            if (a == default)
+                return;
+
+            PushGCD(a, k);
+        }
+
         if (NumStickers == 2 && NumTenkaTargets > 2)
+        {
+            kaeshi();
             PushGCD(Tendo > GCD ? AID.TendoGoken : AID.TenkaGoken, Player);
+        }
 
         if (NumStickers == 3)
+        {
+            kaeshi();
             PushGCD(Tendo > GCD ? AID.TendoSetsugekka : AID.MidareSetsugekka, primaryTarget);
+        }
     }
 
     private void EmergencyMeikyo(StrategyValues strategy)

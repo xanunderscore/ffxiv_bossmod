@@ -81,6 +81,9 @@ public class GenericTowers(BossModule module, ActionID aid = default) : CastCoun
                 zones.Add(ShapeDistance.Circle(t.Position, t.Radius));
             }
         }
+        if (zones.Count == 0)
+            return;
+
         var zoneUnion = ShapeDistance.Union(zones);
         hints.AddForbiddenZone(haveTowersToSoak ? p => -zoneUnion(p) : zoneUnion, firstActivation);
     }
