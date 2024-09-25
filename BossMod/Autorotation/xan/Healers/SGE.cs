@@ -162,7 +162,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
         if ((Gall == 3 || Gall == 2 && NextGall < 2.5f) && Player.HPMP.CurMP <= 9000 && strategy.Option(Track.Druo).As<DruoStrategy>() == DruoStrategy.Auto)
         {
-            var healTarget = World.Party.WithoutSlot().MinBy(a => (float)a.HPMP.CurHP / a.HPMP.MaxHP);
+            var healTarget = World.Party.WithoutSlot(excludeAlliance: true).MinBy(x => (float)x.HPMP.CurHP / x.HPMP.MaxHP);
             PushOGCD(AID.Druochole, healTarget);
         }
 
@@ -192,6 +192,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
     private Actor? FindKardiaTarget()
     {
+        var party = World.Party.WithoutSlot(excludeAlliance: true);
         var total = 0;
         var tanks = 0;
         Actor? tank = null;

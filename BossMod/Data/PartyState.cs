@@ -9,6 +9,9 @@
 // slots 24-63 are occupied by friendly NPCs, i.e. actors with type = Enemy who have the IsAlly and IsTargetable flags set. certain modules need to treat NPCs as regular party members for the purpose of mechanic resolution
 // we limit to 64 slots to facilitate a bitmask for the entire "party" state fitting inside one ulong
 // in trust, buddies are considered party members with content-id 0 (but non-zero actor id, they are always in world)
+// slots 24-63 are occupied by friendly NPCs, i.e. actors with type = Enemy who have the IsAlly and IsTargetable flags set
+// certain modules need to treat NPCs as regular party members for the purpose of mechanic resolution
+// we limit to 64 slots to facilitate a bitmask for the entire "party" state fitting inside one ulong
 // party slot is considered 'empty' if both ids are 0
 public sealed class PartyState
 {
@@ -48,10 +51,12 @@ public sealed class PartyState
     }
 
     // select non-null and optionally alive raid members
-    public IEnumerable<Actor> WithoutSlot(bool includeDead = false, bool partyOnly = false)
+    public IEnumerable<Actor> WithoutSlot(bool includeDead = false, bool excludeAlliance = false)
     {
-        for (int i = 0, size = partyOnly ? MaxPartySize : MaxAllianceSize; i < size; ++i)
+        for (int i = 0; i < MaxAllies; ++i)
         {
+            if (excludeAlliance && i is >= MaxPartySize and < MaxAllianceSize)
+                continue;
             var player = _actors[i];
             if (player == null)
                 continue;
@@ -70,10 +75,12 @@ public sealed class PartyState
         }
     }
 
-    public IEnumerable<(int, Actor)> WithSlot(bool includeDead = false, bool partyOnly = false)
+    public IEnumerable<(int, Actor)> WithSlot(bool includeDead = false, bool excludeAlliance = false)
     {
-        for (int i = 0, size = partyOnly ? MaxPartySize : MaxAllianceSize; i < size; ++i)
+        for (int i = 0; i < MaxAllies; ++i)
         {
+            if (excludeAlliance && i is >= MaxPartySize and < MaxAllianceSize)
+                continue;
             var player = _actors[i];
             if (player == null)
                 continue;

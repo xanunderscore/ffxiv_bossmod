@@ -108,6 +108,7 @@ public sealed class Actor(ulong instanceID, uint oid, int spawnIndex, string nam
     // status "Directional Disregard" - applied temporarily on some DT raid bosses
     public bool Omnidirectional => Statuses.Any(s => s.ID == 3808) || Utils.CharacterIsOmnidirectional(OID);
     public bool IsDeadOrDestroyed => IsDead || IsDestroyed;
+    public bool IsFriendlyNPC => Type == ActorType.Enemy && IsAlly && IsTargetable;
 
     public bool IsFriendlyNPC => Type == ActorType.Enemy && IsAlly && IsTargetable;
 
