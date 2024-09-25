@@ -240,7 +240,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
-        if (!_config.UseDash || player.Statuses.Any(s => (ActionsProhibitedStatus)s.ID is ActionsProhibitedStatus.OutOfTheAction or ActionsProhibitedStatus.InEvent || RotationModuleManager.IsRoleplayStatus(s)))
+        if (!_config.UseDash || player.Statuses.Any(s => (ActionsProhibitedStatus)s.ID is ActionsProhibitedStatus.OutOfTheAction or ActionsProhibitedStatus.InEvent || RotationModuleManager.IsTransformStatus(s)))
             return;
 
         var moveDistance = direction.Length();
