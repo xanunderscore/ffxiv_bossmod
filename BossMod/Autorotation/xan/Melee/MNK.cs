@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
-    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FiresReply, Nadi, RoF, RoW, PB, BH, TC, Blitz, Engage }
+    public enum Track { Potion = SharedTrack.Buffs, SSS, Meditation, FormShift, FiresReply, Nadi, RoF, RoW, PB, BH, TC, Blitz, Engage }
     public enum PotionStrategy
     {
         Manual,
@@ -90,6 +90,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             .AddOption(MeditationStrategy.Force, "Use even if enemy is in melee range")
             .AddOption(MeditationStrategy.Delay, "Do not use")
             .AddAssociatedActions(AID.SteeledMeditation);
+
+        def.DefineSimple(Track.FormShift, "FormShift", minLevel: 52).AddAssociatedActions(AID.FormShift);
 
         def.Define(Track.FiresReply).As<FRStrategy>("FiresReply")
             .AddOption(FRStrategy.Automatic, "Use after Opo GCD", minLevel: 100)
@@ -426,7 +428,16 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         if (ShouldRoF(strategy, 3) || CanFitGCD(FireLeft, 3))
+        {
+            // in case of drift or whatever, if we end up wanting to triple weave after opo, delay PB in favor of using FR to get formless
+            // check if BH cooldown is >118s. if we only checked CanWeave for both then autorotation would do BH -> PB because RoF is slightly delayed to get the optimal late weave
+            var bhImminentOrUsed = CanWeave(AID.Brotherhood) || ReadyIn(AID.Brotherhood) + AttackGCDLength > 120;
+
+            if (CombatTimer > 10 && bhImminentOrUsed && CanWeave(AID.RiddleOfFire) && Unlocked(AID.FiresReply))
+                return;
+
             PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
+        }
     }
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
@@ -446,7 +457,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         QueuePB(strategy);
 
-        if (bhUse == OffensiveStrategy.Automatic && (CombatTimer >= 10 || BeastCount == 2) && DowntimeIn > World.Client.AnimationLock + 20)
+        if (bhUse == OffensiveStrategy.Automatic && (CombatTimer > 10 || BeastCount == 2) && DowntimeIn > World.Client.AnimationLock + 20)
             PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
 
         var useRof = ShouldRoF(strategy);
@@ -475,6 +486,22 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     private void Meditate(StrategyValues strategy, Actor? primaryTarget)
     {
         if (Chakra >= 5 || !Unlocked(AID.SteeledMeditation) || Player.MountId > 0)
+            return;
+
+        var prio = strategy.Option(Track.Meditation).As<MeditationStrategy>() switch
+        {
+            MeditationStrategy.Force => GCDPriority.MeditateForce,
+            MeditationStrategy.Safe => Player.InCombat && primaryTarget != null ? GCDPriority.None : GCDPriority.Meditate,
+            MeditationStrategy.Greedy => Player.DistanceToHitbox(primaryTarget) > 3 ? GCDPriority.Meditate : GCDPriority.None,
+            _ => GCDPriority.None,
+        };
+
+        PushGCD(AID.SteeledMeditation, Player, prio);
+    }
+
+    private void FormShift(StrategyValues strategy, Actor? primaryTarget)
+    {
+        if (!Unlocked(AID.FormShift) || FormShiftLeft > 25)
             return;
 
         var prio = strategy.Option(Track.Meditation).As<MeditationStrategy>() switch
