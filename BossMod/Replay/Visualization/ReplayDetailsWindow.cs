@@ -70,9 +70,9 @@ class ReplayDetailsWindow : UIWindow
         DrawControlRow();
         DrawTimelineRow();
 
-        if (ImGui.BeginTable("table", 2, ImGuiTableFlags.SizingStretchSame))
+        if (ImGui.BeginTable("table", 2, ImGuiTableFlags.SizingStretchProp))
         {
-            ImGui.TableSetupColumn("###arena");
+            ImGui.TableSetupColumn("###arena", ImGuiTableColumnFlags.WidthFixed, 800);
             ImGui.TableSetupColumn("###meta");
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
@@ -140,21 +140,21 @@ class ReplayDetailsWindow : UIWindow
                         }
                     }
 
-                // TODO: more fancy action history/queue...
-                ImGui.TextUnformatted($"Modules: {_rmm}");
-                ImGui.TextUnformatted($"GCD={_mgr.WorldState.Client.Cooldowns[ActionDefinitions.GCDGroup].Remaining:f3}, AnimLock={_mgr.WorldState.Client.AnimationLock:f3}, Combo={_mgr.WorldState.Client.ComboState.Remaining:f3}, RBIn={_mgr.RaidCooldowns.NextDamageBuffIn():f3}");
-                var player = _mgr.WorldState.Party.Player();
-                if (player != null)
-                {
-                    var best = _hints.ActionsToExecute.FindBest(_mgr.WorldState, player, _mgr.WorldState.Client.Cooldowns, _mgr.WorldState.Client.AnimationLock, _hints, 0.02f);
-                    ImGui.TextUnformatted($"! {best.Action} ({best.Priority:f2}) in {best.Delay:f3} @ {best.Target}");
-                }
-                foreach (var a in _hints.ActionsToExecute.Entries)
-                {
-                    ImGui.TextUnformatted($"> {a.Action} ({a.Priority:f2}) in {a.Delay:f3} @ {a.Target}");
+                    // TODO: more fancy action history/queue...
+                    ImGui.TextUnformatted($"Modules: {_rmm}");
+                    ImGui.TextUnformatted($"GCD={_mgr.WorldState.Client.Cooldowns[ActionDefinitions.GCDGroup].Remaining:f3}, AnimLock={_mgr.WorldState.Client.AnimationLock:f3}, Combo={_mgr.WorldState.Client.ComboState.Remaining:f3}, RBIn={_mgr.RaidCooldowns.NextDamageBuffIn():f3}");
+                    var player = _mgr.WorldState.Party.Player();
+                    if (player != null)
+                    {
+                        var best = _hints.ActionsToExecute.FindBest(_mgr.WorldState, player, _mgr.WorldState.Client.Cooldowns, _mgr.WorldState.Client.AnimationLock, _hints, 0.02f);
+                        ImGui.TextUnformatted($"! {best.Action} ({best.Priority:f2}) in {best.Delay:f3} @ {best.Target}");
+                    }
+                    foreach (var a in _hints.ActionsToExecute.Entries)
+                    {
+                        ImGui.TextUnformatted($"> {a.Action} ({a.Priority:f2}) in {a.Delay:f3} @ {a.Target}");
+                    }
                 }
             }
-        }
 
             DrawPartyTable();
             DrawEnemyTables();
