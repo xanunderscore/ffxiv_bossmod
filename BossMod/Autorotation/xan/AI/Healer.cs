@@ -115,7 +115,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         // copied from veyn's HealerActions in EW bossmod - i am a thief
         BitMask esunas = new();
-        foreach (var caster in World.Party.WithoutSlot(partyOnly: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
+        foreach (var caster in World.Party.WithoutSlot(excludeAlliance: true).Where(a => a.CastInfo?.IsSpell(BossMod.WHM.AID.Esuna) ?? false))
             esunas.Set(World.Party.FindSlot(caster.CastInfo!.TargetID));
 
         for (var i = 0; i < PartyState.MaxAllies; i++)
