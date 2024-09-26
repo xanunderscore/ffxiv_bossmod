@@ -67,6 +67,8 @@ class ReplayDetailsWindow : UIWindow
             MoveTo(_curTime + (curFrame - _prevFrame) * _playSpeed);
         _prevFrame = curFrame;
 
+        var resetPF = false;
+
         DrawControlRow();
         DrawTimelineRow();
 
@@ -102,25 +104,26 @@ class ReplayDetailsWindow : UIWindow
                 }
                 ImGui.TextUnformatted($"Current state: {_mgr.ActiveModule.StateMachine.ActiveState?.ID:X}, Time since pull: {_mgr.ActiveModule.StateMachine.TimeSinceActivation:f3}, Draw time: {(drawTimerPost - drawTimerPre).TotalMilliseconds:f3}ms, Components: {compList}, Player offset: {povOffsetString}, Draw cache: {_mgr.ActiveModule.Arena.DrawCacheStats()}");
 
-                ImGui.TableNextColumn();
+            if (ImGui.CollapsingHeader("Plan execution"))
+            {
+                resetPF |= UIRotationWindow.DrawRotationSelector(_rmm);
 
-                if (ImGui.CollapsingHeader("Plan execution"))
+                if (ImGui.Button("Timeline"))
                 {
-                    if (ImGui.Button("Timeline"))
-                    {
-                        _ = new StateMachineWindow(_mgr.ActiveModule);
-                    }
+                    _ = new StateMachineWindow(_mgr.ActiveModule);
+                }
 
-                    if (_mgr.ActiveModule.Info?.PlanLevel > 0)
+                if (_mgr.ActiveModule.Info?.PlanLevel > 0)
+                {
+                    ImGui.SameLine();
+                    var plans = _rotationDB.Plans.GetPlans(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
+                    var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "Plan");
+                    if (newSel != plans.SelectedIndex)
                     {
-                        ImGui.SameLine();
-                        var plans = _rotationDB.Plans.GetPlans(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
-                        var newSel = UIPlanDatabaseEditor.DrawPlanCombo(plans, plans.SelectedIndex, "Plan");
-                        if (newSel != plans.SelectedIndex)
-                        {
-                            plans.SelectedIndex = newSel;
-                            _rotationDB.Plans.ModifyManifest(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
-                        }
+                        plans.SelectedIndex = newSel;
+                        _rotationDB.Plans.ModifyManifest(_mgr.ActiveModule.GetType(), _mgr.WorldState.Party.Player()?.Class ?? Class.None);
+                        resetPF = true;
+                    }
 
                         ImGui.SameLine();
                         if (ImGui.Button(plans.SelectedIndex >= 0 ? "Edit" : "New"))
@@ -156,18 +159,18 @@ class ReplayDetailsWindow : UIWindow
                 }
             }
 
-            DrawPartyTable();
-            DrawEnemyTables();
-            DrawAllActorsTable();
-            DrawAI();
+        resetPF |= DrawPartyTable();
+        DrawEnemyTables();
+        DrawAllActorsTable();
+        DrawAI();
 
-            if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
-                _events.Draw();
-            if (ImGui.CollapsingHeader("Analysis"))
-                _analysis.Draw();
+        if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
+            _events.Draw();
+        if (ImGui.CollapsingHeader("Analysis"))
+            _analysis.Draw();
 
-            ImGui.EndTable();
-        }
+        if (resetPF)
+            ResetPF();
     }
 
     private void DrawControlRow()
@@ -305,11 +308,12 @@ class ReplayDetailsWindow : UIWindow
         }
     }
 
-    private void DrawPartyTable()
+    private bool DrawPartyTable()
     {
         if (!ImGui.CollapsingHeader("Party"))
-            return;
+            return false;
 
+        var resetPF = false;
         ImGui.BeginTable("party", 11, ImGuiTableFlags.Resizable);
         ImGui.TableSetupColumn("POV", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 25);
         ImGui.TableSetupColumn("Class", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize, 30);
@@ -333,7 +337,7 @@ class ReplayDetailsWindow : UIWindow
             if (ImGui.Checkbox("###POV", ref isPOV) && isPOV)
             {
                 _povSlot = slot;
-                ResetPF();
+                resetPF = true;
             }
 
             ImGui.TableNextColumn();
@@ -357,6 +361,7 @@ class ReplayDetailsWindow : UIWindow
             ImGui.PopID();
         }
         ImGui.EndTable();
+        return resetPF;
     }
 
     private void DrawEnemyTables()
@@ -434,12 +439,7 @@ class ReplayDetailsWindow : UIWindow
         if (player == null)
             return;
 
-        if (_pfVisu == null)
-        {
-            var playerAssignment = Service.Config.Get<PartyRolesConfig>()[_mgr.WorldState.Party.Members[_povSlot].ContentId];
-            var pfTank = playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_mgr.WorldState.Party.WithoutSlot().Any(p => p != player && p.Role == Role.Tank);
-            _pfVisu = new(_hints, _mgr.WorldState, player, player.TargetID, e => (e, _pfTargetRadius, _pfPositional, pfTank));
-        }
+        _pfVisu ??= new(_hints, _mgr.WorldState, player, _pfTargetRadius);
         _pfVisu.Draw(_pfTree);
 
         bool rebuild = false;

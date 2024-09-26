@@ -107,6 +107,11 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
         if (NumAOETargets >= needAOETargets)
+        {
+            // TODO: fixme xan!
+            //if (needAOETargets == 1)
+            //    Hints.RecommendedRangeToTarget = 5f;
+
             PushGCD(AID.ArtOfWar1, Player);
 
         PushGCD(AID.Ruin1, primaryTarget);
