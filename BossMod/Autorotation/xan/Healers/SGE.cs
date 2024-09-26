@@ -192,11 +192,10 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
 
     private Actor? FindKardiaTarget()
     {
-        var party = World.Party.WithoutSlot(excludeAlliance: true);
         var total = 0;
         var tanks = 0;
         Actor? tank = null;
-        foreach (var actor in World.Party.WithoutSlot())
+        foreach (var actor in World.Party.WithoutSlot(excludeAlliance: true))
         {
             total++;
             if (actor.Class.GetRole() == Role.Tank)
