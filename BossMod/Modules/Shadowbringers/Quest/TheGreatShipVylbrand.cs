@@ -1,5 +1,4 @@
-﻿/*
-namespace BossMod.Shadowbringers.Quest.TheGreatShipVylbrand;
+﻿namespace BossMod.Shadowbringers.Quest.TheGreatShipVylbrand;
 
 public enum OID : uint
 {
@@ -118,16 +117,10 @@ public class SecondOrderRocksplitterStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 764, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 764)]
 public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(27))
 {
-    protected override bool CheckPull() => true;
-
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
-        Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-    }
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
@@ -138,4 +131,3 @@ public class SecondOrderRocksplitter(WorldState ws, Actor primary) : BossModule(
                 e.Priority = -1;
     }
 }
-*/
