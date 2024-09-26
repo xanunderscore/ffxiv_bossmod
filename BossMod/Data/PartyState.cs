@@ -88,15 +88,6 @@ public sealed class PartyState
                 continue;
             yield return (i, player);
         }
-        for (int i = MaxAllianceSize; i < MaxAllies; ++i)
-        {
-            var player = _actors[i];
-            if (player == null)
-                continue;
-            if (player.IsDead && !includeDead)
-                continue;
-            yield return (i, player);
-        }
     }
 
     // find a slot index containing specified player (by instance ID); returns -1 if not found

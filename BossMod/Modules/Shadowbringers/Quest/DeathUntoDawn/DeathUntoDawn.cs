@@ -50,7 +50,6 @@ public enum SID : uint
     Invincibility = 325, // Lunar Ravana
 }
 
-/*
 class DUDStates : StateMachineBuilder
 {
     public DUDStates(BossModule module) : base(module)
@@ -59,37 +58,11 @@ class DUDStates : StateMachineBuilder
 
         ushort GetRPParam() => (ushort)((Module.Raid.Player()?.FindStatus(Roleplay.SID.RolePlaying)?.Extra ?? 0) & 0xFF);
 
-        bool P0End() => GetRPParam() == AlisaieAI.StatusParam || P1End();
-        bool P1End() => GetRPParam() == UriangerAI.StatusParam || P2End();
+        // bool P1End() => GetRPParam() == UriangerAI.StatusParam || P2End();
         bool P2End() => GetRPParam() == GrahaAI.StatusParam || P3End();
         bool P3End() => Module.Enemies(OID.LunarIfrit).Any(x => x.IsTargetable) || P4End();
         bool P4End() => DutyEnd();
 
-        TrivialPhase().Raw.Update = P0End;
-        TrivialPhase(1)
-            .ActivateOnEnter<AlisaieAI>()
-            .ActivateOnEnter<AntiPersonnelMissile>()
-            .ActivateOnEnter<MRVMissile>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(0, -180);
-            })
-            .Raw.Update = P1End;
-        TrivialPhase(2)
-            .ActivateOnEnter<UriangerAI>()
-            .ActivateOnEnter<LunarGungnir>()
-            .ActivateOnEnter<Gungnir>()
-            .ActivateOnEnter<Gagnrath>()
-            .ActivateOnEnter<GungnirSpread>()
-            .ActivateOnEnter<GunmetalSoul>()
-            .ActivateOnEnter<LunarGungnir2>()
-            .ActivateOnEnter<LeftZantetsuken>()
-            .ActivateOnEnter<RightZantetsuken>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(146.5f, 84.5f);
-            })
-            .Raw.Update = P2End;
         TrivialPhase(3)
             .ActivateOnEnter<GrahaAI>()
             .ActivateOnEnter<DirectionalParry>()
@@ -112,15 +85,12 @@ class DUDStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 780, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
-public class DUD(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
+/*
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 780, PrimaryActorOID = 0x321D)]
+public class DUD(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -180), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => true;
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
-        Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-    }
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 }
 */

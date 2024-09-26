@@ -38,7 +38,7 @@ public class QuestObjective(WorldState ws)
     public bool ForceStopNavigation;
     public bool Completed;
 
-    public Action<Actor, AIHints> AddAIHints = (_, _) => { };
+    public Action<Actor, AIHints, float> AddAIHints = (_, _, _) => { };
     public Action<Actor> OnModelStateChanged = (_) => { };
     public Action<Actor, ActorStatus> OnStatusGain = (_, _) => { };
     public Action<Actor, ActorStatus> OnStatusLose = (_, _) => { };
@@ -137,6 +137,12 @@ public class QuestObjective(WorldState ws)
 
     public QuestObjective Hints(Action<Actor, AIHints> addHints)
     {
+        AddAIHints += (a, b, c) => addHints(a, b);
+        return this;
+    }
+
+    public QuestObjective Hints(Action<Actor, AIHints, float> addHints)
+    {
         AddAIHints += addHints;
         return this;
     }
@@ -146,7 +152,7 @@ public class QuestObjective(WorldState ws)
 
     public QuestObjective WithInteract(uint targetOid, bool allowInCombat = false)
     {
-        AddAIHints += (player, hints) =>
+        AddAIHints += (player, hints, _) =>
         {
             if (!player.InCombat || allowInCombat)
                 hints.InteractWithOID(World, targetOid);
@@ -250,7 +256,7 @@ public abstract class QuestBattle : IDisposable
     public void AddAIHints(Actor player, AIHints hints, float maxCastTime)
     {
         AddQuestAIHints(player, hints, maxCastTime);
-        CurrentObjective?.AddAIHints(player, hints);
+        CurrentObjective?.AddAIHints(player, hints, maxCastTime);
     }
     public void Advance() => CurrentObjectiveIndex++;
     public void Reset() => CurrentObjectiveIndex = 0;

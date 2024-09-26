@@ -30,7 +30,7 @@ public class TheProtectorAndTheDestroyer(WorldState ws) : QuestBattle(ws)
                     }
                 };
 
-                obj.AddAIHints += (player, hints) => {
+                obj.AddAIHints += (player, hints, _) => {
                     if (!player.InCombat)
                         hints.InteractWithTarget = null; // World.Actors.FirstOrDefault(x => sadCitizens.Contains(Utils.GameObjectInternal(Service.ObjectTable[x.SpawnIndex])->LayoutId) && x.IsTargetable);
                 };

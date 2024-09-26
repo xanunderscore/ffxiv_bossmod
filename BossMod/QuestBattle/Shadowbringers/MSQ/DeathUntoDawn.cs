@@ -1,15 +1,18 @@
-﻿using RID = BossMod.Roleplay.AID;
+﻿using BossMod.Autorotation;
+using RID = BossMod.Roleplay.AID;
 
-namespace BossMod.Shadowbringers.Quest.DeathUntoDawn;
+namespace BossMod.QuestBattle.Shadowbringers.MSQ;
 
-class AlisaieAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
+public class AutoAlisaie(WorldState ws) : StatelessRotation(ws, 25)
 {
     public const ushort StatusParam = 157;
 
-    public override void Execute(Actor? primaryTarget)
+    protected override void Exec(Actor? primaryTarget)
     {
         if (primaryTarget == null || primaryTarget.OID == 0x1EB183)
             return;
+
+        Hints.RecommendedRangeToTarget = 25;
 
         switch (ComboAction)
         {
@@ -53,18 +56,40 @@ class AlisaieAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
         UseAction(RID.ShbFleche, primaryTarget);
         UseAction(RID.ShbContreSixte, primaryTarget);
     }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        base.AddAIHints(slot, actor, assignment, hints);
-        hints.InteractWithTarget = Module.Enemies(0x1EB183).FirstOrDefault(x => x.IsTargetable);
-        foreach (var e in hints.PotentialTargets)
-            e.Priority = 0;
-
-        if (hints.InteractWithTarget != null)
-            Arena.Center = actor.Position;
-    }
 }
 
-class AntiPersonnelMissile(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_AntiPersonnelMissile), 6);
-class MRVMissile(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_MRVMissile), 12, maxCasts: 6);
+[Quest(BossModuleInfo.Maturity.Contributed, 780)]
+internal class DeathUntoDawn(WorldState ws) : QuestBattle(ws)
+{
+    private readonly AutoAlisaie _ai = new(ws);
+
+    public override List<QuestObjective> DefineObjectives(WorldState ws) => [
+        new QuestObjective(ws)
+            .With(obj => {
+                obj.OnDirectorUpdate += (diru) => obj.CompleteIf(diru.UpdateID == 0x10000002 && diru.Param1 == 0x68B1);
+            })
+            .PauseForCombat(false),
+
+        new QuestObjective(ws)
+            .WithConnection(new Vector3(-45.56f, -22.71f, -101.05f))
+            .PauseForCombat(false)
+            .With(obj => {
+                obj.OnStatusGain += (act, status) => obj.CompleteIf(status.ID == (uint)Roleplay.SID.RolePlaying && (status.Extra & 0xFF) == 157);
+            }),
+
+        new QuestObjective(ws)
+            .With(obj => {
+                obj.AddAIHints += (player, hints, maxcast) => {
+                    hints.Center = new(0, -180);
+                    hints.Bounds = new ArenaBoundsCircle(20);
+                    _ai.Execute(player, hints, maxcast);
+                };
+            })
+            .CompleteOnKilled(0x3376),
+
+        new QuestObjective(ws)
+            .WithConnection(new Vector3(1.64f, -16.00f, -195.63f))
+            .WithInteract(0x1EB183)
+            .CompleteOnState7(0x1EB183)
+    ];
+}
