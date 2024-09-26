@@ -33,20 +33,7 @@ class ConcussiveOscillationBoss(BossModule module) : LocationTargetedAOEs(module
 class ConcussiveOscillation(BossModule module) : LocationTargetedAOEs(module, ActionID.MakeSpell(AID.ConcussiveOscillation), 8);
 class AmorphousApplause(BossModule module) : SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AmorphousApplause), new AOEShapeCone(30, 90.Degrees()));
 
-class Hydroball(BossModule module) : StackWithCastTargets(module, ActionID.MakeSpell(AID.Hydroball), 5, 4)
-{
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        Actor? actorCheck = WorldState.Party[1];
-        if (actorCheck != null)
-        {
-            foreach (var s in ActiveStacks)
-            {
-                hints.AddForbiddenZone(ShapeDistance.InvertedCircle(actorCheck.Position, 3), s.Activation);
-            }
-        }
-    }
-}
+class Hydroball(BossModule module) : StackWithCastTargets(module, ActionID.MakeSpell(AID.Hydroball), 5, 4);
 
 class D011LugatStates : StateMachineBuilder
 {
