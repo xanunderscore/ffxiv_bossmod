@@ -312,6 +312,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         UpdatePositionals(primaryTarget, NextPositional, TrueNorthLeft > GCD);
 
         Meditate(strategy, primaryTarget);
+        FormShift(strategy, primaryTarget);
 
         var sprint = StatusLeft(BossMod.SGE.SID.Sprint);
 
@@ -323,9 +324,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             SmartEngage(strategy, primaryTarget);
             return;
         }
-
-        if (UptimeIn < 20 && FormShiftLeft < UptimeIn)
-            PushGCD(AID.FormShift, Player);
 
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
@@ -488,31 +486,49 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (Chakra >= 5 || !Unlocked(AID.SteeledMeditation) || Player.MountId > 0)
             return;
 
-        var prio = strategy.Option(Track.Meditation).As<MeditationStrategy>() switch
+        var prio = GCDPriority.None;
+
+        switch (strategy.Option(Track.Meditation).As<MeditationStrategy>())
         {
-            MeditationStrategy.Force => GCDPriority.MeditateForce,
-            MeditationStrategy.Safe => Player.InCombat && primaryTarget != null ? GCDPriority.None : GCDPriority.Meditate,
-            MeditationStrategy.Greedy => Player.DistanceToHitbox(primaryTarget) > 3 ? GCDPriority.Meditate : GCDPriority.None,
-            _ => GCDPriority.None,
-        };
+            case MeditationStrategy.Force:
+                prio = GCDPriority.MeditateForce;
+                break;
+            case MeditationStrategy.Safe:
+                if (!Player.InCombat)
+                    prio = GCDPriority.Meditate;
+
+                // gross
+                if (primaryTarget == null && (UptimeIn ?? float.MaxValue) > GCD + 1)
+                    prio = GCDPriority.Meditate;
+                break;
+            case MeditationStrategy.Greedy:
+                if (Player.DistanceToHitbox(primaryTarget) > 3)
+                    prio = GCDPriority.Meditate;
+                break;
+        }
 
         PushGCD(AID.SteeledMeditation, Player, prio);
     }
 
     private void FormShift(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Unlocked(AID.FormShift) || FormShiftLeft > 25)
+        if (!Unlocked(AID.FormShift))
             return;
 
-        var prio = strategy.Option(Track.Meditation).As<MeditationStrategy>() switch
-        {
-            MeditationStrategy.Force => GCDPriority.MeditateForce,
-            MeditationStrategy.Safe => Player.InCombat && primaryTarget != null ? GCDPriority.None : GCDPriority.Meditate,
-            MeditationStrategy.Greedy => Player.DistanceToHitbox(primaryTarget) > 3 ? GCDPriority.Meditate : GCDPriority.None,
-            _ => GCDPriority.None,
-        };
+        var prio = GCDPriority.None;
 
-        PushGCD(AID.SteeledMeditation, Player, prio);
+        switch (strategy.Simple(Track.FormShift))
+        {
+            case OffensiveStrategy.Force:
+                prio = GCDPriority.MeditateForce;
+                break;
+            case OffensiveStrategy.Automatic:
+                if (UptimeIn > MathF.Max(GCD + AttackGCDLength, FormShiftLeft) && UptimeIn < 25)
+                    prio = GCDPriority.Meditate;
+                break;
+        }
+
+        PushGCD(AID.FormShift, Player, prio);
     }
 
     private void UseBlitz(StrategyValues strategy, AID currentBlitz)

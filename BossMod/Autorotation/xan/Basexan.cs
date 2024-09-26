@@ -29,7 +29,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float RaidBuffsIn { get; private set; }
     protected float RaidBuffsLeft { get; private set; }
     protected float DowntimeIn { get; private set; }
-    protected float UptimeIn { get; private set; }
+    protected float? UptimeIn { get; private set; }
 
     protected float? CountdownRemaining => World.Client.CountdownRemaining;
 
@@ -337,9 +337,17 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;
         (RaidBuffsLeft, RaidBuffsIn) = EstimateRaidBuffTimings(primaryTarget);
-        var (isDowntime, stateLeft) = Manager.Planner?.EstimateTimeToNextDowntime() ?? (false, float.MaxValue);
-        DowntimeIn = isDowntime ? float.MaxValue : stateLeft;
-        UptimeIn = isDowntime ? stateLeft : float.MaxValue;
+
+        if (Manager.Planner?.EstimateTimeToNextDowntime() is (var downtimeNow, var stateLeft))
+        {
+            DowntimeIn = downtimeNow ? 0 : stateLeft;
+            UptimeIn = downtimeNow ? stateLeft : 0;
+        }
+        else
+        {
+            DowntimeIn = float.MaxValue;
+            UptimeIn = null;
+        }
 
         // TODO max MP can be higher in eureka/bozja
         MP = (uint)Math.Clamp(Player.HPMP.CurMP + World.PendingEffects.PendingMPDifference(Player.InstanceID), 0, 10000);
