@@ -353,7 +353,7 @@ public sealed class StandardWAR(RotationModuleManager manager, Actor player) : R
 
         // ai hints for positioning
         var goalST = primaryTarget != null ? Hints.GoalSingleTarget(primaryTarget, 3) : null;
-        var goalAOE = (WPos _) => 0f; // Hints.GoalAOECircle(3);
+        var goalAOE = Hints.GoalAOECircle(3);
         var goal = aoeStrategy switch
         {
             AOEStrategy.SingleTarget => goalST,
