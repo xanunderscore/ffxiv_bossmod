@@ -95,7 +95,7 @@ class PathfindingTest : TestWindow
         NavigationDecision.RasterizeForbiddenZones(map, zones, now, ref scratch);
 
         List<Func<WPos, float>> goals = [];
-        goals.Add(new AIHints().GoalSingleTarget(new(_targetPos), _targetFacingDeg.Degrees(), Positional.Rear, _targetRadius));
+        goals.Add(new AIHints().GoalSingleTarget(new(_targetPos), _targetFacingDeg.Degrees(), Positional.Flank, _targetRadius));
         NavigationDecision.RasterizeGoalZones(map, goals);
 
         var visu = new MapVisualizer(map, new(_startingPos));

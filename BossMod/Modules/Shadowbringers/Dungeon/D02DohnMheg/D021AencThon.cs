@@ -13,6 +13,7 @@ public enum AID : uint
     _Weaponskill_Hydrofall = 8871, // Boss->self, 3.0s cast, single-target
     _Weaponskill_Hydrofall1 = 8893, // Helper->location, 3.0s cast, range 6 circle
     _Weaponskill_LaughingLeap = 8852, // Boss->location, 4.0s cast, range 4 circle
+    _Weaponskill_LaughingLeap1 = 8840, // Boss->players, no cast, range 4 circle
     _Weaponskill_Landsblood = 7822, // Boss->self, 3.0s cast, range 40 circle
     _Weaponskill_Landsblood1 = 7899, // Boss->self, no cast, range 40 circle
     _Weaponskill_Geyser = 8800, // Helper->self, no cast, range 6 circle
@@ -21,45 +22,40 @@ public enum AID : uint
 class CandyCane(BossModule module) : Components.SingleTargetCast(module, ActionID.MakeSpell(AID._Weaponskill_CandyCane));
 class Hydrofall(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Hydrofall1), 6);
 class LaughingLeap(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_LaughingLeap), 4);
+class LaughingLeap2(BossModule module) : Components.StackWithIcon(module, 62, ActionID.MakeSpell(AID._Weaponskill_LaughingLeap1), 4, 5.15f);
 class Landsblood(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Weaponskill_Landsblood));
 
-class GeyserDisplay(BossModule module) : BossComponent(module)
+class Geyser(BossModule module) : Components.GenericAOEs(module)
 {
-    private List<(WPos, DateTime, uint)> Geysers = [];
+    private readonly List<AOEInstance> Geysers = [];
 
-    private List<WDir> Geysers1 = [new(0, -16), new(-9, 10)];
-    private List<WDir> Geysers2 = [new(0, 5), new(-9, -15), new(7, -7)];
+    private readonly List<WDir> Geysers1 = [new(0, -16), new(-9, 15)];
+    private readonly List<WDir> Geysers2 = [new(0, 5), new(-9, -15), new(7, -7)];
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(Module.Enemies(0x1EAAA1), ArenaColor.Object, true);
-        Arena.Actors(Module.Enemies(0x1EAAA2), ArenaColor.Object, true);
-    }
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Geysers;
 
     public override void OnActorEAnim(Actor actor, uint state)
     {
         if (state == 0x100020)
         {
-            var gidx = actor.OID switch
+            var geysers = actor.OID switch
             {
-                0x1EAAA1 => 0,
-                0x1EAAA2 => 1
+                0x1EAAA1 => Geysers1,
+                0x1EAAA2 => Geysers2,
+                _ => []
             };
+            Geysers.AddRange(geysers.Select(d =>
+            {
+                var center = d.Rotate(-actor.Rotation) + actor.Position;
+                return new AOEInstance(new AOEShapeCircle(6), center, default, WorldState.FutureTime(5.1f));
+            }));
         }
-    }
-
-    public override void DrawArenaBackground(int pcSlot, Actor pc)
-    {
-        Geysers.RemoveAll(g => g.Item2.AddSeconds(2) < WorldState.CurrentTime);
-
-        foreach (var g in Geysers)
-            Arena.ZoneCircle(g.Item1, 6, 0xff8800ff);
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         if (spell.Action.ID == (uint)AID._Weaponskill_Geyser)
-            Geysers.Add((caster.Position, WorldState.CurrentTime, 0x808000ff));
+            Geysers.RemoveAll(g => g.Origin.AlmostEqual(caster.Position, 1));
     }
 }
 
@@ -71,8 +67,9 @@ class AencThonLordOfTheLingeringGazeStates : StateMachineBuilder
             .ActivateOnEnter<CandyCane>()
             .ActivateOnEnter<Hydrofall>()
             .ActivateOnEnter<LaughingLeap>()
+            .ActivateOnEnter<LaughingLeap2>()
             .ActivateOnEnter<Landsblood>()
-            .ActivateOnEnter<GeyserDisplay>();
+            .ActivateOnEnter<Geyser>();
     }
 }
 
