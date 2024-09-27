@@ -64,7 +64,8 @@ class ThancredAI(BossModule module) : Components.DeprecatedRoleplayModule(module
 {
     public override void Execute(Actor? primaryTarget)
     {
-        Hints.RecommendedRangeToTarget = 3;
+        if (primaryTarget != null)
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 3));
 
         if (WorldState.Client.DutyActions[0].CurCharges > 0)
         {

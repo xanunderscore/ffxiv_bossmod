@@ -81,7 +81,8 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         // standard filler spells
         if (HaveSpell(AID.GoblinPunch))
         {
-            Hints.RecommendedRangeToTarget = 3;
+            if (primaryTarget is Actor t)
+                Hints.GoalZones.Add(Hints.GoalSingleTarget(t, 3));
             Hints.RecommendedPositional = (primaryTarget, Positional.Front, false, true);
             PushGCD(AID.GoblinPunch, primaryTarget, GCDPriority.FillerST);
         }
@@ -114,7 +115,8 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
     {
         if (HaveSpell(AID.Devour) && !CanFitGCD(StatusLeft(SID.HPBoost), 1))
         {
-            Hints.RecommendedRangeToTarget = 3;
+            if (primaryTarget is Actor t)
+                Hints.GoalZones.Add(Hints.GoalSingleTarget(t, 3));
             PushGCD(AID.Devour, primaryTarget, GCDPriority.BuffRefresh);
         }
 

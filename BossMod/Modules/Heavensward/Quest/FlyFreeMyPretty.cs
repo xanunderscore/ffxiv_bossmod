@@ -62,7 +62,7 @@ class ReaperAI(BossModule module) : BossComponent(module)
                 hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.DiffractiveMagitekCannon), target, ActionQueue.Priority.High, targetPos: target.PosRot.XYZ());
             hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.MagitekCannon), target, ActionQueue.Priority.High, targetPos: target.PosRot.XYZ());
 
-            hints.RecommendedRangeToTarget = 25;
+            hints.GoalZones.Add(hints.GoalSingleTarget(target, 25));
         }
     }
 }

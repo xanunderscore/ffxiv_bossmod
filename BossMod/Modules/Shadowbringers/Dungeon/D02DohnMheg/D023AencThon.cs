@@ -82,7 +82,14 @@ internal class Bounds(BossModule module) : BossComponent(module)
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         if (Bridge)
-            hints.RecommendedRangeToTarget = 0;
+        {
+            var lyre = hints.PriorityTargets.FirstOrDefault(e => e.Actor.OID == (uint)OID.LiarsLyre);
+            if (lyre != null)
+            {
+                lyre.Priority = actor.FindStatus(SID.Unfooled) == null ? -1 : 1;
+                hints.GoalZones.Add(wp => wp.InCircle(lyre.Actor.Position, 2) ? 1000 : 0);
+            }
+        }
     }
 
     public override void OnStatusLose(Actor actor, ActorStatus status)
