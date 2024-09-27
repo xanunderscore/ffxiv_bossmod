@@ -37,7 +37,12 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
 
     protected override bool CanCast(AID aid) => HaveSpell(aid) && base.CanCast(aid);
 
-    private bool HaveSpell(AID aid) => World.Client.BlueMageSpells.Contains((uint)aid);
+    private bool HaveSpell(AID aid) => aid switch
+    {
+        // TODO add other transformed actions here
+        AID.DivineCataract => true,
+        _ => World.Client.BlueMageSpells.Contains((uint)aid)
+    };
 
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
@@ -62,9 +67,16 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
                 return;
         }
 
+        var haveModule = Bossmods.ActiveModule?.StateMachine.ActiveState != null;
+
         // mortal flame
-        if (primaryTarget is Actor p && StatusDetails(p, 3643, Player.InstanceID).Left == 0 && Hints.PriorityTargets.Count() == 1)
+        if (primaryTarget is Actor p && StatusDetails(p, 3643, Player.InstanceID).Left == 0 && Hints.PriorityTargets.Count() == 1 && haveModule)
             PushGCD(AID.MortalFlame, p, GCDPriority.GCDWithCooldown);
+
+        // bom
+        var numBomTargets = Hints.NumPriorityTargetsInAOE(e => StatusDetails(e.Actor, SID.BreathOfMagic, Player.InstanceID).Left < 5 && e.Actor.Position.InCircleCone(Player.Position, 10 + Player.HitboxRadius + e.Actor.HitboxRadius, Player.Rotation.ToDirection(), 60.Degrees()));
+        if (numBomTargets > (haveModule ? 0 : 2))
+            PushGCD(AID.BreathOfMagic, Player, GCDPriority.BuffRefresh);
 
         // if channeling surpanakha, don't use anything else
         var numSurpTargets = AdjustNumTargets(strategy, Hints.NumPriorityTargetsInAOECone(Player.Position, 16, Player.Rotation.ToDirection(), 60.Degrees()));
@@ -82,8 +94,7 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         if (HaveSpell(AID.GoblinPunch))
         {
             if (primaryTarget is Actor t)
-                Hints.GoalZones.Add(Hints.GoalSingleTarget(t, 3));
-            Hints.RecommendedPositional = (primaryTarget, Positional.Front, false, true);
+                Hints.GoalZones.Add(Hints.GoalSingleTarget(t, Positional.Front, 3));
             PushGCD(AID.GoblinPunch, primaryTarget, GCDPriority.FillerST);
         }
         PushGCD(AID.SonicBoom, primaryTarget, GCDPriority.FillerST);
@@ -124,8 +135,11 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         if (d > 0)
             PushGCD(AID.ChelonianGate, Player, GCDPriority.BuffRefresh);
 
-        if (Player.FindStatus(2497) != null)
-            PushGCD(AID.DivineCataract, Player, GCDPriority.BuffRefresh);
+        if (Player.FindStatus(2497u) != null)
+        {
+            Service.Log($"executing Divine Cataract");
+            PushGCD(AID.DivineCataract, Player, GCDPriority.SurpanakhaRepeat);
+        }
     }
 
     public Mimicry CurrentMimic()
