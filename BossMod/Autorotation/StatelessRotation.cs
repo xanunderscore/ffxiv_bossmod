@@ -19,9 +19,11 @@ public abstract class StatelessRotation(WorldState ws, float effectiveRange)
 
         MP = (uint)Math.Max(0, Player.HPMP.CurMP + World.PendingEffects.PendingHPDifference(Player.InstanceID));
 
-        Hints.RecommendedRangeToTarget = effectiveRange;
+        var primary = World.Actors.Find(player.TargetID);
+        if (primary != null)
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(primary, effectiveRange));
 
-        Exec(World.Actors.Find(player.TargetID));
+        Exec(primary);
     }
 
     protected void UseAction(Roleplay.AID action, Actor? target, float additionalPriority = 0, Vector3 targetPos = default) => UseAction(ActionID.MakeSpell(action), target, additionalPriority, targetPos);

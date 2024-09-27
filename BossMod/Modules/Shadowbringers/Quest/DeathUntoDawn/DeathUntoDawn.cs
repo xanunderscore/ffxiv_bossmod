@@ -59,24 +59,15 @@ class DUDStates : StateMachineBuilder
         ushort GetRPParam() => (ushort)((Module.Raid.Player()?.FindStatus(Roleplay.SID.RolePlaying)?.Extra ?? 0) & 0xFF);
 
         // bool P1End() => GetRPParam() == UriangerAI.StatusParam || P2End();
-        bool P2End() => GetRPParam() == GrahaAI.StatusParam || P3End();
+        // bool P2End() => GetRPParam() == GrahaAI.StatusParam || P3End();
         bool P3End() => Module.Enemies(OID.LunarIfrit).Any(x => x.IsTargetable) || P4End();
         bool P4End() => DutyEnd();
 
-        TrivialPhase(3)
-            .ActivateOnEnter<GrahaAI>()
-            .ActivateOnEnter<DirectionalParry>()
-            .ActivateOnEnter<Explosion>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(-144, 83);
-            })
-            .Raw.Update = P3End;
         TrivialPhase(4)
             .ActivateOnEnter<IfritHints>()
             .ActivateOnEnter<RadiantPlume>()
             .ActivateOnEnter<CrimsonCyclone>()
-            .ActivateOnEnter<Explosion>()
+            // .ActivateOnEnter<Explosion>()
             .OnEnter(() =>
             {
                 Module.Arena.Center = new(0, 0);

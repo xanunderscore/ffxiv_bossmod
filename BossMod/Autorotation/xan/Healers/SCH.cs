@@ -101,8 +101,8 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
         if (RaidBuffsLeft > 0 && !CanFitGCD(RaidBuffsLeft, 1))
             PushGCD(AID.Bio1, BestDotTarget);
 
-        if (Unlocked(AID.ArtOfWar1) && !Unlocked(AID.Broil1))
-            Hints.RecommendedRangeToTarget = 4.9f - Player.HitboxRadius;
+        //if (Unlocked(AID.ArtOfWar1) && !Unlocked(AID.Broil1))
+        //    Hints.RecommendedRangeToTarget = 4.9f - Player.HitboxRadius;
 
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
@@ -113,6 +113,7 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
             //    Hints.RecommendedRangeToTarget = 5f;
 
             PushGCD(AID.ArtOfWar1, Player);
+        }
 
         PushGCD(AID.Ruin1, primaryTarget);
 

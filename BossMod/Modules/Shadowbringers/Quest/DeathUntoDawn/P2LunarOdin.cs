@@ -9,37 +9,46 @@ public enum OID : uint
     Fetters = 0x3218
 }
 
+public enum AID : uint
+{
+    _Weaponskill_LunarGungnir = 24025, // LunarOdin->31EC, 12.0s cast, range 6 circle
+    _Weaponskill_LunarGungnir1 = 24026, // LunarOdin->2E2E, 25.0s cast, range 6 circle
+    _Weaponskill_Gungnir2 = 24698, // 233C->self, 10.0s cast, range 10 circle
+    _Weaponskill_Gagnrath = 24030, // 321C->self, 3.0s cast, range 50 width 4 rect
+    _Weaponskill_Gungnir3 = 24029, // 321C->self, no cast, range 10 circle
+    _Weaponskill_LeftZantetsuken1 = 24034, // LunarOdin->self, 4.0s cast, range 70 width 39 rect
+    _Weaponskill_RightZantetsuken1 = 24032, // LunarOdin->self, 4.0s cast, range 70 width 39 rect
+    _Spell_Einherjar = 24036, // Boss->self, 5.0s cast, range 40 circle
+    _Weaponskill_LeadWeight = 24024, // Boss->self, 4.0s cast, single-target
+    _Weaponskill_Gungnir = 24027, // Boss->self, 4.0s cast, single-target
+    _Weaponskill_Gungnir1 = 24028, // 321C->self, 9.3s cast, single-target
+    _Weaponskill_LeftZantetsuken = 24033, // Boss->self, no cast, single-target
+}
+
 class UriangerAI(WorldState ws) : StatelessRotation(ws, 25)
 {
     public const ushort StatusParam = 158;
-
-    private Actor? LunarOdin => Hints.PriorityTargets.FirstOrDefault(x => x.Actor.OID == (uint)OID.Boss)?.Actor;
-    private Actor? Fetters => Hints.PriorityTargets.FirstOrDefault(x => x.Actor.OID == (uint)OID.Fetters)?.Actor;
 
     private float HeliosLeft(Actor p) => p.IsTargetable ? StatusDetails(p, 836, Player.InstanceID).Left : float.MaxValue;
 
     protected override void Exec(Actor? primaryTarget)
     {
-        /*
-        if (MP >= 700)
-        {
-            if (Math.Min(HeliosLeft(Thancred), HeliosLeft(Yshtola)) < 3)
-                UseAction(RID.AspectedHelios, Player);
-        }
-        */
+        var partyPositions = World.Party.WithoutSlot().Select(p => p.Position).ToList();
 
-        foreach (var p in World.Party.WithoutSlot())
-        {
-            if (p.OID == 0x2E2E && p.HPMP.CurHP < 20000)
-                UseAction(RID.Benefic, p);
-        }
+        Hints.GoalZones.Add(pos => partyPositions.Count(p => p.InCircle(pos, 16)));
 
-        UseAction(RID.MaleficIII, Fetters ?? LunarOdin);
+        if (World.Party.WithoutSlot().All(p => HeliosLeft(p) < 1 && p.Position.InCircle(Player.Position, 15.5f + p.HitboxRadius)))
+            UseAction(RID.AspectedHelios, Player);
+
+        if (World.Party.WithoutSlot().FirstOrDefault(p => p.HPMP.CurHP < p.HPMP.MaxHP * 0.4f) is Actor low)
+            UseAction(RID.Benefic, low);
+
+        UseAction(RID.MaleficIII, primaryTarget);
 
         if (Player.FindStatus(Roleplay.SID.DestinyDrawn) != null)
         {
             if (ComboAction == RID.DestinyDrawn)
-                UseAction(RID.LordOfCrowns, Fetters ?? LunarOdin, -100);
+                UseAction(RID.LordOfCrowns, primaryTarget, -100);
 
             if (ComboAction == RID.DestinysSleeve)
                 UseAction(RID.TheScroll, Player, -100);
@@ -58,7 +67,7 @@ class Fetters(BossModule module) : Components.Adds(module, (uint)OID.Fetters);
 class AutoUri(BossModule module) : Components.RotationModule<UriangerAI>(module);
 class GunmetalSoul(BossModule module) : Components.GenericAOEs(module)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.Enemies(0x1EB1D5).Select(e => new AOEInstance(new AOEShapeDonut(4, 100), e.Position));
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Module.Enemies(0x1EB1D5).Where(e => e.EventState != 7).Select(e => new AOEInstance(new AOEShapeDonut(4, 100), e.Position));
 }
 class LunarGungnir(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_LunarGungnir), 6);
 class LunarGungnir2(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_LunarGungnir1), 6);

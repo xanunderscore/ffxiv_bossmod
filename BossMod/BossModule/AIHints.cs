@@ -81,6 +81,9 @@ public sealed class AIHints
     // buffs to be canceled asap
     public List<(uint statusId, ulong sourceId)> StatusesToCancel = [];
 
+    [Obsolete("This does nothing, stop using it")]
+    public float RecommendedRangeToTarget;
+
     // dismount
     public bool Dismount;
 

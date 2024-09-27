@@ -50,11 +50,10 @@ class DirectionalParry(BossModule module) : Components.DirectionalParry(module, 
     {
         if (Module.PrimaryActor.FindStatus(SID.DirectionalParry) != null)
         {
-            var dist = new AOEShapeCone(100, 90.Degrees()).Distance(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation);
-            hints.AddForbiddenZone(dist);
+            var dist = new AOEShapeCone(100, 45.Degrees()).Distance(Module.PrimaryActor.Position, Module.PrimaryActor.Rotation);
+            hints.AddForbiddenZone(dist, WorldState.FutureTime(1));
             if (dist(actor.Position) < 0)
-                foreach (var tar in hints.PotentialTargets)
-                    tar.Priority = AIHints.Enemy.PriorityForbidFully;
+                hints.ForcedTarget = actor;
         }
     }
 }
