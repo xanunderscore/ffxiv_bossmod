@@ -28,8 +28,7 @@ public class TelotekGammaStates : StateMachineBuilder
     }
 }
 
-// actually using npc graha's OID here since this encounter consists of a bunch of adds before the boss even spawns
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 780)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10189)]
 public class TelotekGamma(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -180), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);

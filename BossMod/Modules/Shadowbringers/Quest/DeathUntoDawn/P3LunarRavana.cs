@@ -45,8 +45,8 @@ class GrahaAI(WorldState ws) : StatelessRotation(ws, 25)
 
         if (adds.Any(ShouldBreak))
         {
-            Hints.GoalZones.Add(p => adds.Count(a => a.Position.InCircle(p, 20 + a.HitboxRadius + Player.HitboxRadius)));
-            if (adds.Any(a => ShouldBreak(a) && a.Position.InCircle(Player.Position, 20 + a.HitboxRadius + Player.HitboxRadius)))
+            Hints.GoalZones.Add(p => adds.Count(a => a.Position.InCircle(p, 20)));
+            if (adds.Any(a => ShouldBreak(a) && a.Position.InCircle(Player.Position, 20)))
                 UseAction(RID.Break, Player);
         }
 
@@ -108,7 +108,7 @@ class LunarRavanaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 780, NameID = 10037)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10037)]
 public class LunarRavana(WorldState ws, Actor primary) : BossModule(ws, primary, new(-144, 83), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
