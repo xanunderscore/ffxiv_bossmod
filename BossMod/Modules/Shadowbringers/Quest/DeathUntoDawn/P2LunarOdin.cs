@@ -25,7 +25,7 @@ public enum AID : uint
     _Weaponskill_LeftZantetsuken = 24033, // Boss->self, no cast, single-target
 }
 
-class UriangerAI(WorldState ws) : StatelessRotation(ws, 25)
+class UriangerAI(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     public const ushort StatusParam = 158;
 

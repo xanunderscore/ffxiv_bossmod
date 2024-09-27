@@ -32,7 +32,7 @@ public enum SID : uint
     Invincibility = 325,
 }
 
-class GrahaAI(WorldState ws) : StatelessRotation(ws, 25)
+class GrahaAI(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     private IEnumerable<Actor> Adds => World.Actors.Where(x => (OID)x.OID is OID.MoonGana or OID.SpiritGana or OID.RavanasWill && x.IsTargetable && !x.IsDead);
 

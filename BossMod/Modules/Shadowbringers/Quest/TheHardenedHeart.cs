@@ -38,7 +38,7 @@ class SanctifiedFireIII(BossModule module) : Components.StackWithCastTargets(mod
 class TwistedTalent(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Spell_TwistedTalent1), 5);
 class AbyssalCharge(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AbyssalCharge1), new AOEShapeRect(40, 2));
 
-class AutoBranden(WorldState ws) : StatelessRotation(ws, 3)
+class AutoBranden(WorldState ws) : UnmanagedRotation(ws, 3)
 {
     protected override void Exec(Actor? primaryTarget)
     {

@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Shadowbringers.RoleQuests;
 
-public class AutoNyelbert(WorldState ws) : StatelessRotation(ws, 25)
+public class AutoNyelbert(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     protected override void Exec(Actor? primaryTarget)
     {

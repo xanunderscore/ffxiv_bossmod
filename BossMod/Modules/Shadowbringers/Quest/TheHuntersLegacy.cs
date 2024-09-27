@@ -43,7 +43,7 @@ class StreakLightning1(BossModule module) : Components.LocationTargetedAOEs(modu
 class AlternatingCurrent(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_AlternatingCurrent1), new AOEShapeRect(60, 2.5f));
 class RumblingThunder(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_RumblingThunderStack), 5, 1);
 
-class RendaRae(WorldState ws) : StatelessRotation(ws, 20)
+class RendaRae(WorldState ws) : UnmanagedRotation(ws, 20)
 {
     protected override void Exec(Actor? primaryTarget)
     {

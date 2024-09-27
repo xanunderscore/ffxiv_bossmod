@@ -3,7 +3,7 @@ using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.QuestBattle.Shadowbringers.MSQ;
 
-public class AutoAlisaie(WorldState ws) : StatelessRotation(ws, 25)
+public class AutoAlisaie(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     public const ushort StatusParam = 157;
 

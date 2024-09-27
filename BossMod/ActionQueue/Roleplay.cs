@@ -124,6 +124,8 @@ public enum AID : uint
     Break = 21921,
 
     // Thancred - Frosty Reception
+    SwiftDeception = 27432,
+    SilentTakedown = 27433,
     KeenEdgeFR = 27427,
     BrutalShellFR = 27428,
     SolidBarrelFR = 27429,
@@ -326,6 +328,8 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.MedicaII);
         d.RegisterSpell(AID.Break);
 
+        d.RegisterSpell(AID.SwiftDeception);
+        d.RegisterSpell(AID.SilentTakedown);
         d.RegisterSpell(AID.KeenEdgeFR);
         d.RegisterSpell(AID.BrutalShellFR);
         d.RegisterSpell(AID.SolidBarrelFR);

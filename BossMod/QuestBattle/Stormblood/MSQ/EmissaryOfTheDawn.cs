@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Stormblood.MSQ;
 
-public class AutoAlphi(WorldState ws) : StatelessRotation(ws, 25)
+public class AutoAlphi(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     private Actor? Carby => World.Actors.FirstOrDefault(x => x.OID == 0x2343);
 

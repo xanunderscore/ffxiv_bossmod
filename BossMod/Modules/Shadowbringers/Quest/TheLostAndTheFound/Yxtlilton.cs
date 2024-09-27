@@ -28,7 +28,7 @@ class CodexOfGravity(BossModule module) : Components.StackWithCastTargets(module
     }
 }
 
-class LamittAI(WorldState ws) : StatelessRotation(ws, 25)
+class LamittAI(WorldState ws) : UnmanagedRotation(ws, 25)
 {
     private float ActorHP(Actor a) => (float)(a.HPMP.CurHP + World.PendingEffects.PendingHPDifference(a.InstanceID)) / a.HPMP.MaxHP;
 

@@ -173,6 +173,11 @@ public class QuestObjective(WorldState ws)
                 obj.OnActorCombatChanged += (act) => obj.CompleteIf(act.OID == 0 && !act.InCombat);
             });
 
+    public static QuestObjective StandardInteract(WorldState ws, uint oid, params Vector3[] connections) => new QuestObjective(ws)
+        .WithConnections(connections)
+        .WithInteract(oid)
+        .CompleteOnState7(oid);
+
     public override string ToString() => $"{Name}{(Connections.Count == 0 ? "" : Utils.Vec3String(Connections.Last().Position))}";
 
     public void CompleteIf(bool c) { Completed |= c; }

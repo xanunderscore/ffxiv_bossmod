@@ -2,7 +2,7 @@
 
 namespace BossMod.QuestBattle.Shadowbringers.MSQ;
 
-class AutoEstinien(WorldState ws) : StatelessRotation(ws, 10)
+class AutoEstinien(WorldState ws) : UnmanagedRotation(ws, 10)
 {
     protected override void Exec(Actor? primaryTarget)
     {
