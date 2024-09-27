@@ -170,6 +170,7 @@ public enum SID : uint
     Windburn = 1723, // applied by Feather Rain to target
     LucidDreaming = 1204, // applied by Lucid Dreaming to self
     Swiftcast = 167, // applied by Swiftcast to self
+    SpickAndSpan = 3637,
     MightyGuard = 1719, // applied by Mighty Guard to self
     AethericMimicryTank = 2124,
     AethericMimicryDPS = 2125,

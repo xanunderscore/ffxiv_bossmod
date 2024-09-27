@@ -27,6 +27,7 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         FillerST = 100,
         FillerAOE = 150,
         GCDWithCooldown = 200,
+        Ultravibe = 250,
         Poop = 300,
         Scoop = 301,
         BuffRefresh = 600,
@@ -47,6 +48,8 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, 25);
+
+        var currentHP = Player.HPMP.CurHP + World.PendingEffects.PendingHPDifference(Player.InstanceID);
 
         Mimic = CurrentMimic();
 
@@ -72,6 +75,9 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         // mortal flame
         if (primaryTarget is Actor p && StatusDetails(p, 3643, Player.InstanceID).Left == 0 && Hints.PriorityTargets.Count() == 1 && haveModule)
             PushGCD(AID.MortalFlame, p, GCDPriority.GCDWithCooldown);
+
+        if (haveModule && currentHP * 2 < Player.HPMP.MaxHP)
+            PushGCD(AID.Rehydration, Player, GCDPriority.SurpanakhaRepeat);
 
         // bom
         var numBomTargets = Hints.NumPriorityTargetsInAOE(e => StatusDetails(e.Actor, SID.BreathOfMagic, Player.InstanceID).Left < 5 && e.Actor.Position.InCircleCone(Player.Position, 10 + Player.HitboxRadius + e.Actor.HitboxRadius, Player.Rotation.ToDirection(), 60.Degrees()));
@@ -99,7 +105,7 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         }
         PushGCD(AID.SonicBoom, primaryTarget, GCDPriority.FillerST);
 
-        if (HaveSpell(AID.PeatPelt) && HaveSpell(AID.DeepClean))
+        if (HaveSpell(AID.PeatPelt) && HaveSpell(AID.DeepClean) && StatusLeft(SID.SpickAndSpan) < GCDLength)
         {
             var (poopTarget, poopNum) = SelectTarget(strategy, primaryTarget, 25, (primary, other) => Hints.TargetInAOECircle(other, primary.Position, 6));
             if (poopTarget != null && poopNum > 2)
@@ -108,6 +114,20 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
                 if (scoopNum > 2)
                     PushGCD(AID.DeepClean, poopTarget, GCDPriority.Scoop);
                 PushGCD(AID.PeatPelt, poopTarget, GCDPriority.Poop);
+            }
+        }
+
+        if (HaveSpell(AID.TheRamsVoice) && HaveSpell(AID.Ultravibration))
+        {
+            Hints.GoalZones.Add(Hints.GoalAOECircle(6));
+            var nearby = Hints.PriorityTargets.Where(p => p.Actor.Position.InCircle(Player.Position, 6 + Player.HitboxRadius + p.Actor.HitboxRadius));
+            var nearbycnt = nearby.Count();
+            if (nearbycnt == Hints.PriorityTargets.Count() && nearbycnt > 2)
+            {
+                if (nearby.All(x => StatusDetails(x.Actor, SID.DeepFreeze, Player.InstanceID).Left > 3))
+                    PushGCD(AID.Ultravibration, Player, GCDPriority.Ultravibe + 1);
+
+                PushGCD(AID.TheRamsVoice, Player, GCDPriority.Ultravibe);
             }
         }
 
