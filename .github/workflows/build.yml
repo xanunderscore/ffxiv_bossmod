@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - wip
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+        DALAMUD_HOME: /tmp/dalamud
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Get Tag Name
+        run: echo "tag=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')" >> $GITHUB_ENV
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+          
+      - name: Download Dalamud Latest
+        run: |
+          wget https://goatcorp.github.io/dalamud-distrib/latest.zip -O ${{ env.DALAMUD_HOME }}.zip
+          unzip ${{ env.DALAMUD_HOME }}.zip -d ${{ env.DALAMUD_HOME }}
+
+      - name: Restore Project
+        run: dotnet restore
+
+      - name: Build Project
+        run: dotnet build --configuration Release BossMod/BossMod.csproj
+
+      - name: Publish
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "BossMod/bin/Release/BossMod"
+          prerelease: true
+          tag: "nightly-$(git rev-parse --short HEAD)"
