@@ -18,7 +18,7 @@ jobs:
 
       - name: Short ref
         id: short_ref
-        run: echo "short_ref=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: echo "short_ref=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
