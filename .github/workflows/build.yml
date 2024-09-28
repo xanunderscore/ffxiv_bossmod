@@ -16,8 +16,9 @@ jobs:
         with:
           submodules: true
 
-      - name: Get Tag Name
-        run: echo "tag=$(echo ${{ github.ref }} | sed 's/refs\/tags\/v//')" >> $GITHUB_ENV
+      - name: Short ref
+        id: short_ref
+        run: echo "short_ref=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -40,4 +41,4 @@ jobs:
         with:
           artifacts: "BossMod/bin/Release/BossMod"
           prerelease: true
-          tag: "nightly-$(git rev-parse --short HEAD)"
+          tag: "nightly-${{ steps.short_ref.outputs.short_ref }}"
