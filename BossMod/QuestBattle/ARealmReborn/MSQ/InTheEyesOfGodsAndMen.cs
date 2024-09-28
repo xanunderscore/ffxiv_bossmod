@@ -4,10 +4,7 @@
 internal class InTheEyesOfGodsAndMen(WorldState ws) : QuestBattle(ws)
 {
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
-        new QuestObjective(ws).CompleteOnKilled(1),
-        new QuestObjective(ws)
-            .WithConnection(new Vector3(460.52f, 305.17f, -280.29f))
-            .WithInteract(0x1E8D67)
+        new QuestObjective(ws).WithInteract(0x1E8D67)
     ];
 
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
