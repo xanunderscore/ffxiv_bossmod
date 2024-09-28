@@ -1,5 +1,4 @@
-﻿/*
-namespace BossMod.Endwalker.Quest.WhereEverythingBegins;
+﻿namespace BossMod.Endwalker.Quest.WhereEverythingBegins;
 
 public enum OID : uint
 {
@@ -43,8 +42,6 @@ class VoidVortex(BossModule module) : Components.StackWithCastTargets(module, Ac
 class RottenRampageSpread(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_RottenRampage2), 6);
 class RottenRampage(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_RottenRampage1), 6);
 class BlightedSwathe(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedSwathe), new AOEShapeCone(40, 90.Degrees()));
-class Nox(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Nox1), new AOEShapeCircle(10), maxCasts: 5);
-class VoidGravity(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_VoidGravity1), 6);
 class BlightedSweep(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedSweep), new AOEShapeCone(40, 90.Degrees()));
 class BlightedBuffet(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.BlightedBuffet), new AOEShapeCircle(9));
 class VacuumWave(BossModule module) : Components.KnockbackFromCastTarget(module, ActionID.MakeSpell(AID.VacuumWave), 5)
@@ -119,10 +116,7 @@ public class ScarmiglioneStates : StateMachineBuilder
 {
     public ScarmiglioneStates(BossModule module) : base(module)
     {
-        bool DutyEnd() => module.WorldState.CurrentCFCID != 874;
         TrivialPhase()
-            .ActivateOnEnter<Nox>()
-            .ActivateOnEnter<VoidGravity>()
             .ActivateOnEnter<BlightedSweep>()
             .ActivateOnEnter<BlightedBuffet>()
             .ActivateOnEnter<BlightedSwathe>()
@@ -132,26 +126,18 @@ public class ScarmiglioneStates : StateMachineBuilder
             .ActivateOnEnter<RottenRampage>()
             .ActivateOnEnter<RottenRampageSpread>()
             .ActivateOnEnter<Shield>()
-            .ActivateOnEnter<VoidVortex>()
-            .Raw.Update = DutyEnd;
+            .ActivateOnEnter<VoidVortex>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 874, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
-public class Scarmiglione(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -148), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 70130, NameID = 11407)]
+public class Scarmiglione(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -148), new ArenaBoundsCircle(19.5f))
 {
-    protected override bool CheckPull() => true;
-
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var e in hints.PotentialTargets)
             e.Priority = e.Actor.OID == (uint)OID.FilthyShackle ? 1 : 0;
     }
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
-        Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-    }
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 }
-*/

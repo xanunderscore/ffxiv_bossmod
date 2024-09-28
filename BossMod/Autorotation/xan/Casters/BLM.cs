@@ -110,6 +110,10 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
             return;
         }
 
+        var ll = World.Actors.FirstOrDefault(x => x.OID == 0x179 && x.OwnerID == Player.InstanceID);
+        if (ll != null)
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(ll.Position, 3));
+
         if (primaryTarget == null)
         {
             if (Fire > 0 && Unlocked(AID.Transpose) && Unlocked(AID.UmbralSoul) && ReadyIn(AID.Transpose) == 0)
@@ -120,6 +124,8 @@ public sealed class BLM(RotationModuleManager manager, Actor player) : Castxan<A
 
             return;
         }
+
+        Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 25));
 
         if (Unlocked(AID.Swiftcast))
             PushOGCD(AID.Swiftcast, Player);
