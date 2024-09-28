@@ -365,8 +365,8 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.InfernalSlice);
         d.RegisterSpell(AID.SpinningScythe);
         d.RegisterSpell(AID.NightmareScythe);
-        d.RegisterSpell(AID.Communio);
-        d.RegisterSpell(AID.Engravement);
+        d.RegisterSpell(AID.Communio, instantAnimLock: 1.1f);
+        d.RegisterSpell(AID.Engravement, instantAnimLock: 1.1f);
         d.RegisterSpell(AID.Bloodbath);
 
         d.RegisterSpell(AID.ClawOfTheBraax);
