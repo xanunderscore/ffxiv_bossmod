@@ -168,6 +168,15 @@ public enum AID : uint
     Engravement = 31785,
     Bloodbath = 33013,
 
+    // Godbert - Generational Bonding
+    GentlemanlySmash = 31393,
+    GentlemanlyThrust = 31394,
+    RageOfTheGentleman = 31395,
+    MandervilleDropkick = 31397,
+    MandervilleSprint = 31398,
+    ManderdoubleLariat = 31396,
+    MandervilleLB = 31399,
+
     // Wuk Lamat
     ClawOfTheBraax = 37120,
     FangsOfTheBraax = 37121,
@@ -214,7 +223,11 @@ public enum SID : uint
     // thancred - Frosty Reception
     SwiftDeception = 2957,
 
+    // alphinaud
     LeveilleurDosisIII = 2650,
+
+    // godbert
+    GlovesOff = 3458,
 }
 
 public sealed class Definitions : IDisposable
@@ -368,6 +381,14 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.Communio, instantAnimLock: 1.1f);
         d.RegisterSpell(AID.Engravement, instantAnimLock: 1.1f);
         d.RegisterSpell(AID.Bloodbath);
+
+        d.RegisterSpell(AID.GentlemanlySmash);
+        d.RegisterSpell(AID.GentlemanlyThrust);
+        d.RegisterSpell(AID.RageOfTheGentleman);
+        d.RegisterSpell(AID.MandervilleDropkick);
+        d.RegisterSpell(AID.MandervilleSprint);
+        d.RegisterSpell(AID.ManderdoubleLariat);
+        d.RegisterSpell(AID.MandervilleLB);
 
         d.RegisterSpell(AID.ClawOfTheBraax);
         d.RegisterSpell(AID.FangsOfTheBraax);
