@@ -97,6 +97,16 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
             healFun(a, b);
     }
 
+    private static readonly Dictionary<uint, bool> _esunaCache = [];
+    private static bool StatusIsRemovable(uint statusID)
+    {
+        if (_esunaCache.TryGetValue(statusID, out var value))
+            return value;
+        var check = Utils.StatusIsRemovable(statusID);
+        _esunaCache[statusID] = check;
+        return check;
+    }
+
     private static readonly uint[] NoHealStatuses = [
         82, // Hallowed Ground
         409, // Holmgang
@@ -140,7 +150,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                 var canEsuna = actor.IsTargetable && !esunas[i];
                 foreach (var s in actor.Statuses)
                 {
-                    if (canEsuna && Utils.StatusIsRemovable(s.ID))
+                    if (canEsuna && StatusIsRemovable(s.ID))
                         state.EsunableStatusRemaining = Math.Max(StatusDuration(s.ExpireAt), state.EsunableStatusRemaining);
 
                     if (NoHealStatuses.Contains(s.ID))
