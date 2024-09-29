@@ -268,6 +268,25 @@ public sealed class ClientState
         }
     }
 
+    public Event<OpBlueMageSpellsChange> BlueMageSpellsChanged = new();
+    public sealed record class OpBlueMageSpellsChange(uint[] Values) : WorldState.Operation
+    {
+        public readonly uint[] Values = Values;
+
+        protected override void Exec(WorldState ws)
+        {
+            Array.Copy(Values, ws.Client.BlueMageSpells, NumBlueMageSpells);
+            ws.Client.BlueMageSpellsChanged.Fire(this);
+        }
+        public override void Write(ReplayRecorder.Output output)
+        {
+            output.EmitFourCC("CBLU"u8);
+            output.Emit((byte)Values.Length);
+            foreach (var e in Values)
+                output.Emit(e);
+        }
+    }
+
     public Event<OpClassJobLevelsChange> ClassJobLevelsChanged = new();
     public sealed record class OpClassJobLevelsChange(short[] Values) : WorldState.Operation
     {
@@ -283,28 +302,6 @@ public sealed class ClientState
         public override void Write(ReplayRecorder.Output output)
         {
             output.EmitFourCC("CLVL"u8);
-            output.Emit((byte)Values.Length);
-            foreach (var e in Values)
-                output.Emit(e);
-        }
-    }
-
-    public Event<OpBlueMageSpellsChange> BlueMageSpellsChanged = new();
-    public sealed record class OpBlueMageSpellsChange(uint[] Values) : WorldState.Operation
-    {
-        public readonly uint[] Values = Values;
-
-        protected override void Exec(WorldState ws)
-        {
-            Array.Fill(ws.Client.BlueMageSpells, (ushort)0);
-            for (var i = 0; i < Values.Length; i++)
-                ws.Client.BlueMageSpells[i] = Values[i];
-            ws.Client.BlueMageSpellsChanged.Fire(this);
-        }
-
-        public override void Write(ReplayRecorder.Output output)
-        {
-            output.EmitFourCC("CBLU"u8);
             output.Emit((byte)Values.Length);
             foreach (var e in Values)
                 output.Emit(e);

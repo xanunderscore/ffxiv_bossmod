@@ -27,7 +27,6 @@ public sealed record class RotationModuleDefinition(string DisplayName, string D
 {
     public readonly BitMask Classes = Classes;
     public readonly List<StrategyConfig> Configs = [];
-    public readonly bool CanUseWhileRoleplaying = CanUseWhileRoleplaying;
 
     public DefineRef Define<Index>(Index expectedIndex) where Index : Enum => new(Configs, (int)(object)expectedIndex);
 
@@ -94,6 +93,7 @@ public abstract class RotationModule(RotationModuleManager manager, Actor player
 
     public virtual string DescribeState() => "";
 
+    // utility to check action/trait unlocks
     public bool ActionUnlocked(ActionID action) => ActionDefinitions.Instance[action]?.IsUnlocked(World, Player) ?? false;
 
     public bool TraitUnlocked(uint id)

@@ -64,15 +64,6 @@ public sealed class PartyState
                 continue;
             yield return player;
         }
-        for (int i = MaxAllianceSize; i < MaxAllies; ++i)
-        {
-            var player = _actors[i];
-            if (player == null)
-                continue;
-            if (player.IsDead && !includeDead)
-                continue;
-            yield return player;
-        }
     }
 
     public IEnumerable<(int, Actor)> WithSlot(bool includeDead = false, bool excludeAlliance = false)
