@@ -4,7 +4,7 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
     protected AIHints Hints = null!;
     protected Actor Player = null!;
     protected WorldState World => ws;
-    private float _maxCast;
+    protected float MaxCastTime;
     protected uint MP;
 
     protected Roleplay.AID ComboAction => (Roleplay.AID)World.Client.ComboState.Action;
@@ -13,7 +13,7 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
 
     public void Execute(Actor player, AIHints hints, float maxCastTime)
     {
-        _maxCast = maxCastTime;
+        MaxCastTime = maxCastTime;
         Hints = hints;
         Player = player;
 
@@ -37,7 +37,7 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
         if (def.CastTime > 0)
         {
             var totalCastTime = def.CastTime + def.CastAnimLock;
-            if (_maxCast < totalCastTime - 0.5f)
+            if (MaxCastTime < totalCastTime - 0.5f)
                 return;
         }
 

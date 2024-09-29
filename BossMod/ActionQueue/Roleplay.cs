@@ -85,6 +85,16 @@ public enum AID : uint
     Stardiver = 18780,
     DragonshadowDive = 18781,
 
+    AetherCannon = 20489,
+    Aethersaber = 20490,
+    Aethercut = 20491,
+    FinalFlourish = 20492,
+    UltimaBuster = 20493,
+    PyreticBooster = 20494,
+    AetherialAegis = 20495,
+    AetherMine = 20496,
+    AutoRestoration = 20940,
+
     // Alisaie - DUD
     ShbVerfire = 20529,
     ShbVeraero = 20530,
@@ -213,6 +223,13 @@ public enum SID : uint
     // estinien VOVDOC phase 2
     StabWound = 1466,
 
+    // sapphire weapon duty
+    FreshPerspective = 2379,
+    SafetyLockPyreticBooster = 2307,
+    SafetyLockAetherialAegis = 2308,
+    PyreticBooster = 2294,
+    AetherialAegis = 2295,
+
     // urianger
     DestinyDrawn = 2571,
 
@@ -305,6 +322,16 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.HorridRoar);
         d.RegisterSpell(AID.Stardiver, instantAnimLock: 1.5f);
         d.RegisterSpell(AID.DragonshadowDive);
+
+        d.RegisterSpell(AID.AetherCannon, instantAnimLock: 0.2f);
+        d.RegisterSpell(AID.Aethersaber, instantAnimLock: 0.2f);
+        d.RegisterSpell(AID.Aethercut, instantAnimLock: 0.2f);
+        d.RegisterSpell(AID.FinalFlourish, instantAnimLock: 0.2f);
+        d.RegisterSpell(AID.UltimaBuster);
+        d.RegisterSpell(AID.PyreticBooster, instantAnimLock: 1.1f);
+        d.RegisterSpell(AID.AetherialAegis);
+        d.RegisterSpell(AID.AetherMine);
+        d.RegisterSpell(AID.AutoRestoration, instantAnimLock: 0.2f);
 
         d.RegisterSpell(AID.ShbVerfire);
         d.RegisterSpell(AID.ShbVeraero);

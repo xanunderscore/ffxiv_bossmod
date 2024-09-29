@@ -42,6 +42,8 @@ public sealed class RotationModuleManager : IDisposable
         (uint)Roleplay.SID.RolePlaying,
         // used specifically for In from the Cold (Endwalker)
         (uint)Roleplay.SID.BorrowedFlesh,
+        // sapphire weapon quest
+        (uint)Roleplay.SID.FreshPerspective,
 
         // "Transfiguration" from certain pomanders in Palace of the Dead
         565,
