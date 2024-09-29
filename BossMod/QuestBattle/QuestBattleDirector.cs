@@ -7,6 +7,8 @@ namespace BossMod.QuestBattle;
 
 class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>
 {
+    bool ICallGateSubscriber.HasAction => false;
+    bool ICallGateSubscriber.HasFunction => true;
     public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3) { }
     public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3) => null;
     public void Subscribe(Action<Vector3, Vector3, bool> action) { }
@@ -15,6 +17,8 @@ class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vecto
 
 class PathReadyNoop : ICallGateSubscriber<bool>
 {
+    bool ICallGateSubscriber.HasAction => false;
+    bool ICallGateSubscriber.HasFunction => true;
     public void InvokeAction() { }
     public bool InvokeFunc() => false;
     public void Subscribe(Action action) { }
