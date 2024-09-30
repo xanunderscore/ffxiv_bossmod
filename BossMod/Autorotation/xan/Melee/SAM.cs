@@ -166,7 +166,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        EmergencyMeikyo(strategy);
+        EmergencyMeikyo(strategy, primaryTarget);
         UseKaeshi(primaryTarget);
         UseIaijutsu(primaryTarget);
 
@@ -319,10 +319,10 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
         }
     }
 
-    private void EmergencyMeikyo(StrategyValues strategy)
+    private void EmergencyMeikyo(StrategyValues strategy, Actor? primaryTarget)
     {
         // special case for if we got thrust into combat with no prep
-        if (MeikyoLeft == 0 && !HaveFugetsu && CombatTimer < 5)
+        if (MeikyoLeft == 0 && !HaveFugetsu && CombatTimer < 5 && primaryTarget != null)
             PushGCD(AID.MeikyoShisui, Player);
     }
 
