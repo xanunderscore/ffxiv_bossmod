@@ -111,7 +111,8 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         (BestConeTarget, NumConeTargets) = SelectTarget(strategy, primaryTarget, 8, (primary, other) => Hints.TargetInAOECone(other, Player.Position, 8, Player.DirectionTo(primary), 90.Degrees()));
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
 
-        UpdatePositionals(primaryTarget, GetNextPositional(primaryTarget), TrueNorthLeft > GCD);
+        var pos = GetNextPositional(primaryTarget);
+        UpdatePositionals(primaryTarget, pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 
@@ -127,6 +128,17 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
             return;
         }
+
+        var zones = Hints.GoalAOECircle(5);
+        if (primaryTarget != null)
+        {
+            var positional = pos.Item1;
+            if (primaryTarget.TargetID == Player.InstanceID && primaryTarget.CastInfo == null)
+                positional = Positional.Any;
+            zones = Hints.GoalCombined(Hints.GoalSingleTarget(primaryTarget, positional), zones, 3);
+        }
+
+        Hints.GoalZones.Add(zones);
 
         if (EnhancedHarpe > GCD)
             PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);
