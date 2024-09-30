@@ -15,9 +15,17 @@ public enum AID : uint
     _Spell_TheCodexOfThunderIII = 17012, // Boss->self, 6.0s cast, single-target
     _Spell_TheCodexOfThunderIII1 = 17013, // Helper->29AE, no cast, range 3 circle
     _Spell_TheCodexOfGravity = 17014, // Boss->player, 4.5s cast, range 6 circle
+    _Spell_TheCodexOfDarkness = 17011, // Boss->player/29AD, 10.0s cast, single-target
+    _Ability_AwakenGuardian = 17015, // Boss->self, 3.0s cast, single-target
+    _Spell_CurseOfTheRonka = 17016, // 29B1->29AD, no cast, single-target
 }
 
-class CodexOfDarkness(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Spell_TheCodexOfDarknessII));
+public enum TetherID : uint
+{
+    _Gen_Tether_17 = 17, // Boss->29AD/player
+}
+
+class CodexOfDarknessII(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Spell_TheCodexOfDarknessII));
 class CodexOfGravity(BossModule module) : Components.StackWithCastTargets(module, ActionID.MakeSpell(AID._Spell_TheCodexOfGravity), 6)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -37,10 +45,22 @@ class LamittAI(WorldState ws) : UnmanagedRotation(ws, 25)
         if (primaryTarget == null)
             return;
 
-        var partyHealth = World.Party.WithoutSlot().Where(x => x.Position.InCircle(Player.Position, 15)).Average(ActorHP);
-        var lowest = World.Party.WithoutSlot().MinBy(ActorHP)!;
-        var esunable = World.Party.WithoutSlot().FirstOrDefault(x => x.FindStatus(482) != null);
-        var doomed = World.Party.WithoutSlot().FirstOrDefault(x => x.FindStatus(1769) != null);
+        var party = World.Party.WithoutSlot().ToList();
+
+        Hints.GoalZones.Add(p => party.Count(act => act.Position.InCircle(p, 15 + Player.HitboxRadius + act.HitboxRadius)));
+        Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 25));
+
+        var lowest = party.MinBy(ActorHP)!;
+        var esunable = party.FirstOrDefault(x => x.FindStatus(482) != null);
+        var doomed = party.FirstOrDefault(x => x.FindStatus(1769) != null);
+        var partyHealth = party.Average(ActorHP);
+
+        // pre heal during doom cast since it does insane damage for some reason
+        if (primaryTarget.CastInfo is { Action.ID: 17011 } ci && ci.TargetID == Player.InstanceID)
+        {
+            if (ActorHP(Player) <= 0.8f)
+                UseAction(Roleplay.AID.RonkanCureII, Player);
+        }
 
         if (partyHealth < 0.6f)
             UseAction(Roleplay.AID.RonkanMedica, Player);
@@ -79,7 +99,7 @@ class YxtliltonStates : StateMachineBuilder
         TrivialPhase()
             .ActivateOnEnter<Hints>()
             .ActivateOnEnter<AutoLamitt>()
-            .ActivateOnEnter<CodexOfDarkness>()
+            .ActivateOnEnter<CodexOfDarknessII>()
             .ActivateOnEnter<CodexOfGravity>();
     }
 }

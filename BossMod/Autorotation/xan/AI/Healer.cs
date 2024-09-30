@@ -330,14 +330,18 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         HealSingle((target, state) =>
         {
-            if (state.PredictedHPRatio < 0.25)
-            {
-                if (gauge.Lily > 0)
-                    UseGCD(BossMod.WHM.AID.AfflatusSolace, target);
+            if (state.PredictedHPRatio < 0.5 && gauge.Lily > 0)
+                UseGCD(BossMod.WHM.AID.AfflatusSolace, target);
 
+            if (state.PredictedHPRatio < 0.25)
                 UseOGCD(BossMod.WHM.AID.Tetragrammaton, target);
-            }
         });
+
+        if (ShouldHealInArea(Player.Position, 15, 0.75f) && gauge.Lily > 0)
+            UseGCD(BossMod.WHM.AID.AfflatusRapture, Player);
+
+        if (ShouldHealInArea(Player.Position, 10, 0.5f))
+            UseGCD(BossMod.WHM.AID.Cure3, Player);
     }
 
     private static readonly (AstrologianCard, BossMod.AST.AID)[] SupportCards = [
