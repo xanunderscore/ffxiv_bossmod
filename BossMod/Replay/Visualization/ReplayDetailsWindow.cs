@@ -1,4 +1,5 @@
 ﻿using BossMod.Autorotation;
+using BossMod.QuestBattle;
 using ImGuiNET;
 
 namespace BossMod.ReplayVisualization;
@@ -11,6 +12,7 @@ class ReplayDetailsWindow : UIWindow
     private BossModuleManager _mgr;
     private AIHintsBuilder _hintsBuilder;
     private RotationModuleManager _rmm;
+    private QuestBattleDirector _qbd;
     private readonly DateTime _first;
     private readonly DateTime _last;
     private DateTime _curTime; // note that is could fall between frames
@@ -40,7 +42,8 @@ class ReplayDetailsWindow : UIWindow
         _player = new(data);
         _rotationDB = rotationDB;
         _mgr = new(_player.WorldState);
-        _hintsBuilder = new(_player.WorldState, _mgr, new(_player.WorldState, _mgr));
+        _qbd = new(_player.WorldState, _mgr);
+        _hintsBuilder = new(_player.WorldState, _mgr, _qbd);
         _rmm = new(rotationDB, _mgr, _hints);
         _curTime = _first = data.Ops[0].Timestamp;
         _last = data.Ops[^1].Timestamp;
@@ -54,6 +57,7 @@ class ReplayDetailsWindow : UIWindow
     {
         _analysis.Dispose();
         _config.Dispose();
+        _qbd.Dispose();
         _rmm.Dispose();
         _hintsBuilder.Dispose();
         _mgr.Dispose();
@@ -167,6 +171,7 @@ class ReplayDetailsWindow : UIWindow
             DrawEnemyTables();
             DrawAllActorsTable();
             DrawAI();
+            DrawQBD();
 
             if (ImGui.CollapsingHeader($"Events (version: {_player.Replay.GameVersion})"))
                 _events.Draw();
@@ -459,6 +464,16 @@ class ReplayDetailsWindow : UIWindow
 
     //private string FlagTransitionString((bool active, float transIn) arg) => $"{(arg.active ? "end" : "start")} in {arg.transIn:f2}s";
 
+    private void DrawQBD()
+    {
+        if (!ImGui.CollapsingHeader("Quest battle info"))
+            return;
+
+        _qbd.Update(_hints);
+
+        ImGui.TextUnformatted(_qbd.CurrentObjective?.ToString() ?? "<none>");
+    }
+
     private void MoveTo(DateTime t)
     {
         if (t < _player.WorldState.CurrentTime)
@@ -468,7 +483,8 @@ class ReplayDetailsWindow : UIWindow
             _mgr.Dispose();
             _player.Reset();
             _mgr = new(_player.WorldState);
-            _hintsBuilder = new(_player.WorldState, _mgr, new(_player.WorldState, _mgr));
+            _qbd = new(_player.WorldState, _mgr);
+            _hintsBuilder = new(_player.WorldState, _mgr, _qbd);
             _rmm = new(_rotationDB, _mgr, _hints);
         }
         _player.AdvanceTo(t, _mgr.Update);

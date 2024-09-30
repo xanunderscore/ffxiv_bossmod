@@ -195,7 +195,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     private void MoveNext(Actor player, QuestObjective objective, AIHints hints)
     {
-        if (CurrentWaypoints.Count == 0 || AIController.InCutscene)
+        if (CurrentWaypoints.Count == 0 || (Service.PluginInterface != null && AIController.InCutscene))
             return;
 
         if (_config.ShowWaypoints)
@@ -292,7 +292,15 @@ public sealed class QuestBattleDirector : IDisposable
     private async void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
     {
         CurrentConnections = connections;
-        CurrentWaypoints = await TryPathfind(Enumerable.Repeat(new Waypoint(start, false), 1).Concat(connections), maxRetries).ConfigureAwait(false);
+        if (Service.PluginInterface == null)
+        {
+            Service.Log($"[QBD] UIDev detected, returning player's current position for waypoint");
+            CurrentWaypoints = [new(start, true)];
+        }
+        else
+        {
+            CurrentWaypoints = await TryPathfind(Enumerable.Repeat(new Waypoint(start, false), 1).Concat(connections), maxRetries).ConfigureAwait(false);
+        }
     }
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)

@@ -13,7 +13,11 @@ public class LegendsOfTheNotSoHiddenTemple(WorldState ws) : QuestBattle(ws)
             .With(obj =>
             {
                 var waitForWorthlessNPCs = DateTime.MaxValue;
-                obj.OnNavigationComplete += () => waitForWorthlessNPCs = World.FutureTime(8);
+                obj.OnNavigationComplete += () =>
+                {
+                    Service.Log($"delaying npcs");
+                    waitForWorthlessNPCs = World.FutureTime(8);
+                };
                 obj.Update += () =>
                 {
                     if (obj.Completed || World.CurrentTime < waitForWorthlessNPCs)
