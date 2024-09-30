@@ -56,7 +56,7 @@ class BileBombardment(BossModule module) : Components.LocationTargetedAOEs(modul
 
 internal class Bounds(BossModule module) : BossComponent(module)
 {
-    private bool Bridge = false;
+    private bool Bridge;
 
     private static readonly List<WPos> tightrope =
     [
@@ -83,12 +83,8 @@ internal class Bounds(BossModule module) : BossComponent(module)
     {
         if (Bridge)
         {
-            var lyre = hints.PriorityTargets.FirstOrDefault(e => e.Actor.OID == (uint)OID.LiarsLyre);
-            if (lyre != null)
-            {
-                lyre.Priority = actor.FindStatus(SID.Unfooled) == null ? -1 : 1;
-                hints.GoalZones.Add(wp => wp.InCircle(lyre.Actor.Position, 2) ? 1000 : 0);
-            }
+            var goal = Module.PrimaryActor.Position;
+            hints.GoalZones.Add(p => (goal - p).LengthSq() < 0.25f ? 100 : 0);
         }
     }
 
@@ -134,5 +130,5 @@ internal class AencThonLordOfTheLengthsomeGaitStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8146)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, Contributors = "xan, Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 649, NameID = 8146)]
 public class AencThonLordOfTheLengthsomeGait(WorldState ws, Actor primary) : BossModule(ws, primary, new(-128.5f, -244), new ArenaBoundsCircle(19.5f));
