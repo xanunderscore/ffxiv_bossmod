@@ -4,6 +4,9 @@ public enum OID : uint
 {
     Boss = 0x2339,
     Helper = 0x233C,
+    _Gen_Soroban = 0x2351, // R0.500, x8
+    _Gen_MonkeyMagick = 0x23C2, // R1.000, x0 (spawn during fight)
+    _Gen_Font = 0x233B, // R4.000, x0 (spawn during fight)
 }
 
 public enum AID : uint
@@ -16,8 +19,14 @@ public enum AID : uint
     _Ability_BlessedBubbles = 11710, // Boss->self, 5.0s cast, single-target
     _Weaponskill_SpiritBurst = 11706, // 23C2->self, 1.0s cast, range 6 circle
     _Spell_WaterDrop = 11301, // 2351->234F, 8.0s cast, range 6 circle
+    _Weaponskill_Whitewater = 11520, // Boss->self, 3.0s cast, single-target
+    _Weaponskill_Whitewater1 = 11521, // 2351->self, 3.0s cast, range 40+R width 7 rect
+    _Ability_Whirlwind = 11514, // Boss->self, 3.0s cast, single-target
+    _Weaponskill_Upwell = 11515, // 233B->self, 3.0s cast, range 37+R ?-degree cone
 }
 
+class Whitewater(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Whitewater1), new AOEShapeRect(40.5f, 3.5f));
+class Upwell(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Upwell), new AOEShapeCone(41, 15.Degrees()));
 class SpiritBurst(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_SpiritBurst), new AOEShapeCircle(6));
 class WaterDrop(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Spell_WaterDrop), 6);
 
@@ -105,7 +114,9 @@ class SorobanStates : StateMachineBuilder
             .ActivateOnEnter<ShieldHint>()
             .ActivateOnEnter<WaterDrop>()
             .ActivateOnEnter<ExplosiveTataru>()
-            .ActivateOnEnter<SpiritBurst>();
+            .ActivateOnEnter<SpiritBurst>()
+            .ActivateOnEnter<Whitewater>()
+            .ActivateOnEnter<Upwell>();
     }
 }
 
