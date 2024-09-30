@@ -1,6 +1,5 @@
 ﻿using BossMod.Autorotation;
 using BossMod.Pathfinding;
-using Dalamud.Interface.Utility;
 using ImGuiNET;
 
 namespace BossMod.AI;
@@ -8,10 +7,9 @@ namespace BossMod.AI;
 public record struct Targeting(AIHints.Enemy Target, float PreferredRange = 3, Positional PreferredPosition = Positional.Any, bool PreferTanking = false);
 
 // constantly follow master
-sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Preset? aiPreset) : IDisposable
+sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDisposable
 {
     public WorldState WorldState => autorot.Bossmods.WorldState;
-    public Preset? AIPreset = aiPreset;
     public float ForceMovementIn { get; private set; } = float.MaxValue; // TODO: reconsider
     private readonly AIConfig _config = Service.Config.Get<AIConfig>();
     private readonly NavigationDecision.Context _naviCtx = new();
@@ -19,7 +17,6 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private bool _afkMode;
     private bool _followMaster; // if true, our navigation target is master rather than primary target - this happens e.g. in outdoor or in dungeons during gathering trash
     private WPos _masterPrevPos;
-    private WPos _masterMovementStart;
     private DateTime _masterLastMoved;
 
     public void Dispose()
@@ -39,10 +36,10 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         _afkMode = master != player && !master.InCombat && (WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 10;
         bool gazeImminent = autorot.Hints.ForbiddenDirections.Count > 0 && autorot.Hints.ForbiddenDirections[0].activation <= WorldState.FutureTime(0.5f);
         bool pyreticImminent = autorot.Hints.ImminentSpecialMode.mode == AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1);
-        bool forbidActions = _config.ForbidActions || _afkMode || gazeImminent || pyreticImminent || autorot.Preset != null && autorot.Preset != AIPreset;
+        bool forbidTargeting = _config.ForbidActions || _afkMode || gazeImminent || pyreticImminent;
 
         Targeting target = new();
-        if (!forbidActions)
+        if (!forbidTargeting)
         {
             target = SelectPrimaryTarget(player, master);
             if (target.Target != null || TargetIsForbidden(player.TargetID))
@@ -50,15 +47,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             AdjustTargetPositional(player, ref target);
         }
 
-        if (_config.OverridePositional)
-        {
-            target.PreferredPosition = _config.DesiredPositional;
-            target.PreferTanking = _config.DesiredPositional != Positional.Any;
-        }
-        if (_config.OverrideRange)
-            target.PreferredRange = _config.MaxDistanceToTarget;
-
-        _followMaster = master != player && (autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null || _config.FollowDuringActiveBossModule) && (!master.InCombat || _config.FollowDuringCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100) && (player.InCombat || _config.FollowOutOfCombat);
+        _followMaster = master != player;
 
         // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
         if (!WorldState.PendingEffects.PendingKnockbacks(player.InstanceID))
@@ -72,13 +61,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         bool moveWithMaster = masterIsMoving && _followMaster && master != player;
         ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? 0 : _naviDecision.LeewaySeconds;
 
-        // note: that there is a 1-frame delay if target and/or strategy changes - we don't really care?..
-        if (!forbidActions)
-        {
-            autorot.Preset = AIPreset;
-        }
-
-        UpdateMovement(player, master, target, gazeImminent || pyreticImminent, !forbidActions ? autorot.Hints.ActionsToExecute : null);
+        UpdateMovement(player, master, target, gazeImminent || pyreticImminent, !forbidTargeting ? autorot.Hints.ActionsToExecute : null);
     }
 
     // returns null if we're to be idle, otherwise target to attack
@@ -146,7 +129,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         if (_followMaster)
         {
             autorot.Hints.GoalZones.Clear();
-            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(master.Position, _config.OverrideRange ? _config.MaxDistanceToSlot : 1));
+            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(master.Position, 1));
             return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player);
         }
 
@@ -162,7 +145,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         if (masterChanged)
         {
             ctrl.SetFocusTarget(master);
-            _masterPrevPos = _masterMovementStart = master.Position;
+            _masterPrevPos = master.Position;
             _masterLastMoved = WorldState.CurrentTime.AddSeconds(-1);
         }
     }
@@ -179,8 +162,6 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
         else if ((WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 0.5f)
         {
-            // master has stopped, consider previous movement finished
-            _masterMovementStart = _masterPrevPos;
             masterIsMoving = false;
         }
         // else: don't consider master to have stopped moving unless he's standing still for some small time
@@ -224,31 +205,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
     public void DrawDebug()
     {
-        ImGui.Checkbox("Forbid actions", ref _config.ForbidActions);
+        ImGui.Checkbox("Disable autotarget", ref _config.ForbidActions);
         ImGui.SameLine();
-        ImGui.Checkbox("Forbid movement", ref _config.ForbidMovement);
-        ImGui.SameLine();
-        ImGui.Checkbox("Show extra options", ref _config.ShowExtraUIOptions);
-        if (_config.ShowExtraUIOptions)
-        {
-            ImGui.Checkbox("Follow during combat", ref _config.FollowDuringCombat);
-            ImGui.SameLine();
-            ImGui.Checkbox("Follow during active boss module", ref _config.FollowDuringActiveBossModule);
-            ImGui.Spacing();
-            ImGui.Checkbox("Follow out of combat", ref _config.FollowOutOfCombat);
-            ImGui.SameLine();
-            ImGui.Checkbox("Follow target", ref _config.FollowTarget);
-            ImGui.SameLine();
-            ImGui.Checkbox("Override follow range", ref _config.OverrideRange);
-            ImGui.PushItemWidth(75 * ImGuiHelpers.GlobalScale);
-            ImGui.InputFloat("Follow slot range", ref _config.MaxDistanceToSlot);
-            ImGui.SameLine();
-            ImGui.InputFloat("Follow target range", ref _config.MaxDistanceToTarget);
-            ImGui.PopItemWidth();
-        }
-        var player = WorldState.Party.Player();
-        var dist = _naviDecision.Destination != null && player != null ? (_naviDecision.Destination.Value - player.Position).Length() : 0;
-        ImGui.TextUnformatted($"Max-cast={MathF.Min(ForceMovementIn, 1000):f3}, afk={_afkMode}, follow={_followMaster}, \n{_naviDecision.Destination} (d={dist:f3}), master standing for {Math.Clamp((WorldState.CurrentTime - _masterLastMoved).TotalSeconds, 0, 1000):f1}");
+        ImGui.Checkbox("Disable movement", ref _config.ForbidMovement);
     }
 
     private bool TargetIsForbidden(ulong actorId) => autorot.Hints.ForbiddenTargets.Any(e => e.Actor.InstanceID == actorId);
