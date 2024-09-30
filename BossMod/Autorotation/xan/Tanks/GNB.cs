@@ -51,6 +51,12 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining > 0)
             return;
 
+        var zones = Hints.GoalAOECircle(5);
+        if (primaryTarget != null)
+            zones = Hints.GoalCombined(Hints.GoalSingleTarget(primaryTarget, 3), zones, Unlocked(AID.FatedCircle) && Ammo > 0 ? 2 : 3);
+
+        Hints.GoalZones.Add(zones);
+
         if (ReadyIn(AID.NoMercy) > 20 && Ammo > 0)
             PushGCD(AID.GnashingFang, primaryTarget);
 
@@ -79,15 +85,14 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
         if (Reign > GCD && OnCooldown(AID.GnashingFang) && OnCooldown(AID.DoubleDown) && SonicBreak == 0)
             PushGCD(AID.ReignOfBeasts, BestReignTarget);
 
-        if (NumAOETargets > 1 && Unlocked(AID.DemonSlice))
+        if (NumAOETargets > 1 && ShouldBust(strategy, AID.BurstStrike))
         {
-            if (ShouldBust(strategy, AID.BurstStrike))
-            {
-                PushGCD(AID.FatedCircle, Player);
+            PushGCD(AID.FatedCircle, Player);
+            PushGCD(AID.BurstStrike, primaryTarget);
+        }
 
-                PushGCD(AID.BurstStrike, primaryTarget);
-            }
-
+        if (NumAOETargets > 2 && Unlocked(AID.DemonSlice))
+        {
             if (ComboLastMove == AID.BrutalShell)
                 PushGCD(AID.SolidBarrel, primaryTarget);
 
@@ -96,22 +101,20 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
 
             PushGCD(AID.DemonSlice, Player);
         }
-        else
-        {
-            if (ShouldBust(strategy, AID.BurstStrike))
-                PushGCD(AID.BurstStrike, primaryTarget);
 
-            if (ComboLastMove == AID.DemonSlice && NumAOETargets > 0)
-                PushGCD(AID.DemonSlaughter, Player);
+        if (ShouldBust(strategy, AID.BurstStrike))
+            PushGCD(AID.BurstStrike, primaryTarget);
 
-            if (ComboLastMove == AID.BrutalShell)
-                PushGCD(AID.SolidBarrel, primaryTarget);
+        if (ComboLastMove == AID.DemonSlice && NumAOETargets > 0)
+            PushGCD(AID.DemonSlaughter, Player);
 
-            if (ComboLastMove == AID.KeenEdge)
-                PushGCD(AID.BrutalShell, primaryTarget);
+        if (ComboLastMove == AID.BrutalShell)
+            PushGCD(AID.SolidBarrel, primaryTarget);
 
-            PushGCD(AID.KeenEdge, primaryTarget);
-        }
+        if (ComboLastMove == AID.KeenEdge)
+            PushGCD(AID.BrutalShell, primaryTarget);
+
+        PushGCD(AID.KeenEdge, primaryTarget);
     }
 
     // TODO handle forced 2 cartridge burst

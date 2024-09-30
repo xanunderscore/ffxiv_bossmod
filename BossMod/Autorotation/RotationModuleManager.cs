@@ -9,7 +9,7 @@ public sealed class RotationModuleManager : IDisposable
         get => _preset;
         set
         {
-            // Config.LastPreset = value?.Name ?? string.Empty;
+            Config.LastPreset = value?.Name ?? string.Empty;
             DirtyActiveModules(_preset != value);
             _preset = value;
         }
