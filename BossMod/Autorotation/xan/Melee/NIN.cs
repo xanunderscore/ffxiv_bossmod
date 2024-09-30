@@ -324,7 +324,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Player.InCombat || primaryTarget == null)
+        if (!Player.InCombat)
         {
             if (strategy.Option(Track.Hide).As<HideStrategy>() == HideStrategy.Automatic
                 && Mudra.Left == 0
@@ -334,6 +334,9 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
             return;
         }
+
+        if (primaryTarget == null)
+            return;
 
         if (ShadowWalker > 0 && ReadyIn(AID.TrickAttack) > ShadowWalker)
             PushOGCD(AID.Meisui, Player);

@@ -72,9 +72,11 @@ class ReplayDetailsWindow : UIWindow
         DrawControlRow();
         DrawTimelineRow();
 
-        if (ImGui.BeginTable("table", 2, ImGuiTableFlags.SizingStretchProp))
+        var haveModule = _mgr.ActiveModule != null;
+        if (ImGui.BeginTable("table", haveModule ? 2 : 1, ImGuiTableFlags.SizingStretchProp))
         {
-            ImGui.TableSetupColumn("###arena", ImGuiTableColumnFlags.WidthFixed, 800);
+            if (haveModule)
+                ImGui.TableSetupColumn("###arena", ImGuiTableColumnFlags.WidthFixed, 800);
             ImGui.TableSetupColumn("###meta");
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
@@ -86,12 +88,12 @@ class ReplayDetailsWindow : UIWindow
             ImGui.SameLine();
             ImGui.Checkbox("Override", ref _azimuthOverride);
             _hintsBuilder.Update(_hints, _povSlot, float.MaxValue);
-            if (_mgr.ActiveModule != null)
+            if (haveModule)
             {
                 _rmm.Update(0, float.MaxValue, false);
 
                 var drawTimerPre = DateTime.Now;
-                _mgr.ActiveModule.Draw(_azimuthOverride ? _azimuth.Degrees() : _mgr.WorldState.Client.CameraAzimuth, _povSlot, true, true);
+                _mgr.ActiveModule!.Draw(_azimuthOverride ? _azimuth.Degrees() : _mgr.WorldState.Client.CameraAzimuth, _povSlot, true, true);
                 var drawTimerPost = DateTime.Now;
 
                 var compList = string.Join(", ", _mgr.ActiveModule.Components.Select(c => c.GetType().Name));
