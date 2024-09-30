@@ -9,6 +9,7 @@ public sealed class RotationModuleManager : IDisposable
         get => _preset;
         set
         {
+            // Config.LastPreset = value?.Name ?? string.Empty;
             DirtyActiveModules(_preset != value);
             _preset = value;
         }
@@ -72,6 +73,9 @@ public sealed class RotationModuleManager : IDisposable
             WorldState.Client.CountdownChanged.Subscribe(OnCountdownChanged),
             Database.Presets.PresetModified.Subscribe(OnPresetModified)
         );
+
+        if (Config.LastPreset != "")
+            Preset = Database.Presets.Presets.FirstOrDefault(p => p.Name == Config.LastPreset);
     }
 
     public void Dispose()
