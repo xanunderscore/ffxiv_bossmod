@@ -143,7 +143,10 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (AtonementReady > 0 || Requiescat.Left > 0 || DivineMight > 0)
+        if (primaryTarget == null)
+            return;
+
+        if (ShouldFoF(strategy, primaryTarget))
             PushOGCD(AID.FightOrFlight, Player);
 
         if (BladeOfHonorReady > 0)
@@ -167,5 +170,10 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
 
         if (FightOrFlight > 0)
             PushOGCD(AID.Intervene, primaryTarget);
+    }
+
+    private bool ShouldFoF(StrategyValues strategy, Actor? primaryTarget)
+    {
+        return AtonementReady > 0 || Requiescat.Left > 0 || DivineMight > 0 || !Unlocked(TraitID.DivineMagicMastery1);
     }
 }
