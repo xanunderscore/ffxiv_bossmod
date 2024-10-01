@@ -36,7 +36,6 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
     public int NumPhlegmaTargets;
     public int NumPneumaTargets;
 
-    public int NumNearbyDotTargets;
     public float TargetDotLeft;
 
     private Actor? BestPhlegmaTarget; // 6y/5y
@@ -62,23 +61,7 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
         (BestPneumaTarget, NumPneumaTargets) = SelectTarget(strategy, primaryTarget, 25, Is25yRectTarget);
 
-        NumAOETargets = 0;
-        NumNearbyDotTargets = 0;
-        foreach (var t in Hints.PotentialTargets.Where(x => x.Actor.DistanceToHitbox(Player) <= 5))
-        {
-            if (t.Priority < 0)
-            {
-                NumAOETargets = 0;
-                NumNearbyDotTargets = 0;
-                break;
-            }
-            NumAOETargets++;
-            if (DotDuration(t.Actor) < 3)
-                NumNearbyDotTargets++;
-        }
-
-        NumAOETargets = AdjustNumTargets(strategy, NumAOETargets);
-        NumNearbyDotTargets = AdjustNumTargets(strategy, NumNearbyDotTargets);
+        NumAOETargets = NumNearbyTargets(strategy, 5);
 
         (BestDotTarget, TargetDotLeft) = SelectDotTarget(strategy, primaryTarget, DotDuration, 2);
 
@@ -98,22 +81,12 @@ public sealed class SGE(RotationModuleManager manager, Actor player) : Castxan<A
         if (!Player.InCombat && Unlocked(AID.Eukrasia) && !Eukrasia && Player.MountId == 0)
             PushGCD(AID.Eukrasia, Player);
 
-        if (Unlocked(AID.Eukrasia))
+        if (Unlocked(AID.Eukrasia) && !CanFitGCD(TargetDotLeft, 1))
         {
-            if (NumNearbyDotTargets > 1 && Unlocked(AID.EukrasianDyskrasia))
-            {
-                if (!Eukrasia)
-                    PushGCD(AID.Eukrasia, Player);
+            if (!Eukrasia)
+                PushGCD(AID.Eukrasia, Player);
 
-                PushGCD(AID.Dyskrasia, Player);
-            }
-            else if (!CanFitGCD(TargetDotLeft, 1))
-            {
-                if (!Eukrasia)
-                    PushGCD(AID.Eukrasia, Player);
-
-                PushGCD(AID.Dosis, BestDotTarget);
-            }
+            PushGCD(AID.Dosis, BestDotTarget);
         }
 
         if (ReadyIn(AID.Pneuma) <= GCD && NumPneumaTargets > 1)
