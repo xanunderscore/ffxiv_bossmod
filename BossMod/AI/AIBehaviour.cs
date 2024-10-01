@@ -126,16 +126,23 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
         if (_config.ForbidMovement)
             return new() { LeewaySeconds = float.MaxValue };
 
+        WPos? forceDestination = null;
         if (_followMaster)
+            forceDestination = master.Position;
+        else if (autorot.Hints.InteractWithTarget is Actor tar)
+            forceDestination = tar.Position;
+
+        if (forceDestination != null)
         {
             autorot.Hints.GoalZones.Clear();
-            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(master.Position, 1));
+            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(forceDestination.Value, 2));
             return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player);
         }
 
         // TODO: remove this once all rotation modules are fixed
         if (autorot.Hints.GoalZones.Count == 0 && targeting.Target != null)
             autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(targeting.Target.Actor, targeting.PreferredPosition, targeting.PreferredRange));
+
         return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player);
     }
 
