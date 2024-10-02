@@ -345,11 +345,17 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         switch (EffectiveForm)
         {
             case Form.Coeurl:
-                PushGCD(CoeurlStacks == 0 && Unlocked(AID.Demolish) ? AID.Demolish : AID.SnapPunch, primaryTarget, GCDPriority.Basic); break;
+                PushGCD(CoeurlStacks == 0 && Unlocked(AID.Demolish) ? AID.Demolish : AID.SnapPunch, primaryTarget, GCDPriority.Basic);
+                break;
             case Form.Raptor:
-                PushGCD(RaptorStacks == 0 && Unlocked(AID.TwinSnakes) ? AID.TwinSnakes : AID.TrueStrike, primaryTarget, GCDPriority.Basic); break;
+                PushGCD(RaptorStacks == 0 && Unlocked(AID.TwinSnakes) ? AID.TwinSnakes : AID.TrueStrike, primaryTarget, GCDPriority.Basic);
+                break;
+            case Form.OpoOpo:
+                PushGCD(OpoStacks == 0 && Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic);
+                break;
             default:
-                PushGCD(OpoStacks == 0 && Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic); break;
+                PushGCD(Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic);
+                break;
         }
 
         switch (strategy.Simple(Track.SSS))
