@@ -51,11 +51,13 @@ public sealed class PartyState
     }
 
     // select non-null and optionally alive raid members
-    public IEnumerable<Actor> WithoutSlot(bool includeDead = false, bool excludeAlliance = false)
+    public IEnumerable<Actor> WithoutSlot(bool includeDead = false, bool excludeAlliance = false, bool excludeNPCs = false)
     {
         for (int i = 0; i < MaxAllies; ++i)
         {
             if (excludeAlliance && i is >= MaxPartySize and < MaxAllianceSize)
+                continue;
+            if (excludeNPCs && i >= MaxAllianceSize)
                 continue;
             var player = _actors[i];
             if (player == null)

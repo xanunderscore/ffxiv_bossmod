@@ -393,9 +393,6 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
         var aetherflow = gauge.Aetherflow > 0;
 
-        if (World.Party.WithoutSlot().Count() == 1 && aetherflow && primaryTarget != null)
-            UseOGCD(BossMod.SCH.AID.EnergyDrain, primaryTarget);
-
         if (aetherflow && ShouldHealInArea(Player.Position, 15, 0.5f))
             UseOGCD(BossMod.SCH.AID.Indomitability, Player);
 
@@ -419,10 +416,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
                     UseOGCD(BossMod.SCH.AID.Lustrate, target);
                 }
                 else
-                {
-                    UseGCD(BossMod.SCH.AID.Adloquium, target);
                     UseGCD(BossMod.SCH.AID.Physick, target);
-                }
             }
         });
     }
