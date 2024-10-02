@@ -77,11 +77,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        var zones = Hints.GoalAOECircle(5);
-        if (PlayerTarget != null)
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, 3);
-
-        Hints.GoalZones.Add(zones);
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), 3);
 
         if (ConfiteorCombo != AID.None && MP >= 1000)
             PushGCD(ConfiteorCombo, BestRangedTarget);

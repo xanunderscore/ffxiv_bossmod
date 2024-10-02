@@ -51,11 +51,7 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining > 0)
             return;
 
-        var zones = Hints.GoalAOECircle(5);
-        if (PlayerTarget != null)
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, Unlocked(AID.FatedCircle) && Ammo > 0 ? 2 : 3);
-
-        Hints.GoalZones.Add(zones);
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), Unlocked(AID.FatedCircle) && Ammo > 0 ? 2 : 3);
 
         if (ReadyIn(AID.NoMercy) > 20 && Ammo > 0)
             PushGCD(AID.GnashingFang, primaryTarget);

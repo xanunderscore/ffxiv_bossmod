@@ -325,6 +325,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), AOEBreakpoint);
+
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
         WindsReply();

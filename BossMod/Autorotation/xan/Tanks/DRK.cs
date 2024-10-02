@@ -73,11 +73,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining > 0)
             return;
 
-        var zones = Hints.GoalAOECircle(5);
-        if (PlayerTarget != null)
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, 3);
-
-        Hints.GoalZones.Add(zones);
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), 3);
 
         if (Darkside > GCD)
         {
