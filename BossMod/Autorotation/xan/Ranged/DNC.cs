@@ -108,6 +108,10 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
+        var approach = IsDancing || ReadyIn(AID.StandardStep) <= GCD || ReadyIn(AID.TechnicalStep) <= GCD;
+
+        GoalZoneCombined(approach ? 15 : 25, Hints.GoalAOECircle(IsDancing ? 15 : 5), 2);
+
         if (IsDancing)
         {
             if (NextStep != 0)
@@ -320,7 +324,7 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
 
     private Actor? FindDancePartner()
     {
-        var partner = World.Party.WithoutSlot(excludeAlliance: true).Exclude(Player).Where(x => Player.DistanceToHitbox(x) <= 30).MaxBy(p => p.Class switch
+        var partner = World.Party.WithoutSlot(excludeAlliance: true, excludeNPCs: true).Exclude(Player).Where(x => Player.DistanceToHitbox(x) <= 30).MaxBy(p => p.Class switch
         {
             Class.SAM => 100,
             Class.NIN or Class.VPR => 99,
