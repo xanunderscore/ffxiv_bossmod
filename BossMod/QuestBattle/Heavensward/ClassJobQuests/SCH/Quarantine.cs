@@ -1,4 +1,4 @@
-﻿namespace BossMod.QuestBattle.ARealmReborn.ClassJobQuests.SCH;
+﻿namespace BossMod.QuestBattle.Heavensward.ClassJobQuests.SCH;
 
 [Quest(BossModuleInfo.Maturity.Contributed, 404)]
 internal class Quarantine(WorldState ws) : QuestBattle(ws)

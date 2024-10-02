@@ -106,13 +106,10 @@ public sealed class SCH(RotationModuleManager manager, Actor player) : Castxan<A
 
         var needAOETargets = Unlocked(AID.Broil1) ? 2 : 1;
 
-        if (NumAOETargets >= needAOETargets)
-        {
-            if (needAOETargets == 1)
-                Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 5));
+        GoalZoneCombined(25, Hints.GoalAOECircle(5), needAOETargets);
 
+        if (NumAOETargets >= needAOETargets)
             PushGCD(AID.ArtOfWar1, Player);
-        }
 
         PushGCD(AID.Ruin1, primaryTarget);
 
