@@ -52,8 +52,8 @@ public sealed class GNB(RotationModuleManager manager, Actor player) : Attackxan
             return;
 
         var zones = Hints.GoalAOECircle(5);
-        if (primaryTarget != null)
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(primaryTarget, 3), zones, Unlocked(AID.FatedCircle) && Ammo > 0 ? 2 : 3);
+        if (PlayerTarget != null)
+            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, Unlocked(AID.FatedCircle) && Ammo > 0 ? 2 : 3);
 
         Hints.GoalZones.Add(zones);
 

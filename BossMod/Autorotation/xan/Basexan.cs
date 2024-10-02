@@ -30,6 +30,10 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected float RaidBuffsLeft { get; private set; }
     protected float DowntimeIn { get; private set; }
     protected float? UptimeIn { get; private set; }
+    /// <summary>
+    /// Player's "actual" target. Is guaranteed to be an enemy.
+    /// </summary>
+    protected Actor? PlayerTarget { get; private set; }
 
     protected float? CountdownRemaining => World.Client.CountdownRemaining;
 
@@ -137,6 +141,8 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         if (!IsEnemy(primaryTarget))
             primaryTarget = null;
 
+        PlayerTarget = primaryTarget;
+
         if (t is Targeting.Auto or Targeting.AutoTryPri)
         {
             if (Player.DistanceToHitbox(primaryTarget) > range)
@@ -144,7 +150,6 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
                 var newTarget = Hints.PriorityTargets.FirstOrDefault(x => Player.DistanceToHitbox(x.Actor) <= range)?.Actor;
                 if (newTarget != null)
                     primaryTarget = newTarget;
-                // Hints.ForcedTarget = primaryTarget;
             }
         }
     }
@@ -296,7 +301,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     protected bool Unlocked(TraitID tid) => TraitUnlocked((uint)(object)tid);
 
-    private static bool IsEnemy(Actor? actor) => actor != null && actor.Type is ActorType.Enemy or ActorType.Part && !actor.IsAlly;
+    private static bool IsEnemy(Actor? actor) => actor != null && !actor.IsAlly;
 
     protected Positional GetCurrentPositional(Actor target) => (Player.Position - target.Position).Normalized().Dot(target.Rotation.ToDirection()) switch
     {

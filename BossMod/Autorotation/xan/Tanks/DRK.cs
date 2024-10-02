@@ -73,6 +73,12 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
         if (CountdownRemaining > 0)
             return;
 
+        var zones = Hints.GoalAOECircle(5);
+        if (PlayerTarget != null)
+            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, 3);
+
+        Hints.GoalZones.Add(zones);
+
         if (Darkside > GCD)
         {
             if (Scorn > GCD && (RaidBuffsLeft > GCD || RaidBuffsIn > 9000))
@@ -146,8 +152,10 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
         if (Darkside > 0 && strategy.BuffsOk())
             PushOGCD(AID.LivingShadow, Player, OGCDPriority.LivingShadow);
 
-        if (Blood > 0 || !Unlocked(TraitID.Blackblood))
-            PushOGCD(AID.Delirium, Player, OGCDPriority.Delirium);
+        if (Blood > 0 || !Unlocked(AID.Delirium))
+        {
+            PushOGCD(Unlocked(AID.Delirium) ? AID.Delirium : AID.BloodWeapon, Player, OGCDPriority.Delirium);
+        }
 
         if (!CanWeave(AID.Delirium))
         {
@@ -193,7 +201,7 @@ public sealed class DRK(RotationModuleManager manager, Actor player) : Attackxan
 
         void use(OGCDPriority prio)
         {
-            if (NumLineTargets > 2)
+            if (NumLineTargets > 2 || !Unlocked(AID.EdgeOfDarkness))
                 PushOGCD(AID.FloodOfDarkness, BestLineTarget, prio);
 
             PushOGCD(AID.EdgeOfDarkness, primaryTarget, prio);

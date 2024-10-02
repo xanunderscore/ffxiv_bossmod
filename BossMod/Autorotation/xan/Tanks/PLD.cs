@@ -78,8 +78,8 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
         }
 
         var zones = Hints.GoalAOECircle(5);
-        if (primaryTarget != null)
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(primaryTarget, 3), zones, 3);
+        if (PlayerTarget != null)
+            zones = Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, 3), zones, 3);
 
         Hints.GoalZones.Add(zones);
 
