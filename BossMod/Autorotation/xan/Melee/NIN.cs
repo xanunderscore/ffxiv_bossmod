@@ -80,6 +80,8 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool Hidden => HiddenStatus || ShadowWalker > World.Client.AnimationLock;
 
+    private bool CanTrickInCombat => Unlocked(AID.Suiton);
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
@@ -167,7 +169,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         // TODO save charges for trick
         if (Unlocked(AID.Raiton))
         {
-            if (ReadyIn(AID.TrickAttack) < 15 && ShadowWalker == 0)
+            if (Unlocked(AID.Huton) && ReadyIn(AID.TrickAttack) < 15 && ShadowWalker == 0)
             {
                 if (useNinjutsuAOE)
                     UseMudra(AID.Huton, BestRangedAOETarget);
@@ -175,7 +177,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
                     UseMudra(AID.Suiton, primaryTarget);
             }
 
-            if (OnCooldown(AID.Kassatsu) && AssassinateCD > Kassatsu && ReadyIn(AID.TrickAttack) > Kassatsu)
+            if (OnCooldown(AID.Kassatsu) && AssassinateCD > Kassatsu && (ReadyIn(AID.TrickAttack) > Kassatsu || !CanTrickInCombat))
             {
                 if (useNinjutsuAOE)
                     // this will get auto transformed to goka mekkyaku
@@ -271,6 +273,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
         var ten1 = Kassatsu > 0 ? AID.Ten2 : AID.Ten1;
         var jin1 = Kassatsu > 0 ? AID.Jin2 : AID.Jin1;
+        var chi1 = Kassatsu > 0 ? AID.Chi2 : AID.Chi1;
 
         if (len == 1)
         {
@@ -287,7 +290,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
                 return (AID.Ninjutsu, target);
 
             if (Mudras[0] == 0)
-                return (last == 1 ? jin1 : ten1, Player);
+                return (last == 1 ? (Unlocked(jin1) ? jin1 : chi1) : ten1, Player);
 
             if (Mudras[1] == 0)
                 return (last == 1 ? AID.Ten2 : last == 2 ? AID.Chi2 : AID.Jin2, Player);
@@ -329,6 +332,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             if (strategy.Option(Track.Hide).As<HideStrategy>() == HideStrategy.Automatic
                 && Mudra.Left == 0
                 && GCD == 0
+                && Unlocked(AID.Ten1)
                 && OnCooldown(AID.Ten1))
                 PushOGCD(AID.Hide, Player);
 
@@ -365,7 +369,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
             // late weave trick during 2min windows with mug/dokumori active; otherwise use on cooldown
             PushOGCD(AID.TrickAttack, primaryTarget, delay: TargetMugLeft == 0 ? 0 : GCD - 0.8f);
 
-        if (ReadyIn(AID.TrickAttack) > 10)
+        if (ReadyIn(AID.TrickAttack) > 10 || !CanTrickInCombat)
             PushOGCD(Unlocked(AID.DreamWithinADream) ? AID.DreamWithinADream : AID.Assassinate, primaryTarget);
 
         if (ShouldBhava(strategy))
