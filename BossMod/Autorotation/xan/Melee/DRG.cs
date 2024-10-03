@@ -84,6 +84,8 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         if (primaryTarget == null)
             return;
 
+        GoalZoneCombined(3, Hints.GoalAOERect(primaryTarget, 10, 2), 3);
+
         if (NumAOETargets > 2)
         {
             switch (ComboLastMove)
