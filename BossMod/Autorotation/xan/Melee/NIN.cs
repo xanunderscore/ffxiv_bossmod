@@ -115,7 +115,8 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
         NumAOETargets = NumMeleeAOETargets(strategy);
 
-        UpdatePositionals(primaryTarget, GetNextPositional(primaryTarget), TrueNorthLeft > GCD);
+        var pos = GetNextPositional(primaryTarget);
+        UpdatePositionals(primaryTarget, pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 
@@ -126,6 +127,8 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
             return;
         }
+
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), 3, pos.Item1);
 
         if (TenChiJin.Left > GCD)
         {

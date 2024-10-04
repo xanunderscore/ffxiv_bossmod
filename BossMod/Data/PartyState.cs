@@ -6,7 +6,6 @@
 // note that player could be in party without having actor in world (e.g. if he is in different zone)
 // if player does not exist in world, party is always empty; otherwise player is always in slot 0
 // in alliance, two 'other' groups use slots 8-15 and 16-23; alliance members don't have content-ID, but always have actor-ID
-// slots 24-63 are occupied by friendly NPCs, i.e. actors with type = Enemy who have the IsAlly and IsTargetable flags set. certain modules need to treat NPCs as regular party members for the purpose of mechanic resolution
 // we limit to 64 slots to facilitate a bitmask for the entire "party" state fitting inside one ulong
 // in trust, buddies are considered party members with content-id 0 (but non-zero actor id, they are always in world)
 // slots 24-63 are occupied by friendly NPCs, i.e. actors with type = Enemy who have the IsAlly and IsTargetable flags set
