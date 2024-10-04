@@ -138,7 +138,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     {
         var t = strategy.Option(SharedTrack.Targeting).As<Targeting>();
 
-        if (!IsEnemy(primaryTarget))
+        if (!IsValidEnemy(primaryTarget, World))
             primaryTarget = null;
 
         PlayerTarget = primaryTarget;
@@ -314,7 +314,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected bool Unlocked(AID aid) => ActionUnlocked(ActionID.MakeSpell(aid));
     protected bool Unlocked(TraitID tid) => TraitUnlocked((uint)(object)tid);
 
-    private static bool IsEnemy(Actor? actor) => actor != null && !actor.IsAlly;
+    private static bool IsValidEnemy(Actor? actor, WorldState ws) => actor != null && !actor.IsAlly && !Utils.ActorIsDying(actor, ws);
 
     protected Positional GetCurrentPositional(Actor target) => (Player.Position - target.Position).Normalized().Dot(target.Rotation.ToDirection()) switch
     {

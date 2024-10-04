@@ -120,9 +120,7 @@ public sealed class AIHints
                 continue;
 
             // target is dying; skip it so that AI retargets, but ensure that it's not marked as a forbidden target
-            // skip this check on striking dummies (name ID 541) as they die constantly
-            var predictedHP = ws.PendingEffects.PendingHPDifference(actor.InstanceID);
-            if (actor.HPMP.CurHP + predictedHP <= 0 && actor.NameID != 541)
+            if (Utils.ActorIsDying(actor, ws))
                 continue;
 
             var allowedAttack = actor.InCombat && ws.Party.FindSlot(actor.TargetID) >= 0;
