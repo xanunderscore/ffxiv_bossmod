@@ -109,9 +109,14 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
-    public QuestObjective CompleteOnKilled(uint oid)
+    public QuestObjective CompleteOnKilled(uint oid, int required = 1)
     {
-        OnActorKilled += (act) => CompleteIf(act.OID == oid);
+        var killed = 0;
+        OnActorKilled += (act) =>
+        {
+            if (act.OID == oid && ++killed >= required)
+                Completed = true;
+        };
         return this;
     }
 
