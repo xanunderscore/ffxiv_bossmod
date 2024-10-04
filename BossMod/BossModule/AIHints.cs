@@ -1,4 +1,6 @@
-﻿namespace BossMod;
+﻿using BossMod.AI;
+
+namespace BossMod;
 
 // information relevant for AI decision making process for a specific player
 public sealed class AIHints
@@ -89,6 +91,8 @@ public sealed class AIHints
     [Obsolete("This does nothing, stop using it")]
     public bool Dismount;
 
+    private readonly AIConfig _config = Service.Config.Get<AIConfig>();
+
     // clear all stored data
     public void Clear()
     {
@@ -112,7 +116,7 @@ public sealed class AIHints
     // fill list of potential targets from world state
     public void FillPotentialTargets(WorldState ws, bool playerIsDefaultTank)
     {
-        bool playerInFate = ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
+        bool playerInFate = _config.AutoFate && ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
         var allowedFateID = playerInFate ? ws.Client.ActiveFate.ID : 0;
         foreach (var actor in ws.Actors.Where(a => a.IsTargetable && !a.IsAlly && !a.IsDead))
         {

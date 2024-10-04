@@ -1,4 +1,5 @@
-﻿using BossMod.QuestBattle;
+﻿using BossMod.AI;
+using BossMod.QuestBattle;
 
 namespace BossMod;
 
@@ -15,6 +16,7 @@ public sealed class AIHintsBuilder : IDisposable
     private readonly EventSubscriptions _subscriptions;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
     private ArenaBoundsCircle? _activeFateBounds;
+    private readonly AIConfig _config;
 
     public AIHintsBuilder(WorldState ws, BossModuleManager bmm, QuestBattleDirector qb)
     {
@@ -22,6 +24,7 @@ public sealed class AIHintsBuilder : IDisposable
         _bmm = bmm;
         _obstacles = new(ws);
         _qb = qb;
+        _config = Service.Config.Get<AIConfig>();
         _subscriptions = new
         (
             ws.Actors.CastStarted.Subscribe(OnCastStarted),
@@ -61,7 +64,7 @@ public sealed class AIHintsBuilder : IDisposable
     {
         var (e, bitmap) = _obstacles.Find(player.PosRot.XYZ());
         var resolution = bitmap?.PixelSize ?? 0.5f;
-        if (_ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
+        if (_config.AutoFate && _ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
         {
             hints.PathfindMapCenter = new(_ws.Client.ActiveFate.Center.XZ());
             hints.PathfindMapBounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius));
