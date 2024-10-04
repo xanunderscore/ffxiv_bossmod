@@ -93,6 +93,14 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
+        if (primaryTarget != null)
+        {
+            var aoebreakpoint = 3;
+            if (Overheated && Unlocked(AID.AutoCrossbow))
+                aoebreakpoint = 4;
+            GoalZoneCombined(25, Hints.GoalAOECone(primaryTarget, 12, 60.Degrees()), aoebreakpoint);
+        }
+
         if (Overheated && Unlocked(AID.HeatBlast))
         {
             if (FMFLeft > GCD)
