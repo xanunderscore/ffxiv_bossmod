@@ -10,6 +10,13 @@ internal class GambolingForGil(WorldState ws) : QuestBattle(ws)
             .Hints((player, hints) => {
                 var g = ws.Client.GetGauge<DancerGauge>();
 
+                if (player.FindStatus(DNC.SID.ClosedPosition) == null)
+                {
+                    var nashmeira = World.Party.WithoutSlot().FirstOrDefault(x => x.OID == 0x29D1);
+                    if (nashmeira != null)
+                        hints.ActionsToExecute.Push(ActionID.MakeSpell(DNC.AID.ClosedPosition), nashmeira, ActionQueue.Priority.High);
+                }
+
                 if (g.DanceSteps[0] == 0)
                     hints.ActionsToExecute.Push(ActionID.MakeSpell(DNC.AID.StandardStep), player, ActionQueue.Priority.High);
 
