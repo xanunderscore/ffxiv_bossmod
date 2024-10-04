@@ -4,8 +4,6 @@ using Dalamud.Game.Gui.Dtr;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
 
@@ -25,7 +23,14 @@ internal sealed class DTRProvider : IDisposable
         _mgr = manager;
         _ai = ai;
 
-        _autorotationEntry.OnClick = () => _wantOpenPopup = true;
+        _autorotationEntry.Tooltip = "Left Click => Choose Preset, Right Click => Disable Current Preset";
+        _autorotationEntry.OnClick = () =>
+        {
+            if (UIInputData.Instance()->MouseButtonHeldThrottledFlags.HasFlag(MouseButtonFlags.RBUTTON))
+                _mgr.Preset = null;
+            else
+                _wantOpenPopup = true;
+        };
         _aiEntry.Tooltip = "Left Click => Toggle Enabled, Right Click => Toggle DrawUI";
         _aiEntry.OnClick = () =>
         {
