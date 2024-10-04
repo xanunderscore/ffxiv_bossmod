@@ -325,7 +325,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     {
         var ignore = trueNorth || (target?.Omnidirectional ?? true);
 
-        if (target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front)
+        if (target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front && target?.NameID != 541)
             positional = (Positional.Any, false);
 
         var next = positional.pos;
