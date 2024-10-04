@@ -169,9 +169,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     private Actor? BestRangedTarget; // fire's reply
     private Actor? BestLineTarget; // enlightenment, wind's reply
 
-    public bool HasLunar => Nadi.HasFlag(NadiFlags.Lunar);
-    public bool HasSolar => Nadi.HasFlag(NadiFlags.Solar);
-    public bool HasBothNadi => HasLunar && HasSolar;
+    public bool HaveLunar => Nadi.HasFlag(NadiFlags.Lunar);
+    public bool HaveSolar => Nadi.HasFlag(NadiFlags.Solar);
+    public bool HaveBothNadi => HaveLunar && HaveSolar;
 
     protected override float GetCastTime(AID aid) => 0;
 
@@ -180,7 +180,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (BeastCount != 3)
             return (AID.None, false);
 
-        if (HasBothNadi)
+        if (HaveBothNadi)
             return (Unlocked(AID.PhantomRush) ? AID.PhantomRush : AID.TornadoKick, true);
 
         var bc = BeastChakra;
@@ -192,8 +192,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     }
 
     public int BeastCount => BeastChakra.Count(x => x != BeastChakraType.None);
-    public bool ForcedLunar => BeastCount > 1 && BeastChakra[0] == BeastChakra[1] && !HasBothNadi;
-    public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1] && !HasBothNadi;
+    public bool ForcedLunar => BeastCount > 1 && BeastChakra[0] == BeastChakra[1] && !HaveBothNadi;
+    public bool ForcedSolar => BeastCount > 1 && BeastChakra[0] != BeastChakra[1] && !HaveBothNadi;
 
     public bool CanFormShift => Unlocked(AID.FormShift) && PerfectBalanceLeft == 0;
 
@@ -217,6 +217,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return (pos, imm);
         }
     }
+
+    private bool HaveTarget;
 
     public enum GCDPriority
     {
@@ -263,6 +265,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
+        HaveTarget = primaryTarget != null && Player.InCombat;
 
         var gauge = World.Client.GetGauge<MonkGauge>();
 
@@ -387,10 +390,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         // this condition is unfortunately a little contrived. there are no other general cases in the monk rotation where we want to overwrite a lunar, as it's overall a dps loss
         // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
         // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
-        var forcedDoubleLunar = CombatTimer < 30 && HasLunar && ReadyIn(AID.PerfectBalance) > GCD && CanFitGCD(FireLeft, 3);
+        var forcedDoubleLunar = CombatTimer < 30 && HaveLunar && ReadyIn(AID.PerfectBalance) > GCD && CanFitGCD(FireLeft, 3);
         var forcedSolar = nadi is NadiStrategy.Solar or NadiStrategy.SolarDowntime
             || ForcedSolar
-            || HasLunar && !HasSolar && !forcedDoubleLunar;
+            || HaveLunar && !HaveSolar && !forcedDoubleLunar;
 
         var canCoeurl = forcedSolar;
         var canRaptor = forcedSolar;
@@ -449,23 +452,19 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void OGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        var bhUse = strategy.Simple(Track.BH);
-        if (bhUse == OffensiveStrategy.Force)
-            PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
+        switch (strategy.Option(Track.Potion).As<PotionStrategy>())
+        {
+            case PotionStrategy.Now:
+                Potion();
+                break;
+            case PotionStrategy.PreBuffs:
+                if (HaveTarget && CanWeave(AID.Brotherhood, 4))
+                    Potion();
+                break;
+        }
 
-        if (!Player.InCombat || GCD == 0 || primaryTarget == null)
-            return;
-
-        if (strategy.Option(Track.Potion).As<PotionStrategy>() == PotionStrategy.Now)
-            Potion();
-
-        if (strategy.Option(Track.Potion).As<PotionStrategy>() == PotionStrategy.PreBuffs && CanWeave(AID.Brotherhood, 4))
-            Potion();
-
+        Brotherhood(strategy, primaryTarget);
         QueuePB(strategy);
-
-        if (bhUse == OffensiveStrategy.Automatic && (CombatTimer > 10 || BeastCount == 2) && DowntimeIn > World.Client.AnimationLock + 20)
-            PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
 
         var useRof = ShouldRoF(strategy);
 
@@ -478,7 +477,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (NextPositionalImminent && !NextPositionalCorrect)
             PushOGCD(AID.TrueNorth, Player, OGCDPriority.TrueNorth, useRof ? 0 : GCD - 0.8f);
 
-        if (Chakra >= 5 && !CanWeave(AID.RiddleOfFire))
+        if (HaveTarget && Chakra >= 5 && !CanWeave(AID.RiddleOfFire))
         {
             if (NumLineTargets >= 3)
                 PushOGCD(AID.HowlingFist, BestLineTarget, OGCDPriority.TFC);
@@ -488,6 +487,22 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         if (strategy.Option(Track.TC).As<TCStrategy>() == TCStrategy.GapClose && Player.DistanceToHitbox(primaryTarget) is > 3 and < 25)
             PushOGCD(AID.Thunderclap, primaryTarget, OGCDPriority.TrueNorth);
+    }
+
+    private void Brotherhood(StrategyValues strategy, Actor? primaryTarget)
+    {
+        switch (strategy.Simple(Track.BH))
+        {
+            case OffensiveStrategy.Automatic:
+                if (HaveTarget && (CombatTimer > 10 || BeastCount == 2) && DowntimeIn > World.Client.AnimationLock + 20)
+                    PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
+                break;
+            case OffensiveStrategy.Force:
+                PushOGCD(AID.Brotherhood, Player, OGCDPriority.Brotherhood);
+                break;
+            default:
+                return;
+        }
     }
 
     private void Meditate(StrategyValues strategy, Actor? primaryTarget)
@@ -599,7 +614,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         return strategy.Simple(Track.RoF) switch
         {
-            OffensiveStrategy.Automatic => (extraGCDs > 0 || !CanWeave(AID.Brotherhood)) && DowntimeIn > World.Client.AnimationLock + 20,
+            OffensiveStrategy.Automatic => HaveTarget && (extraGCDs > 0 || !CanWeave(AID.Brotherhood)) && DowntimeIn > World.Client.AnimationLock + 20,
             OffensiveStrategy.Force => true,
             _ => false
         };
@@ -607,7 +622,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool ShouldRoW(StrategyValues strategy) => strategy.Simple(Track.RoW) switch
     {
-        OffensiveStrategy.Automatic => !CanWeave(AID.RiddleOfFire) && DowntimeIn > World.Client.AnimationLock + 15,
+        OffensiveStrategy.Automatic => HaveTarget && !CanWeave(AID.RiddleOfFire) && DowntimeIn > World.Client.AnimationLock + 15,
         OffensiveStrategy.Force => true,
         _ => false
     };
