@@ -417,7 +417,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == PBStrategy.Delay)
             return;
 
-        if (pbstrat == PBStrategy.Force)
+        if (pbstrat == PBStrategy.Force && PerfectBalanceLeft == 0)
         {
             PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
             return;
