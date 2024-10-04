@@ -261,7 +261,12 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         if (PlayerTarget == null)
             Hints.GoalZones.Add(fAoe);
         else
+        {
+            if (PlayerTarget.Omnidirectional || PlayerTarget.TargetID == Player.InstanceID && PlayerTarget.CastInfo == null)
+                pos = Positional.Any;
+
             Hints.GoalZones.Add(Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, pos, range), fAoe, minAoe));
+        }
     }
 
     protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);

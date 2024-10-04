@@ -277,6 +277,9 @@ public sealed class QuestBattleDirector : IDisposable
                 dashDistance = 10;
                 break;
             case Class.NIN:
+                if (player.FindStatus(NIN.SID.Hidden) != null)
+                    return;
+
                 if (moveDistance > 20)
                 {
                     var destination = direction / (moveDistance / 20);

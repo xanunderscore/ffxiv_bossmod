@@ -82,6 +82,10 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool CanTrickInCombat => Unlocked(AID.Suiton);
 
+    private static readonly uint[] NoUnhideZones = [
+        452
+    ];
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
@@ -108,7 +112,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         Meisui = StatusLeft(SID.Meisui);
         TenriJindo = StatusLeft(SID.TenriJindoReady);
 
-        if (HiddenStatus)
+        if (HiddenStatus && !NoUnhideZones.Contains(World.CurrentCFCID))
             Hints.StatusesToCancel.Add(((uint)SID.Hidden, Player.InstanceID));
 
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
