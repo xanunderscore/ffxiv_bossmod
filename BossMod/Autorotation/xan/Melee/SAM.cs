@@ -151,7 +151,8 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
                 break;
         }
 
-        UpdatePositionals(primaryTarget, GetNextPositional(strategy), TrueNorthLeft > GCD);
+        var pos = GetNextPositional(strategy);
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 

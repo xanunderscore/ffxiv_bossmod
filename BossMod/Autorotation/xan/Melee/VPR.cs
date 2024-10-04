@@ -111,7 +111,8 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Attackxan
         BestGenerationTarget = SelectTarget(strategy, primaryTarget, 3, IsSplashTarget).Best;
         NumAOETargets = NumMeleeAOETargets(strategy);
 
-        UpdatePositionals(primaryTarget, GetPositional(strategy), TrueNorthLeft > GCD);
+        var pos = GetPositional(strategy);
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 

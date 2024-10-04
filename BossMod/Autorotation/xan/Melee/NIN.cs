@@ -120,7 +120,7 @@ public sealed class NIN(RotationModuleManager manager, Actor player) : Attackxan
         NumAOETargets = NumMeleeAOETargets(strategy);
 
         var pos = GetNextPositional(primaryTarget);
-        UpdatePositionals(primaryTarget, pos, TrueNorthLeft > GCD);
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 

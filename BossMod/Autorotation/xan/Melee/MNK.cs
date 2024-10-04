@@ -309,7 +309,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         EffectiveForm = GetEffectiveForm(strategy);
 
-        UpdatePositionals(primaryTarget, NextPositional, TrueNorthLeft > GCD);
+        var pos = NextPositional;
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         Meditate(strategy, primaryTarget);
         FormShift(strategy, primaryTarget);
@@ -325,7 +326,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        GoalZoneCombined(3, Hints.GoalAOECircle(5), AOEBreakpoint, NextPositional.Item1);
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), AOEBreakpoint, pos.Item1);
 
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);

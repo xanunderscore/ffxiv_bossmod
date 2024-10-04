@@ -261,12 +261,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         if (PlayerTarget == null)
             Hints.GoalZones.Add(fAoe);
         else
-        {
-            if (PlayerTarget.Omnidirectional || PlayerTarget.TargetID == Player.InstanceID && PlayerTarget.CastInfo == null)
-                pos = Positional.Any;
-
             Hints.GoalZones.Add(Hints.GoalCombined(Hints.GoalSingleTarget(PlayerTarget, pos, range), fAoe, minAoe));
-        }
     }
 
     protected int NumMeleeAOETargets(StrategyValues strategy) => NumNearbyTargets(strategy, 5);
@@ -326,9 +321,13 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
     protected bool NextPositionalImminent;
     protected bool NextPositionalCorrect;
 
-    protected void UpdatePositionals(Actor? target, (Positional pos, bool imm) positional, bool trueNorth)
+    protected void UpdatePositionals(Actor? target, ref (Positional pos, bool imm) positional, bool trueNorth)
     {
         var ignore = trueNorth || (target?.Omnidirectional ?? true);
+
+        if (target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front)
+            positional = (Positional.Any, false);
+
         var next = positional.pos;
         NextPositionalImminent = !ignore && positional.imm;
         NextPositionalCorrect = ignore || target == null || positional.pos switch

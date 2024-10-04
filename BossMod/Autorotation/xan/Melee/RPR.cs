@@ -112,7 +112,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         (BestRangedAOETarget, NumRangedAOETargets) = SelectTarget(strategy, primaryTarget, 25, IsSplashTarget);
 
         var pos = GetNextPositional(primaryTarget);
-        UpdatePositionals(primaryTarget, pos, TrueNorthLeft > GCD);
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 
@@ -129,16 +129,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
             return;
         }
 
-        var zones = Hints.GoalAOECircle(5);
-        if (primaryTarget != null)
-        {
-            var positional = pos.Item1;
-            if (primaryTarget.TargetID == Player.InstanceID && primaryTarget.CastInfo == null)
-                positional = Positional.Any;
-            zones = Hints.GoalCombined(Hints.GoalSingleTarget(primaryTarget, positional), zones, 3);
-        }
-
-        Hints.GoalZones.Add(zones);
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), 3, pos.Item1);
 
         if (EnhancedHarpe > GCD)
             PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);

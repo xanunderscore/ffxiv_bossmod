@@ -78,7 +78,7 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         (BestDiveTarget, NumDiveTargets) = SelectTarget(strategy, primaryTarget, 20, IsSplashTarget);
 
         var pos = GetPositional(strategy, primaryTarget);
-        UpdatePositionals(primaryTarget, GetPositional(strategy, primaryTarget), TrueNorthLeft > GCD);
+        UpdatePositionals(primaryTarget, ref pos, TrueNorthLeft > GCD);
 
         OGCD(strategy, primaryTarget);
 
