@@ -24,8 +24,8 @@ internal class RiseOfTheMachinists(WorldState ws) : QuestBattle(ws)
 
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
-        hints.Center = new(Center.X, Center.Z);
-        hints.Bounds = new ArenaBoundsCircle(120, 2);
+        hints.PathfindMapCenter = new(Center.X, Center.Z);
+        hints.PathfindMapBounds = new ArenaBoundsCircle(120, 2);
     }
 }
 

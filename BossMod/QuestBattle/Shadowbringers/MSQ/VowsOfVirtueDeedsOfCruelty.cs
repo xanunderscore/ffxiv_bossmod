@@ -36,8 +36,8 @@ public class VowsOfVirtueDeedsOfCruelty(WorldState ws) : QuestBattle(ws)
                 obj.OnConditionChange += (flag, val) => obj.CompleteIf(flag == Dalamud.Game.ClientState.Conditions.ConditionFlag.Jumping61 && !val);
             })
             .Hints((player, hints) => {
-                hints.Center = player.Position with { Z = 400 };
-                hints.Bounds = new ArenaBoundsRect(20, 14);
+                hints.PathfindMapCenter = player.Position with { Z = 400 };
+                hints.PathfindMapBounds = new ArenaBoundsRect(20, 14);
             }),
 
         new QuestObjective(ws)

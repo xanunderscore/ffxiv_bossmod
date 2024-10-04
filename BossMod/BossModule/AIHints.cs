@@ -86,6 +86,9 @@ public sealed class AIHints
     [Obsolete("This does nothing, stop using it")]
     public float RecommendedRangeToTarget;
 
+    [Obsolete("This does nothing, stop using it")]
+    public bool Dismount;
+
     // clear all stored data
     public void Clear()
     {

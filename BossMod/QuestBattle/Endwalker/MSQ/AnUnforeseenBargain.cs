@@ -49,8 +49,8 @@ internal class AnUnforeseenBargain(WorldState ws) : QuestBattle(ws)
 
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
-        hints.Center = new(97.85f, 286);
-        hints.Bounds = new ArenaBoundsCircle(19.5f);
+        hints.PathfindMapCenter = new(97.85f, 286);
+        hints.PathfindMapBounds = new ArenaBoundsCircle(19.5f);
 
         foreach (var h in hints.PotentialTargets)
             if (h.Actor.CastInfo is { Action.ID: 33042 } ci)

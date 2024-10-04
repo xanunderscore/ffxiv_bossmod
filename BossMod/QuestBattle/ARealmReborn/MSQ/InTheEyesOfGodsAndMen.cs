@@ -9,8 +9,8 @@ internal class InTheEyesOfGodsAndMen(WorldState ws) : QuestBattle(ws)
 
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
-        hints.Bounds = new ArenaBoundsCircle(60, 1);
-        hints.Center = player.Position;
+        hints.PathfindMapBounds = new ArenaBoundsCircle(60, 1);
+        hints.PathfindMapCenter = player.Position;
 
         foreach (var h in hints.PotentialTargets)
             h.Priority = h.Actor.OID switch

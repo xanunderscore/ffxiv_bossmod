@@ -7,8 +7,8 @@ internal class SecuringTheLocks(WorldState ws) : QuestBattle(ws)
 
     public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
     {
-        hints.Center = Center;
-        hints.Bounds = new ArenaBoundsCircle(120, 2);
+        hints.PathfindMapCenter = Center;
+        hints.PathfindMapBounds = new ArenaBoundsCircle(120, 2);
 
         if (player.TargetID == 0)
         {

@@ -234,7 +234,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
     }
 
-    public static bool HaveTarget(Actor player, AIHints hints) => player.InCombat || hints.PriorityTargets.Any(x => hints.Bounds.Contains(x.Actor.Position - hints.Center));
+    public static bool HaveTarget(Actor player, AIHints hints) => player.InCombat || hints.PriorityTargets.Any(x => hints.PathfindMapBounds.Contains(x.Actor.Position - hints.PathfindMapCenter));
 
     enum ActionsProhibitedStatus : uint
     {

@@ -267,10 +267,10 @@ class ReplayDetailsWindow : UIWindow
     // x, z, rot, hp, name, target, cast, statuses
     private void DrawCommonColumns(Actor actor)
     {
-        var centerX = _hints.Center.X;
-        var centerZ = _hints.Center.Z;
-        var (minX, maxX) = (_hints.Center.X - 20, _hints.Center.X + 20);
-        var (minZ, maxZ) = (_hints.Center.Z - 20, _hints.Center.Z + 20);
+        var centerX = _hints.PathfindMapCenter.X;
+        var centerZ = _hints.PathfindMapCenter.Z;
+        var (minX, maxX) = (_hints.PathfindMapCenter.X - 20, _hints.PathfindMapCenter.X + 20);
+        var (minZ, maxZ) = (_hints.PathfindMapCenter.Z - 20, _hints.PathfindMapCenter.Z + 20);
 
         var posX = actor.Position.X;
         var posZ = actor.Position.Z;
