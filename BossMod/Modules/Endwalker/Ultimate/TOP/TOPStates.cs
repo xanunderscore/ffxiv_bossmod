@@ -12,14 +12,19 @@ class TOPStates : StateMachineBuilder
         SimplePhase(0, Phase1, "P1: Beetle")
             .Raw.Update = () => Module.PrimaryActor.IsDestroyed || !Module.PrimaryActor.IsTargetable;
         SimplePhase(1, Phase2, "P2: M/F")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => (_module.OpticalUnit()?.IsDestroyed ?? true) || IsEffectivelyDead(_module.BossP2M()) && IsEffectivelyDead(_module.BossP2F());
         SimplePhase(2, Phase3, "P3: Final")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => (_module.OpticalUnit()?.IsDestroyed ?? true) || IsEffectivelyDead(_module.BossP3());
         SimplePhase(3, Phase4, "P4: Blue Screen")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => (_module.OpticalUnit()?.IsDestroyed ?? true) || _module.FindComponent<P4BlueScreen>()?.NumCasts > 0;
         SimplePhase(4, Phase5, "P5: M/F Repeat")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => (_module.OpticalUnit()?.IsDestroyed ?? true) || (_module.FindComponent<P5BlindFaith>()?.Active ?? false);
         SimplePhase(5, Phase6, "P6: Alpha")
+            .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.OpticalUnit()?.IsDestroyed ?? true;
     }
 
