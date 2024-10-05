@@ -323,11 +323,11 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected void UpdatePositionals(Actor? target, ref (Positional pos, bool imm) positional, bool trueNorth)
     {
-        if (trueNorth || (target?.Omnidirectional ?? true) || target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front && target?.NameID != 541)
+        if ((target?.Omnidirectional ?? true) || target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front && target?.NameID != 541)
             positional = (Positional.Any, false);
 
-        NextPositionalImminent = positional.imm;
-        NextPositionalCorrect = target == null || positional.pos switch
+        NextPositionalImminent = !trueNorth && positional.imm;
+        NextPositionalCorrect = trueNorth || target == null || positional.pos switch
         {
             Positional.Flank => MathF.Abs(target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized())) < 0.7071067f,
             Positional.Rear => target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized()) < -0.7071068f,

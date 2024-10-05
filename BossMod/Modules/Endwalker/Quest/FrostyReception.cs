@@ -1,9 +1,9 @@
-﻿/*
-namespace BossMod.Endwalker.Quest.FrostyReception;
+﻿namespace BossMod.Endwalker.Quest.AFrostyReception;
 
 public enum OID : uint
 {
-    VergiliaVanCorculum = 0x3646
+    Boss = 0x3646,
+    Helper = 0x233C,
 }
 
 public enum AID : uint
@@ -23,53 +23,31 @@ public enum AID : uint
     _Weaponskill_Bombardment = 27458, // 363A->self, no cast, single-target
     _Weaponskill_MagitekCannon = 27457, // 363B->player/363E/364F/3640/363D/363F/3641, 5.0s cast, range 6 circle
     _Weaponskill_Bombardment1 = 27459, // 233C->location, 4.0s cast, range 6 circle
-
 }
 
+class GigaTempest(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID._Weaponskill_GigaTempest));
+class Ruination(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Ruination), new AOEShapeCross(40, 4));
+class Ruination2(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Ruination1), new AOEShapeRect(30, 4));
+class LockOn(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_LockOn), new AOEShapeCircle(6));
+class ResinBomb(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_ResinBomb), 5);
+class MagitekCannon(BossModule module) : Components.SpreadFromCastTargets(module, ActionID.MakeSpell(AID._Weaponskill_MagitekCannon), 6);
+class Bombardment(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Bombardment1), 6);
 
-public class FrostyReceptionStates : StateMachineBuilder
+class VergiliaVanCorculumStates : StateMachineBuilder
 {
-    public FrostyReceptionStates(BossModule module) : base(module)
+    public VergiliaVanCorculumStates(BossModule module) : base(module)
     {
-        bool DutyEnd() => Module.WorldState.CurrentCFCID != 812;
-
         TrivialPhase()
-            .ActivateOnEnter<MetalGearThancred>()
-            .ActivateOnEnter<MetalGearCheckpoints>()
-            .ActivateOnEnter<MetalGearBounds>()
-            .Raw.Update = () => DutyEnd() || Module.Raid.Player()?.FindStatus(Roleplay.SID.RolePlaying) == null;
-        TrivialPhase(1)
-            .ActivateOnEnter<CarriageBounds>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Bounds = new ArenaBoundsCircle(20);
-            })
-            .Raw.Update = () => DutyEnd() || Module.Raid.Player()?.Position.Z < 0;
-        TrivialPhase(2)
-            .ActivateOnEnter<PostCarriage>()
             .ActivateOnEnter<GigaTempest>()
             .ActivateOnEnter<Ruination>()
             .ActivateOnEnter<Ruination2>()
             .ActivateOnEnter<LockOn>()
             .ActivateOnEnter<ResinBomb>()
             .ActivateOnEnter<MagitekCannon>()
-            .ActivateOnEnter<Bombardment>()
-            .OnEnter(() =>
-            {
-                Module.Arena.Center = new(0, -80);
-            })
-            .Raw.Update = DutyEnd;
+            .ActivateOnEnter<Bombardment>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 812, PrimaryActorOID = BossModuleInfo.PrimaryActorNone)]
-public class FrostyReception(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(30))
-{
-    protected override bool CheckPull() => true;
+[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69919, NameID = 10572)]
+public class VergiliaVanCorculum(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, -78), new ArenaBoundsCircle(19.5f));
 
-    protected override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => x.IsAlly), ArenaColor.PlayerGeneric);
-    }
-}
-*/

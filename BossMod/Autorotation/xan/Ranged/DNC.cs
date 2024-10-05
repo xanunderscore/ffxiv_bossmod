@@ -327,15 +327,15 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         var partner = World.Party.WithoutSlot(excludeAlliance: true, excludeNPCs: true).Exclude(Player).Where(x => Player.DistanceToHitbox(x) <= 30).MaxBy(p => p.Class switch
         {
             Class.SAM => 100,
-            Class.NIN or Class.VPR => 99,
-            Class.MNK => 88,
+            Class.NIN or Class.VPR or Class.ROG => 99,
+            Class.MNK or Class.PGL => 88,
             Class.RPR => 87,
-            Class.DRG => 86,
-            Class.BLM or Class.PCT => 79,
-            Class.SMN => 78,
+            Class.DRG or Class.LNC => 86,
+            Class.BLM or Class.PCT or Class.THM => 79,
+            Class.SMN or Class.ACN => 78,
             Class.RDM => 77,
             Class.MCH => 69,
-            Class.BRD => 68,
+            Class.BRD or Class.ARC => 68,
             Class.DNC => 67,
             _ => 1
         });
