@@ -139,6 +139,7 @@ public enum AID : uint
     KeenEdgeFR = 27427,
     BrutalShellFR = 27428,
     SolidBarrelFR = 27429,
+    BewildermentBomb = 27434,
 
     // Alphinaud - As the Heavens Burn
     Diagnosis = 26224,
@@ -373,6 +374,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.KeenEdgeFR);
         d.RegisterSpell(AID.BrutalShellFR);
         d.RegisterSpell(AID.SolidBarrelFR);
+        d.RegisterSpell(AID.BewildermentBomb);
 
         d.RegisterSpell(AID.Diagnosis);
         d.RegisterSpell(AID.Prognosis);

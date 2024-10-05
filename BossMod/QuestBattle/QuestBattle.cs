@@ -50,6 +50,7 @@ public class QuestObjective(WorldState ws)
     public Action<Actor> OnActorCombatChanged = (_) => { };
     public Action<Actor> OnActorKilled = (_) => { };
     public Action<Actor> OnActorTargetableChanged = (_) => { };
+    public Action<WorldState.OpEnvControl> OnEnvControl = (_) => { };
     public Action<WorldState.OpDirectorUpdate> OnDirectorUpdate = (_) => { };
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
     public Action OnNavigationComplete = () => { };
@@ -84,6 +85,17 @@ public class QuestObjective(WorldState ws)
         act(this);
         return this;
     }
+
+    public QuestObjective MoveHint(WPos destination)
+    {
+        AddAIHints += (player, hints, _) =>
+        {
+            hints.GoalZones.Add(p => p.InCircle(destination, 2) ? 0.5f : 0);
+        };
+        return this;
+    }
+
+    public QuestObjective MoveHint(Vector3 destination) => MoveHint(new WPos(destination.XZ()));
 
     public QuestObjective PauseForCombat(bool pause)
     {
@@ -237,6 +249,7 @@ public abstract class QuestBattle : IDisposable
             ws.Actors.EventObjectStateChange.Subscribe((act, u) => CurrentObjective?.OnEventObjectStateChanged(act, u)),
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) => CurrentObjective?.OnEventObjectAnimation(act, p1, p2)),
             ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate(op)),
+            ws.EnvControl.Subscribe(op => CurrentObjective?.OnEnvControl(op)),
             ws.Actors.IsTargetableChanged.Subscribe(act => CurrentObjective?.OnActorTargetableChanged(act))
         );
         if (Service.Condition == null)

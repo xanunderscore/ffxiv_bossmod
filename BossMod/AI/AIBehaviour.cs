@@ -67,9 +67,6 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
     // returns null if we're to be idle, otherwise target to attack
     private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
-        if (autorot.Hints.InteractWithTarget is Actor interact)
-            return new Targeting(new AIHints.Enemy(interact, false), 2);
-
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
         // if current target is not among valid targets, clear it - this opens way for future target selection heuristics
         var targetId = autorot.Hints.ForcedTarget?.InstanceID ?? player.TargetID;
@@ -126,16 +123,20 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
         if (_config.ForbidMovement)
             return new() { LeewaySeconds = float.MaxValue };
 
-        WPos? forceDestination = null;
+        Actor? forceDestination = null;
+        float forceDestinationRange = 2;
         if (_followMaster)
-            forceDestination = master.Position;
+            forceDestination = master;
         else if (autorot.Hints.InteractWithTarget is Actor tar)
-            forceDestination = tar.Position;
+        {
+            forceDestination = tar;
+            forceDestinationRange = 3.5f;
+        }
 
         if (forceDestination != null)
         {
             autorot.Hints.GoalZones.Clear();
-            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(forceDestination.Value, 2));
+            autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(forceDestination, forceDestinationRange));
             return NavigationDecision.Build(_naviCtx, WorldState, autorot.Hints, player);
         }
 

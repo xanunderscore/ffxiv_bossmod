@@ -103,6 +103,10 @@ public sealed class QuestBattleDirector : IDisposable
             {
                 Log($"EObjAnim: {act}, {p1}, {p2}");
             }),
+            ws.EnvControl.Subscribe(op =>
+            {
+                Log($"EnvControl: {op}");
+            }),
 #endif
             ws.CurrentZoneChanged.Subscribe(OnZoneChange),
             ObjectiveChanged.Subscribe(OnObjectiveChanged),
