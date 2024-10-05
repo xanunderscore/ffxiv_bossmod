@@ -66,8 +66,16 @@ public sealed class AIHintsBuilder : IDisposable
         var resolution = bitmap?.PixelSize ?? 0.5f;
         if (_config.AutoFate && _ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
         {
-            hints.PathfindMapCenter = new(_ws.Client.ActiveFate.Center.XZ());
+            var center = new WPos(_ws.Client.ActiveFate.Center.XZ());
+            hints.PathfindMapCenter = center;
             hints.PathfindMapBounds = (_activeFateBounds ??= new ArenaBoundsCircle(_ws.Client.ActiveFate.Radius));
+            if (e != null && bitmap != null)
+            {
+                var centerCell = (center - e.Origin) / resolution;
+                var centerX = (int)centerCell.X;
+                var centerZ = (int)centerCell.Z;
+                hints.PathfindMapObstacles = new(bitmap, new(centerX - e.ViewWidth, centerZ - e.ViewHeight, centerX + e.ViewWidth, centerZ + e.ViewHeight));
+            }
             // TODO: obstactles for fates, if we care?..
         }
         else if (e != null && bitmap != null)
