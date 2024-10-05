@@ -50,6 +50,7 @@ public class QuestObjective(WorldState ws)
     public Action<Actor> OnActorCombatChanged = (_) => { };
     public Action<Actor> OnActorKilled = (_) => { };
     public Action<Actor> OnActorTargetableChanged = (_) => { };
+    public Action<Actor, ActorCastEvent> OnEventCast = (_, _) => { };
     public Action<WorldState.OpEnvControl> OnEnvControl = (_) => { };
     public Action<WorldState.OpDirectorUpdate> OnDirectorUpdate = (_) => { };
     public Action<ConditionFlag, bool> OnConditionChange = (_, _) => { };
@@ -86,11 +87,11 @@ public class QuestObjective(WorldState ws)
         return this;
     }
 
-    public QuestObjective MoveHint(WPos destination)
+    public QuestObjective MoveHint(WPos destination, float weight = 0.5f)
     {
         AddAIHints += (player, hints, _) =>
         {
-            hints.GoalZones.Add(p => p.InCircle(destination, 2) ? 0.5f : 0);
+            hints.GoalZones.Add(p => p.InCircle(destination, 2) ? weight : 0);
         };
         return this;
     }
@@ -235,6 +236,7 @@ public abstract class QuestBattle : IDisposable
 
         _subscriptions = new(
             ws.Actors.EventStateChanged.Subscribe(act => CurrentObjective?.OnActorEventStateChanged(act)),
+            ws.Actors.CastEvent.Subscribe((a, b) => CurrentObjective?.OnEventCast(a, b)),
             ws.Actors.StatusLose.Subscribe((act, ix) => CurrentObjective?.OnStatusLose(act, act.Statuses[ix])),
             ws.Actors.StatusGain.Subscribe((act, ix) => CurrentObjective?.OnStatusGain(act, act.Statuses[ix])),
             ws.Actors.ModelStateChanged.Subscribe(act => CurrentObjective?.OnModelStateChanged(act)),

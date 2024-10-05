@@ -69,7 +69,7 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         })
         .With(obj =>
         {
-            obj.OnModelStateChanged += (act) => obj.CompleteIf(act.OID == enemyOID && act.ModelState.ModelState == 83);
+            obj.OnEventCast += (act, spell) => obj.CompleteIf(act.OID == 0 && spell.Action.ID == (uint)Roleplay.AID.SilentTakedown);
         });
 
     private QuestObjective Dog(Vector3 destination) => new QuestObjective(World)
@@ -93,6 +93,10 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws)
             .Named("Wall")
             .With(obj => {
+                obj.AddAIHints += (player, hints, _) => {
+                    if (World.Actors.Find(player.TargetID)?.OID == 0x384C)
+                        hints.ForcedTarget = player;
+                };
                 obj.OnEnvControl += (env) => obj.CompleteIf(env.Index == 14 && env.State == 0x80002);
             }),
 
@@ -127,11 +131,56 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
 
         QuestObjective.StandardInteract(ws, 0x1EB46C).Named("Gate 4"),
 
-        Dog(new Vector3(-18.127f, 0.3f, -380.105f))
-            .Named("Dog 2")
-            .MoveHint(new Vector3(-2.26f, 0.20f, -364.02f)),
+        new QuestObjective(ws)
+            .With(obj => {
+                obj.Update = () => {
+                    var cd = ActionDefinitions.Instance[ActionID.MakeSpell(Roleplay.AID.SwiftDeception)];
+                    obj.CompleteIf(cd?.ReadyIn(World.Client.Cooldowns, World.Client.DutyActions) < 0.5f);
+                };
+            }),
 
-        Takedown(new(-27, 0, -387), 0x3627).Named("Guard 4"),
+        Takedown(new(-27, 0, -387), 0x3627).Named("Guard 4")
+            .MoveHint(new WPos(-9.75f, -359.75f), 0.5f)
+            .MoveHint(new WPos(-32.25f, -378.75f), 0.75f),
+
+        QuestObjective.StandardInteract(ws, 0x1EB46D).Named("Gate 5"),
+        QuestObjective.StandardInteract(ws, 0x1EB46E)
+            .Named("Controls")
+            .MoveHint(new WPos(-38.25f, -396.75f)),
+
+        new QuestObjective(ws)
+            .Named("Exit")
+            .MoveHint(new WPos(-59.25f, -426.25f))
+            .With(obj => {
+                obj.Update += () => obj.CompleteIf(World.Party.Player()?.Position.Z > 0);
+            }),
+
+        new QuestObjective(ws)
+            .Named("Carriage 1")
+            .With(obj => {
+                obj.OnDirectorUpdate += (diru) => obj.CompleteIf(diru.UpdateID == 0x10000001 && diru.Param1 == 0x7B76);
+            }),
+
+        new QuestObjective(ws)
+            .Named("Carriage 2")
+            .MoveHint(new WPos(0, 235))
+            .With(obj => {
+                obj.OnDirectorUpdate += (diru) => obj.CompleteIf(diru.UpdateID == 0x10000001 && diru.Param1 == 0x7B77);
+            }),
+
+        new QuestObjective(ws)
+            .Named("Carriage 3")
+            .MoveHint(new WPos(0, 176))
+            .CompleteOnKilled(0x3635),
+
+        new QuestObjective(ws)
+            .Named("Teleport")
+            .Hints((player, hints) => {
+                hints.ForcedMovement = new(0, 0, -1);
+            })
+            .With(obj => {
+                obj.OnActorCombatChanged += (act) => obj.CompleteIf(act.OID == 0 && act.InCombat);
+            })
     ];
 }
 

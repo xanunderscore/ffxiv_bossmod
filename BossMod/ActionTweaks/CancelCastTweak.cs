@@ -30,7 +30,7 @@ public sealed class CancelCastTweak(WorldState ws, AIHints hints)
 
         var cast = _ws.Party.Player()?.CastInfo;
         var target = _ws.Actors.Find(cast?.TargetID ?? 0);
-        if (target == null)
+        if (target == null || cast?.Action.Type == ActionType.KeyItem)
             return false;
 
         var isRaise = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Action>(cast?.Action.SpellId() ?? 0)?.Unknown24 == 1;

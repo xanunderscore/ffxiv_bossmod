@@ -133,7 +133,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
             forceDestinationRange = 3.5f;
         }
 
-        if (forceDestination != null)
+        if (forceDestination != null && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
         {
             autorot.Hints.GoalZones.Clear();
             autorot.Hints.GoalZones.Add(autorot.Hints.GoalSingleTarget(forceDestination, forceDestinationRange));
