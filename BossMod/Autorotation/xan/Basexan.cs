@@ -323,20 +323,17 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
 
     protected void UpdatePositionals(Actor? target, ref (Positional pos, bool imm) positional, bool trueNorth)
     {
-        var ignore = trueNorth || (target?.Omnidirectional ?? true);
-
-        if (target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front && target?.NameID != 541)
+        if (trueNorth || (target?.Omnidirectional ?? true) || target?.TargetID == Player.InstanceID && target?.CastInfo == null && positional.pos != Positional.Front && target?.NameID != 541)
             positional = (Positional.Any, false);
 
-        var next = positional.pos;
-        NextPositionalImminent = !ignore && positional.imm;
-        NextPositionalCorrect = ignore || target == null || positional.pos switch
+        NextPositionalImminent = positional.imm;
+        NextPositionalCorrect = target == null || positional.pos switch
         {
             Positional.Flank => MathF.Abs(target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized())) < 0.7071067f,
             Positional.Rear => target.Rotation.ToDirection().Dot((Player.Position - target.Position).Normalized()) < -0.7071068f,
             _ => true
         };
-        Manager.Hints.RecommendedPositional = (target, next, NextPositionalImminent, NextPositionalCorrect);
+        Manager.Hints.RecommendedPositional = (target, positional.pos, NextPositionalImminent, NextPositionalCorrect);
     }
 
     public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
