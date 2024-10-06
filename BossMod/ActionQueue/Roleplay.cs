@@ -141,6 +141,12 @@ public enum AID : uint
     SolidBarrelFR = 27429,
     BewildermentBomb = 27434,
 
+    FastBladeIFTC = 26249,
+    RiotBladeIFTC = 26250,
+    RageOfHaloneIFTC = 26251,
+    FightOrFlightIFTC = 26252,
+    RampartIFTC = 26253,
+
     // Alphinaud - As the Heavens Burn
     Diagnosis = 26224,
     Prognosis = 27043,
@@ -375,6 +381,12 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.BrutalShellFR);
         d.RegisterSpell(AID.SolidBarrelFR);
         d.RegisterSpell(AID.BewildermentBomb);
+
+        d.RegisterSpell(AID.FastBladeIFTC);
+        d.RegisterSpell(AID.RiotBladeIFTC);
+        d.RegisterSpell(AID.RageOfHaloneIFTC);
+        d.RegisterSpell(AID.FightOrFlightIFTC);
+        d.RegisterSpell(AID.RampartIFTC);
 
         d.RegisterSpell(AID.Diagnosis);
         d.RegisterSpell(AID.Prognosis);
