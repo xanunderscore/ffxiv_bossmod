@@ -1,4 +1,6 @@
-﻿namespace BossMod.Shadowbringers.Quest.DeathUntoDawn.P4;
+﻿using BossMod.QuestBattle;
+
+namespace BossMod.Shadowbringers.Quest.DeathUntoDawn.P4;
 
 public enum OID : uint
 {
@@ -44,11 +46,12 @@ class LunarIfritStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10041)]
-public class LunarIfrit(WorldState ws, Actor primary) : BossModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10041)]
+public class LunarIfrit(WorldState ws, Actor primary) : InstapullModule(ws, primary, new(0, 0), new ArenaBoundsCircle(20))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        base.CalculateModuleAIHints(slot, actor, assignment, hints);
         hints.PrioritizeTargetsByOID(OID.InfernalNail, 5);
     }
 }

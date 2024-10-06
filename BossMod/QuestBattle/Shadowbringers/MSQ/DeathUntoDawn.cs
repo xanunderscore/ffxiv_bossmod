@@ -12,7 +12,7 @@ public class AutoAlisaie(WorldState ws) : UnmanagedRotation(ws, 25)
         if (primaryTarget == null || primaryTarget.OID == 0x1EB183)
             return;
 
-        Hints.RecommendedRangeToTarget = 25;
+        var melee = false;
 
         switch (ComboAction)
         {
@@ -26,19 +26,19 @@ public class AutoAlisaie(WorldState ws) : UnmanagedRotation(ws, 25)
                 UseAction(RID.ShbVerflare, primaryTarget);
                 break;
             case RID.ShbCorpsACorps:
-                Hints.RecommendedRangeToTarget = 3;
+                melee = true;
                 UseAction(RID.ShbEnchantedRiposte, primaryTarget);
                 break;
             case RID.ShbEnchantedRiposte:
-                Hints.RecommendedRangeToTarget = 3;
+                melee = true;
                 UseAction(RID.ShbEnchantedZwerchhau, primaryTarget);
                 break;
             case RID.ShbEnchantedZwerchhau:
-                Hints.RecommendedRangeToTarget = 3;
+                melee = true;
                 UseAction(RID.ShbEnchantedRedoublement, primaryTarget);
                 break;
             case RID.ShbEnchantedRedoublement:
-                Hints.RecommendedRangeToTarget = 3;
+                melee = true;
                 UseAction(RID.ShbDisplacement, primaryTarget);
                 break;
             case RID.ShbDisplacement:
@@ -52,6 +52,9 @@ public class AutoAlisaie(WorldState ws) : UnmanagedRotation(ws, 25)
                 UseAction(RID.ShbVerfire, primaryTarget);
                 break;
         }
+
+        if (melee)
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 3));
 
         UseAction(RID.ShbFleche, primaryTarget);
         UseAction(RID.ShbContreSixte, primaryTarget);
@@ -82,6 +85,8 @@ internal class DeathUntoDawn(WorldState ws) : QuestBattle(ws)
                 obj.AddAIHints += (player, hints, maxcast) => {
                     hints.PathfindMapCenter = new(0, -180);
                     hints.PathfindMapBounds = new ArenaBoundsCircle(20);
+                    if (!player.InCombat)
+                        hints.PrioritizeAll();
                     _ai.Execute(player, hints, maxcast);
                 };
             })

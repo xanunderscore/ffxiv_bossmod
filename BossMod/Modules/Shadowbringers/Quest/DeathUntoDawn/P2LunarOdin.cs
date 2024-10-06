@@ -1,4 +1,5 @@
 ﻿using BossMod.Autorotation;
+using BossMod.QuestBattle;
 using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Shadowbringers.Quest.DeathUntoDawn.P2;
@@ -74,13 +75,24 @@ class LunarGungnir2(BossModule module) : Components.StackWithCastTargets(module,
 class Gungnir(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Gungnir2), new AOEShapeCircle(10));
 class Gagnrath(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_Gagnrath), new AOEShapeRect(50, 2));
 class GungnirSpread(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(10), 189, ActionID.MakeSpell(AID._Weaponskill_Gungnir3), 5.3f, centerAtTarget: true);
-class LeftZantetsuken(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_LeftZantetsuken1), new AOEShapeRect(70, 19.5f))
+
+class Zantetsuken(BossModule module) : Components.GenericAOEs(module)
 {
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, c.Position + c.Rotation.ToDirection().OrthoL() * 16, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Color, Risky));
-}
-class RightZantetsuken(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_RightZantetsuken1), new AOEShapeRect(70, 19.5f))
-{
-    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => ActiveCasters.Select(c => new AOEInstance(Shape, c.Position + c.Rotation.ToDirection().OrthoR() * 16, c.CastInfo!.Rotation, Module.CastFinishAt(c.CastInfo), Color, Risky));
+    private readonly List<Actor> Casters = [];
+
+    public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor) => Casters.Select(c => new AOEInstance(new AOEShapeRect(70, 19.5f), actor.CastInfo!.LocXZ, actor.CastInfo!.Rotation, Module.CastFinishAt(actor.CastInfo)));
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID is AID._Weaponskill_RightZantetsuken1 or AID._Weaponskill_LeftZantetsuken1)
+            Casters.Add(caster);
+    }
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    {
+        if ((AID)spell.Action.ID is AID._Weaponskill_RightZantetsuken1 or AID._Weaponskill_LeftZantetsuken1)
+            Casters.Remove(caster);
+    }
 }
 
 public class LunarOdinStates : StateMachineBuilder
@@ -96,10 +108,9 @@ public class LunarOdinStates : StateMachineBuilder
             .ActivateOnEnter<GungnirSpread>()
             .ActivateOnEnter<GunmetalSoul>()
             .ActivateOnEnter<LunarGungnir2>()
-            .ActivateOnEnter<LeftZantetsuken>()
-            .ActivateOnEnter<RightZantetsuken>();
+            .ActivateOnEnter<Zantetsuken>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10034)]
-public class LunarOdin(WorldState ws, Actor primary) : BossModule(ws, primary, new(146.5f, 84.5f), new ArenaBoundsCircle(20));
+public class LunarOdin(WorldState ws, Actor primary) : InstapullModule(ws, primary, new(146.5f, 84.5f), new ArenaBoundsCircle(20));

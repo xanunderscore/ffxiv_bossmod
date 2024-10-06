@@ -1,4 +1,5 @@
 ﻿using BossMod.Autorotation;
+using BossMod.QuestBattle;
 using RID = BossMod.Roleplay.AID;
 
 namespace BossMod.Shadowbringers.Quest.DeathUntoDawn.P3;
@@ -108,13 +109,14 @@ class LunarRavanaStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10037)]
-public class LunarRavana(WorldState ws, Actor primary) : BossModule(ws, primary, new(-144, 83), new ArenaBoundsCircle(20))
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69602, NameID = 10037)]
+public class LunarRavana(WorldState ws, Actor primary) : InstapullModule(ws, primary, new(-144, 83), new ArenaBoundsCircle(20))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
+        base.CalculateModuleAIHints(slot, actor, assignment, hints);
         foreach (var h in hints.PotentialTargets)
             h.Priority = h.Actor.FindStatus(SID.Invincibility) == null ? 1 : 0;
     }
