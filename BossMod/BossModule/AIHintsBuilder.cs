@@ -1,5 +1,4 @@
 ﻿using BossMod.AI;
-using BossMod.QuestBattle;
 
 namespace BossMod;
 
@@ -12,18 +11,18 @@ public sealed class AIHintsBuilder : IDisposable
     public readonly Pathfinding.ObstacleMapManager Obstacles;
     private readonly WorldState _ws;
     private readonly BossModuleManager _bmm;
-    private readonly QuestBattleDirector _qb;
+    private readonly ZoneModuleManager _zmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
     private ArenaBoundsCircle? _activeFateBounds;
     private readonly AIConfig _config;
 
-    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, QuestBattleDirector qb)
+    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm)
     {
         _ws = ws;
         _bmm = bmm;
+        _zmm = zmm;
         Obstacles = new(ws);
-        _qb = qb;
         _config = Service.Config.Get<AIConfig>();
         _subscriptions = new
         (
@@ -42,6 +41,7 @@ public sealed class AIHintsBuilder : IDisposable
     public void Update(AIHints hints, int playerSlot, float maxCastTime)
     {
         hints.Clear();
+        hints.MaxCastTimeEstimate = maxCastTime;
         var player = _ws.Party[playerSlot];
         if (player != null)
         {
@@ -49,12 +49,13 @@ public sealed class AIHintsBuilder : IDisposable
             var activeModule = _bmm.ActiveModule?.StateMachine.ActivePhase != null ? _bmm.ActiveModule : null;
             hints.FillPotentialTargets(_ws, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot().Any(p => p != player && p.Role == Role.Tank));
             if (activeModule != null)
+            {
                 activeModule.CalculateAIHints(playerSlot, player, playerAssignment, hints, maxCastTime);
+            }
             else
             {
                 CalculateAutoHints(hints, player);
-                if (_qb.Enabled)
-                    _qb.CurrentModule?.AddAIHints(player, hints, maxCastTime);
+                _zmm.ActiveModule?.CalculateAIHints(player, hints);
             }
         }
         hints.Normalize();

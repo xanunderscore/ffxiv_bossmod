@@ -336,7 +336,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         Manager.Hints.RecommendedPositional = (target, positional.pos, NextPositionalImminent, NextPositionalCorrect);
     }
 
-    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    public sealed override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         NextGCD = default;
         NextGCDPrio = 0;
@@ -346,7 +346,7 @@ public abstract class Basexan<AID, TraitID>(RotationModuleManager manager, Actor
         SwiftcastLeft = StatusLeft(BossMod.WHM.SID.Swiftcast);
         TrueNorthLeft = StatusLeft(BossMod.DRG.SID.TrueNorth);
 
-        ForceMovementIn = forceMovementIn;
+        ForceMovementIn = Hints.MaxCastTimeEstimate;
         AnimationLockDelay = estimatedAnimLockDelay;
 
         CombatTimer = (float)(World.CurrentTime - Manager.CombatStart).TotalSeconds;

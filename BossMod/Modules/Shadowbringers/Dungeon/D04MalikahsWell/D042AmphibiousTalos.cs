@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x267A, // R=3.15
     Geyser = 0x1EAAC9,
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -15,18 +15,19 @@ public enum AID : uint
     GeyserEruption = 15598, // Helper->self, 3.5s cast, range 8 circle
     HighPressure = 15596, // Boss->self, 4.0s cast, range 40 circle, knockback 20, away from source
     SwiftSpillFirst = 15599, // Boss->self, 7.0s cast, range 50 60-degree cone
-    SwiftSpillRest = 15600, // Boss->self, no cast, range 50 60-degree cone
+    SwiftSpillRest = 15600 // Boss->self, no cast, range 50 60-degree cone
 }
 
 public enum IconID : uint
 {
     Tankbuster = 198, // player
     RotateCCW = 157, // Boss
-    RotateCW = 156, // Boss
+    RotateCW = 156 // Boss
 }
 
 class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(module)
 {
+    private static readonly Angle a60 = 60.Degrees();
     private Angle _increment;
     private Angle _rotation;
     private DateTime _activation;
@@ -36,8 +37,8 @@ class SwiftSpillRotation(BossModule module) : Components.GenericRotatingAOE(modu
     {
         var increment = (IconID)iconID switch
         {
-            IconID.RotateCW => -60.Degrees(),
-            IconID.RotateCCW => 60.Degrees(),
+            IconID.RotateCW => -a60,
+            IconID.RotateCCW => a60,
             _ => default
         };
         if (increment != default)
@@ -97,5 +98,5 @@ class D042AmphibiousTalosStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8250)]
-public class D042AmphibiousTalos(WorldState ws, Actor primary) : BossModule(ws, primary, new(208, 275), new ArenaBoundsCircle(19.5f));
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8250)]
+public class D042AmphibiousTalos(WorldState ws, Actor primary) : BossModule(ws, primary, new(208, 275), new ArenaBoundsCircle(19.55f));

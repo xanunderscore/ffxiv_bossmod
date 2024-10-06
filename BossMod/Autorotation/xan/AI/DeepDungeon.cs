@@ -19,7 +19,7 @@ public class DeepDungeonAI(RotationModuleManager manager, Actor player) : AIBase
         214, 215, 216, 217, 218
     ];
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         if (strategy.Enabled(Track.Potion))
         {

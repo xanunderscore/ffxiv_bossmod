@@ -118,7 +118,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
         (uint)WAR.SID.BloodwhettingDefenseLong
     ];
 
-    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, float forceMovementIn, bool isMoving)
+    public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
         if (Player.MountId > 0)
             return;

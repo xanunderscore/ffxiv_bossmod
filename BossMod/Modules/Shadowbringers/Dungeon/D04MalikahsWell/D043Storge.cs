@@ -4,7 +4,7 @@ public enum OID : uint
 {
     Boss = 0x267B, // R=5.0
     RhapsodicNail = 0x267C, // R=1.5
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
@@ -24,7 +24,7 @@ public enum AID : uint
     HereticForkWait = 17913, // 2BD6->self, 6.5s cast, single-target, before long Heretics Fork
     HereticsFork1 = 15602, // Boss->self, 5.0s cast, range 60 width 10 cross
     HereticsFork2 = 15609, // RhapsodicNail->self, 8.0s cast, range 60 width 10 cross
-    HereticsFork3 = 15886, // Boss->self, 23.0s cast, range 60 width 10 cross
+    HereticsFork3 = 15886 // Boss->self, 23.0s cast, range 60 width 10 cross
 }
 
 class IntestinalCrank(BossModule module) : Components.RaidwideCast(module, ActionID.MakeSpell(AID.IntestinalCrank));
@@ -42,9 +42,9 @@ class HereticsForkBreakingWheelStreak(BossModule module) : Components.GenericAOE
     public override IEnumerable<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
         if (_spell1.Count > 0)
-            yield return new(_spell1[0].Shape, _spell1[0].Origin, _spell1[0].Rotation, _spell1[0].Activation);
+            yield return _spell1[0];
         if (_spell1.Count == 0 && _spell2.Count > 0)
-            yield return new(_spell2[0].Shape, _spell2[0].Origin, _spell2[0].Rotation, _spell2[0].Activation);
+            yield return _spell2[0];
     }
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -95,5 +95,5 @@ class D043StorgeStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8249)]
-public class D043Storge(WorldState ws, Actor primary) : BossModule(ws, primary, new(196, -95), new ArenaBoundsSquare(19.5f));
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "The Combat Reborn Team (Malediktus), Ported by Herculezz", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 656, NameID = 8249)]
+public class D043Storge(WorldState ws, Actor primary) : BossModule(ws, primary, new(195, -95), new ArenaBoundsSquare(14.5f));

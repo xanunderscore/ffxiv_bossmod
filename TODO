@@ -1,9 +1,12 @@
 immediate plans
-- investigate https://discord.com/channels/1001823907193552978/1191076246860349450/1290280745453092949
 - nechuciho - seen incorrect rotations...
 - merge prs!
 - collisions for pathfinding
 -- embedded mode
+- zone module manager
+-- drawing in main/hint windows and in replays
+-- replay visualization
+-- sastasha as example
 - brd rotation
 
 general:
