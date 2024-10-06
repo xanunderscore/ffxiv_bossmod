@@ -45,13 +45,10 @@ class FoxshotKB(BossModule module) : Components.Knockback(module, stopAtWall: tr
 
         hints.AddForbiddenZone(p =>
         {
-            var dir = source.DirectionTo(p);
             foreach (var s in sources)
-            {
-                var winddir = s - source.Position;
-                if (MathF.Abs(WDir.Cross(winddir, dir)) <= 6 && WDir.Dot(winddir, dir) > 0)
+                if (Intersect.RayCircle(source.Position, source.DirectionTo(p), s, 6) < 1000)
                     return -1;
-            }
+
             return 0;
         }, Module.CastFinishAt(source.CastInfo));
     }
