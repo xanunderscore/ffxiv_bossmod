@@ -5,11 +5,14 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
+    public enum Track { Intervene = SharedTrack.Count }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("xan PLD", "Paladin", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.PLD, Class.GLA), 100);
 
         def.DefineShared().AddAssociatedActions(AID.FightOrFlight);
+        def.DefineSimple(Track.Intervene, "Dash").AddAssociatedActions(AID.Intervene);
 
         return def;
     }
@@ -164,12 +167,24 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
                 PushOGCD(AID.CircleOfScorn, Player);
         }
 
-        if (FightOrFlight > 0)
-            PushOGCD(AID.Intervene, primaryTarget);
+        switch (strategy.Simple(Track.Intervene))
+        {
+            case OffensiveStrategy.Automatic:
+                if (FightOrFlight > 0)
+                    PushOGCD(AID.Intervene, primaryTarget);
+                break;
+            case OffensiveStrategy.Force:
+                PushOGCD(AID.Intervene, primaryTarget);
+                break;
+        }
     }
 
     private bool ShouldFoF(StrategyValues strategy, Actor? primaryTarget)
     {
-        return AtonementReady > 0 || Requiescat.Left > 0 || DivineMight > 0 || !Unlocked(TraitID.DivineMagicMastery1);
+        if (!Unlocked(TraitID.DivineMagicMastery1))
+            return true;
+
+        // hold FoF until 3rd GCD for opener, otherwise use on cooldown
+        return DivineMight > 0 || CombatTimer > 30;
     }
 }
