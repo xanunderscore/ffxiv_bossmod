@@ -28,7 +28,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Disable auto-target")]
     public bool ForbidActions = false;
 
-    [PropertyDisplay("Automatically engage FATE mobs")]
+    [PropertyDisplay("Automatically engage FATE mobs", since: "0.0.0.253")]
     public bool AutoFate = true;
 
     [PropertyDisplay("Focus target master")]
