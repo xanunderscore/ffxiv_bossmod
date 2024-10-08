@@ -112,6 +112,7 @@ public sealed class AIHints
         GoalZones.Clear();
         RecommendedPositional = default;
         WantJump = false;
+        Dismount = false;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;
         PredictedDamage.Clear();
