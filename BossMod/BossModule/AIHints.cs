@@ -86,13 +86,14 @@ public sealed class AIHints
     // actions that we want to be executed, gathered from various sources (manual input, autorotation, planner, ai, modules, etc.)
     public ActionQueue ActionsToExecute = new();
 
+    public bool WantJump;
+
     // buffs to be canceled asap
     public List<(uint statusId, ulong sourceId)> StatusesToCancel = [];
 
     [Obsolete("This does nothing, stop using it")]
     public float RecommendedRangeToTarget;
 
-    [Obsolete("This does nothing, stop using it")]
     public bool Dismount;
 
     private readonly AIConfig _config = Service.Config.Get<AIConfig>();
@@ -110,6 +111,7 @@ public sealed class AIHints
         ForbiddenZones.Clear();
         GoalZones.Clear();
         RecommendedPositional = default;
+        WantJump = false;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;
         PredictedDamage.Clear();
@@ -220,10 +222,10 @@ public sealed class AIHints
 
     // goal zones
     // simple goal zone that returns 1 if target is in range, useful for single-target actions
-    public Func<WPos, float> GoalSingleTarget(WPos target, float radius)
+    public Func<WPos, float> GoalSingleTarget(WPos target, float radius, float weight = 1)
     {
         var effRsq = radius * radius;
-        return p => (p - target).LengthSq() <= effRsq ? 1 : 0;
+        return p => (p - target).LengthSq() <= effRsq ? weight : 0;
     }
     public Func<WPos, float> GoalSingleTarget(Actor target, float range) => GoalSingleTarget(target.Position, range + target.HitboxRadius + 0.5f);
 

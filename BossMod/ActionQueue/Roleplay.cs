@@ -147,6 +147,9 @@ public enum AID : uint
     FightOrFlightIFTC = 26252,
     RampartIFTC = 26253,
     MedicalKit = 27315,
+    MagitekCannonIFTC = 26231,
+    DiffractiveMagitekCannonIFTC = 26232,
+    HighPoweredMagitekCannonIFTC = 26233,
 
     // Alphinaud - As the Heavens Burn
     Diagnosis = 26224,
@@ -389,6 +392,9 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.FightOrFlightIFTC);
         d.RegisterSpell(AID.RampartIFTC);
         d.RegisterSpell(AID.MedicalKit);
+        d.RegisterSpell(AID.MagitekCannonIFTC);
+        d.RegisterSpell(AID.DiffractiveMagitekCannonIFTC);
+        d.RegisterSpell(AID.HighPoweredMagitekCannonIFTC);
 
         d.RegisterSpell(AID.Diagnosis);
         d.RegisterSpell(AID.Prognosis);
