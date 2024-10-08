@@ -53,6 +53,7 @@ public class QuestObjective(WorldState ws)
     public Action<Actor, ActorCastEvent>? OnEventCast;
     public Action<WorldState.OpEnvControl>? OnEnvControl;
     public Action<WorldState.OpDirectorUpdate>? OnDirectorUpdate;
+    public Action<ClientState.OpDutyActionsChange>? OnDutyActionsChange;
     public Action<ConditionFlag, bool>? OnConditionChange;
     public Action? OnNavigationComplete;
     public Action? Update;
@@ -246,7 +247,8 @@ public abstract class QuestBattle : IDisposable
             ws.Actors.EventObjectAnimation.Subscribe((act, p1, p2) => CurrentObjective?.OnEventObjectAnimation?.Invoke(act, p1, p2)),
             ws.DirectorUpdate.Subscribe(op => CurrentObjective?.OnDirectorUpdate?.Invoke(op)),
             ws.EnvControl.Subscribe(op => CurrentObjective?.OnEnvControl?.Invoke(op)),
-            ws.Actors.IsTargetableChanged.Subscribe(act => CurrentObjective?.OnActorTargetableChanged?.Invoke(act))
+            ws.Actors.IsTargetableChanged.Subscribe(act => CurrentObjective?.OnActorTargetableChanged?.Invoke(act)),
+            ws.Client.DutyActionsChanged.Subscribe(op => CurrentObjective?.OnDutyActionsChange?.Invoke(op))
         );
         if (Service.Condition == null)
             Service.Log($"[QuestBattle] UIDev detected, not registering hook");

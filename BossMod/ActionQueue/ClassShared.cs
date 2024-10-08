@@ -60,7 +60,7 @@ public enum AID : uint
     AethericSiphon = 9102,
     Shatterstone = 9823,
     Deflect = 10006,
-    DeflectVeryEasy = 18863,
+    DeflectVeryEasy = 18863
 }
 
 public sealed class Definitions : IDisposable

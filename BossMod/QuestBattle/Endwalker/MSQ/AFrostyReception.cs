@@ -40,7 +40,7 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         if (player.FindStatus(Roleplay.SID.RolePlaying) == null)
             return;
 
-        foreach (var h in hints.PotentialTargets.Where(p => p.Actor.Position.InCircle(player.Position, 20)))
+        foreach (var h in hints.PotentialTargets.Where(p => p.Actor.Position.InCircle(player.Position, 30)))
             if (!h.Actor.InCombat)
                 if (player.FindStatus(Roleplay.SID.SwiftDeception) == null || h.Actor.OID == 0x362A)
                     hints.AddForbiddenZone(GetSightCone(h.Actor));
@@ -134,6 +134,9 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws)
             .With(obj => {
                 obj.Update = () => {
+                    if (World.Party.Player()?.InCombat ?? false)
+                        return;
+
                     var cd = ActionDefinitions.Instance[ActionID.MakeSpell(Roleplay.AID.SwiftDeception)];
                     obj.CompleteIf(cd?.ReadyIn(World.Client.Cooldowns, World.Client.DutyActions) < 0.5f);
                 };

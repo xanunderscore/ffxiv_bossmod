@@ -146,6 +146,7 @@ public enum AID : uint
     RageOfHaloneIFTC = 26251,
     FightOrFlightIFTC = 26252,
     RampartIFTC = 26253,
+    MedicalKit = 27315,
 
     // Alphinaud - As the Heavens Burn
     Diagnosis = 26224,
@@ -387,6 +388,7 @@ public sealed class Definitions : IDisposable
         d.RegisterSpell(AID.RageOfHaloneIFTC);
         d.RegisterSpell(AID.FightOrFlightIFTC);
         d.RegisterSpell(AID.RampartIFTC);
+        d.RegisterSpell(AID.MedicalKit);
 
         d.RegisterSpell(AID.Diagnosis);
         d.RegisterSpell(AID.Prognosis);

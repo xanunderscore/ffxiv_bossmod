@@ -77,7 +77,6 @@ sealed class AIController(ActionManagerEx amex, MovementOverride movement)
 
         if (hints.InteractWithTarget is Actor tar && CanInteract(player, tar))
         {
-            // clear forced movement so we don't interrupt our own interact
             hints.ForcedMovement = new();
             ExecuteInteract(now, tar);
         }
