@@ -8,7 +8,7 @@ internal class SlingsAndArrows(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(-36.12f, 40.34f, -25.96f))
             .WithConnection(new Vector3(-46.72f, 40.00f, 60.58f))
             .With(obj => {
-                obj.AddAIHints += (player, hints, _) => {
+                obj.AddAIHints += (player, hints) => {
                     hints.InteractWithTarget = World.Actors.FirstOrDefault(x => x.OID == 0x1E9B5B && x.Position.AlmostEqual(new WPos(-40.36f, 64.93f), 5));
                 };
             })

@@ -15,7 +15,7 @@ internal class TheHarvestBegins(WorldState ws) : QuestBattle(ws)
             .With(obj => {
                 var guillotine = false;
 
-                obj.AddAIHints += (player, hints, _) => {
+                obj.AddAIHints += (player, hints) => {
                     hints.PrioritizeAll();
 
                     if (!guillotine && player.FindStatus(BossMod.RPR.SID.SoulReaver) != null && World.Actors.Find(player.TargetID) is Actor tar)

@@ -1,4 +1,5 @@
 ﻿using BossMod.AI;
+using BossMod.QuestBattle;
 
 namespace BossMod;
 
@@ -11,16 +12,18 @@ public sealed class AIHintsBuilder : IDisposable
     public readonly Pathfinding.ObstacleMapManager Obstacles;
     private readonly WorldState _ws;
     private readonly BossModuleManager _bmm;
+    private readonly QuestBattleDirector _qb;
     private readonly ZoneModuleManager _zmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
     private ArenaBoundsCircle? _activeFateBounds;
     private readonly AIConfig _config;
 
-    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm)
+    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm, QuestBattleDirector qb)
     {
         _ws = ws;
         _bmm = bmm;
+        _qb = qb;
         _zmm = zmm;
         Obstacles = new(ws);
         _config = Service.Config.Get<AIConfig>();
@@ -55,6 +58,7 @@ public sealed class AIHintsBuilder : IDisposable
             else
             {
                 CalculateAutoHints(hints, player);
+                _qb.CurrentModule?.AddAIHints(player, hints);
                 _zmm.ActiveModule?.CalculateAIHints(player, hints);
             }
         }

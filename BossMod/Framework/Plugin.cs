@@ -82,7 +82,7 @@ public sealed class Plugin : IDalamudPlugin
         _bossmod = new(_ws);
         _qb = new(_ws, _bossmod);
         _zonemod = new(_ws);
-        _hintsBuilder = new(_ws, _bossmod, _zonemod);
+        _hintsBuilder = new(_ws, _bossmod, _zonemod, _qb);
         _movementOverride = new();
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);

@@ -14,7 +14,7 @@ internal class RiseOfTheMachinists(WorldState ws) : QuestBattle(ws)
                         tedal ??= act;
                 };
 
-                obj.AddAIHints += (player, hints, _) => {
+                obj.AddAIHints += (player, hints) => {
                     foreach(var h in hints.PotentialTargets)
                         if (h.Actor.TargetID == tedal?.InstanceID)
                             h.Priority = 5;
@@ -22,7 +22,7 @@ internal class RiseOfTheMachinists(WorldState ws) : QuestBattle(ws)
             })
         ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         hints.PathfindMapCenter = new(Center.X, Center.Z);
         hints.PathfindMapBounds = new ArenaBoundsCircle(120, 2);

@@ -5,7 +5,7 @@ internal class ComeRainOrShrine(WorldState ws) : QuestBattle(ws)
 {
     private void HealBond(QuestObjective obj)
     {
-        obj.AddAIHints += (player, hints, _) =>
+        obj.AddAIHints += (player, hints) =>
         {
             if (World.Actors.FirstOrDefault(x => x.OID == 0x1ADA && x.IsTargetable && x.FindStatus(835) == null) is Actor t)
                 hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.AST.AID.AspectedBenefic), t, ActionQueue.Priority.High);

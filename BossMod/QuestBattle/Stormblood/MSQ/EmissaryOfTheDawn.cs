@@ -33,5 +33,5 @@ public class EmissaryOfTheDawn(WorldState ws) : QuestBattle(ws)
             .WithInteract(0x1EA9D9)
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) => _ai.Execute(player, hints, maxCastTime);
+    public override void AddQuestAIHints(Actor player, AIHints hints) => _ai.Execute(player, hints);
 }

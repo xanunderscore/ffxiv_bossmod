@@ -35,7 +35,7 @@ public class ItsProbablyATrap(WorldState ws) : QuestBattle(ws)
             .PauseForCombat(false)
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             // attacking sekiseigumi fails the mission

@@ -7,7 +7,7 @@ internal class InTheEyesOfGodsAndMen(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws).WithInteract(0x1E8D67)
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         hints.PathfindMapBounds = new ArenaBoundsCircle(60, 1);
         hints.PathfindMapCenter = player.Position;

@@ -8,7 +8,7 @@ internal class AGameOfLifeAndDeath(WorldState ws) : QuestBattle(ws)
         {
             // check here instead of OnStatusGain since NIN autorotation might have used hide (to reset cds) before step began
             obj.Update += () => obj.CompleteIf(World.Party.Player()?.FindStatus(BossMod.NIN.SID.Hidden) != null);
-            obj.AddAIHints += (player, hints, _) => hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.NIN.AID.Hide), player, ActionQueue.Priority.Medium);
+            obj.AddAIHints += (player, hints) => hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.NIN.AID.Hide), player, ActionQueue.Priority.Medium);
         });
 
     public override List<QuestObjective> DefineObjectives(WorldState ws) => [
@@ -28,7 +28,7 @@ internal class AGameOfLifeAndDeath(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws)
             .WithInteract(0x1EA740)
             .With(obj => {
-                obj.AddAIHints += (player, hints, _) => hints.StatusesToCancel.Add(((uint)BossMod.NIN.SID.Hidden, player.InstanceID));
+                obj.AddAIHints += (player, hints) => hints.StatusesToCancel.Add(((uint)BossMod.NIN.SID.Hidden, player.InstanceID));
 
                 obj.OnModelStateChanged += (act) => obj.CompleteIf(act.OID == 0x1E64 && act.ModelState is {ModelState: 0, AnimState1: 0, AnimState2: 0});
             }),

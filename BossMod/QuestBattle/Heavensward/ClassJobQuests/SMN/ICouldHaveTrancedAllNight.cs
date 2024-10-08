@@ -3,7 +3,7 @@
 [Quest(BossModuleInfo.Maturity.Contributed, 439)]
 internal class ICouldHaveTrancedAllNight(WorldState ws) : QuestBattle(ws)
 {
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             h.Priority = h.Actor.OID == 0x1321 ? 0 : 1;

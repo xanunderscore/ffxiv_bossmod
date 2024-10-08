@@ -44,5 +44,5 @@ public class VowsOfVirtueDeedsOfCruelty(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(240, -40, 287))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime) => _ai.Execute(player, hints, maxCastTime);
+    public override void AddQuestAIHints(Actor player, AIHints hints) => _ai.Execute(player, hints);
 }

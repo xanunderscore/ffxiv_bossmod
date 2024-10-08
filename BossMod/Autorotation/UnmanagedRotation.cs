@@ -11,9 +11,9 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
 
     protected abstract void Exec(Actor? primaryTarget);
 
-    public void Execute(Actor player, AIHints hints, float maxCastTime)
+    public void Execute(Actor player, AIHints hints)
     {
-        MaxCastTime = maxCastTime;
+        MaxCastTime = hints.MaxCastTimeEstimate;
         Hints = hints;
         Player = player;
 

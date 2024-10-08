@@ -63,6 +63,8 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 {
                     var newBitmap = new Bitmap(Bitmap.Width + _deltaCells, Bitmap.Height, Bitmap.Color0, Bitmap.Color1, Bitmap.Resolution);
                     Bitmap.FullRegion.CopyTo(newBitmap, _deltaCells, 0);
+                    e.MinBounds.X += _deltaCells * Bitmap.PixelSize;
+                    e.Origin.X -= _deltaCells * Bitmap.PixelSize;
                     CheckpointNoClone(newBitmap);
                 }
                 ImGui.SameLine();
@@ -70,6 +72,8 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 {
                     var newBitmap = new Bitmap(Bitmap.Width, Bitmap.Height + _deltaCells, Bitmap.Color0, Bitmap.Color1, Bitmap.Resolution);
                     Bitmap.FullRegion.CopyTo(newBitmap, 0, _deltaCells);
+                    e.MinBounds.Z += _deltaCells * Bitmap.PixelSize;
+                    e.Origin.Z -= _deltaCells * Bitmap.PixelSize;
                     CheckpointNoClone(newBitmap);
                 }
                 ImGui.SameLine();
@@ -77,6 +81,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 {
                     var newBitmap = new Bitmap(Bitmap.Width + _deltaCells, Bitmap.Height, Bitmap.Color0, Bitmap.Color1, Bitmap.Resolution);
                     Bitmap.FullRegion.CopyTo(newBitmap, 0, 0);
+                    e.MaxBounds.X += _deltaCells * Bitmap.PixelSize;
                     CheckpointNoClone(newBitmap);
                 }
                 ImGui.SameLine();
@@ -84,6 +89,7 @@ sealed class DebugObstacles(ObstacleMapManager obstacles, IDalamudPluginInterfac
                 {
                     var newBitmap = new Bitmap(Bitmap.Width, Bitmap.Height + _deltaCells, Bitmap.Color0, Bitmap.Color1, Bitmap.Resolution);
                     Bitmap.FullRegion.CopyTo(newBitmap, 0, 0);
+                    e.MaxBounds.Z += _deltaCells * Bitmap.PixelSize;
                     CheckpointNoClone(newBitmap);
                 }
             }

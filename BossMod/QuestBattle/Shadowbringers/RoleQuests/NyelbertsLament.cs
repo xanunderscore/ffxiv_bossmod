@@ -48,12 +48,12 @@ public class NyelbertsLament(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(-440.00f, -121.67f, -676.00f))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             if (h.Actor.InCombat)
                 h.Priority = 0;
 
-        _ai.Execute(player, hints, maxCastTime);
+        _ai.Execute(player, hints);
     }
 }

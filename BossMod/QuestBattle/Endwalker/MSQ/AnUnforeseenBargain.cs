@@ -47,7 +47,7 @@ internal class AnUnforeseenBargain(WorldState ws) : QuestBattle(ws)
 {
     private readonly ZeroAI _zero = new(ws);
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         hints.PathfindMapCenter = new(97.85f, 286);
         hints.PathfindMapBounds = new ArenaBoundsCircle(19.5f);
@@ -57,7 +57,7 @@ internal class AnUnforeseenBargain(WorldState ws) : QuestBattle(ws)
                 hints.ForbiddenDirections.Add((player.AngleTo(h.Actor), 45.Degrees(), World.FutureTime(ci.NPCRemainingTime)));
 
         if (player.FindStatus(Roleplay.SID.RolePlaying) != null)
-            _zero.Execute(player, hints, maxCastTime);
+            _zero.Execute(player, hints);
     }
 }
 

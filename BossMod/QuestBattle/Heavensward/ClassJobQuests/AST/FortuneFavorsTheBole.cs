@@ -18,7 +18,7 @@ internal class FortuneFavorsTheBole(WorldState ws) : QuestBattle(ws)
             .WithConnection(new Vector3(34.35f, 3.68f, 306.75f))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             if (h.Actor.InCombat)

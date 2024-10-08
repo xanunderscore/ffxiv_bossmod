@@ -84,7 +84,7 @@ internal class SleepNowInSapphire(WorldState ws) : QuestBattle(ws)
                         shieldActivate = false;
                 };
 
-                obj.AddAIHints += (player, hints, _) => {
+                obj.AddAIHints += (player, hints) => {
                     hints.PrioritizeAll();
                     if (pyreticActivate)
                         hints.ActionsToExecute.Push(ActionID.MakeSpell(Roleplay.AID.PyreticBooster), player, ActionQueue.Priority.High);
@@ -94,11 +94,11 @@ internal class SleepNowInSapphire(WorldState ws) : QuestBattle(ws)
             })
         ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         hints.PathfindMapBounds = new ArenaBoundsSquare(60, 1);
         hints.PathfindMapCenter = new WPos(-15, 610);
 
-        _weapon.Execute(player, hints, maxCastTime);
+        _weapon.Execute(player, hints);
     }
 }

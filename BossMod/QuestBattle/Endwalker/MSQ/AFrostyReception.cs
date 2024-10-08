@@ -35,7 +35,7 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
 {
     private readonly AutoThancred _ai = new(ws);
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         if (player.FindStatus(Roleplay.SID.RolePlaying) == null)
             return;
@@ -45,7 +45,7 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
                 if (player.FindStatus(Roleplay.SID.SwiftDeception) == null || h.Actor.OID == 0x362A)
                     hints.AddForbiddenZone(GetSightCone(h.Actor));
 
-        _ai.Execute(player, hints, maxCastTime);
+        _ai.Execute(player, hints);
     }
 
     private static Func<WPos, float> GetSightCone(Actor p)
@@ -93,7 +93,7 @@ internal class AFrostyReception(WorldState ws) : QuestBattle(ws)
         new QuestObjective(ws)
             .Named("Wall")
             .With(obj => {
-                obj.AddAIHints += (player, hints, _) => {
+                obj.AddAIHints += (player, hints) => {
                     if (World.Actors.Find(player.TargetID)?.OID == 0x384C)
                         hints.ForcedTarget = player;
                 };

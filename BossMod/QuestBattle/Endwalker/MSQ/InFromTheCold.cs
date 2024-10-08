@@ -30,13 +30,13 @@ internal class InFromTheCold(WorldState ws) : QuestBattle(ws)
 {
     private readonly ImperialAI _ai = new(ws);
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets.Where(p => p.Actor.Position.InCircle(player.Position, 20)))
             if (!h.Actor.InCombat)
                 hints.AddForbiddenZone(ShapeDistance.Cone(h.Actor.Position, 8.5f + h.Actor.HitboxRadius, h.Actor.Rotation, 45.Degrees()));
 
-        _ai.Execute(player, hints, maxCastTime);
+        _ai.Execute(player, hints);
     }
 }
 

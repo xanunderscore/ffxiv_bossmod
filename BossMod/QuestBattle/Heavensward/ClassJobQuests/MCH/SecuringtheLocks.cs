@@ -5,7 +5,7 @@ internal class SecuringTheLocks(WorldState ws) : QuestBattle(ws)
 {
     private static readonly WPos Center = new(231.29f, 124.36f);
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         hints.PathfindMapCenter = Center;
         hints.PathfindMapBounds = new ArenaBoundsCircle(120, 2);

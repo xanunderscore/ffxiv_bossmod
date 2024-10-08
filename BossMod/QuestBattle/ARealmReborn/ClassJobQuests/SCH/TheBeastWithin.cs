@@ -38,7 +38,7 @@ internal class TheBeastWithin(WorldState ws) : QuestBattle(ws)
             .Hints((player, hints) => hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.SCH.AID.Physick), World.Actors.FirstOrDefault(x => x.OID == 0x5F8 && x.IsTargetable), ActionQueue.Priority.High))
     ];
 
-    public override void AddQuestAIHints(Actor player, AIHints hints, float maxCastTime)
+    public override void AddQuestAIHints(Actor player, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             if (h.Actor.OID == 0x5F3)
