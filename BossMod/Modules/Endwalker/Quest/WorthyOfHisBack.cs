@@ -1,4 +1,6 @@
-﻿namespace BossMod.Endwalker.Quest.WorthyOfHisBack;
+﻿using BossMod.QuestBattle;
+
+namespace BossMod.Endwalker.Quest.WorthyOfHisBack;
 
 public enum OID : uint
 {
@@ -249,7 +251,10 @@ class Adds(BossModule module) : Components.AddsMulti(module, [(uint)OID.Thelema,
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var e in hints.PotentialTargets)
-            e.Priority = OIDs.Contains(e.Actor.OID) ? 1 : 0;
+            if (OIDs.Contains(e.Actor.OID))
+                e.Priority = (int)(30 - (e.Actor.Position - Arena.Center).Length());
+            else
+                e.Priority = 0;
     }
 }
 
@@ -279,4 +284,4 @@ public class VenatStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "xan", GroupType = BossModuleInfo.GroupType.Quest, GroupID = 69968, NameID = 10586)]
-public class Venat(WorldState ws, Actor primary) : BossModule(ws, primary, new(-630, 72), new ArenaBoundsCircle(24.5f));
+public class Venat(WorldState ws, Actor primary) : InstapullModule(ws, primary, new(-630, 72), new ArenaBoundsCircle(24.5f));

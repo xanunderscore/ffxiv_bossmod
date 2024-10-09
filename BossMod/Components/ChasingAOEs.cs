@@ -33,6 +33,14 @@ public class GenericChasingAOEs(BossModule module, ActionID aid = default, strin
         }
     }
 
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        base.AddAIHints(slot, actor, assignment, hints);
+        foreach (var c in Chasers)
+            if (c.Target == actor && c.Shape is AOEShapeCircle circle)
+                hints.AddForbiddenZone(new AOEShapeCircle(circle.Radius + c.MoveDist), c.PrevPos, default, c.NextActivation);
+    }
+
     public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor) => Chasers.Any(c => c.Target == player) ? PlayerPriority.Interesting : PlayerPriority.Irrelevant;
 
     // return false if chaser was not found
