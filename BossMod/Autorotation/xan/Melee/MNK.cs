@@ -223,7 +223,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     public enum GCDPriority
     {
         None = 0,
-        Meditate = 50,
+        Meditate = 1,
         WindRanged = 100,
         FireRanged = 200,
         Basic = 300,
@@ -536,7 +536,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     private void FormShift(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (!Unlocked(AID.FormShift))
+        if (!Unlocked(AID.FormShift) || PerfectBalanceLeft > 0)
             return;
 
         var prio = GCDPriority.None;

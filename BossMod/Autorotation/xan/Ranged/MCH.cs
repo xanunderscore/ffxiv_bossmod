@@ -125,7 +125,7 @@ public sealed class MCH(RotationModuleManager manager, Actor player) : Attackxan
             PushGCD(AID.ChainSaw, BestChainsawTarget, 10);
 
         if (ReadyIn(AID.Bioblaster) <= GCD && NumAOETargets > 2)
-            PushGCD(AID.Bioblaster, BestAOETarget);
+            PushGCD(AID.Bioblaster, BestAOETarget, priority: MaxChargesIn(AID.Bioblaster) <= GCD ? 20 : 2);
 
         if (ReadyIn(AID.Drill) <= GCD)
             PushGCD(AID.Drill, primaryTarget, priority: MaxChargesIn(AID.Drill) <= GCD ? 20 : 2);
