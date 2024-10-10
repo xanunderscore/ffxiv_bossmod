@@ -32,11 +32,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         [PropertyDisplay("Lunar", 0xFFDB8BCA)]
         Lunar,
         [PropertyDisplay("Solar", 0xFF8EE6FA)]
-        Solar,
-        [PropertyDisplay("Lunar (downtime)", 0xFFDB8BCA)]
-        LunarDowntime,
-        [PropertyDisplay("Solar (downtime)", 0xFF8EE6FA)]
-        SolarDowntime,
+        Solar
     }
     public enum RoWStrategy
     {
@@ -49,7 +45,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         Automatic,
         ForceOpo,
         Force,
-        Delay
+        Delay,
+        DowntimeSolar,
+        DowntimeLunar
     }
     public enum TCStrategy
     {
@@ -103,18 +101,20 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         def.Define(Track.Nadi).As<NadiStrategy>("Nadi")
             .AddOption(NadiStrategy.Automatic, "Automatically choose best nadi (double lunar opener, otherwise alternate)", minLevel: 60)
             .AddOption(NadiStrategy.Lunar, "Lunar", minLevel: 60)
-            .AddOption(NadiStrategy.Solar, "Solar", minLevel: 60)
-            .AddOption(NadiStrategy.LunarDowntime, "Build lunar nadi if no current target", minLevel: 60)
-            .AddOption(NadiStrategy.SolarDowntime, "Build solar nadi if no current target", minLevel: 60);
+            .AddOption(NadiStrategy.Solar, "Solar", minLevel: 60);
 
         def.DefineSimple(Track.RoF, "RoF", minLevel: 68).AddAssociatedActions(AID.RiddleOfFire);
         def.DefineSimple(Track.RoW, "RoW", minLevel: 72).AddAssociatedActions(AID.RiddleOfWind);
+
         def.Define(Track.PB).As<PBStrategy>("PB")
             .AddOption(PBStrategy.Automatic, "Automatically use after Opo before or during Riddle of Fire", minLevel: 50)
             .AddOption(PBStrategy.ForceOpo, "Use ASAP after next Opo", minLevel: 50)
             .AddOption(PBStrategy.Force, "Use ASAP", minLevel: 50)
             .AddOption(PBStrategy.Delay, "Do not use", minLevel: 50)
+            .AddOption(PBStrategy.DowntimeSolar, "Downtime prep: Solar", minLevel: 60, effect: 39)
+            .AddOption(PBStrategy.DowntimeLunar, "Downtime prep: Lunar", minLevel: 60, effect: 39)
             .AddAssociatedActions(AID.PerfectBalance);
+
         def.DefineSimple(Track.BH, "BH", minLevel: 70).AddAssociatedActions(AID.Brotherhood);
         def.Define(Track.TC).As<TCStrategy>("TC")
             .AddOption(TCStrategy.None, "Do not use", minLevel: 35)
@@ -331,6 +331,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         GoalZoneCombined(3, Hints.GoalAOECircle(5), AOEBreakpoint, pos.Item1);
 
+        OGCD(strategy, primaryTarget);
+
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
         WindsReply();
@@ -373,7 +375,39 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 break;
         }
 
-        OGCD(strategy, primaryTarget);
+        Prep(strategy);
+    }
+
+    private void Prep(StrategyValues strategy)
+    {
+        bool lunar;
+        switch (strategy.Option(Track.PB).As<PBStrategy>())
+        {
+            case PBStrategy.DowntimeSolar:
+                lunar = false;
+                break;
+            case PBStrategy.DowntimeLunar:
+                lunar = true;
+                break;
+            default:
+                return;
+        }
+
+        if (PerfectBalanceLeft == 0)
+            return;
+
+        var deadlineAll = MathF.Min(UptimeIn ?? float.MaxValue, PerfectBalanceLeft) - 0.5f;
+        var gcdsLeft = 3 - BeastCount;
+        var deadlineNext = deadlineAll - gcdsLeft * AttackGCDLength;
+        if (lunar)
+            PushGCD(AID.ArmOfTheDestroyer, Player, GCDPriority.Basic, deadlineNext);
+        else
+            PushGCD(BeastCount switch
+            {
+                0 => AID.Rockbreaker,
+                1 => AID.FourPointFury,
+                _ => AID.ArmOfTheDestroyer
+            }, Player, GCDPriority.Basic, deadlineNext);
     }
 
     private Form GetEffectiveForm(StrategyValues strategy)
@@ -391,7 +425,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         // NextChargeIn(PerfectBalance) > GCD is also not quite correct. ideally this would test whether a PB charge will come up during the riddle of fire window
         // but in fights with extended downtime, nadis will already be explicitly planned out, so this isn't super important
         var forcedDoubleLunar = CombatTimer < 30 && HaveLunar && ReadyIn(AID.PerfectBalance) > GCD && CanFitGCD(FireLeft, 3);
-        var forcedSolar = nadi is NadiStrategy.Solar or NadiStrategy.SolarDowntime
+        var forcedSolar = nadi == NadiStrategy.Solar
             || ForcedSolar
             || HaveLunar && !HaveSolar && !forcedDoubleLunar;
 
@@ -410,14 +444,14 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         return canRaptor ? Form.Raptor : canCoeurl ? Form.Coeurl : Form.OpoOpo;
     }
 
-    private void QueuePB(StrategyValues strategy)
+    private void QueuePB(StrategyValues strategy, Actor? primaryTarget)
     {
         var pbstrat = strategy.Option(Track.PB).As<PBStrategy>();
 
-        if (BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == PBStrategy.Delay)
+        if (BeastChakra[0] != BeastChakraType.None || NextGCD == AID.FiresReply || pbstrat == PBStrategy.Delay || PerfectBalanceLeft > 0)
             return;
 
-        if (pbstrat == PBStrategy.Force && PerfectBalanceLeft == 0)
+        if (pbstrat == PBStrategy.Force || pbstrat is PBStrategy.DowntimeSolar or PBStrategy.DowntimeLunar && primaryTarget is null)
         {
             PushOGCD(AID.PerfectBalance, Player, OGCDPriority.PerfectBalance);
             return;
@@ -464,7 +498,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
 
         Brotherhood(strategy, primaryTarget);
-        QueuePB(strategy);
+        QueuePB(strategy, primaryTarget);
 
         var useRof = ShouldRoF(strategy);
 
