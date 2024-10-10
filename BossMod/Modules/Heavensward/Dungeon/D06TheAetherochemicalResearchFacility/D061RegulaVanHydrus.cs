@@ -30,7 +30,6 @@ public enum TetherID : uint
 }
 
 class AetherochemicalGrenado(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalGrenado), 8);
-class AetherochemicalLaser(BossModule module) : Components.BaitAwayTethers(module, new AOEShapeRect(50, 2), (uint)TetherID.BaitAway, ActionID.MakeSpell(AID.AetherochemicalLaser));
 class AetherochemicalLaserAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.AetherochemicalLaser), new AOEShapeRect(50, 2));
 class JudgmentAOE(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.JudgmentAOE), new AOEShapeCircle(8));
 class MagiteckTurrents(BossModule module) : Components.AddsMulti(module, [(uint)OID.MagitekTurretI, (uint)OID.MagitekTurretII]);
@@ -44,7 +43,6 @@ class D061RegulaVanHydrusStates : StateMachineBuilder
     {
         TrivialPhase()
             .ActivateOnEnter<AetherochemicalGrenado>()
-            .ActivateOnEnter<AetherochemicalLaser>()
             .ActivateOnEnter<AetherochemicalLaserAOE>()
             .ActivateOnEnter<JudgmentAOE>()
             .ActivateOnEnter<MagiteckTurrents>()

@@ -124,7 +124,8 @@ public sealed class AIHints
     // fill list of potential targets from world state
     public void FillPotentialTargets(WorldState ws, bool playerIsDefaultTank)
     {
-        bool playerInFate = _config.AutoFate && ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
+        var curFate = Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(ws.Client.ActiveFate.ID);
+        bool playerInFate = _config.AutoFate && ws.Client.ActiveFate.ID != 0 && ws.Party.Player()?.Level <= curFate?.ClassJobLevelMax;
         var allowedFateID = playerInFate ? ws.Client.ActiveFate.ID : 0;
         foreach (var actor in ws.Actors.Where(a => a.IsTargetable && !a.IsAlly && !a.IsDead))
         {

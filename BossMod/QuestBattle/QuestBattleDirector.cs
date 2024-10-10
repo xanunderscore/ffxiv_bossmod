@@ -1,5 +1,6 @@
 ﻿using BossMod.AI;
 using BossMod.Autorotation;
+using BossMod.Pathfinding;
 using Dalamud.Plugin.Ipc;
 using System.Threading.Tasks;
 
@@ -32,6 +33,7 @@ public sealed class QuestBattleDirector : IDisposable
     private readonly BossModuleManager bmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly QuestBattleConfig _config;
+    private readonly PathManager _pm;
 
     public readonly record struct NavigationWaypoint(Vector3 Position, bool SpecifiedInPath);
 
@@ -63,6 +65,7 @@ public sealed class QuestBattleDirector : IDisposable
     {
         World = ws;
         _config = Service.Config.Get<QuestBattleConfig>();
+        _pm = new(ws);
         this.bmm = bmm;
 
         _subscriptions = new(
@@ -299,6 +302,17 @@ public sealed class QuestBattleDirector : IDisposable
     private async void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
     {
         CurrentConnections = connections;
+
+        if (connections.Count == 0)
+            return;
+
+        if (_pm.TryGetPath(connections.Last().Position, out var wp))
+        {
+            Service.Log($"[QBD] returning cached points");
+            CurrentWaypoints = wp.Select(p => new NavigationWaypoint(p, false)).ToList();
+            return;
+        }
+
         if (Service.PluginInterface == null)
         {
             Service.Log($"[QBD] UIDev detected, returning player's current position for waypoint");
@@ -306,7 +320,9 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            CurrentWaypoints = await TryPathfind(Enumerable.Repeat(new Waypoint(start, false), 1).Concat(connections), maxRetries).ConfigureAwait(false);
+            CurrentWaypoints = await TryPathfind([new Waypoint(start, false), .. connections], maxRetries).ConfigureAwait(false);
+
+            _pm.SavePath(connections.Last().Position, CurrentWaypoints.Select(p => p.Position).ToList());
         }
     }
 

@@ -17,4 +17,10 @@ public sealed class QuestBattleConfig : ConfigNode
 
     [PropertyDisplay("Use dash abilities for navigation (Smudge, Elusive Jump, etc)")]
     public bool UseDash = true;
+
+    [PropertyDisplay("Developer mode: load paths from source")]
+    public bool LoadFromSource = false;
+
+    [PropertyDisplay("Developer mode: source file for saved paths", tooltip: "<repo root>/BossMod/Pathfinding/StaticPaths/pathlist.json")]
+    public string SourcePath = "";
 }

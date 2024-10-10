@@ -358,7 +358,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(OpoStacks == 0 && Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic);
                 break;
             default:
-                PushGCD(Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic);
+                PushGCD(OpoStacks > 0 && FormShiftLeft > GCD ? AID.Bootshine : Unlocked(AID.DragonKick) ? AID.DragonKick : AID.Bootshine, primaryTarget, GCDPriority.Basic);
                 break;
         }
 
