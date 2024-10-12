@@ -152,6 +152,14 @@ public sealed class QuestBattleDirector : IDisposable
         }
     }
 
+    public void AddAIHints(Actor player, AIHints hints)
+    {
+        if (!Enabled || Paused)
+            return;
+
+        CurrentModule?.AddAIHints(player, hints);
+    }
+
     public void Update(AIHints hints)
     {
         if (!Enabled || Paused || bmm?.ActiveModule?.StateMachine.ActivePhase != null)

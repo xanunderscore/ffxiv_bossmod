@@ -58,7 +58,7 @@ public sealed class AIHintsBuilder : IDisposable
             else
             {
                 CalculateAutoHints(hints, player);
-                _qb.CurrentModule?.AddAIHints(player, hints);
+                _qb.AddAIHints(player, hints);
                 _zmm.ActiveModule?.CalculateAIHints(player, hints);
             }
         }
