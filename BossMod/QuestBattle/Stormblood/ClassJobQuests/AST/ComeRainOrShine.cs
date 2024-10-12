@@ -35,6 +35,7 @@ internal class ComeRainOrShrine(WorldState ws) : QuestBattle(ws)
             .With(HealBond),
 
         new QuestObjective(ws)
+            .WithConnection(new Vector3(144.55f, 18.00f, -58.19f))
             .WithConnection(new Vector3(47.98f, 3.00f, -60.09f))
             .WithConnection(new Vector3(22.43f, 10.50f, -209.94f))
             .WithInteract(0x1EA312)
