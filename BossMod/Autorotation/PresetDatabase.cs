@@ -6,22 +6,29 @@ namespace BossMod.Autorotation;
 // note: presets in the database are immutable (otherwise eg. manager won't see the changes in active preset)
 public sealed class PresetDatabase
 {
+    public const string DefaultPresetName = "VBM Default";
+
+    private readonly AutorotationConfig _cfg = Service.Config.Get<AutorotationConfig>();
+
     public readonly List<Preset> Presets = [];
     public Event<Preset?, Preset?> PresetModified = new(); // (old, new); old == null if preset is added, new == null if preset is removed
 
     private readonly FileInfo _dbPath;
 
-    public PresetDatabase(string rootPath, FileInfo? defaultPresets)
+    public PresetDatabase(string rootPath, FileInfo defaultPresets)
     {
         _dbPath = new(rootPath + ".db.json");
-        if (!File.Exists(_dbPath.FullName) && (defaultPresets?.Exists ?? false))
-            defaultPresets.CopyTo(_dbPath.FullName);
+
+        if (defaultPresets.Exists)
+            Presets.AddRange(LoadPresetsFromFile(defaultPresets.FullName));
+        else
+            Service.Log($"Failed to load default presets from '{defaultPresets}': file is missing");
 
         if (File.Exists(_dbPath.FullName))
         {
             try
             {
-                Presets = LoadPresetsFromFile(_dbPath.FullName);
+                Presets.AddRange(LoadPresetsFromFile(_dbPath.FullName));
             }
             catch (Exception ex)
             {
@@ -66,7 +73,7 @@ public sealed class PresetDatabase
             jwriter.WriteStartObject();
             jwriter.WriteNumber("version", 0);
             jwriter.WritePropertyName("payload");
-            JsonSerializer.Serialize(jwriter, Presets, Serialization.BuildSerializationOptions());
+            JsonSerializer.Serialize(jwriter, Presets.Where(p => p.Name != DefaultPresetName), Serialization.BuildSerializationOptions());
             jwriter.WriteEndObject();
             Service.Log($"Database saved successfully to '{_dbPath.FullName}'");
         }
@@ -76,5 +83,5 @@ public sealed class PresetDatabase
         }
     }
 
-    public IEnumerable<Preset> PresetsForClass(Class c) => Presets.Where(p => p.Modules.Any(m => RotationModuleRegistry.Modules[m.Key].Definition.Classes[(int)c]));
+    public IEnumerable<Preset> PresetsForClass(Class c) => Presets.Where(p => (p.Name != DefaultPresetName || !_cfg.HideDefaultPreset) && p.Modules.Any(m => RotationModuleRegistry.Modules[m.Key].Definition.Classes[(int)c]));
 }

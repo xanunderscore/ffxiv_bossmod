@@ -178,7 +178,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private void AutoWHM(StrategyValues strategy)
     {
-        var gauge = GetGauge<WhiteMageGauge>();
+        var gauge = World.Client.GetGauge<WhiteMageGauge>();
 
         HealSingle((target, state) =>
         {
@@ -205,7 +205,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private void AutoAST(StrategyValues strategy)
     {
-        var gauge = GetGauge<AstrologianGauge>();
+        var gauge = World.Client.GetGauge<AstrologianGauge>();
 
         HealSingle((target, state) =>
         {
@@ -237,7 +237,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private void AutoSCH(StrategyValues strategy, Actor? primaryTarget)
     {
-        var gauge = GetGauge<ScholarGauge>();
+        var gauge = World.Client.GetGauge<ScholarGauge>();
 
         var pet = World.Client.ActivePet.InstanceID == 0xE0000000 ? null : World.Actors.Find(World.Client.ActivePet.InstanceID);
         var haveSeraph = gauge.SeraphTimer > 0;
@@ -275,7 +275,7 @@ public class HealerAI(RotationModuleManager manager, Actor player) : AIBase(mana
 
     private void AutoSGE(StrategyValues strategy, Actor? primaryTarget)
     {
-        var gauge = GetGauge<SageGauge>();
+        var gauge = World.Client.GetGauge<SageGauge>();
 
         var haveBalls = gauge.Addersgall > 0;
 

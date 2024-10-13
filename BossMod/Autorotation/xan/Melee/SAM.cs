@@ -112,7 +112,7 @@ public sealed class SAM(RotationModuleManager manager, Actor player) : Attackxan
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 3);
 
-        var gauge = GetGauge<SamuraiGauge>();
+        var gauge = World.Client.GetGauge<SamuraiGauge>();
         KaeshiAction = GetKaeshiAction();
         // other kaeshi are distinguished by status ID now
         KaeshiNamikiri = gauge.Kaeshi == FFXIVClientStructs.FFXIV.Client.Game.Gauge.KaeshiAction.Namikiri;
