@@ -56,6 +56,10 @@ internal class AnUnforeseenBargain(WorldState ws) : QuestBattle(ws)
             if (h.Actor.CastInfo is { Action.ID: 33042 } ci)
                 hints.ForbiddenDirections.Add((player.AngleTo(h.Actor), 45.Degrees(), World.FutureTime(ci.NPCRemainingTime)));
 
+        // walk north to engage enemies
+        if (!player.InCombat)
+            hints.ForcedMovement = new(0, 0, -1);
+
         if (player.FindStatus(Roleplay.SID.RolePlaying) != null)
             _zero.Execute(player, hints);
     }
