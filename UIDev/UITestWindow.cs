@@ -32,7 +32,7 @@ class UITestWindow : UIWindow
         Service.Config.LoadFromFile(new(configPath));
         _onConfigModified = Service.Config.Modified.Subscribe(() => ConfigModified = true);
 
-        _rotationDB = new(new(rotationRoot), null);
+        _rotationDB = new(new(rotationRoot), new(Assembly.GetExecutingAssembly().Location + "/DefaultRotationPresets.json"));
         _replayManager = new(_rotationDB, ".");
     }
 

@@ -376,8 +376,15 @@ public sealed unsafe class ActionManagerEx : IDisposable
             }
             else if (_dismountTweak.IsMountPreventingAction(actionAdj))
             {
-                Service.Log("[AMEx] Trying to dismount...");
-                _useActionHook.Original(_inst, CSActionType.Action, 4, 0xE0000000, 0, ActionManager.UseActionMode.None, 0, null);
+                if (_dismountTweak.AllowAutoDismount())
+                {
+                    Service.Log("[AMEx] Trying to dismount...");
+                    _useActionHook.Original(_inst, CSActionType.Action, 4, 0xE0000000, 0, ActionManager.UseActionMode.None, 0, null);
+                }
+                else
+                {
+                    blockMovement = false;
+                }
             }
             else
             {

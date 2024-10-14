@@ -142,7 +142,7 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
 
     private void CalcNextBestOGCD(StrategyValues strategy, Actor? primaryTarget)
     {
-        if (primaryTarget == null)
+        if (primaryTarget == null || CountdownRemaining > 0)
             return;
 
         if (ShouldFoF(strategy, primaryTarget))

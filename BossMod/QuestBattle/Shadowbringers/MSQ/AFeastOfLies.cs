@@ -32,5 +32,9 @@ public class AFeastOfLies(WorldState ws) : QuestBattle(ws)
 
         new QuestObjective(ws)
             .WithConnection(new Vector3(0, 82.9f, -38))
+            .CompleteOnCreated(0x295A),
+
+        new QuestObjective(ws)
+            .Hints((player, hints) => hints.ForcedMovement = new(0, 0, 1))
     ];
 }
