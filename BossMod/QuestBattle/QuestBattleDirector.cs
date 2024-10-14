@@ -1,6 +1,7 @@
 ﻿using BossMod.AI;
 using BossMod.Autorotation;
 using Dalamud.Plugin.Ipc;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BossMod.QuestBattle;
@@ -34,6 +35,9 @@ public sealed class QuestBattleDirector : IDisposable
     private readonly QuestBattleConfig _config;
 
     public readonly record struct NavigationWaypoint(Vector3 Position, bool SpecifiedInPath);
+
+    private Task<List<NavigationWaypoint>>? PathfindTask;
+    private readonly CancellationTokenSource Cancel = new();
 
     public List<NavigationWaypoint> CurrentWaypoints { get; private set; } = [];
     public QuestBattle? CurrentModule { get; private set; }
@@ -135,6 +139,9 @@ public sealed class QuestBattleDirector : IDisposable
         CurrentObjective = null;
         CurrentModule?.Dispose();
         CurrentModule = null;
+        Cancel.Cancel();
+        PathfindTask?.Wait();
+        PathfindTask = null;
     }
 
     private void OnPlayerEnterCombat(Actor player)
@@ -164,6 +171,12 @@ public sealed class QuestBattleDirector : IDisposable
     {
         if (!Enabled || Paused || bmm?.ActiveModule?.StateMachine.ActivePhase != null)
             return;
+
+        if (PathfindTask?.IsCompletedSuccessfully ?? false)
+        {
+            CurrentWaypoints = PathfindTask.Result;
+            PathfindTask = null;
+        }
 
         var player = World.Party.Player();
         if (player == null)
@@ -304,7 +317,7 @@ public sealed class QuestBattleDirector : IDisposable
             hints.ActionsToExecute.Push(dashAction, null, ActionQueue.Priority.Low, facingAngle: moveAngle);
     }
 
-    private async void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
+    private void TryPathfind(Vector3 start, List<Waypoint> connections, int maxRetries = 5)
     {
         CurrentConnections = connections;
 
@@ -315,11 +328,12 @@ public sealed class QuestBattleDirector : IDisposable
         {
             Service.Log($"[QBD] UIDev detected, returning player's current position for waypoint");
             CurrentWaypoints = [new(start, true)];
+            return;
         }
-        else
-        {
-            CurrentWaypoints = await TryPathfind([new Waypoint(start, false), .. connections], maxRetries).ConfigureAwait(false);
-        }
+
+        Cancel.Cancel();
+        PathfindTask?.Wait();
+        PathfindTask = Task.Run(() => TryPathfind(connections, maxRetries), Cancel.Token);
     }
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)
@@ -376,6 +390,8 @@ public sealed class QuestBattleDirector : IDisposable
     private void OnObjectiveChanged(QuestObjective obj)
     {
         CurrentObjectiveNavigationProgress = 0;
+        Cancel.Cancel();
+        PathfindTask?.Wait();
         Log($"next objective: {obj}");
         if (World.Party.Player() is Actor player && (!_combatFlag || obj.NavigationStrategy == NavigationStrategy.Continue))
             TryPathfind(player.PosRot.XYZ(), obj.Connections);
@@ -384,6 +400,8 @@ public sealed class QuestBattleDirector : IDisposable
     private void OnObjectiveCleared(QuestObjective obj)
     {
         CurrentObjectiveNavigationProgress = 0;
+        Cancel.Cancel();
+        PathfindTask?.Wait();
         Log($"cleared objective: {obj}");
         CurrentWaypoints.Clear();
     }

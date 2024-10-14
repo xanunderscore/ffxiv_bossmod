@@ -7,7 +7,7 @@ public sealed class QuestBattleConfig : ConfigNode
     public bool Enabled = false;
 
     [PropertyDisplay("Show VBM Quest UI")]
-    public bool ShowUI = true;
+    public bool ShowUI = false;
 
     [PropertyDisplay("Required maturity for quest modules to be loaded")]
     public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
@@ -17,10 +17,4 @@ public sealed class QuestBattleConfig : ConfigNode
 
     [PropertyDisplay("Use dash abilities for navigation (Smudge, Elusive Jump, etc)")]
     public bool UseDash = true;
-
-    [PropertyDisplay("Developer mode: load paths from source")]
-    public bool LoadFromSource = false;
-
-    [PropertyDisplay("Developer mode: source file for saved paths", tooltip: "<repo root>/BossMod/Pathfinding/StaticPaths/pathlist.json")]
-    public string SourcePath = "";
 }
