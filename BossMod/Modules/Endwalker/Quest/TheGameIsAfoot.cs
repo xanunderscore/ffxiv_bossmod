@@ -34,10 +34,8 @@ class DeadlySwoop(BossModule module) : Components.ChargeAOEs(module, ActionID.Ma
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
-        if (actor.FindStatus(1391) != null)
-            return;
-
-        base.AddAIHints(slot, actor, assignment, hints);
+        if (Raid.WithoutSlot().Count() == 3)
+            base.AddAIHints(slot, actor, assignment, hints);
     }
 }
 
