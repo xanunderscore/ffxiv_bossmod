@@ -120,11 +120,23 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
         if (HaveSpell(AID.TheRamsVoice) && HaveSpell(AID.Ultravibration))
         {
             Hints.GoalZones.Add(Hints.GoalAOECircle(6));
-            var nearby = Hints.PriorityTargets.Where(p => p.Actor.Position.InCircle(Player.Position, 6 + Player.HitboxRadius + p.Actor.HitboxRadius));
-            var nearbycnt = nearby.Count();
-            if (nearbycnt == Hints.PriorityTargets.Count() && nearbycnt > 2)
+            var priorityTotal = 0;
+            var nearbyTotal = 0;
+            var nearbyFrozen = 0;
+
+            foreach (var target in Hints.PriorityTargets)
             {
-                if (nearby.All(x => StatusDetails(x.Actor, SID.DeepFreeze, Player.InstanceID).Left > 3))
+                priorityTotal++;
+                if (target.Actor.Position.InCircle(Player.Position, 6 + Player.HitboxRadius + target.Actor.HitboxRadius))
+                {
+                    nearbyTotal++;
+                    if (StatusDetails(target.Actor, SID.DeepFreeze, Player.InstanceID).Left > 3)
+                        nearbyFrozen++;
+                }
+            }
+            if (nearbyTotal == priorityTotal && nearbyTotal > 2)
+            {
+                if (nearbyFrozen == nearbyTotal)
                     PushGCD(AID.Ultravibration, Player, GCDPriority.Ultravibe + 1);
 
                 PushGCD(AID.TheRamsVoice, Player, GCDPriority.Ultravibe);

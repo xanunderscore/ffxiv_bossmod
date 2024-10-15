@@ -75,7 +75,7 @@ public sealed class RotationModuleManager : IDisposable
         );
 
         if (Config.LastPreset != "")
-            Preset = Database.Presets.Presets.FirstOrDefault(p => p.Name == Config.LastPreset);
+            Preset = Database.Presets.VisiblePresets.FirstOrDefault(p => p.Name == Config.LastPreset);
     }
 
     public void Dispose()
