@@ -62,7 +62,7 @@ public sealed class WHM(RotationModuleManager manager, Actor player) : Castxan<A
 
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining < 1.7)
+            if (CountdownRemaining < GetCastTime(AID.Stone1))
                 PushGCD(AID.Stone1, primaryTarget);
 
             return;

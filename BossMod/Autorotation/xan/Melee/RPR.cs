@@ -123,7 +123,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         if (CountdownRemaining > 0)
         {
-            if (CountdownRemaining < 1.7)
+            if (CountdownRemaining < GetCastTime(AID.Harpe))
                 PushGCD(AID.Harpe, primaryTarget);
 
             return;
