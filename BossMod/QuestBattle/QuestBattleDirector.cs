@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace BossMod.QuestBattle;
 
-class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>
+class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, CancellationToken, Task<List<Vector3>>?>
 {
     bool ICallGateSubscriber.HasAction => false;
     bool ICallGateSubscriber.HasFunction => true;
-    public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3) { }
-    public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3) => null;
-    public void Subscribe(Action<Vector3, Vector3, bool> action) { }
-    public void Unsubscribe(Action<Vector3, Vector3, bool> action) { }
+    public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken cancel) { }
+    public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken cancel) => null;
+    public void Subscribe(Action<Vector3, Vector3, bool, CancellationToken> action) { }
+    public void Unsubscribe(Action<Vector3, Vector3, bool, CancellationToken> action) { }
 }
 
 class PathReadyNoop : ICallGateSubscriber<bool>
@@ -54,7 +54,7 @@ public sealed class QuestBattleDirector : IDisposable
 
     public const float Tolerance = 0.25f;
 
-    private readonly ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?> _pathfind;
+    private readonly ICallGateSubscriber<Vector3, Vector3, bool, CancellationToken, Task<List<Vector3>>?> _pathfind;
     private readonly ICallGateSubscriber<bool> _isMeshReady;
 
     private bool _combatFlag;
@@ -125,12 +125,12 @@ public sealed class QuestBattleDirector : IDisposable
         }
         else
         {
-            _pathfind = Service.PluginInterface.GetIpcSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>("vnavmesh.Nav.Pathfind");
+            _pathfind = Service.PluginInterface.GetIpcSubscriber<Vector3, Vector3, bool, CancellationToken, Task<List<Vector3>>?>("vnavmesh.Nav.PathfindCancelable");
             _isMeshReady = Service.PluginInterface.GetIpcSubscriber<bool>("vnavmesh.Nav.IsReady");
         }
     }
 
-    private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
+    private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target, CancellationToken cancel) => _pathfind.InvokeFunc(source, target, false, cancel);
     private bool IsMeshReady() => _isMeshReady.InvokeFunc();
 
     private void Clear()
@@ -334,16 +334,16 @@ public sealed class QuestBattleDirector : IDisposable
         Cancel.Cancel();
         PathfindTask?.Wait();
         Log("queueing new pathfind");
-        PathfindTask = TryPathfind([new Waypoint(start), .. connections], maxRetries);
+        PathfindTask = TryPathfind([new Waypoint(start), .. connections], Cancel.Token, maxRetries);
         Log($"task: {PathfindTask}");
     }
 
-    private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)
+    private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, CancellationToken cancel, int maxRetries = 5)
     {
         if (!IsMeshReady())
         {
             await Task.Delay(500);
-            return await TryPathfind(connectionPoints, maxRetries - 1);
+            return await TryPathfind(connectionPoints, cancel, maxRetries - 1);
         }
         var points = connectionPoints.Take(3).ToList();
         if (points.Count < 2)
@@ -358,7 +358,7 @@ public sealed class QuestBattleDirector : IDisposable
 
         if (end.Pathfind)
         {
-            var task = Pathfind(start.Position, end.Position);
+            var task = Pathfind(start.Position, end.Position, cancel);
             if (task == null)
             {
                 Log($"Pathfind failure");
@@ -379,7 +379,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
 
         if (points.Count > 2)
-            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1)));
+            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1), cancel));
         return thesePoints;
     }
 
