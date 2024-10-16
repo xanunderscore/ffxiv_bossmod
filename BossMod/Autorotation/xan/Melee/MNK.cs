@@ -331,8 +331,6 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
         GoalZoneCombined(3, Hints.GoalAOECircle(5), AOEBreakpoint, pos.Item1);
 
-        OGCD(strategy, primaryTarget);
-
         UseBlitz(strategy, currentBlitz);
         FiresReply(strategy);
         WindsReply();
@@ -376,6 +374,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         }
 
         Prep(strategy);
+        OGCD(strategy, primaryTarget);
     }
 
     private void Prep(StrategyValues strategy)
@@ -414,6 +413,9 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
     {
         if (PerfectBalanceLeft == 0)
             return CurrentForm;
+
+        if (ForcedLunar)
+            return Form.OpoOpo;
 
         var nadi = strategy.Option(Track.Nadi).As<NadiStrategy>();
 
