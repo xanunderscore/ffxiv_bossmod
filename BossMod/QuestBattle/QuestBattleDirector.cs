@@ -288,12 +288,9 @@ public sealed class QuestBattleDirector : IDisposable
             return;
         }
 
-        Log("canceling previous pathfind (TryPathfind)");
         Cancel.Cancel();
         PathfindTask?.Wait();
-        Log("queueing new pathfind");
         PathfindTask = TryPathfind([new Waypoint(start), .. connections], Cancel.Token, maxRetries);
-        Log($"task: {PathfindTask}");
     }
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, CancellationToken cancel, int maxRetries = 5)
