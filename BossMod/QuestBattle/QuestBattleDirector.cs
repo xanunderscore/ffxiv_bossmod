@@ -10,8 +10,8 @@ class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, CancellationTok
 {
     bool ICallGateSubscriber.HasAction => false;
     bool ICallGateSubscriber.HasFunction => true;
-    public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken cancel) { }
-    public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken cancel) => null;
+    public void InvokeAction(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken arg4) { }
+    public Task<List<Vector3>>? InvokeFunc(Vector3 arg1, Vector3 arg2, bool arg3, CancellationToken arg4) => null;
     public void Subscribe(Action<Vector3, Vector3, bool, CancellationToken> action) { }
     public void Unsubscribe(Action<Vector3, Vector3, bool, CancellationToken> action) { }
 }
@@ -300,8 +300,8 @@ public sealed class QuestBattleDirector : IDisposable
     {
         if (!IsMeshReady())
         {
-            await Task.Delay(500);
-            return await TryPathfind(connectionPoints, cancel, maxRetries - 1);
+            await Task.Delay(500).ConfigureAwait(true);
+            return await TryPathfind(connectionPoints, cancel, maxRetries - 1).ConfigureAwait(true);
         }
         var points = connectionPoints.Take(3).ToList();
         if (points.Count < 2)
@@ -323,7 +323,7 @@ public sealed class QuestBattleDirector : IDisposable
                 return [];
             }
 
-            var ptVecs = await task;
+            var ptVecs = await task.ConfigureAwait(true);
             // returned path always contains the destination point twice for whatever reason
             ptVecs.RemoveAt(ptVecs.Count - 1);
 
@@ -337,13 +337,14 @@ public sealed class QuestBattleDirector : IDisposable
         }
 
         if (points.Count > 2)
-            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1), cancel));
+            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1), cancel).ConfigureAwait(true));
         return thesePoints;
     }
 
     public void Dispose()
     {
         _subscriptions.Dispose();
+        Cancel.Dispose();
     }
 
     private void OnObjectiveChanged(QuestObjective obj)
