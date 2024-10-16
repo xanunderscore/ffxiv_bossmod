@@ -140,7 +140,6 @@ public sealed class QuestBattleDirector : IDisposable
         CurrentModule?.Dispose();
         CurrentModule = null;
         Cancel.Cancel();
-        PathfindTask?.Wait();
         PathfindTask = null;
     }
 
@@ -331,22 +330,25 @@ public sealed class QuestBattleDirector : IDisposable
             return;
         }
 
+        Log("canceling previous pathfind (TryPathfind)");
         Cancel.Cancel();
         PathfindTask?.Wait();
-        PathfindTask = Task.Run(() => TryPathfind(connections, maxRetries), Cancel.Token);
+        Log("queueing new pathfind");
+        PathfindTask = TryPathfind([new Waypoint(start), .. connections], maxRetries);
+        Log($"task: {PathfindTask}");
     }
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, int maxRetries = 5)
     {
         if (!IsMeshReady())
         {
-            await Task.Delay(500).ConfigureAwait(false);
-            return await TryPathfind(connectionPoints, maxRetries - 1).ConfigureAwait(false);
+            await Task.Delay(500);
+            return await TryPathfind(connectionPoints, maxRetries - 1);
         }
         var points = connectionPoints.Take(3).ToList();
         if (points.Count < 2)
         {
-            Log($"pathfind called with too few points (need 2, got {points.Count})");
+            Log($"pathfind called with too few points (need 2, got {string.Join(", ", points)})");
             return [];
         }
         var start = points[0];
@@ -356,7 +358,6 @@ public sealed class QuestBattleDirector : IDisposable
 
         if (end.Pathfind)
         {
-
             var task = Pathfind(start.Position, end.Position);
             if (task == null)
             {
@@ -364,7 +365,7 @@ public sealed class QuestBattleDirector : IDisposable
                 return [];
             }
 
-            var ptVecs = await task.ConfigureAwait(false);
+            var ptVecs = await task;
             // returned path always contains the destination point twice for whatever reason
             ptVecs.RemoveAt(ptVecs.Count - 1);
 
@@ -378,7 +379,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
 
         if (points.Count > 2)
-            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1)).ConfigureAwait(false));
+            thesePoints.AddRange(await TryPathfind(connectionPoints.Skip(1)));
         return thesePoints;
     }
 

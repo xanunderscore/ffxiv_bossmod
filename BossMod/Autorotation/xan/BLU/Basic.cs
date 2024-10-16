@@ -168,10 +168,7 @@ public sealed class BLU(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.ChelonianGate, Player, GCDPriority.BuffRefresh);
 
         if (Player.FindStatus(2497u) != null)
-        {
-            Service.Log($"executing Divine Cataract");
             PushGCD(AID.DivineCataract, Player, GCDPriority.SurpanakhaRepeat);
-        }
     }
 
     public Mimicry CurrentMimic()
