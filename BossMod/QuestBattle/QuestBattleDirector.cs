@@ -289,8 +289,7 @@ public sealed class QuestBattleDirector : IDisposable
         }
 
         Cancel.Cancel();
-        PathfindTask?.Wait();
-        PathfindTask = TryPathfind([new Waypoint(start), .. connections], Cancel.Token, maxRetries);
+        PathfindTask = Task.Run(() => TryPathfind([new Waypoint(start), .. connections], Cancel.Token, maxRetries));
     }
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints, CancellationToken cancel, int maxRetries = 5)
@@ -348,7 +347,6 @@ public sealed class QuestBattleDirector : IDisposable
     {
         CurrentObjectiveNavigationProgress = 0;
         Cancel.Cancel();
-        PathfindTask?.Wait();
         Log($"next objective: {obj}");
         if (World.Party.Player() is Actor player && (!_combatFlag || obj.NavigationStrategy == NavigationStrategy.Continue))
             TryPathfind(player.PosRot.XYZ(), obj.Connections);
@@ -358,7 +356,6 @@ public sealed class QuestBattleDirector : IDisposable
     {
         CurrentObjectiveNavigationProgress = 0;
         Cancel.Cancel();
-        PathfindTask?.Wait();
         Log($"cleared objective: {obj}");
         CurrentWaypoints.Clear();
     }

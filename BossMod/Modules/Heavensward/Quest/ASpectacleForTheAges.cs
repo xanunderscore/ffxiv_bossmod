@@ -2,22 +2,7 @@
 
 public enum OID : uint
 {
-    Boss = 0x154D,
-    Helper = 0x233C,
-    _Gen_SerpentVeteran = 0x1540, // R0.500, x1
-    _Gen_ = 0x1547, // R0.500-1.500, x1
-    _Gen_SerpentCommanderHeuloix = 0x1551, // R0.500, x1
-    _Gen_SerpentVeteran1 = 0x153D, // R0.500, x1
-    _Gen_SerpentVeteran2 = 0x153C, // R0.500, x1
-    _Gen_StormVeteran = 0x153E, // R0.500, x1 (spawn during fight)
-    _Gen_StormVeteran1 = 0x1539, // R0.500, x1
-    _Gen_StormVeteran2 = 0x1538, // R0.500, x1
-    _Gen_FlameVeteran = 0x153B, // R0.500, x1
-    _Gen_FlameVeteran1 = 0x153F, // R0.500, x1
-    _Gen_StormCommanderRhiki = 0x1550, // R0.500, x1
-    _Gen_PipinOfTheSteelHeart = 0x154F, // R0.500, x1 (spawn during fight)
-    _Gen_FlameVeteran2 = 0x153A, // R0.500, x1 (spawn during fight)
-    BossP2 = 0x154E,
+    Boss = 0x154E,
     Tizona = 0x1552
 }
 
@@ -48,36 +33,6 @@ public enum AID : uint
     _Weaponskill_TheBullOfAlaMhigo = 5759, // Boss->player, 2.0s cast, single-target
 }
 
-public enum SID : uint
-{
-    _Gen_VulnerabilityDown = 350, // none->1546/_Gen_FlameVeteran2/1544/_Gen_FlameVeteran1/1543, extra=0x0
-    _Gen_HawksEye = 3861, // 1544->1544, extra=0x0
-    _Gen_Stun = 2, // 154B->_Gen_StormCommanderRhiki, extra=0x0
-}
-
-class FlagTarget(BossModule module) : BossComponent(module)
-{
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        foreach (var e in hints.PotentialTargets)
-            if (e.Actor.FindStatus(SID._Gen_VulnerabilityDown) != null)
-                e.Priority = 5;
-    }
-
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        foreach (var e in WorldState.Actors.Where(e => !e.IsAlly && e.IsTargetable))
-            if (e.FindStatus(SID._Gen_VulnerabilityDown) != null)
-                Arena.AddCircle(e.Position, 1.5f, ArenaColor.Danger);
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints)
-    {
-        if (WorldState.Actors.Any(e => !e.IsAlly && e.IsTargetable && e.FindStatus(SID._Gen_VulnerabilityDown) != null))
-            hints.Add("Attack tethered enemy!", false);
-    }
-}
-
 class FlamingTizona(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_FlamingTizona1), 6);
 class TheCurse(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_TheCurse), new AOEShapeDonutSector(2, 7, 90.Degrees()));
 
@@ -97,35 +52,21 @@ class FlameGeneralAldynnStates : StateMachineBuilder
     public FlameGeneralAldynnStates(BossModule module) : base(module)
     {
         TrivialPhase()
-            .ActivateOnEnter<FlagTarget>()
-            .Raw.Update = () => module.Enemies(OID.BossP2).Any(x => x.IsTargetable);
-        TrivialPhase(1)
             .ActivateOnEnter<FlamingTizona>()
             .ActivateOnEnter<TheCurse>()
             .ActivateOnEnter<Demoralize>()
-            .ActivateOnEnter<Tizona>()
-            .OnEnter(() =>
-            {
-                module.Arena.Center = new(-35.75f, -205.5f);
-                module.Arena.Bounds = new ArenaBoundsCircle(15);
-            })
-            .Raw.Update = () => module.Enemies(OID.BossP2).All(x => x.IsDeadOrDestroyed);
+            .ActivateOnEnter<Tizona>();
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 67775, NameID = 4739)]
-public class FlameGeneralAldynn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-38, -209), new ArenaBoundsRect(25, 25, 45.Degrees()))
+public class FlameGeneralAldynn(WorldState ws, Actor primary) : BossModule(ws, primary, new(-35.75f, -205.5f), new ArenaBoundsCircle(15))
 {
     protected override bool CheckPull() => PrimaryActor.InCombat;
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         foreach (var h in hints.PotentialTargets)
             h.Priority = Math.Max(0, h.Priority);
-    }
-
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
-        Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
     }
 }
 
