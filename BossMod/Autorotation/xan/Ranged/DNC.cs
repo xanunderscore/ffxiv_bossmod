@@ -61,6 +61,12 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
 
     private bool HaveTarget(Actor? primaryTarget) => NumAOETargets > 1 || primaryTarget != null;
 
+    private static float GetApplicationDelay(AID aid) => aid switch
+    {
+        AID.StandardFinish or AID.SingleStandardFinish or AID.DoubleStandardFinish => 0.54f,
+        _ => 0
+    };
+
     public override void Exec(StrategyValues strategy, Actor? primaryTarget)
     {
         SelectPrimaryTarget(strategy, ref primaryTarget, range: 25);
@@ -249,8 +255,12 @@ public sealed class DNC(RotationModuleManager manager, Actor player) : Attackxan
         if (ReadyIn(AID.StandardStep) > GCD)
             return false;
 
+        var stdFinishCast = GCD + 3.5f;
+        var stdFinishDamage = stdFinishCast + GetApplicationDelay(AID.StandardFinish);
+
         return NumDanceTargets > 0 &&
-            (TechFinishLeft == 0 || TechFinishLeft > GCD + 3.5 || !Unlocked(AID.TechnicalStep));
+            DowntimeIn > stdFinishDamage &&
+            (TechFinishLeft == 0 || TechFinishLeft > stdFinishCast || !Unlocked(AID.TechnicalStep));
     }
 
     private bool ShouldTechStep(StrategyValues strategy)
