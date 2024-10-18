@@ -99,7 +99,7 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
         {
             case AOEStrategy.AOE:
             case AOEStrategy.ForceAOE:
-                var nearbyDD = Hints.PriorityTargets.Where(x => Player.DistanceToHitbox(x.Actor) <= 5).Select(DDLeft);
+                var nearbyDD = Hints.PriorityTargets.Where(x => Hints.TargetInAOECircle(x.Actor, Player.Position, 5)).Select(DDLeft);
                 var minNeeded = strategy.AOE() == AOEStrategy.ForceAOE ? 1 : 2;
                 if (MinIfEnoughElements(nearbyDD.Where(x => x < 30), minNeeded) is float m)
                     ShortestNearbyDDLeft = m;
