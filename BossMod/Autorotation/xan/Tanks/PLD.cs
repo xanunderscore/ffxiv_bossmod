@@ -185,6 +185,6 @@ public sealed class PLD(RotationModuleManager manager, Actor player) : Attackxan
             return true;
 
         // hold FoF until 3rd GCD for opener, otherwise use on cooldown
-        return DivineMight > 0 || CombatTimer > 30;
+        return DivineMight > 0 || CombatTimer > 30 || strategy.Simple(SharedTrack.Buffs) == OffensiveStrategy.Force;
     }
 }
