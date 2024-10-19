@@ -89,6 +89,9 @@ class AutoYshtola(WorldState ws) : UnmanagedRotation(ws, 25)
             UseAction(RPID.CureIISeventhDawn, Hien);
         }
 
+        if (Hien.CastInfo?.Action.ID == 13234)
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(Hien.Position, 2, 5));
+
         var aero = StatusDetails(Magnai, WHM.SID.Aero2, Player.InstanceID);
         if (aero.Left < 4.6f)
             UseAction(RPID.AeroIISeventhDawn, Magnai);
