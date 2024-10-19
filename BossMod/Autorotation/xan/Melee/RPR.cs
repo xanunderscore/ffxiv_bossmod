@@ -5,11 +5,24 @@ namespace BossMod.Autorotation.xan;
 
 public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan<AID, TraitID>(manager, player)
 {
+    public enum Track { Harpe = SharedTrack.Count }
+
+    public enum HarpeStrategy
+    {
+        Automatic,
+        Forbid,
+        Ranged,
+    }
+
     public static RotationModuleDefinition Definition()
     {
         var def = new RotationModuleDefinition("xan RPR", "Reaper", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.RPR), 100);
 
         def.DefineShared().AddAssociatedActions(AID.ArcaneCircle);
+        def.Define(Track.Harpe).As<HarpeStrategy>("Harpe")
+            .AddOption(HarpeStrategy.Automatic, "Use out of melee range if Enhanced Harpe is active")
+            .AddOption(HarpeStrategy.Forbid, "Don't use")
+            .AddOption(HarpeStrategy.Ranged, "Use out of melee range");
 
         return def;
     }
@@ -131,8 +144,19 @@ public sealed class RPR(RotationModuleManager manager, Actor player) : Attackxan
 
         GoalZoneCombined(3, Hints.GoalAOECircle(5), 3, pos.Item1);
 
-        if (EnhancedHarpe > GCD)
-            PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);
+        if (SoulReaver == 0)
+        {
+            switch (strategy.Option(Track.Harpe).As<HarpeStrategy>())
+            {
+                case HarpeStrategy.Automatic:
+                    if (EnhancedHarpe > GCD)
+                        PushGCD(AID.Harpe, primaryTarget, GCDPriority.EnhancedHarpe);
+                    break;
+                case HarpeStrategy.Ranged:
+                    PushOGCD(AID.Harpe, primaryTarget, 50);
+                    break;
+            }
+        }
 
         DDRefresh(primaryTarget);
 
