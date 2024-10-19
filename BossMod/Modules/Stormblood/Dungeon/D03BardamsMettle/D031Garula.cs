@@ -27,7 +27,21 @@ public enum AID : uint
 class CrumblingCrust(BossModule module) : Components.LocationTargetedAOEs(module, ActionID.MakeSpell(AID.CrumblingCrust), 3);
 class Heave(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.Heave), new AOEShapeCone(13, 60.Degrees()));
 class WideBlaster(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID.WideBlaster), new AOEShapeCone(29.15f, 60.Degrees()));
-class Rush(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Rush), 4);
+class Rush(BossModule module) : Components.BaitAwayChargeCast(module, ActionID.MakeSpell(AID.Rush), 4)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (CurrentBaits.Any(b => b.Target == actor))
+        {
+            var c = CurrentBaits.First(b => b.Target == actor);
+            hints.AddForbiddenZone(new AOEShapeCircle(16), c.Source.Position, default, Module.CastFinishAt(c.Source.CastInfo));
+        }
+        else
+        {
+            base.AddAIHints(slot, actor, assignment, hints);
+        }
+    }
+}
 class RushTether(BossModule module) : Components.BaitAwayCast(module, ActionID.MakeSpell(AID.RushYamaa), new AOEShapeCircle(5), true)
 {
     public override void Update()
