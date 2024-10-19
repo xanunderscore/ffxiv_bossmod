@@ -1,4 +1,6 @@
-﻿namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
+﻿using BossMod.QuestBattle;
+
+namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
 
 class StormUnbound(BossModule module) : Components.Exaflare(module, 5)
 {
@@ -86,4 +88,11 @@ public class ZenosP2States : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, GroupType = BossModuleInfo.GroupType.Quest, GroupID = 68721, NameID = 6039, PrimaryActorOID = (uint)OID.BossP2)]
-public class ZenosP2(WorldState ws, Actor primary) : BossModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20));
+public class ZenosP2(WorldState ws, Actor primary) : InstapullModule(ws, primary, new(233, -93.25f), new ArenaBoundsCircle(20))
+{
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (!actor.InCombat)
+            hints.ForcedMovement = new(1, 0, 0);
+    }
+}
