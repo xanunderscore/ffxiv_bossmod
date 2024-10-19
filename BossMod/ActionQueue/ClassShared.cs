@@ -118,30 +118,6 @@ public sealed class Definitions : IDisposable
         // Misc
         d.RegisterSpell(AID.Resurrection);
 
-        // pet actions
-        d.Register(ActionDefinitions.IDPetAway, new ActionDefinition(ActionDefinitions.IDPetAway)
-        {
-            InstantAnimLock = 0,
-            CastAnimLock = 0,
-        });
-        d.Register(ActionDefinitions.IDPetHeel, new ActionDefinition(ActionDefinitions.IDPetHeel)
-        {
-            InstantAnimLock = 0,
-            CastAnimLock = 0,
-        });
-        d.Register(ActionDefinitions.IDPetPlace, new ActionDefinition(ActionDefinitions.IDPetPlace)
-        {
-            InstantAnimLock = 0,
-            CastAnimLock = 0,
-            AllowedTargets = ActionTargets.Area,
-            Range = 30
-        });
-        d.Register(ActionDefinitions.IDPetStay, new ActionDefinition(ActionDefinitions.IDPetStay)
-        {
-            InstantAnimLock = 0,
-            CastAnimLock = 0
-        });
-
         // duty actions
         d.RegisterSpell(AID.SmokeScreen);
         d.RegisterSpell(AID.AethericSiphon);

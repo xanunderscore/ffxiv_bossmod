@@ -1,5 +1,4 @@
 ﻿using BossMod.Autorotation;
-using BossMod.QuestBattle;
 using Dalamud.Common;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
@@ -18,7 +17,6 @@ public sealed class Plugin : IDalamudPlugin
     private readonly WorldState _ws;
     private readonly AIHints _hints;
     private readonly BossModuleManager _bossmod;
-    private readonly QuestBattleDirector _qb;
     private readonly ZoneModuleManager _zonemod;
     private readonly AIHintsBuilder _hintsBuilder;
     private readonly MovementOverride _movementOverride;
@@ -31,6 +29,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly DTRProvider _dtr;
     private readonly SlashCommandProvider _slashCmd;
     private TimeSpan _prevUpdateTime;
+    private DateTime _throttleJump;
 
     // windows
     private readonly ConfigUI _configUI; // TODO: should be a proper window!
@@ -40,7 +39,6 @@ public sealed class Plugin : IDalamudPlugin
     private readonly UIRotationWindow _wndRotation;
     private readonly AI.AIWindow _wndAI;
     private readonly MainDebugWindow _wndDebug;
-    private readonly QuestBattleWindow _qbWindow;
 
     public unsafe Plugin(IDalamudPluginInterface dalamud, ICommandManager commandManager, ISigScanner sigScanner, IDataManager dataManager)
     {
@@ -76,9 +74,8 @@ public sealed class Plugin : IDalamudPlugin
         _ws = new(qpf, gameVersion);
         _hints = new();
         _bossmod = new(_ws);
-        _qb = new(_ws, _bossmod);
         _zonemod = new(_ws);
-        _hintsBuilder = new(_ws, _bossmod, _zonemod, _qb);
+        _hintsBuilder = new(_ws, _bossmod, _zonemod);
         _movementOverride = new();
         _amex = new(_ws, _hints, _movementOverride);
         _wsSync = new(_ws, _amex);
@@ -93,11 +90,10 @@ public sealed class Plugin : IDalamudPlugin
         _configUI = new(Service.Config, _ws, replayDir, _rotationDB);
         _wndBossmod = new(_bossmod, _zonemod);
         _wndBossmodHints = new(_bossmod, _zonemod);
-        _wndReplay = new(_ws, _rotationDB, replayDir);
+        _wndReplay = new(_ws, _bossmod, _rotationDB, replayDir);
         _wndRotation = new(_rotation, _amex, () => OpenConfigUI("Autorotation Presets"));
         _wndAI = new(_ai);
         _wndDebug = new(_ws, _rotation, _amex, _hintsBuilder, dalamud);
-        _qbWindow = new(_qb);
 
         dalamud.UiBuilder.DisableAutomaticUiHide = true;
         dalamud.UiBuilder.Draw += DrawUI;
@@ -111,7 +107,6 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         Service.Condition.ConditionChange -= OnConditionChanged;
-        _qbWindow.Dispose();
         _wndDebug.Dispose();
         _wndAI.Dispose();
         _wndRotation.Dispose();
@@ -124,7 +119,6 @@ public sealed class Plugin : IDalamudPlugin
         _ipc.Dispose();
         _ai.Dispose();
         _rotation.Dispose();
-        _qb.Dispose();
         _wsSync.Dispose();
         _amex.Dispose();
         _movementOverride.Dispose();
@@ -258,7 +252,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         var tsStart = DateTime.Now;
 
-        var userPreventingCast = _movementOverride.IsMoveRequested() && (!_amex.Config.PreventMovingWhileCasting || _movementOverride.IsForceUnblocked());
+        var userPreventingCast = _movementOverride.IsMoveRequested() && !_amex.Config.PreventMovingWhileCasting;
         var maxCastTime = userPreventingCast ? 0 : _ai.ForceMovementIn;
 
         _dtr.Update();
@@ -269,7 +263,6 @@ public sealed class Plugin : IDalamudPlugin
         _hintsBuilder.Update(_hints, PartyState.PlayerSlot, maxCastTime);
         _amex.QueueManualActions();
         _rotation.Update(_amex.AnimationLockDelayEstimate, _movementOverride.IsMoving());
-        _qb.Update(_hints);
         _ai.Update();
         _broadcast.Update();
         _amex.FinishActionGather();
@@ -309,6 +302,12 @@ public sealed class Plugin : IDalamudPlugin
         {
             var res = FFXIVClientStructs.FFXIV.Client.Game.StatusManager.ExecuteStatusOff(s.statusId, s.sourceId != 0 ? (uint)s.sourceId : 0xE0000000);
             Service.Log($"[ExecHints] Canceling status {s.statusId} from {s.sourceId:X} -> {res}");
+        }
+        if (_hints.WantJump && _ws.CurrentTime > _throttleJump)
+        {
+            //Service.Log($"[ExecHints] Jumping...");
+            FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance()->UseAction(FFXIVClientStructs.FFXIV.Client.Game.ActionType.GeneralAction, 2);
+            _throttleJump = _ws.CurrentTime.AddMilliseconds(100);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using BossMod.Autorotation;
+﻿using BossMod.QuestBattle;
 
 namespace BossMod.Shadowbringers.Quest.TheLostAndTheFound.Yxtlilton;
 

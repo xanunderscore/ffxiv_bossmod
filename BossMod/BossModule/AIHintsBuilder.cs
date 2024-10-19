@@ -1,7 +1,4 @@
-﻿using BossMod.AI;
-using BossMod.QuestBattle;
-
-namespace BossMod;
+﻿namespace BossMod;
 
 // utility that recalculates ai hints based on different data sources (eg active bossmodule, etc)
 // when there is no active bossmodule (eg in outdoor or on trash), we try to guess things based on world state (eg actor casts)
@@ -12,21 +9,17 @@ public sealed class AIHintsBuilder : IDisposable
     public readonly Pathfinding.ObstacleMapManager Obstacles;
     private readonly WorldState _ws;
     private readonly BossModuleManager _bmm;
-    private readonly QuestBattleDirector _qb;
     private readonly ZoneModuleManager _zmm;
     private readonly EventSubscriptions _subscriptions;
     private readonly Dictionary<ulong, (Actor Caster, Actor? Target, AOEShape Shape, bool IsCharge)> _activeAOEs = [];
     private ArenaBoundsCircle? _activeFateBounds;
-    private readonly AIConfig _config;
 
-    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm, QuestBattleDirector qb)
+    public AIHintsBuilder(WorldState ws, BossModuleManager bmm, ZoneModuleManager zmm)
     {
         _ws = ws;
         _bmm = bmm;
-        _qb = qb;
         _zmm = zmm;
         Obstacles = new(ws);
-        _config = Service.Config.Get<AIConfig>();
         _subscriptions = new
         (
             ws.Actors.CastStarted.Subscribe(OnCastStarted),
@@ -53,13 +46,12 @@ public sealed class AIHintsBuilder : IDisposable
             hints.FillPotentialTargets(_ws, playerAssignment == PartyRolesConfig.Assignment.MT || playerAssignment == PartyRolesConfig.Assignment.OT && !_ws.Party.WithoutSlot().Any(p => p != player && p.Role == Role.Tank));
             if (activeModule != null)
             {
-                activeModule.CalculateAIHints(playerSlot, player, playerAssignment, hints, maxCastTime);
+                activeModule.CalculateAIHints(playerSlot, player, playerAssignment, hints);
             }
             else
             {
                 CalculateAutoHints(hints, player);
-                _qb.AddAIHints(player, hints);
-                _zmm.ActiveModule?.CalculateAIHints(player, hints);
+                _zmm.ActiveModule?.CalculateAIHints(playerSlot, player, hints);
             }
         }
         hints.Normalize();
@@ -69,7 +61,7 @@ public sealed class AIHintsBuilder : IDisposable
     {
         var (e, bitmap) = Obstacles.Find(player.PosRot.XYZ());
         var resolution = bitmap?.PixelSize ?? 0.5f;
-        if (_config.AutoFate && _ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
+        if (_ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.GeneratedSheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax)
         {
             var center = new WPos(_ws.Client.ActiveFate.Center.XZ());
             hints.PathfindMapCenter = center;

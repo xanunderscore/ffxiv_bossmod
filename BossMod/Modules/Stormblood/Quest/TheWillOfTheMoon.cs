@@ -1,4 +1,5 @@
-﻿using RPID = BossMod.Roleplay.AID;
+﻿using BossMod.QuestBattle;
+using RPID = BossMod.Roleplay.AID;
 
 namespace BossMod.Stormblood.Quest.TheWillOfTheMoon;
 
@@ -66,18 +67,16 @@ public class WindChisel(BossModule module) : Components.SelfTargetedAOEs(module,
 
 public class Scales(BossModule module) : Components.Adds(module, (uint)OID.TheScaleOfTheFather);
 
-class YshtolaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
+class AutoYshtola(WorldState ws) : UnmanagedRotation(ws, 25)
 {
-    private Actor Magnai => Module.Enemies(OID.Magnai)[0];
-    private Actor Hien => Module.WorldState.Actors.First(x => (OID)x.OID == OID.Hien);
-    private Actor Daidukul => Module.WorldState.Actors.First(x => (OID)x.OID == OID.Daidukul);
+    private Actor Magnai => World.Actors.First(x => (OID)x.OID == OID.Magnai);
+    private Actor Hien => World.Actors.First(x => (OID)x.OID == OID.Hien);
+    private Actor Daidukul => World.Actors.First(x => (OID)x.OID == OID.Daidukul);
 
-    private WPos? _safeZone;
+    private int PredictedHP(Actor a) => (int)a.HPMP.CurHP + World.PendingEffects.PendingHPDifference(a.InstanceID);
 
-    public override void Execute(Actor? primaryTarget)
+    protected override void Exec(Actor? primaryTarget)
     {
-        Hints.RecommendedRangeToTarget = 25;
-
         var hienMinHP = Daidukul.CastInfo?.Action.ID == (uint)AID.TranquilAnnihilation
             ? 28000
             : 10000;
@@ -90,9 +89,6 @@ class YshtolaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
             UseAction(RPID.CureIISeventhDawn, Hien);
         }
 
-        if (_safeZone != null && (_safeZone.Value - Player.Position).Length() > 2)
-            Hints.ForcedMovement = (_safeZone.Value - Player.Position).Normalized().ToVec3();
-
         var aero = StatusDetails(Magnai, WHM.SID.Aero2, Player.InstanceID);
         if (aero.Left < 4.6f)
             UseAction(RPID.AeroIISeventhDawn, Magnai);
@@ -102,18 +98,9 @@ class YshtolaAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
         if (Player.HPMP.CurMP < 5000)
             UseAction(RPID.Aetherwell, Player);
     }
-
-    public override void OnActorEAnim(Actor actor, uint state)
-    {
-        if (actor.OID == 0x1EA1A1)
-        {
-            if (state == 0x10002)
-                _safeZone = actor.Position;
-            else if (state == 0x40008)
-                _safeZone = null;
-        }
-    }
 }
+
+class YshtolaAI(BossModule module) : Components.RotationModule<AutoYshtola>(module);
 
 class P1Hints(BossModule module) : BossComponent(module)
 {

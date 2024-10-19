@@ -1,10 +1,15 @@
-﻿namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
+﻿using BossMod.QuestBattle;
 
-class HienAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
+namespace BossMod.Stormblood.Quest.ARequiemForHeroes;
+
+class AutoHien(WorldState ws) : UnmanagedRotation(ws, 3)
 {
-    public override void Execute(Actor? primaryTarget)
+    protected override void Exec(Actor? primaryTarget)
     {
-        Hints.RecommendedRangeToTarget = 3;
+        if (primaryTarget == null)
+            return;
+
+        Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 3));
 
         var ajisai = StatusDetails(primaryTarget, Roleplay.SID.Ajisai, Player.InstanceID);
 
@@ -25,12 +30,14 @@ class HienAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
                 break;
         }
 
-        if (PredictedHP(Player) < 5000)
+        if (Player.HPMP.CurHP < 5000)
             UseAction(Roleplay.AID.SecondWind, Player, -10);
 
         UseAction(Roleplay.AID.HissatsuGyoten, primaryTarget, -10);
     }
 }
+
+class HienAI(BossModule module) : Components.RotationModule<AutoHien>(module);
 
 public class ZenosP1States : StateMachineBuilder
 {

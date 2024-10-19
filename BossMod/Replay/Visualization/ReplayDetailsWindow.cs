@@ -42,7 +42,7 @@ class ReplayDetailsWindow : UIWindow
         _rotationDB = rotationDB;
         _mgr = new(_player.WorldState);
         _zmm = new(_player.WorldState);
-        _hintsBuilder = new(_player.WorldState, _mgr, _zmm, new(_player.WorldState, _mgr));
+        _hintsBuilder = new(_player.WorldState, _mgr, _zmm);
         _rmm = new(rotationDB, _mgr, _hints);
         _curTime = _first = data.Ops[0].Timestamp;
         _last = data.Ops[^1].Timestamp;
@@ -453,7 +453,7 @@ class ReplayDetailsWindow : UIWindow
             _player.Reset();
             _mgr = new(_player.WorldState);
             _zmm = new(_player.WorldState);
-            _hintsBuilder = new(_player.WorldState, _mgr, _zmm, new(_player.WorldState, _mgr));
+            _hintsBuilder = new(_player.WorldState, _mgr, _zmm);
             _rmm = new(_rotationDB, _mgr, _hints);
         }
         _player.AdvanceTo(t, _mgr.Update);

@@ -26,7 +26,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
     public void Execute(Actor player, Actor master)
     {
         ForceMovementIn = float.MaxValue;
-        if (player.IsDead || AIController.InCutscene)
+        if (player.IsDead)
             return;
 
         // keep master in focus
@@ -194,8 +194,6 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
             ctrl.NaviTargetVertical = master != player ? master.PosRot.Y : null;
             ctrl.AllowInterruptingCastByMovement = player.CastInfo != null && _naviDecision.LeewaySeconds <= player.CastInfo.RemainingTime - 0.5;
             ctrl.ForceCancelCast = false;
-            ctrl.WantJump = distSq >= 0.01f && autorot.Bossmods.ActiveModule?.StateMachine.ActiveState != null && autorot.Bossmods.ActiveModule.NeedToJump(player.Position, toDest.Normalized());
-            ctrl.WantJump |= autorot.Hints.WantJump;
 
             //var cameraFacing = _ctrl.CameraFacing;
             //var dot = cameraFacing.Dot(_ctrl.TargetRot.Value);

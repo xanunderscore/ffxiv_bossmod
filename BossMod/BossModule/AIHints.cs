@@ -34,6 +34,8 @@ public sealed class AIHints
         // TODO: misdirection, etc
     }
 
+    private readonly AIConfig _config = Service.Config.Get<AIConfig>();
+
     public static readonly ArenaBounds DefaultBounds = new ArenaBoundsSquare(30);
 
     // information needed to build base pathfinding map (onto which forbidden/goal zones are later rasterized), if needed (lazy, since it's somewhat expensive and not always needed)
@@ -86,17 +88,12 @@ public sealed class AIHints
     // actions that we want to be executed, gathered from various sources (manual input, autorotation, planner, ai, modules, etc.)
     public ActionQueue ActionsToExecute = new();
 
-    public bool WantJump;
-
     // buffs to be canceled asap
     public List<(uint statusId, ulong sourceId)> StatusesToCancel = [];
 
-    [Obsolete("This does nothing, stop using it")]
-    public float RecommendedRangeToTarget;
-
-    public bool Dismount;
-
-    private readonly AIConfig _config = Service.Config.Get<AIConfig>();
+    // misc stuff to execute
+    public bool WantJump;
+    public bool WantDismount;
 
     // clear all stored data
     public void Clear()
@@ -111,14 +108,14 @@ public sealed class AIHints
         ForbiddenZones.Clear();
         GoalZones.Clear();
         RecommendedPositional = default;
-        WantJump = false;
-        Dismount = false;
         ForbiddenDirections.Clear();
         ImminentSpecialMode = default;
         PredictedDamage.Clear();
         MaxCastTimeEstimate = float.MaxValue;
         ActionsToExecute.Clear();
         StatusesToCancel.Clear();
+        WantJump = false;
+        WantDismount = false;
     }
 
     // fill list of potential targets from world state
@@ -151,7 +148,12 @@ public sealed class AIHints
         }
     }
 
-    public void PrioritizeTargetsByOID(uint oid, int priority = 0) => PrioritizeTargetsByOID([oid], priority);
+    public void PrioritizeTargetsByOID(uint oid, int priority = 0)
+    {
+        foreach (var h in PotentialTargets)
+            if (h.Actor.OID == oid)
+                h.Priority = Math.Max(priority, h.Priority);
+    }
     public void PrioritizeTargetsByOID<OID>(OID oid, int priority = 0) where OID : Enum => PrioritizeTargetsByOID((uint)(object)oid, priority);
 
     public void PrioritizeTargetsByOID(uint[] oids, int priority = 0)
@@ -167,10 +169,7 @@ public sealed class AIHints
             h.Priority = Math.Max(h.Priority, 0);
     }
 
-    public void InteractWithOID(WorldState ws, uint oid)
-    {
-        InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);
-    }
+    public void InteractWithOID(WorldState ws, uint oid) => InteractWithTarget = ws.Actors.FirstOrDefault(a => a.OID == oid && a.IsTargetable);
     public void InteractWithOID<OID>(WorldState ws, OID oid) where OID : Enum => InteractWithOID(ws, (uint)(object)oid);
 
     public void AddForbiddenZone(Func<WPos, float> shapeDistance, DateTime activation = new()) => ForbiddenZones.Add((shapeDistance, activation));

@@ -1,4 +1,6 @@
-﻿namespace BossMod.Shadowbringers.Quest.FullSteamAhead;
+﻿using BossMod.QuestBattle;
+
+namespace BossMod.Shadowbringers.Quest.FullSteamAhead;
 
 public enum OID : uint
 {
@@ -60,16 +62,18 @@ class NexusOfThunder(BossModule module) : Components.SelfTargetedAOEs(module, Ac
 class CoiledLevin(BossModule module) : Components.SelfTargetedAOEs(module, ActionID.MakeSpell(AID._Weaponskill_CoiledLevin1), new AOEShapeCircle(6));
 class LightningVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.LightningVoidzone).Where(x => x.EventState != 7));
 
-class ThancredAI(BossModule module) : Components.DeprecatedRoleplayModule(module)
+class ThancredAI(BossModule module) : Components.RotationModule<AutoThancred>(module);
+
+class AutoThancred(WorldState ws) : UnmanagedRotation(ws, 3)
 {
-    public override void Execute(Actor? primaryTarget)
+    protected override void Exec(Actor? primaryTarget)
     {
         if (primaryTarget != null)
             Hints.GoalZones.Add(Hints.GoalSingleTarget(primaryTarget, 3));
 
-        if (WorldState.Client.DutyActions[0].CurCharges > 0)
+        if (World.Client.DutyActions[0].CurCharges > 0)
         {
-            UseAction(WorldState.Client.DutyActions[0].Action, primaryTarget);
+            UseAction(World.Client.DutyActions[0].Action, primaryTarget);
             return;
         }
 
@@ -89,12 +93,18 @@ class ThancredAI(BossModule module) : Components.DeprecatedRoleplayModule(module
         if (Player.HPMP.CurHP * 2 < Player.HPMP.MaxHP)
             UseAction(Roleplay.AID.SoothingPotion, Player, -100);
 
-        var combo = WorldState.Client.ComboState.Action;
-        if (combo == 16418)
-            UseAction(Roleplay.AID.SolidBarrel, primaryTarget);
-        if (combo == 16434)
-            UseAction(Roleplay.AID.BrutalShell, primaryTarget);
-        UseAction(Roleplay.AID.KeenEdge, primaryTarget);
+        switch (ComboAction)
+        {
+            case Roleplay.AID.BrutalShell:
+                UseAction(Roleplay.AID.SolidBarrel, primaryTarget);
+                break;
+            case Roleplay.AID.KeenEdge:
+                UseAction(Roleplay.AID.BrutalShell, primaryTarget);
+                break;
+            default:
+                UseAction(Roleplay.AID.KeenEdge, primaryTarget);
+                break;
+        }
     }
 }
 

@@ -1,4 +1,5 @@
-﻿namespace BossMod.Autorotation;
+namespace BossMod.QuestBattle;
+
 public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
 {
     protected AIHints Hints = null!;
@@ -58,3 +59,4 @@ public abstract class UnmanagedRotation(WorldState ws, float effectiveRange)
     }
     protected (float Left, int Stacks) StatusDetails<SID>(Actor? actor, SID sid, ulong sourceID, float pendingDuration = 1000) where SID : Enum => StatusDetails(actor, (uint)(object)sid, sourceID, pendingDuration);
 }
+
