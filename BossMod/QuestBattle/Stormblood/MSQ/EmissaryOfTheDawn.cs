@@ -1,6 +1,4 @@
-﻿using BossMod.Autorotation;
-
-namespace BossMod.QuestBattle.Stormblood.MSQ;
+﻿namespace BossMod.QuestBattle.Stormblood.MSQ;
 
 public class AutoAlphi(WorldState ws) : UnmanagedRotation(ws, 25)
 {
@@ -12,7 +10,7 @@ public class AutoAlphi(WorldState ws) : UnmanagedRotation(ws, 25)
             UseAction(Roleplay.AID.RuinIII, primaryTarget);
 
         if (Carby?.CastInfo is { Action.ID: 9396 } cinfo)
-            Hints.AddForbiddenZone(new AOEShapeDonut(3, 100), Carby.Position, activation: World.FutureTime(cinfo.NPCRemainingTime));
+            Hints.GoalZones.Add(Hints.GoalSingleTarget(Carby!.Position, 3, 5));
     }
 }
 
