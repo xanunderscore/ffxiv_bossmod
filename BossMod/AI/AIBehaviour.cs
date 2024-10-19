@@ -130,7 +130,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot) : IDi
         else if (autorot.Hints.InteractWithTarget is Actor tar)
         {
             forceDestination = tar;
-            forceDestinationRange = 3.5f;
+            forceDestinationRange = 2.09f;
         }
 
         if (forceDestination != null && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
