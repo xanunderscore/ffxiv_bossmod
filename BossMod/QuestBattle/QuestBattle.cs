@@ -32,12 +32,12 @@ class PathfindNoop : ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vecto
     public void Unsubscribe(Action<Vector3, Vector3, bool> action) { }
 }
 
-class PathReadyNoop : ICallGateSubscriber<float>
+class PathReadyNoop : ICallGateSubscriber<bool>
 {
     bool ICallGateSubscriber.HasAction => false;
     bool ICallGateSubscriber.HasFunction => true;
     public void InvokeAction() { }
-    public float InvokeFunc() => -1;
+    public bool InvokeFunc() => true;
     public void Subscribe(Action action) { }
     public void Unsubscribe(Action action) { }
 }
@@ -242,7 +242,7 @@ public abstract class QuestBattle : ZoneModule
     private bool Paused;
     private const float Tolerance = 0.25f;
     private readonly ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?> _pathfind;
-    private readonly ICallGateSubscriber<float> _navmeshBuildProgress;
+    private readonly ICallGateSubscriber<bool> _meshIsReady;
     private bool _combatFlag;
     private bool _playerLoaded;
 
@@ -300,12 +300,12 @@ public abstract class QuestBattle : ZoneModule
         {
             //Log($"UIDev detected, skipping initialization");
             _pathfind = new PathfindNoop();
-            _navmeshBuildProgress = new PathReadyNoop();
+            _meshIsReady = new PathReadyNoop();
         }
         else
         {
             _pathfind = Service.PluginInterface.GetIpcSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?>("vnavmesh.Nav.Pathfind");
-            _navmeshBuildProgress = Service.PluginInterface.GetIpcSubscriber<float>("vnavmesh.Nav.BuildProgress");
+            _meshIsReady = Service.PluginInterface.GetIpcSubscriber<bool>("vnavmesh.Nav.IsReady");
             _abandonDuty = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
         }
     }
@@ -462,7 +462,7 @@ public abstract class QuestBattle : ZoneModule
     public virtual void AddQuestAIHints(Actor player, AIHints hints) { }
 
     private Task<List<Vector3>>? Pathfind(Vector3 source, Vector3 target) => _pathfind.InvokeFunc(source, target, false);
-    private float MeshBuildProgress() => _navmeshBuildProgress.InvokeFunc();
+    private bool MeshIsReady() => _meshIsReady.InvokeFunc();
 
     public static bool HaveTarget(Actor player, AIHints hints) => hints.PriorityTargets.Any(x => hints.PathfindMapBounds.Contains(x.Actor.Position - hints.PathfindMapCenter));
 
@@ -495,7 +495,7 @@ public abstract class QuestBattle : ZoneModule
 
     private async Task<List<NavigationWaypoint>> TryPathfind(IEnumerable<Waypoint> connectionPoints)
     {
-        while (MeshBuildProgress() > -1)
+        while (!MeshIsReady())
         {
             Log($"navmesh is not ready - waiting");
             await Task.Delay(500).ConfigureAwait(true);
