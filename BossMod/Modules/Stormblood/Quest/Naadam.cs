@@ -176,5 +176,7 @@ class OvooStates : StateMachineBuilder
 public class Ovoo(WorldState ws, Actor primary) : BossModule(ws, primary, new(354, 296.5f), new ArenaBoundsCircle(20))
 {
     protected override bool CheckPull() => Raid.Player()?.Position.InCircle(PrimaryActor.Position, 15) ?? false;
+
+    protected override void DrawEnemies(int pcSlot, Actor pc) => Arena.Actors(WorldState.Actors.Where(x => !x.IsAlly), ArenaColor.Enemy);
 }
 
