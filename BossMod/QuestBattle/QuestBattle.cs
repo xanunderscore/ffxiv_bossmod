@@ -244,6 +244,7 @@ public abstract class QuestBattle : ZoneModule
     private readonly ICallGateSubscriber<Vector3, Vector3, bool, Task<List<Vector3>>?> _pathfind;
     private readonly ICallGateSubscriber<bool> _isMeshReady;
     private bool _combatFlag;
+    private bool _playerLoaded;
 
     // and these are from QBW
     private delegate void AbandonDuty(bool a1);
@@ -307,12 +308,6 @@ public abstract class QuestBattle : ZoneModule
             _isMeshReady = Service.PluginInterface.GetIpcSubscriber<bool>("vnavmesh.Nav.IsReady");
             _abandonDuty = Marshal.GetDelegateForFunctionPointer<AbandonDuty>(Service.SigScanner.ScanText("E8 ?? ?? ?? ?? 41 B2 01 EB 39"));
         }
-
-        // start first objective
-        var player = ws.Party.Player();
-        var curObjective = CurrentObjective;
-        if (player != null && curObjective != null)
-            TryPathfind(player.PosRot.XYZ(), curObjective.Connections);
     }
 
     protected override void Dispose(bool disposing)
@@ -328,6 +323,17 @@ public abstract class QuestBattle : ZoneModule
 
     public override void Update()
     {
+        if (!_playerLoaded)
+        {
+            var player = World.Party.Player();
+            if (player != null)
+            {
+                _playerLoaded = true;
+                if (CurrentObjective != null)
+                    TryPathfind(player.PosRot.XYZ(), CurrentObjective.Connections);
+            }
+        }
+
         if (PathfindTask?.IsCompletedSuccessfully ?? false)
         {
             CurrentWaypoints = PathfindTask.Result;
@@ -569,7 +575,7 @@ public abstract class QuestBattle : ZoneModule
 
     private void Dash(Actor player, Vector3 direction, AIHints hints)
     {
-        if (!_config.UseDash || player.Statuses.Any(s => (ActionsProhibitedStatus)s.ID is ActionsProhibitedStatus.OutOfTheAction or ActionsProhibitedStatus.InEvent || Autorotation.RotationModuleManager.IsTransformStatus(s)))
+        if (!_config.UseDash || player.MountId > 0 || player.Statuses.Any(s => (ActionsProhibitedStatus)s.ID is ActionsProhibitedStatus.OutOfTheAction or ActionsProhibitedStatus.InEvent || Autorotation.RotationModuleManager.IsTransformStatus(s)))
             return;
 
         var moveDistance = direction.Length();

@@ -1,7 +1,4 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
-
-namespace BossMod;
+﻿namespace BossMod;
 
 // Tweak to automatically dismount when trying to use an action and failing due to being mounted.
 public sealed class AutoDismountTweak(WorldState ws)
@@ -28,7 +25,6 @@ public sealed class AutoDismountTweak(WorldState ws)
     public bool AllowDismount()
     {
         var player = ws.Party.Player();
-        var mountData = player != null && player.MountId != 0 ? Service.LuminaRow<Lumina.Excel.GeneratedSheets.Mount>(player.MountId) : null;
-        return mountData != null && mountData.Order >= 0;
+        return player?.MountId > 0;
     }
 }

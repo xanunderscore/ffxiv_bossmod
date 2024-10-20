@@ -399,7 +399,7 @@ public sealed unsafe class ActionManagerEx : IDisposable
             _inst->UseAction(CSActionType.GeneralAction, 1);
 
         if (_hints.WantDismount && _dismountTweak.AllowDismount())
-            _inst->UseAction(CSActionType.Action, 4);
+            _inst->UseAction(CSActionType.GeneralAction, 23);
     }
 
     // note: targetId is usually your current primary target (or 0xE0000000 if you don't target anyone), unless you do something like /ac XXX <f> etc
