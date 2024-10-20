@@ -510,10 +510,10 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         if (ShouldRoW(strategy))
             PushOGCD(AID.RiddleOfWind, Player, OGCDPriority.RiddleOfWind);
 
-        if (NextPositionalImminent && !NextPositionalCorrect)
+        if (NextPositionalImminent && !NextPositionalCorrect && Player.DistanceToHitbox(primaryTarget) < 6)
             PushOGCD(AID.TrueNorth, Player, OGCDPriority.TrueNorth, useRof ? 0 : GCD - 0.8f);
 
-        if (HaveTarget && Chakra >= 5 && !CanWeave(AID.RiddleOfFire))
+        if (HaveTarget && Chakra >= 5 && !useRof)
         {
             if (NumLineTargets >= 3)
                 PushOGCD(AID.HowlingFist, BestLineTarget, OGCDPriority.TFC);
