@@ -42,6 +42,7 @@ public sealed class RotationModuleManager : IDisposable
         (uint)Roleplay.SID.RolePlaying, // used for almost all solo duties
         (uint)Roleplay.SID.BorrowedFlesh, // used specifically for In from the Cold (Endwalker)
         (uint)Roleplay.SID.FreshPerspective, // sapphire weapon quest
+        1448, // "Transfiguration" from some boss in some dungeon
         565, // "Transfiguration" from certain pomanders in Palace of the Dead
     ];
 

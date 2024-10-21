@@ -789,5 +789,93 @@
       "ViewHeight": 60,
       "Filename": "1144.241.1.bmp"
     }
+  ],
+  "671.466": [
+    {
+      "MinBoundsX": -247.5,
+      "MinBoundsY": 36.5,
+      "MinBoundsZ": -126.5,
+      "MaxBoundsX": -68,
+      "MaxBoundsY": 66.5,
+      "MaxBoundsZ": 229,
+      "OriginX": -247.5,
+      "OriginZ": -126.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "671.466.1.bmp"
+    }
+  ],
+  "686.467": [
+    {
+      "MinBoundsX": -604.5,
+      "MinBoundsY": -1,
+      "MinBoundsZ": -84.5,
+      "MaxBoundsX": 99,
+      "MaxBoundsY": 56.5,
+      "MaxBoundsZ": 780.5,
+      "OriginX": -604.5,
+      "OriginZ": -84.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "686.467.1.bmp"
+    }
+  ],
+  "684.269": [
+    {
+      "MinBoundsX": 499,
+      "MinBoundsY": 59,
+      "MinBoundsZ": 411,
+      "MaxBoundsX": 823,
+      "MaxBoundsY": 97.5,
+      "MaxBoundsZ": 710.5,
+      "OriginX": 499,
+      "OriginZ": 411,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "684.269.1.bmp"
+    }
+  ],
+  "1146.247": [
+    {
+      "MinBoundsX": -433,
+      "MinBoundsY": 1.5,
+      "MinBoundsZ": 84,
+      "MaxBoundsX": -259,
+      "MaxBoundsY": 38,
+      "MaxBoundsZ": 263,
+      "OriginX": -433,
+      "OriginZ": 84,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1146.247.1.bmp"
+    },
+    {
+      "MinBoundsX": 50.5,
+      "MinBoundsY": 95.5,
+      "MinBoundsZ": -424.5,
+      "MaxBoundsX": 310.5,
+      "MaxBoundsY": 135.5,
+      "MaxBoundsZ": 147,
+      "OriginX": 50.5,
+      "OriginZ": -424.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1146.247.2.bmp"
+    }
+  ],
+  "1172.279": [
+    {
+      "MinBoundsX": -514,
+      "MinBoundsY": -17,
+      "MinBoundsZ": -71.5,
+      "MaxBoundsX": 498.5,
+      "MaxBoundsY": 19,
+      "MaxBoundsZ": 65.5,
+      "OriginX": -514,
+      "OriginZ": -71.5,
+      "ViewWidth": 60,
+      "ViewHeight": 60,
+      "Filename": "1172.279.1.bmp"
+    }
   ]
 }

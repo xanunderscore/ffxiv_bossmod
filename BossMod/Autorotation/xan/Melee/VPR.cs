@@ -116,6 +116,11 @@ public sealed class VPR(RotationModuleManager manager, Actor player) : Attackxan
 
         OGCD(strategy, primaryTarget);
 
+        if (primaryTarget == null)
+            return;
+
+        GoalZoneCombined(3, Hints.GoalAOECircle(5), 3, pos.Item1);
+
         if (CombatTimer < 1 && Player.DistanceToHitbox(primaryTarget) is > 3 and < 20)
             PushGCD(AID.Slither, primaryTarget);
 

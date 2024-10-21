@@ -42,12 +42,33 @@ internal class StandardTank(RotationModuleManager manager, Actor player) : AIRot
         if (Bossmods.ActiveModule is not TOP module)
             return;
 
-        if (module.StateMachine.ActiveState is not StateMachine.State state)
+        MitPanto(primaryTarget, module.StateMachine);
+    }
+
+    private void UseBuff(TankAI.Buff buff, Actor? target)
+    {
+        if (buff.CanUse?.Invoke(this) ?? true)
+        {
+            Hints.ActionsToExecute.Push(buff.ID, target, ActionQueue.Priority.Medium);
+        }
+    }
+
+    private void MitPanto(Actor? primaryTarget, StateMachine stateMachine)
+    {
+        // first stack happens 12.1 seconds after transition, last stack happens 18 seconds later
+        // both tanks should use party mit to cover as much as they can
+        // war/pld have 30s mit so can use whenever, gnb/drk should ensure last stack is mitted. first stack usually has beefy shields
+        var timeSincePantoCast = stateMachine.ActiveState?.ID switch
+        {
+            0x10001 => stateMachine.TimeSinceTransition,
+            0x10010 => stateMachine.TimeSinceTransition + 12.1f,
+            _ => -1
+        };
+        if (timeSincePantoCast < 0)
             return;
 
-        if (state.ID == 0x10001)
-        {
-            // first stack happens 12.1 seconds after transition, last stack happens 18 seconds later; both tanks should use party mit to cover entire mech
-        }
+        var lastStackIn = 30.1f - timeSincePantoCast;
+        var useMitIn = lastStackIn - TankActions.PartyMit.Duration;
+        Hints.ActionsToExecute.Push(TankActions.PartyMit.ID, Player, ActionQueue.Priority.Medium, default, useMitIn);
     }
 }

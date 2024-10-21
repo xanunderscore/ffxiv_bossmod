@@ -26,11 +26,7 @@ public sealed class TheKeyToVictory(WorldState ws) : QuestBattle(ws)
                 .WithInteract(OID.QueerDevice)
                 .CompleteOnTargetable((uint)OID.QueerDevice, false),
 
-            new QuestObjective(ws)
-                .WithConnection(new Vector3(-278.78f, 11.18f, 158.27f))
-                .PauseForCombat(false)
-                .Hints((player, hints) => hints.PrioritizeAll())
-                .CompleteOnKilled((uint)OID.Colossus),
+            new QuestObjective(ws).CompleteOnKilled((uint)OID.Colossus),
 
             new QuestObjective(ws)
                 .WithInteract(OID.TatteredDiary)
