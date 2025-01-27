@@ -55,9 +55,8 @@ public sealed class AIHintsBuilder : IDisposable
             }
             else
             {
-                CalculateAutoBounds(hints, player);
-                _zmm.ActiveModule?.CalculateAIHints(playerSlot, player, hints);
                 CalculateAutoHints(hints, player);
+                _zmm.ActiveModule?.CalculateAIHints(playerSlot, player, hints);
             }
         }
         hints.Normalize();
@@ -86,7 +85,7 @@ public sealed class AIHintsBuilder : IDisposable
         }
     }
 
-    private void CalculateAutoBounds(AIHints hints, Actor player)
+    private void CalculateAutoHints(AIHints hints, Actor player)
     {
         var inFate = _ws.Client.ActiveFate.ID != 0 && player.Level <= Service.LuminaRow<Lumina.Excel.Sheets.Fate>(_ws.Client.ActiveFate.ID)?.ClassJobLevelMax;
         var center = inFate ? _ws.Client.ActiveFate.Center : player.PosRot.XYZ();
@@ -135,25 +134,19 @@ public sealed class AIHintsBuilder : IDisposable
                 hints.PathfindMapCenter.Z += 2.5f;
             // keep default bounds
         }
-    }
 
-    private void CalculateAutoHints(AIHints hints, Actor player)
-    {
         foreach (var aoe in _activeAOEs.Values)
         {
-            if (hints.NoAutohint.Contains(aoe.Caster))
-                continue;
-
             var target = aoe.Target == aoe.Caster ? aoe.Caster.CastInfo!.LocXZ : (aoe.Target?.Position ?? aoe.Caster.CastInfo!.LocXZ);
             var rot = aoe.Caster.CastInfo!.Rotation;
             var finishAt = _ws.FutureTime(aoe.Caster.CastInfo.NPCRemainingTime);
             if (aoe.IsCharge)
             {
-                hints.AddForbiddenZone(ShapeDistance.Rect(aoe.Caster.Position, target, ((AOEShapeRect)aoe.Shape).HalfWidth), finishAt);
+                hints.AddForbiddenZone(ShapeDistance.Rect(aoe.Caster.Position, target, ((AOEShapeRect)aoe.Shape).HalfWidth), finishAt, aoe.Caster.InstanceID);
             }
             else
             {
-                hints.AddForbiddenZone(aoe.Shape, target, rot, finishAt);
+                hints.AddForbiddenZone(aoe.Shape, target, rot, finishAt, aoe.Caster.InstanceID);
             }
         }
     }

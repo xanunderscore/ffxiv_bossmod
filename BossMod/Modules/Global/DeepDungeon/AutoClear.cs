@@ -122,13 +122,16 @@ public abstract class AutoClear : ZoneModule
 {
     public readonly int LevelCap;
 
-    public static readonly List<WPos> ProblematicTrapLocations = [
-        new(-346.5f, 302.4f),
-        new(-297.8f, 295.5f),
-        new(295.7f, -302.3f),
-        new(304.3f, -297f),
-        new(361.1f, -357.4f)
-    ];
+    //public static readonly List<WPos> ProblematicTrapLocations = [
+    //    new(-346.5f, 302.4f),
+    //    new(-297.8f, 295.5f),
+    //    new(295.7f, -302.3f),
+    //    new(304.3f, -297f),
+    //    new(361.1f, -357.4f),
+    //    new(239.5f, -230.5f),
+    //    new(239.5f, -228.8f),
+    //    new(-374.8f, 302.2f)
+    //];
 
     public static readonly HashSet<uint> BronzeChestIDs = [
         // PotD
@@ -172,6 +175,7 @@ public abstract class AutoClear : ZoneModule
     private readonly Dictionary<string, Floor<Wall>> LoadedFloors;
     private readonly List<(Wall Wall, bool Rotated)> Walls = [];
     private readonly List<WPos> RoomCenters = [];
+    private readonly List<WPos> ProblematicTrapLocations = [];
 
     private int Kills;
     private int DesiredRoom;
@@ -186,13 +190,14 @@ public abstract class AutoClear : ZoneModule
         public readonly bool ImmuneAt(DateTime time) => KnockbackPenalty || RoleBuffExpire > time || JobBuffExpire > time;
     }
 
-    private PlayerImmuneState[] PlayerImmunes = new PlayerImmuneState[4];
+    private readonly PlayerImmuneState[] _playerImmunes = new PlayerImmuneState[4];
 
     private ObstacleMapManager _obstacles;
 
     protected DeepDungeonState Palace => World.DeepDungeon;
 
-    public static readonly string WallsFile = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs", "BossMod", "walls.json");
+    public static readonly string WallsFile = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs", "BossMod", "deep_dungeon", "walls.json");
+    public static readonly string TrapsFile = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "pluginConfigs", "BossMod", "deep_dungeon", "ignore_traps.json");
 
     protected AutoClear(WorldState ws, int LevelCap) : base(ws)
     {
@@ -225,12 +230,17 @@ public abstract class AutoClear : ZoneModule
 
         _trapsCurrentZone = PalacePalInterop.GetTrapLocationsForZone(ws.CurrentZone);
 
-        IgnoreTraps.AddRange(ProblematicTrapLocations);
-
         using (var fstream = new FileStream(WallsFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read))
         {
             LoadedFloors = JsonSerializer.Deserialize<Dictionary<string, Floor<Wall>>>(fstream)!;
         }
+
+        using (var fstream = new FileStream(TrapsFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read))
+        {
+            ProblematicTrapLocations = JsonSerializer.Deserialize<List<WPos>>(fstream)!;
+        }
+
+        IgnoreTraps.AddRange(ProblematicTrapLocations);
 
 #if DEBUG
         if (Service.SigScanner != null)
@@ -261,19 +271,19 @@ public abstract class AutoClear : ZoneModule
             case (uint)WAR.SID.ArmsLength:
                 var slot1 = World.Party.FindSlot(actor.InstanceID);
                 if (slot1 >= 0)
-                    PlayerImmunes[slot1].RoleBuffExpire = status.ExpireAt;
+                    _playerImmunes[slot1].RoleBuffExpire = status.ExpireAt;
                 break;
             case (uint)WAR.SID.InnerStrength:
                 var slot2 = World.Party.FindSlot(actor.InstanceID);
                 if (slot2 >= 0)
-                    PlayerImmunes[slot2].JobBuffExpire = status.ExpireAt;
+                    _playerImmunes[slot2].JobBuffExpire = status.ExpireAt;
                 break;
             // Knockback Penalty floor effect
             case 1096:
             case 1512:
                 var slot3 = World.Party.FindSlot(actor.InstanceID);
                 if (slot3 >= 0)
-                    PlayerImmunes[slot3].KnockbackPenalty = true;
+                    _playerImmunes[slot3].KnockbackPenalty = true;
                 break;
         }
 
@@ -339,7 +349,7 @@ public abstract class AutoClear : ZoneModule
         IgnoreTraps.AddRange(ProblematicTrapLocations);
         DesiredRoom = 0;
         Kills = 0;
-        Array.Fill(PlayerImmunes, default);
+        Array.Fill(_playerImmunes, default);
         _lastChestContentsGold = null;
         _lastChestMagicite = false;
         _chestContentsGold.Clear();
@@ -417,20 +427,29 @@ public abstract class AutoClear : ZoneModule
             _obstacles.Dispose();
             _obstacles = new(World);
         }
-        if (player != null)
-        {
-            var (entry, data) = _obstacles.Find(player.PosRot.XYZ());
-            if (entry == null)
-            {
-                ImGui.SameLine();
-                UIMisc.HelpMarker(() => "Obstacle map missing for floor!", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
-            }
 
-            if (data != null && data.PixelSize != 0.5f)
-            {
-                ImGui.SameLine();
-                UIMisc.HelpMarker(() => $"Wrong resolution for map; should be 0.5, got {data.PixelSize}", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
-            }
+        if (player == null)
+            return;
+
+        var (entry, data) = _obstacles.Find(player.PosRot.XYZ());
+        if (entry == null)
+        {
+            ImGui.SameLine();
+            UIMisc.HelpMarker(() => "Obstacle map missing for floor!", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
+        }
+
+        if (data != null && data.PixelSize != 0.5f)
+        {
+            ImGui.SameLine();
+            UIMisc.HelpMarker(() => $"Wrong resolution for map; should be 0.5, got {data.PixelSize}", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
+        }
+
+        if (ImGui.Button("Set closest trap location as ignored"))
+        {
+            var pos = _trapsCurrentZone.MinBy(t => (t - player.Position).LengthSq()).Rounded(0.1f);
+            ProblematicTrapLocations.Add(pos);
+            IgnoreTraps.Add(pos);
+            SaveTraps();
         }
     }
 
@@ -489,87 +508,7 @@ public abstract class AutoClear : ZoneModule
             hints.ForcedMovement = new(0);
 
         HandleFloorPathfind(player, hints);
-
-        IterAndExpire(HintDisabled, g => g.CastInfo == null, hints.NoAutohint.Add);
-
-        IterAndExpire(Gazes, g => g.Source.CastInfo == null, d =>
-        {
-            if (d.Shape.Check(player.Position, d.Source))
-                hints.ForbiddenDirections.Add((player.AngleTo(d.Source), 45.Degrees(), CastFinishAt(d.Source)));
-        });
-
-        IterAndExpire(Donuts, d => d.Source.CastInfo == null, d =>
-        {
-            hints.AddForbiddenZone(new AOEShapeDonut(d.Inner, d.Outer), d.Source.Position, default, CastFinishAt(d.Source));
-        });
-
-        IterAndExpire(Circles, d => d.Source.CastInfo == null, d =>
-        {
-            hints.AddForbiddenZone(new AOEShapeCircle(d.Radius), d.Source.Position, default, CastFinishAt(d.Source));
-
-            // some enrages are way bigger than pathfinding map size (e.g. slime explosion is 60y)
-            // in these cases, if the player is inside the aoe, add a goal zone telling it to GTFO as far as possible
-            if (d.Radius >= 30)
-            {
-                var distToSource = (player.Position - d.Source.Position).Length();
-                if (distToSource <= d.Radius)
-                {
-                    var desiredDistance = distToSource + 10;
-                    hints.GoalZones.Add(p =>
-                    {
-                        var dist = (p - d.Source.Position).Length();
-                        return dist >= desiredDistance ? 100 : 0;
-                    });
-                }
-            }
-        });
-
-        IterAndExpire(Interrupts, d => d.CastInfo == null, d =>
-        {
-            if (hints.FindEnemy(d) is { } e)
-                e.ShouldBeInterrupted = true;
-        });
-
-        IterAndExpire(Stuns, d => d.CastInfo == null, d =>
-        {
-            if (hints.FindEnemy(d) is { } e)
-                e.ShouldBeStunned = true;
-        });
-
-        IterAndExpire(LOS, d => d.CastInfo == null, caster =>
-        {
-            if (!_losCache.TryGetValue(caster.InstanceID, out var dangermap))
-                return;
-
-            var origin = dangermap.Item1;
-            var map = dangermap.Item2;
-
-            hints.AddForbiddenZone(p =>
-            {
-                var offset = (p - origin) / map.PixelSize;
-                return map[(int)offset.X, (int)offset.Z] ? -10 : 10;
-            }, CastFinishAt(caster));
-        }, d => _losCache.Remove(d.InstanceID));
-
-        IterAndExpire(Voidzones, d => d.Source.IsDeadOrDestroyed, d =>
-        {
-            hints.AddForbiddenZone(d.Zone, d.Source.Position, d.Source.Rotation);
-        });
-
-        IterAndExpire(KnockbackZones, d => d.Source.CastInfo == null, kb =>
-        {
-            var castFinish = CastFinishAt(kb.Source);
-            if (PlayerImmunes[playerSlot].ImmuneAt(castFinish))
-                return;
-
-            hints.AddForbiddenZone(new AOEShapeCircle(kb.Radius), kb.Source.Position, default, castFinish);
-        });
-
-        IterAndExpire(ForbiddenTargets, t => t.Timeout <= World.CurrentTime, t =>
-        {
-            if (hints.FindEnemy(t.Actor) is { } enemy)
-                enemy.Priority = AIHints.Enemy.PriorityForbidden;
-        });
+        DrawAOEs(playerSlot, player, hints);
 
         var isStunned = player.IsTransformed || player.Statuses.Any(s => (SID)s.ID is SID.Silence or SID.Pacification);
         var isOccupied = player.InCombat || isStunned;
@@ -710,6 +649,93 @@ public abstract class AutoClear : ZoneModule
         }
 
         hints.ForcedTarget = bestTarget;
+    }
+
+    private void DrawAOEs(int playerSlot, Actor player, AIHints hints)
+    {
+        IterAndExpire(HintDisabled, g => g.CastInfo == null, g =>
+        {
+            hints.ForbiddenZones.RemoveAll(z => z.Source == g.InstanceID);
+        });
+
+        IterAndExpire(Gazes, g => g.Source.CastInfo == null, d =>
+        {
+            if (d.Shape.Check(player.Position, d.Source))
+                hints.ForbiddenDirections.Add((player.AngleTo(d.Source), 45.Degrees(), CastFinishAt(d.Source)));
+        });
+
+        IterAndExpire(Donuts, d => d.Source.CastInfo == null, d =>
+        {
+            hints.AddForbiddenZone(new AOEShapeDonut(d.Inner, d.Outer), d.Source.Position, default, CastFinishAt(d.Source));
+        });
+
+        IterAndExpire(Circles, d => d.Source.CastInfo == null, d =>
+        {
+            hints.AddForbiddenZone(new AOEShapeCircle(d.Radius), d.Source.Position, default, CastFinishAt(d.Source));
+
+            // some enrages are way bigger than pathfinding map size (e.g. slime explosion is 60y)
+            // in these cases, if the player is inside the aoe, add a goal zone telling it to GTFO as far as possible
+            if (d.Radius >= 30)
+            {
+                var distToSource = (player.Position - d.Source.Position).Length();
+                if (distToSource <= d.Radius)
+                {
+                    var desiredDistance = distToSource + 10;
+                    hints.GoalZones.Add(p =>
+                    {
+                        var dist = (p - d.Source.Position).Length();
+                        return dist >= desiredDistance ? 100 : 0;
+                    });
+                }
+            }
+        });
+
+        IterAndExpire(Interrupts, d => d.CastInfo == null, d =>
+        {
+            if (hints.FindEnemy(d) is { } e)
+                e.ShouldBeInterrupted = true;
+        });
+
+        IterAndExpire(Stuns, d => d.CastInfo == null, d =>
+        {
+            if (hints.FindEnemy(d) is { } e)
+                e.ShouldBeStunned = true;
+        });
+
+        IterAndExpire(LOS, d => d.CastInfo == null, caster =>
+        {
+            if (!_losCache.TryGetValue(caster.InstanceID, out var dangermap))
+                return;
+
+            var origin = dangermap.Item1;
+            var map = dangermap.Item2;
+
+            hints.AddForbiddenZone(p =>
+            {
+                var offset = (p - origin) / map.PixelSize;
+                return map[(int)offset.X, (int)offset.Z] ? -10 : 10;
+            }, CastFinishAt(caster));
+        }, d => _losCache.Remove(d.InstanceID));
+
+        IterAndExpire(Voidzones, d => d.Source.IsDeadOrDestroyed, d =>
+        {
+            hints.AddForbiddenZone(d.Zone, d.Source.Position, d.Source.Rotation);
+        });
+
+        IterAndExpire(KnockbackZones, d => d.Source.CastInfo == null, kb =>
+        {
+            var castFinish = CastFinishAt(kb.Source);
+            if (_playerImmunes[playerSlot].ImmuneAt(castFinish))
+                return;
+
+            hints.AddForbiddenZone(new AOEShapeCircle(kb.Radius), kb.Source.Position, default, castFinish);
+        });
+
+        IterAndExpire(ForbiddenTargets, t => t.Timeout <= World.CurrentTime, t =>
+        {
+            if (hints.FindEnemy(t.Actor) is { } enemy)
+                enemy.Priority = AIHints.Enemy.PriorityForbidden;
+        });
     }
 
     private static bool IsDangerousOutOfCombatStatus(uint statusRaw) => (SID)statusRaw is SID.DamageUp or SID.DreadBeastAura or SID.PhysicalDamageUp;
@@ -863,6 +889,14 @@ public abstract class AutoClear : ZoneModule
         }
 
         return false;
+    }
+
+    private void SaveTraps()
+    {
+        using (var fstream = new FileStream(TrapsFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
+        {
+            JsonSerializer.Serialize(fstream, ProblematicTrapLocations);
+        }
     }
 }
 
