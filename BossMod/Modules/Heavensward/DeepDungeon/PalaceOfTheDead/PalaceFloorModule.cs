@@ -65,7 +65,7 @@ public abstract class PalaceFloorModule(WorldState ws) : AutoClear(ws, 60)
         {
             case SID.BlazeSpikes:
             case SID.IceSpikes:
-                ForbiddenTargets.Add(actor);
+                ForbiddenTargets.Add((actor, World.FutureTime(10)));
                 break;
         }
     }
@@ -76,7 +76,7 @@ public abstract class PalaceFloorModule(WorldState ws) : AutoClear(ws, 60)
         {
             case SID.BlazeSpikes:
             case SID.IceSpikes:
-                ForbiddenTargets.Remove(actor);
+                ForbiddenTargets.RemoveAll(t => t.Actor == actor);
                 break;
         }
     }

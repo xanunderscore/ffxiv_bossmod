@@ -18,6 +18,7 @@ public enum AID : uint
     CentralizedNerveGas = 32933, // Helper->self, 5.3s cast, range 25+R 120-degree cone
     LeftwardNerveGas = 32934, // Helper->self, 5.3s cast, range 25+R 180-degree cone
     RightwardNerveGas = 32935, // Helper->self, 5.3s cast, range 25+R 180-degree cone
+    NanosporeJet = 31429, // Boss->self, 5.0s cast, range 100 circle
 }
 
 public enum TetherID : uint
@@ -129,7 +130,7 @@ class Barofield(BossModule module) : Components.GenericAOEs(module, ActionID.Mak
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action == WatchedAction)
+        if ((AID)spell.Action.ID is AID.Barofield or AID.NanosporeJet)
             activation = Module.CastFinishAt(spell);
     }
 

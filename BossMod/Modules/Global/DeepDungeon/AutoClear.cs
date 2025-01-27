@@ -147,7 +147,7 @@ public abstract class AutoClear : ZoneModule
     private readonly List<Gaze> Gazes = [];
     protected readonly List<Actor> Interrupts = [];
     protected readonly List<Actor> Stuns = [];
-    protected readonly List<Actor> ForbiddenTargets = [];
+    protected readonly List<(Actor Actor, DateTime Timeout)> ForbiddenTargets = [];
     protected readonly List<Actor> HintDisabled = [];
     private readonly List<Actor> LOS = [];
     private readonly List<WPos> IgnoreTraps = [];
@@ -565,9 +565,11 @@ public abstract class AutoClear : ZoneModule
             hints.AddForbiddenZone(new AOEShapeCircle(kb.Radius), kb.Source.Position, default, castFinish);
         });
 
-        foreach (var d in ForbiddenTargets)
-            if (hints.FindEnemy(d) is { } e)
-                e.Priority = AIHints.Enemy.PriorityForbidden;
+        IterAndExpire(ForbiddenTargets, t => t.Timeout <= World.CurrentTime, t =>
+        {
+            if (hints.FindEnemy(t.Actor) is { } enemy)
+                enemy.Priority = AIHints.Enemy.PriorityForbidden;
+        });
 
         var isStunned = player.IsTransformed || player.Statuses.Any(s => (SID)s.ID is SID.Silence or SID.Pacification);
         var isOccupied = player.InCombat || isStunned;

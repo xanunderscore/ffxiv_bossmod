@@ -170,7 +170,7 @@ public abstract class EOFloorModule(WorldState ws, bool autoRaiseOnEnter = false
             // setting target to forbidden when it gains the spikes status is too late
             case AID.GelidCharge:
             case AID.SmolderingScales:
-                ForbiddenTargets.Add(actor);
+                ForbiddenTargets.Add((actor, World.FutureTime(10)));
                 break;
         }
     }
@@ -219,7 +219,7 @@ public abstract class EOFloorModule(WorldState ws, bool autoRaiseOnEnter = false
         {
             case (uint)SID.IceSpikes:
             case (uint)SID.BlazeSpikes:
-                ForbiddenTargets.Remove(actor);
+                ForbiddenTargets.RemoveAll(t => t.Actor == actor);
                 break;
         }
     }
