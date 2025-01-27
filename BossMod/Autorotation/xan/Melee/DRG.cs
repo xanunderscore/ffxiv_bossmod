@@ -189,19 +189,17 @@ public sealed class DRG(RotationModuleManager manager, Actor player) : Attackxan
         if (ShouldWT(strategy))
             PushOGCD(AID.WyrmwindThrust, BestLongAOETarget);
 
-        PushOGCD(AID.Stardiver, BestDiveTarget);
-
         if (NastrondReady == 0)
             PushOGCD(AID.Geirskogul, BestLongAOETarget);
 
         if (DiveReady == 0 && posOk && posCheck(0.6f))
-            if (LanceCharge > GCD && ShouldLifeSurge())
-                PushOGCD(AID.LifeSurge, Player);
+            PushOGCD(AID.Jump, bestSingleTarget);
+
+        if (LanceCharge > GCD && ShouldLifeSurge())
+            PushOGCD(AID.LifeSurge, Player);
 
         if (moveOk && strategy.BuffsOk() && posCheck(0.8f))
-
-            if (moveOk)
-                PushOGCD(AID.DragonfireDive, BestDiveTarget);
+            PushOGCD(AID.DragonfireDive, BestDiveTarget);
 
         if (NastrondReady > 0)
             PushOGCD(AID.Nastrond, BestLongAOETarget);
