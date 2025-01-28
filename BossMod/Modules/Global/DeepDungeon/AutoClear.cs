@@ -586,13 +586,9 @@ public abstract class AutoClear : ZoneModule
         if (!isStunned && pomanderToUseHere is PomanderID p2 && player.FindStatus(SID.ItemPenalty) == null)
             hints.ActionsToExecute.Push(new ActionID(ActionType.Pomander, (uint)p2), null, ActionQueue.Priority.VeryHigh);
 
-        var haveChest = false;
+        Actor? wantCoffer = null;
         if (coffer is Actor t && !player.IsTransformed && (_config.AutoMoveTreasure && (!player.InCombat || _config.NavigateInCombat) || player.DistanceToHitbox(t) < 3.5f))
-        {
-            hints.GoalZones.Add(hints.GoalSingleTarget(t.Position, 25));
-            hints.InteractWithTarget = coffer;
-            haveChest = true;
-        }
+            wantCoffer = t;
 
         if (!player.InCombat && _config.AutoPassage && Palace.PassageActive)
         {
@@ -603,9 +599,16 @@ public abstract class AutoClear : ZoneModule
                 hints.GoalZones.Add(hints.GoalSingleTarget(c.Position, 2, 0.5f));
                 // give pathfinder a little help lmao
                 hints.GoalZones.Add(hints.GoalSingleTarget(c.Position, 25, 0.25f));
-                if (haveChest && player.DistanceToHitbox(c) < player.DistanceToHitbox(coffer) && !_config.OpenChestsFirst)
-                    hints.InteractWithTarget = null;
+                if (player.DistanceToHitbox(c) < player.DistanceToHitbox(coffer) && !_config.OpenChestsFirst)
+                    wantCoffer = null;
             }
+        }
+
+        if (wantCoffer is Actor xxx)
+        {
+            wantCoffer = xxx;
+            hints.GoalZones.Add(hints.GoalSingleTarget(xxx.Position, 25));
+            hints.InteractWithTarget = coffer;
         }
 
         if (revealedTraps.Count > 0)

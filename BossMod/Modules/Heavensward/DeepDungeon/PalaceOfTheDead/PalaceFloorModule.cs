@@ -65,7 +65,8 @@ public abstract class PalaceFloorModule(WorldState ws) : AutoClear(ws, 60)
         {
             case SID.BlazeSpikes:
             case SID.IceSpikes:
-                ForbiddenTargets.Add((actor, World.FutureTime(10)));
+                if (Palace.Floor > 60)
+                    ForbiddenTargets.Add((actor, World.FutureTime(10)));
                 break;
         }
     }
