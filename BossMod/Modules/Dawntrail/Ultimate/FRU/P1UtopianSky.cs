@@ -3,7 +3,7 @@
 class P1UtopianSkyBlastingZone(BossModule module) : Components.GenericAOEs(module, ActionID.MakeSpell(AID.BlastingZoneAOE))
 {
     public readonly List<AOEInstance> AOEs = [];
-    public BitMask DangerousSpots; // 0 = N, then CCW
+    public BitMask DangerousSpots; // 0 = N, then CW
     public DateTime Activation = DateTime.MaxValue;
 
     private static readonly AOEShapeRect _shape = new(50, 8);
@@ -23,7 +23,7 @@ class P1UtopianSkyBlastingZone(BossModule module) : Components.GenericAOEs(modul
         {
             Activation = WorldState.FutureTime(9.1f);
             AOEs.Add(new(_shape, actor.Position, actor.Rotation, Activation));
-            DangerousSpots.Set((int)MathF.Round((Angle.FromDirection(actor.Position - Module.Center).Deg + 180) / 45) % 8);
+            DangerousSpots.Set((int)MathF.Round((-Angle.FromDirection(actor.Position - Module.Center).Deg + 180) / 45) % 8);
         }
     }
 
