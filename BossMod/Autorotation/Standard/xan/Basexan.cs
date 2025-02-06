@@ -500,13 +500,13 @@ static class Extendxan
 
     public static RotationModuleDefinition DefineSharedTA(this RotationModuleDefinition def)
     {
-        def.Define(SharedTrack.Targeting).As<Targeting>("Targeting")
+        def.Define(SharedTrack.Targeting).As<Targeting>("Targeting", uiPriority: 100)
             .AddOption(xan.Targeting.Manual, "Manual", "Use player's current target for all actions")
             .AddOption(xan.Targeting.Auto, "Auto", "Automatically select best target (highest number of nearby targets) for AOE actions")
             .AddOption(xan.Targeting.AutoPrimary, "AutoPrimary", "Automatically select best target for AOE actions - ensure player target is hit")
             .AddOption(xan.Targeting.AutoTryPri, "AutoTryPri", "Automatically select best target for AOE actions - if player has a target, ensure that target is hit");
 
-        def.Define(SharedTrack.AOE).As<AOEStrategy>("AOE")
+        def.Define(SharedTrack.AOE).As<AOEStrategy>("AOE", uiPriority: 99)
             .AddOption(AOEStrategy.AOE, "AOE", "Use AOE actions if beneficial")
             .AddOption(AOEStrategy.ST, "ST", "Use single-target actions")
             .AddOption(AOEStrategy.ForceAOE, "ForceAOE", "Always use AOE actions, even on one target")
@@ -515,9 +515,9 @@ static class Extendxan
         return def;
     }
 
-    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name, int minLevel = 1) where Index : Enum
+    public static RotationModuleDefinition.ConfigRef<OffensiveStrategy> DefineSimple<Index>(this RotationModuleDefinition def, Index track, string name, int minLevel = 1, float uiPriority = 0) where Index : Enum
     {
-        return def.Define(track).As<OffensiveStrategy>(name)
+        return def.Define(track).As<OffensiveStrategy>(name, uiPriority: uiPriority)
             .AddOption(OffensiveStrategy.Automatic, "Auto", "Use when optimal", minLevel: minLevel)
             .AddOption(OffensiveStrategy.Delay, "Delay", "Don't use", minLevel: minLevel)
             .AddOption(OffensiveStrategy.Force, "Force", "Use ASAP", minLevel: minLevel);
