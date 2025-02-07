@@ -170,7 +170,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
         def.DefineSimple(Track.TN, "TrueNorth", minLevel: 50, uiPriority: 48).AddAssociatedActions(AID.TrueNorth);
         def.Define(Track.Positional).As<PositionalStrategy>("Pos (AI)", uiPriority: 45)
             .AddOption(PositionalStrategy.Automatic, "Tell AI mode to navigate to hit positionals")
-            .AddOption(PositionalStrategy.Ignore, "Tell AI mode to ignore positionals");
+            .AddOption(PositionalStrategy.Ignore, "Tell AI mode to ignore positionals")
+            .AddAssociatedActions(AID.Demolish, AID.SnapPunch, AID.PouncingCoeurl);
 
         return def;
     }
