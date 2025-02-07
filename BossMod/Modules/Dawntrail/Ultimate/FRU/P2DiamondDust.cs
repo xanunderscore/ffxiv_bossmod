@@ -340,7 +340,16 @@ class P2SinboundHoly(BossModule module) : Components.UniformStackSpread(module, 
     }
 }
 
-class P2SinboundHolyVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.SinboundHolyVoidzone).Where(z => z.EventState != 7));
+class P2SinboundHolyVoidzone(BossModule module) : Components.PersistentVoidzone(module, 6, m => m.Enemies(OID.SinboundHolyVoidzone).Where(z => z.EventState != 7))
+{
+    public bool AIHintsEnabled = true;
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (AIHintsEnabled)
+            base.AddAIHints(slot, actor, assignment, hints);
+    }
+}
 
 class P2ShiningArmor(BossModule module) : Components.GenericGaze(module, ActionID.MakeSpell(AID.ShiningArmor))
 {
@@ -459,8 +468,8 @@ class P2TwinStillnessSilence(BossModule module) : Components.GenericAOEs(module)
             {
                 // if we're behind boss, slide over to the safe point as opposite to the boss as possible
                 var farthestDir = Angle.FromDirection(-sourceOffset);
-                var bestRange = zoneList.Allowed(1.Degrees()).MinBy(r => farthestDir.Rad < r.min.Rad ? r.min.Rad - farthestDir.Rad : farthestDir.Rad > r.max.Rad ? farthestDir.Rad - r.max.Rad : 0);
-                var dir = farthestDir.Rad < bestRange.min.Rad ? bestRange.min : farthestDir.Rad > bestRange.max.Rad ? bestRange.max : farthestDir;
+                var bestRange = zoneList.Allowed(5.Degrees()).MinBy(r => farthestDir.DistanceToRange(r.min, r.max).Abs().Rad);
+                var dir = farthestDir.ClosestInRange(bestRange.min, bestRange.max);
                 hints.AddForbiddenZone(ShapeDistance.InvertedCircle(actor.Position + SlideDistance * dir.ToDirection(), 1), DateTime.MaxValue);
             }
             else
