@@ -213,6 +213,8 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
 
     protected override float GetCastTime(AID aid) => 0;
 
+    public float EffectiveDowntimeIn => MathF.Max(0, DowntimeIn - GetApplicationDelay(AID.SixSidedStar));
+
     private (AID action, bool isTargeted) GetCurrentBlitz()
     {
         if (BeastCount != 3)
@@ -401,7 +403,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
             case OffensiveStrategy.Automatic:
-                if (DowntimeIn > 0 && !CanFitGCD(DowntimeIn - GetApplicationDelay(AID.SixSidedStar), 1))
+                if (EffectiveDowntimeIn > 0 && !CanFitGCD(EffectiveDowntimeIn, 1))
                     PushGCD(AID.SixSidedStar, primaryTarget, GCDPriority.SSS);
                 break;
         }
@@ -705,7 +707,7 @@ public sealed class MNK(RotationModuleManager manager, Actor player) : Attackxan
                 prio = GCDPriority.WindsReply;
                 break;
             case WRStrategy.PreDowntime:
-                if (DowntimeIn < WindsReplyLeft && !CanFitGCD(DowntimeIn, 2))
+                if (EffectiveDowntimeIn < WindsReplyLeft && !CanFitGCD(EffectiveDowntimeIn, 2))
                     prio = GCDPriority.WindsReply;
                 break;
         }
